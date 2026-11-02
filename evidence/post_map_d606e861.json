@@ -1,0 +1,1072 @@
+{
+  "schemaVersion": 1,
+  "buildId": "d606e861",
+  "analysisStage": "ISOLATED_POST_MAP_DIAGNOSTIC_ONLY",
+  "executionStatus": "PASS",
+  "exitCode": 0,
+  "notFitAcceptance": true,
+  "originalActiveDatabaseOpened": false,
+  "clonedFiles": 261,
+  "fitRoutingCmpFilesCopied": false,
+  "allOriginalContentHashesStable": true,
+  "allOriginalMapDbMetadataStable": true,
+  "projectMetadataOnlyChanges": [
+    "PartBDebug.qpf",
+    "PartBDebug.qsf",
+    "PartBDebug.sdc",
+    "MemberBCdc.sdc",
+    "vga_sink.qsys"
+  ],
+  "manifest": "build/member_b/post_map_d606e861/clone_manifest.json",
+  "worstPerGroupPerCorner": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -29.313,
+      "dataDelayNs": 69.021,
+      "logicLevels": 36,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[7]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.146,
+      "dataDelayNs": 6.29,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -23.135,
+      "dataDelayNs": 42.843,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.292,
+      "dataDelayNs": 0.416,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3032]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3032]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": -29.313,
+      "dataDelayNs": 69.021,
+      "logicLevels": 36,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[7]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.383,
+      "dataDelayNs": 5.325,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -18.548,
+      "dataDelayNs": 38.256,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 1.24,
+      "dataDelayNs": 18.468,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|box.ymin[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|minPlus[15]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -23.135,
+      "dataDelayNs": 42.843,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -31.361,
+      "dataDelayNs": 71.08,
+      "logicLevels": 36,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[7]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.037,
+      "dataDelayNs": 6.387,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -24.884,
+      "dataDelayNs": 44.603,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.296,
+      "dataDelayNs": 0.423,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3032]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3032]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": -31.361,
+      "dataDelayNs": 71.08,
+      "logicLevels": 36,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[7]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.197,
+      "dataDelayNs": 5.522,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -20.336,
+      "dataDelayNs": 40.055,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 0.649,
+      "dataDelayNs": 19.07,
+      "logicLevels": 11,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[18]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -24.884,
+      "dataDelayNs": 44.603,
+      "logicLevels": 42,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -15.327,
+      "dataDelayNs": 55.111,
+      "logicLevels": 34,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[18]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.134,
+      "dataDelayNs": 5.652,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -13.019,
+      "dataDelayNs": 32.803,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.473,
+      "dataDelayNs": 0.311,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3032]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3032]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": -15.327,
+      "dataDelayNs": 55.111,
+      "logicLevels": 34,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[18]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.809,
+      "dataDelayNs": 3.975,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -8.297,
+      "dataDelayNs": 28.081,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 5.04,
+      "dataDelayNs": 14.744,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderX[47]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -13.019,
+      "dataDelayNs": 32.803,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -15.283,
+      "dataDelayNs": 55.071,
+      "logicLevels": 34,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[18]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.164,
+      "dataDelayNs": 5.647,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -12.996,
+      "dataDelayNs": 32.784,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.48,
+      "dataDelayNs": 0.308,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3032]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3032]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": -15.283,
+      "dataDelayNs": 55.071,
+      "logicLevels": 34,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[18]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.815,
+      "dataDelayNs": 3.973,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -8.277,
+      "dataDelayNs": 28.065,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 5.042,
+      "dataDelayNs": 14.746,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderX[47]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -12.996,
+      "dataDelayNs": 32.784,
+      "logicLevels": 36,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    }
+  ],
+  "slow0Top10ByGroup": {
+    "ALL": [
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 1,
+        "slackNs": -31.361,
+        "dataDelayNs": 71.08,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[7]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 2,
+        "slackNs": -31.361,
+        "dataDelayNs": 71.08,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[8]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 3,
+        "slackNs": -31.361,
+        "dataDelayNs": 71.08,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[9]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 4,
+        "slackNs": -31.361,
+        "dataDelayNs": 71.08,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[5]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 5,
+        "slackNs": -31.361,
+        "dataDelayNs": 71.08,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[6]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 6,
+        "slackNs": -31.36,
+        "dataDelayNs": 71.079,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[6]",
+        "to": "memberBVgaOverlay:overlay|outData[7]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 7,
+        "slackNs": -31.36,
+        "dataDelayNs": 71.079,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[6]",
+        "to": "memberBVgaOverlay:overlay|outData[8]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 8,
+        "slackNs": -31.36,
+        "dataDelayNs": 71.079,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[6]",
+        "to": "memberBVgaOverlay:overlay|outData[9]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 9,
+        "slackNs": -31.36,
+        "dataDelayNs": 71.079,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[6]",
+        "to": "memberBVgaOverlay:overlay|outData[5]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": 10,
+        "slackNs": -31.36,
+        "dataDelayNs": 71.079,
+        "logicLevels": 36,
+        "from": "camera_display:disp_u|x[6]",
+        "to": "memberBVgaOverlay:overlay|outData[6]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      }
+    ],
+    "CLOCK_50": [
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 1,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 2,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[7]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 3,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[2]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 4,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[3]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 5,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[0]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 6,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[1]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 7,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[4]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 8,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[5]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 9,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[6]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": 10,
+        "slackNs": -24.884,
+        "dataDelayNs": 44.603,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmin[8]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      }
+    ],
+    "CCL": [
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 1,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 2,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[7]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 3,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[2]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 4,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[3]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 5,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[0]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 6,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[1]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 7,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[4]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 8,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[5]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 9,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[6]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CCL",
+        "rank": 10,
+        "slackNs": -20.336,
+        "dataDelayNs": 40.055,
+        "logicLevels": 42,
+        "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmin[8]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      }
+    ],
+    "READER": [
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 1,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[18]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 2,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[16]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 3,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[19]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 4,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[17]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 5,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[6]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 6,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[7]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 7,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[3]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 8,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[4]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 9,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[0]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "READER",
+        "rank": 10,
+        "slackNs": 0.649,
+        "dataDelayNs": 19.07,
+        "logicLevels": 11,
+        "from": "perceptionCore:core|projectiveMarkerReader:reader|box.xmax[0]",
+        "to": "perceptionCore:core|projectiveMarkerReader:reader|minMinus[1]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      }
+    ]
+  },
+  "skew": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "pathCount": "6",
+      "worstSlackNs": "19.235"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "pathCount": "6",
+      "worstSlackNs": "19.252"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "pathCount": "6",
+      "worstSlackNs": "19.462"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "pathCount": "6",
+      "worstSlackNs": "19.471"
+    }
+  ],
+  "reports": [
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_0c_all.txt",
+      "sha256": "fa91795dcf0899fa49069ee241e8bdf7d1620cdbe5bee77f8a03265885db85fe"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_0c_CCL.txt",
+      "sha256": "56a591063e68c83cd99697e461b2c4f58a39dd877fcd42ce79b0e7c3942c6eb8"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_0c_CORE.txt",
+      "sha256": "c90f249eaf714ee28ac57c2fc53fb50879230e1d014223eb57618b35c8d2a9a8"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_0c_maxskew.txt",
+      "sha256": "4a16b3f47e0534682cdbd2ae8841720def12c26e136a601c54e586342930d12b"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_0c_READER.txt",
+      "sha256": "e75336447b79a32859f3ab286df73306e3ed6f8324bc898f2268965ff6e211b8"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_85c_all.txt",
+      "sha256": "1901227a4358f268526b34f6caea0688894db902c2322e104e5110708d23e2a9"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_85c_CCL.txt",
+      "sha256": "79269f0d427758b6f12b755f793427d39e3c764b74ea80e80a1a24ed654e97ab"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_85c_CORE.txt",
+      "sha256": "5a7cd9d6811ecf38ded8fad9933ef38d4eb7cf528eead19a0f2b71bb851f34b2"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_85c_maxskew.txt",
+      "sha256": "31bb29291b075a3edd3e09801ba800e295eaee279ed0b36d2103878fb2b7c3ff"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/6_slow_1100mv_85c_READER.txt",
+      "sha256": "324d21055528f4189087eec25b10b7371782e7e6ad5c5145346321b997cfc783"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/metastability_post_map.txt",
+      "sha256": "83eaecc0f825d327ff5e0490550e763925f017a51350f57a23f61be2704139ea"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_0c_all.txt",
+      "sha256": "544fb36a54d79d3ec5b878d87263675cd7959b4609fd6e48504ee08cd83149b7"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_0c_CCL.txt",
+      "sha256": "0e4e8dc3f2df788b3a89006d60d523fc0a88e3017f2217c98d02ebc6f09f49cb"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_0c_CORE.txt",
+      "sha256": "5f5956631b8373613c898965739a31510210596734891726cd4a8bcd39a5be82"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_0c_maxskew.txt",
+      "sha256": "5fe0dcdc638d81e3e839b048a770fb6d0004261b0605b86f0478328c911b0e0f"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_0c_READER.txt",
+      "sha256": "5a84644fd0f4b12adefadfcade95d3cd27fea3c4b30690764afa15f45b25b3d9"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_85c_all.txt",
+      "sha256": "ade682cb595e3926d895cef81484450cda5731a4501f9dd12b4db460fb0684ab"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_85c_CCL.txt",
+      "sha256": "3953a7cb7dfbb3527ec2f6adeb1b77ca7a4758422b787287c523f890d0bbf790"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_85c_CORE.txt",
+      "sha256": "79d51b96efadb5c2675a83b812a87c0a6df8fe85956648e695221994d6314ee1"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_85c_maxskew.txt",
+      "sha256": "9f74e8acfa10e426cd4db0859bbd1b12c45c5649c9d0ae6f38569a7501fc3615"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/MIN_fast_1100mv_85c_READER.txt",
+      "sha256": "52bf80e8d5ec2dfa9e4cccdb6151b067b1a8236e953a10bbce20af0600283cb8"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/paths.tsv",
+      "sha256": "f4bc6d493bc173c1f6e5038b01f4f25acbccd270f7697cda78e11305ca4d1f54"
+    },
+    {
+      "path": "build/member_b/post_map_d606e861/diagnostics/skew.tsv",
+      "sha256": "0dc3cc511b3013e065a5d8ae996821022757563ab08835d62191944969261658"
+    }
+  ],
+  "findings": {
+    "VGA": "Signed32bit overlay Div0 /3 gives71.080ns/36levels/-31.361ns; bounded exact unsigned implementation justified.",
+    "CCL": "Root walk gives44.603ns/42levels/-24.884ns includingcleanup output mux,40.055ns/-20.336ns internally.",
+    "READER": "19.070ns/11levels/+0.649ns slow0; not final timing.",
+    "MTBF": "2259automatic chains,98.5%not computable. Pre-fit warning18869; headline1e9years is not design assurance."
+  },
+  "limits": [
+    "Unrouted estimates only.",
+    "ClonedQSF absolute source references trigger stored-path notices; no synthesis ran.",
+    "No production source or active fit DB edited."
+  ]
+}

@@ -1,0 +1,1376 @@
+{
+  "schemaVersion": 1,
+  "buildId": "fd9950d9",
+  "sourceSha256": "fd9950d98a33b408a8b1c9b22ef21d45a0b794755eb2ff44003b435f90de370a",
+  "analysisStage": "POST_MAP_DIAGNOSTIC_ONLY",
+  "executionStatus": "PASS",
+  "sourceIdentityBeforeAfterEqual": true,
+  "fitStartedByThisAudit": false,
+  "runResult": "build/member_b/20261102T113456_698200Z_map_diagnostic/result.json",
+  "resourceSummary": {
+    "registers": 23781,
+    "previousRegisters": 23671,
+    "dspBlocks": 21,
+    "previousDspBlocks": 17,
+    "memoryBits": 2787648,
+    "previousMemoryBits": 2787648
+  },
+  "resourceByEntity": {
+    "before": {
+      "|camera_display:disp_u|": {
+        "combinationalAluts": "268 (94)",
+        "registers": "36 (36)",
+        "memoryBits": 0,
+        "dspBlocks": 0
+      },
+      "|memberBVgaOverlay:overlay|": {
+        "combinationalAluts": "3392 (3214)",
+        "registers": "719 (719)",
+        "memoryBits": 0,
+        "dspBlocks": 0
+      },
+      "|perceptionCore:core|": {
+        "combinationalAluts": "14340 (1355)",
+        "registers": "12276 (3060)",
+        "memoryBits": 326784,
+        "dspBlocks": 15
+      },
+      "|boundedCandidates:candidates|": {
+        "combinationalAluts": "8289 (8289)",
+        "registers": "4684 (4684)",
+        "memoryBits": 0,
+        "dspBlocks": 0
+      },
+      "|projectiveMarkerReader:reader|": {
+        "combinationalAluts": "3022 (2858)",
+        "registers": "2937 (2810)",
+        "memoryBits": 0,
+        "dspBlocks": 14
+      }
+    },
+    "after": {
+      "|camera_display:disp_u|": {
+        "combinationalAluts": "84 (84)",
+        "registers": "36 (36)",
+        "memoryBits": 0,
+        "dspBlocks": 2
+      },
+      "|memberBVgaOverlay:overlay|": {
+        "combinationalAluts": "3091 (3091)",
+        "registers": "719 (719)",
+        "memoryBits": 0,
+        "dspBlocks": 2
+      },
+      "|perceptionCore:core|": {
+        "combinationalAluts": "13863 (1390)",
+        "registers": "12326 (3113)",
+        "memoryBits": 326784,
+        "dspBlocks": 15
+      },
+      "|boundedCandidates:candidates|": {
+        "combinationalAluts": "7762 (7762)",
+        "registers": "4684 (4684)",
+        "memoryBits": 0,
+        "dspBlocks": 0
+      },
+      "|projectiveMarkerReader:reader|": {
+        "combinationalAluts": "3033 (2869)",
+        "registers": "2937 (2810)",
+        "memoryBits": 0,
+        "dspBlocks": 14
+      }
+    }
+  },
+  "worstPerGroupPerCorner": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -6.356,
+      "dataDelayNs": 26.064,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.146,
+      "dataDelayNs": 6.29,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -6.356,
+      "dataDelayNs": 26.064,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.292,
+      "dataDelayNs": 0.416,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3028]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3028]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 17.146,
+      "dataDelayNs": 22.562,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.383,
+      "dataDelayNs": 5.325,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 17.146,
+      "dataDelayNs": 22.562,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -1.769,
+      "dataDelayNs": 21.477,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 1.381,
+      "dataDelayNs": 18.327,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderY[45]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -6.356,
+      "dataDelayNs": 26.064,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -7.057,
+      "dataDelayNs": 26.776,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.037,
+      "dataDelayNs": 6.387,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -7.057,
+      "dataDelayNs": 26.776,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.296,
+      "dataDelayNs": 0.423,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3028]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3028]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 16.375,
+      "dataDelayNs": 23.344,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.197,
+      "dataDelayNs": 5.522,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 16.375,
+      "dataDelayNs": 23.344,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[4]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": -2.509,
+      "dataDelayNs": 22.228,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|boundedCandidates:candidates|line_label[1][0][1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 0.984,
+      "dataDelayNs": 18.735,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderY[45]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -7.057,
+      "dataDelayNs": 26.776,
+      "logicLevels": 15,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[0][7].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -3.326,
+      "dataDelayNs": 23.11,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.134,
+      "dataDelayNs": 5.652,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -3.326,
+      "dataDelayNs": 23.11,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.473,
+      "dataDelayNs": 0.311,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3028]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3028]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 22.741,
+      "dataDelayNs": 17.043,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.809,
+      "dataDelayNs": 3.975,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 22.741,
+      "dataDelayNs": 17.043,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 1.579,
+      "dataDelayNs": 18.205,
+      "logicLevels": 8,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_y[1]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 5.04,
+      "dataDelayNs": 14.744,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderY[45]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -3.326,
+      "dataDelayNs": 23.11,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -3.311,
+      "dataDelayNs": 23.099,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.164,
+      "dataDelayNs": 5.647,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -3.311,
+      "dataDelayNs": 23.099,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.48,
+      "dataDelayNs": 0.308,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3028]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3028]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 22.775,
+      "dataDelayNs": 17.013,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.815,
+      "dataDelayNs": 3.973,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 22.775,
+      "dataDelayNs": 17.013,
+      "logicLevels": 16,
+      "from": "camera_display:disp_u|x[6]",
+      "to": "memberBVgaOverlay:overlay|outData[14]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 1.597,
+      "dataDelayNs": 18.191,
+      "logicLevels": 8,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_y[0]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": 5.042,
+      "dataDelayNs": 14.746,
+      "logicLevels": 5,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|denominator[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|remainderY[45]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -3.311,
+      "dataDelayNs": 23.099,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_valid",
+      "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][3].xmax[0]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    }
+  ],
+  "slow0Comparison": {
+    "vga": {
+      "beforeDataNs": 71.08,
+      "afterDataNs": 23.344,
+      "beforeLevels": 36,
+      "afterLevels": 16,
+      "beforeSlackNs": -31.361,
+      "afterSlackNs": 16.375
+    },
+    "coreCcl": {
+      "beforeDataNs": 44.603,
+      "afterDataNs": 26.776,
+      "beforeLevels": 42,
+      "afterLevels": 15,
+      "beforeSlackNs": -24.884,
+      "afterSlackNs": -7.057
+    },
+    "cclInternal": {
+      "beforeDataNs": 40.055,
+      "afterDataNs": 22.228,
+      "beforeSlackNs": -20.336,
+      "afterSlackNs": -2.509
+    },
+    "reader": {
+      "afterDataNs": 18.735,
+      "afterSlackNs": 0.984
+    }
+  },
+  "maxSkew": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "pathCount": "6",
+      "worstSlackNs": "19.235"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "pathCount": "6",
+      "worstSlackNs": "19.252"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "pathCount": "6",
+      "worstSlackNs": "19.462"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "pathCount": "6",
+      "worstSlackNs": "19.471"
+    }
+  ],
+  "grayMappings": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "writeGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "readGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "timeGray",
+      "sourceCount": "32",
+      "destinationCount": "32",
+      "timedCount": "32",
+      "falseCount": "0"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "writeGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "readGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "timeGray",
+      "sourceCount": "32",
+      "destinationCount": "32",
+      "timedCount": "32",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "writeGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "readGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "timeGray",
+      "sourceCount": "32",
+      "destinationCount": "32",
+      "timedCount": "32",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "writeGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "readGray",
+      "sourceCount": "9",
+      "destinationCount": "9",
+      "timedCount": "9",
+      "falseCount": "0"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "timeGray",
+      "sourceCount": "32",
+      "destinationCount": "32",
+      "timedCount": "32",
+      "falseCount": "0"
+    }
+  ],
+  "synchronisers": {
+    "nativeMapAssignments": 114,
+    "expectedCustomChains": 57,
+    "actualUserSpecifiedCustomChains": 57,
+    "everyExpectedFirstAndSecondPhysicalRegisterPresent": true,
+    "reportedChainLengths": {
+      "2": 38,
+      "3": 19
+    },
+    "thirdRegisterExplanation": "All18FIFO pointer chains additionally include full/empty asconsumer; timeGray bit0 additionally includes destination RAM inputregister. Firsttwo entries are the expected synchroniser stages. Do not incorrectly require entire TimeQuest chain length exactly2.",
+    "registers": [
+      {
+        "first": "heldBusCdc:resultToCamera|acknowledgeSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "heldBusCdc:resultToCamera|acknowledgeSync[0]",
+          "heldBusCdc:resultToCamera|acknowledgeSync[1]"
+        ],
+        "settlingNs": "33.665"
+      },
+      {
+        "first": "heldBusCdc:resultToDisplay|acknowledgeSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "heldBusCdc:resultToDisplay|acknowledgeSync[0]",
+          "heldBusCdc:resultToDisplay|acknowledgeSync[1]"
+        ],
+        "settlingNs": "33.665"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|acknowledgeSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|acknowledgeSync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|acknowledgeSync[1]"
+        ],
+        "settlingNs": "37.885"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|faultSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|faultSync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|faultSync[1]"
+        ],
+        "settlingNs": "38.604"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[1]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[1]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[1]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.347"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[0]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.347"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[8]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[8]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[8]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.525"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[7]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[7]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[7]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.525"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[3]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[3]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[3]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.526"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[2]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[2]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[2]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.526"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[4]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[4]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[4]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.615"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[5]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[5]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[5]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.615"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[6]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGrayMeta[6]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|writeGraySync[6]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|empty"
+        ],
+        "settlingNs": "50.868"
+      },
+      {
+        "first": "heldBusCdc:resultToDisplay|requestSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "heldBusCdc:resultToDisplay|requestSync[0]",
+          "heldBusCdc:resultToDisplay|requestSync[1]"
+        ],
+        "settlingNs": "73.280"
+      },
+      {
+        "first": "heldBusCdc:resultToCamera|requestSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "heldBusCdc:resultToCamera|requestSync[0]",
+          "heldBusCdc:resultToCamera|requestSync[1]"
+        ],
+        "settlingNs": "93.650"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[29]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[29]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[29]"
+        ],
+        "settlingNs": "96.046"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[27]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[27]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[27]"
+        ],
+        "settlingNs": "96.061"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[31]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[31]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[31]"
+        ],
+        "settlingNs": "96.073"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[28]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[28]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[28]"
+        ],
+        "settlingNs": "96.076"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[26]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[26]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[26]"
+        ],
+        "settlingNs": "96.086"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[30]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[30]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[30]"
+        ],
+        "settlingNs": "96.181"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[23]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[23]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[23]"
+        ],
+        "settlingNs": "96.413"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[22]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[22]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[22]"
+        ],
+        "settlingNs": "96.428"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[24]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[24]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[24]"
+        ],
+        "settlingNs": "96.443"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[21]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[21]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[21]"
+        ],
+        "settlingNs": "96.453"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[25]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[25]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[25]"
+        ],
+        "settlingNs": "96.578"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[19]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[19]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[19]"
+        ],
+        "settlingNs": "96.730"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[17]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[17]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[17]"
+        ],
+        "settlingNs": "96.745"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[18]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[18]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[18]"
+        ],
+        "settlingNs": "96.760"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[16]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[16]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[16]"
+        ],
+        "settlingNs": "96.770"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[20]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[20]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[20]"
+        ],
+        "settlingNs": "96.780"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[14]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[14]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[14]"
+        ],
+        "settlingNs": "97.110"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[15]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[15]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[15]"
+        ],
+        "settlingNs": "97.195"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[11]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[11]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[11]"
+        ],
+        "settlingNs": "97.225"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[12]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[12]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[12]"
+        ],
+        "settlingNs": "97.270"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[13]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[13]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[13]"
+        ],
+        "settlingNs": "97.323"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[10]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[10]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[10]"
+        ],
+        "settlingNs": "97.613"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[9]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[9]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[9]"
+        ],
+        "settlingNs": "97.658"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[6]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[6]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[6]"
+        ],
+        "settlingNs": "97.748"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[7]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[7]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[7]"
+        ],
+        "settlingNs": "97.798"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[8]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[8]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[8]"
+        ],
+        "settlingNs": "97.851"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|requestSync[0]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|requestSync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc|requestSync[1]"
+        ],
+        "settlingNs": "97.855"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[5]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[5]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[5]"
+        ],
+        "settlingNs": "98.136"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[4]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[4]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[4]"
+        ],
+        "settlingNs": "98.151"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[3]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[3]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[3]"
+        ],
+        "settlingNs": "98.176"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[2]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[2]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[2]"
+        ],
+        "settlingNs": "98.584"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[1]",
+        "method": "User Specified",
+        "chainLength": 2,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[1]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[1]"
+        ],
+        "settlingNs": "98.614"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[0]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGrayMeta[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|timeGraySync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|altsyncram:memory_rtl_0|altsyncram_b7l1:auto_generated|ram_block1a2~porta_datain_reg0"
+        ],
+        "settlingNs": "98.644"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[0]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[0]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.032"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[2]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[2]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[2]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.035"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[6]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[6]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[6]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.047"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[4]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[4]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[4]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.048"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[1]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[1]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[1]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.108"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[3]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[3]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[3]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.116"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[7]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[7]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[7]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.135"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[5]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[5]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[5]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.136"
+      },
+      {
+        "first": "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[8]",
+        "method": "User Specified",
+        "chainLength": 3,
+        "registers": [
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGrayMeta[8]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|readGraySync[8]",
+          "perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|full"
+        ],
+        "settlingNs": "140.212"
+      }
+    ],
+    "mtbfAcceptance": "NOT_VALIDATED: post-map unrouted values are estimates; final fitted settling and assumptions must be checked.",
+    "unrecognisedAttributeWarningAbsent": true
+  },
+  "warningCounts": {
+    "18236": 1,
+    "10230": 14,
+    "10270": 1,
+    "10034": 2,
+    "10036": 10,
+    "276020": 1,
+    "276027": 2,
+    "12241": 1,
+    "13032": 1,
+    "13033": 1,
+    "13039": 2,
+    "13040": 11,
+    "13034": 1,
+    "13035": 3,
+    "13009": 1,
+    "13010": 3,
+    "13024": 1,
+    "13410": 22,
+    "21074": 1,
+    "15610": 7
+  },
+  "reports": [
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/PartBDebug.map.rpt",
+      "sha256": "7474cc63a8e1df2770075e1b1a11c567154a9b22d0949d5773384573eef5fa28"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/PartBDebug.map.summary",
+      "sha256": "2d1f02455cbda2a7133a6962da061bc9ef22c46ad7e9692662bd9a06af58634c"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/quartus_map.log",
+      "sha256": "1ff7697fb0567e4a33045f53ad9c388452a11f056315d050ff3a8b3efc8687ac"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/quartus_sta_post_map.log",
+      "sha256": "e2dc5797876f68bda35b91287aaf80619a27ed003eddbb993148116c45c440c6"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/diagnose.tcl",
+      "sha256": "a95d416b4f1874b1766cf695b5eb4398d59164f49f9277ba07b3c9998c99e1ee"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/diagnostics/paths.tsv",
+      "sha256": "2746edfd13559612804f100728b3d02070c9156034267e565f42ecb992713c6c"
+    },
+    {
+      "path": "build/member_b/20261102T113456_698200Z_map_diagnostic/diagnostics/metastability_post_map.txt",
+      "sha256": "fd2a69c8149b0192f8a79d2d78ffa9ea43d381220e1df107d1e0baecc09daa28"
+    }
+  ],
+  "limits": [
+    "Map and post-map are not final fit/timing acceptance.",
+    "The remaining CCL path includes estimated high-fanout interconnect; final placement may alter it.",
+    "Four reciprocal mappings consume4additionalDSPs,21total,while removing4signeddivider instances.",
+    "Root owns the subsequent formal flowcompile; this audit started no fitter."
+  ]
+}

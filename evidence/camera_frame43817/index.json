@@ -1,0 +1,139 @@
+{
+  "schema": "echo7-camera-sample-v1",
+  "levels": [
+    "CAMERA_HW_PIXELS_ONLY",
+    "MODEL"
+  ],
+  "inputSource": "LIVE_BASELINE_CAMERA_THEN_OFFLINE_PIXEL_REPLAY",
+  "frameId": 43817,
+  "crcHex": "0x1c09",
+  "captureStatus": "PASS",
+  "modelStatus": "PASS",
+  "memberBProgrammed": false,
+  "target": {
+    "cable": "DE-SoC [USB-1]",
+    "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)",
+    "index": 2
+  },
+  "captureStartedUtc": "2026-11-02T13:21:28.444649+00:00",
+  "captureFinishedUtc": "2026-11-02T13:21:34.588820+00:00",
+  "snapshotTransaction": {
+    "status": "PASS",
+    "fresh": true,
+    "countDelta": 1,
+    "snapshotCount": 8,
+    "hostObservedMs": 1793625690710,
+    "proof": "request toggle, changed GCTL count, matching ack and stable pre/post memory state",
+    "hostTimeMeaning": "Host transaction chronology only; not the FPGA capture timestamp"
+  },
+  "colourAlgorithm": 1,
+  "readerAlgorithm": 2,
+  "colourProfile": {
+    "redMin": 48,
+    "blueMin": 32,
+    "colourAlgorithm": 1,
+    "redSignedHueDegrees": [
+      -24,
+      0
+    ],
+    "blueHueDegrees": [
+      200,
+      250
+    ],
+    "minimumSaturation": 0.5,
+    "horizontalRunSupport": 3
+  },
+  "whiteProfile": {
+    "mode": "WEIGHTED_LUMA",
+    "minimum": 96,
+    "maximumChannelSpread": 64,
+    "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+    "sumWeights": [
+      1,
+      2,
+      1
+    ],
+    "sumMinimum": 384
+  },
+  "accepted": [
+    {
+      "colour": "red",
+      "digit": 1,
+      "quality": 255
+    },
+    {
+      "colour": "blue",
+      "digit": 1,
+      "quality": 192
+    },
+    {
+      "colour": "blue",
+      "digit": 2,
+      "quality": 192
+    },
+    {
+      "colour": "blue",
+      "digit": 3,
+      "quality": 192
+    },
+    {
+      "colour": "blue",
+      "digit": 4,
+      "quality": 192
+    },
+    {
+      "colour": "red",
+      "digit": 2,
+      "quality": 255
+    },
+    {
+      "colour": "blue",
+      "digit": 6,
+      "quality": 192
+    },
+    {
+      "colour": "blue",
+      "digit": 5,
+      "quality": 192
+    }
+  ],
+  "candidateCounts": {
+    "red": 2,
+    "blue": 7
+  },
+  "overflow": false,
+  "blankBlueReferenceAccepted": false,
+  "productionVectorsChanged": false,
+  "limitations": [
+    "The FPGA ran the earlier stationary camera baseline; no current B on-board recognition was executed.",
+    "This is an independent seventh acquisition, retained outside the six-input production regression.",
+    "Host transaction times establish request chronology and are not FPGA algorithm latency.",
+    "A single successful camera image does not establish generalised recognition accuracy."
+  ],
+  "artifacts": [
+    {
+      "source": "build/member_b/20261102T132128_443689Z_baseline_fresh_after_memory/frame.png",
+      "retained": "evidence/camera_frame43817/frame.png",
+      "sha256": "eb0da76aaa85ca798390829d01e76d0a871a7f1605d8bdfccd0e238519e63834",
+      "bytes": 54606
+    },
+    {
+      "source": "build/member_b/20261102T132128_443689Z_baseline_fresh_after_memory/result.json",
+      "retained": "evidence/camera_frame43817/capture_result.json",
+      "sha256": "456009415ed6c5dbae82401441583b4c78f5482b0246eeffc02a62e3effb68c9",
+      "bytes": 2195
+    },
+    {
+      "source": "build/member_b/20261102T132128_443689Z_baseline_fresh_after_memory/snapshot_metadata.json",
+      "retained": "evidence/camera_frame43817/snapshot_metadata.json",
+      "sha256": "aa96bff45830903e59b7d8d4a69f95dd8cebe5a212729d7cc1baad136043d33e",
+      "bytes": 702
+    },
+    {
+      "source": "build/member_b/20261102T132128_443689Z_baseline_fresh_after_memory/model/projective.json",
+      "retained": "evidence/camera_frame43817/projective.json",
+      "sha256": "7a9f3f732b41c95006b71fda1194104c9d8afc786e03e43f6287ce715312f321",
+      "bytes": 32300
+    }
+  ]
+}

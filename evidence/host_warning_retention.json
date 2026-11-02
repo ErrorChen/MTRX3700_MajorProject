@@ -1,0 +1,20 @@
+{
+  "schema": "echo7-host-warning-retention-v1",
+  "level": "MODEL_TOOLING",
+  "status": "PASS",
+  "actualMapLog": "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/quartus_map.log",
+  "logSha256": "6ca1fc7e2a99d09d0893c8f777e399fb08ca6fee2dd03159479f5a0390bcd222",
+  "previousNumberedOnlyCount": 85,
+  "retainedWarningCount": 87,
+  "unnumberedWarnings": [
+    "Warning: RST port on the PLL is not properly connected on instance video_pll:video_pll_u|altera_pll:altera_pll_i|general[0].gpll. The reset port on the PLL should be connected. If the PLL loses lock for any reason, you might need to manually reset the PLL in order to re-establish lock to the reference clock. File: c:/intelfpga_lite/18.1/quartus/libraries/megafunctions/altera_pll.v Line: 748",
+    "Warning: RST port on the PLL is not properly connected on instance video_pll:video_pll_u|altera_pll:altera_pll_i|general[1].gpll. The reset port on the PLL should be connected. If the PLL loses lock for any reason, you might need to manually reset the PLL in order to re-establish lock to the reference clock. File: c:/intelfpga_lite/18.1/quartus/libraries/megafunctions/altera_pll.v Line: 748"
+  ],
+  "regression": "build/member_b/20261102T133652_918566Z_host_warning_regression/result.json",
+  "unitTests": 15,
+  "sourceSha256": {
+    "tools/echo7.py": "360c185283e22d61aedf31a93de572045df85559e2acedc35d12cddec33d6fda",
+    "tests/python/test_tools.py": "52fdcb65a5c747e82c18c03bda8f8bf8adcbb83a7b3f6b26a03510f987636b67"
+  },
+  "limit": "Host warning retention only; no timing exception, RTL change or FPGA acceptance."
+}

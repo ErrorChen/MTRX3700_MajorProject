@@ -10,7 +10,7 @@ from collections import deque
 import random
 import unittest
 
-from candidates_reclaimed_model import candidates_reclaimed, vector_cases
+from candidates_reclaimed_model import candidates_reclaimed, vector_cases, adversarialUnionCases
 
 
 def full_bfs(mask, colour):
@@ -43,6 +43,18 @@ def descriptor_set(components):
 
 
 class ReclaimedModelTests(unittest.TestCase):
+    def test_adversarial_nested_union_fixtures_against_whole_image_bfs(self):
+        cases = adversarialUnionCases()
+        self.assertEqual(len(cases), 8)
+        self.assertEqual(len(vector_cases()), 26)
+        for name, mask in cases:
+            result = candidates_reclaimed(mask, cap=8, min_area=3)
+            self.assertTrue(result["frame_valid"], name)
+            for colour, label in ((1, "red"), (2, "blue")):
+                expected = [c for c in full_bfs(mask, colour) if c["area"] >= 3]
+                self.assertEqual(descriptor_set(result[label]), descriptor_set(expected), name)
+            self.assertEqual(max(result["red_max_row_handles"], result["blue_max_row_handles"]), 8, name)
+
     def test_diagonal_is_not_four_connected(self):
         result = candidates_reclaimed([[1, 0], [0, 1]], min_area=1)
         self.assertEqual(len(result["red"]), 2)

@@ -23,7 +23,7 @@ module projectiveMarkerReader #(
     typedef enum logic [4:0] {
         IDLE,SETUP,SCAN_INIT,SCAN_WAIT,SCAN_SAMPLE,CORNER_PREP,GEOMETRY,
         HOMO_DELTAS,HOMO_PRODUCTS,HOMO_SIGN,HOMO_COEFF,GRID_NUM,GRID_PREP,
-        DIVIDE,MAP_ADDRESS,GRID_WAIT,GRID_SAMPLE,DECIDE,NEXT,MULTIPLY_WAIT,GRID_INIT
+        DIVIDE,MAP_ADDRESS,GRID_WAIT,GRID_SAMPLE,DECIDE,NEXT,MULTIPLY_WAIT,GRID_INIT,ANCHOR_START,ANCHOR_WAIT
     } state_t;
     state_t state;
     candidate_array_t heldRed,heldBlue;
@@ -69,13 +69,21 @@ module projectiveMarkerReader #(
     logic [8:0] quotientX,quotientY;
     logic [3:0] divisionBit;
     logic [7:0] strokeProjection[0:6];
-    logic [5:0] anchorColumns;
-    logic [4:0] anchorRows;
-    logic [5:0] anchorCount,holeUpperWhite,holeLowerWhite;
+    // Algorithm 2 counts one closed native component, not repeated grid taps.
+    logic [16:0] anchorCount,anchorReadAddress;
+    logic [8:0] anchorWidth;
+    logic [7:0] anchorHeight;
+    logic anchorDone;
+    logic [5:0] holeUpperWhite,holeLowerWhite;
     logic [6:0] segmentBits;
     logic uncertain,strongEvidence,shapeGood,highResolutionQuad;
     logic [3:0] decodedDigit;
     marker_t decision;
+    nativeAnchorReader anchorReader(.clk(clk),.reset(reset),.start(state==ANCHOR_START),
+        .pointX(pointX),.pointY(pointY),.busy(),.done(anchorDone),
+        .readAddress(anchorReadAddress),.readWhite(readWhite),
+        .anchorCount(anchorCount),.anchorWidth(anchorWidth),.anchorHeight(anchorHeight),
+        .ambiguous(),.overflow(),.allocationPeak(),.componentCount());
     projectiveSerialMultiply coefficientMultiplier(.clk(clk),.reset(reset),
         .start(state==HOMO_PRODUCTS),.operandA(multiplyA),.operandB(multiplyB),
         .result(multiplyResult),.done(multiplyDone));
@@ -132,7 +140,8 @@ module projectiveMarkerReader #(
             14:begin multiplyA=hNorm;multiplyB=pointY[3];end
             default:begin multiplyA=dNorm;multiplyB=pointY[0];end
         endcase
-        if(state==SCAN_INIT||state==SCAN_WAIT||state==SCAN_SAMPLE)
+        if(state==ANCHOR_START||state==ANCHOR_WAIT)readAddress=anchorReadAddress;
+        else if(state==SCAN_INIT||state==SCAN_WAIT||state==SCAN_SAMPLE)
             readAddress=17'(scanY)*17'd320+17'(scanX);
         else readAddress=17'(quotientY)*17'd320+17'(quotientX);
         segmentBits=0;uncertain=0;
@@ -147,7 +156,7 @@ module projectiveMarkerReader #(
                 if(population(strokeProjection[i]) < ((i==0||i==3||i==6)?7:6))strongEvidence=0;
             end else if(population(strokeProjection[i])>2)uncertain=1;
         end
-        shapeGood=anchorCount>=3&&population({2'b0,anchorColumns})>=2&&population({3'b0,anchorRows})>=2&&
+        shapeGood=anchorCount>=3&&anchorWidth>=2&&anchorHeight>=2&&
             holeUpperWhite<=4&&holeLowerWhite<=4;
         decodedDigit=15;
         case(segmentBits)
@@ -184,7 +193,7 @@ module projectiveMarkerReader #(
             gridX<=0;gridY<=0;numeratorX<=0;numeratorY<=0;denominator<=0;
             rowNumeratorX<=0;rowNumeratorY<=0;rowDenominator<=0;
             remainderX<=0;remainderY<=0;divisionDenominator<=0;shiftedDenominator<=0;divisionBit<=0;quotientX<=0;quotientY<=0;
-            anchorColumns<=0;anchorRows<=0;anchorCount<=0;holeUpperWhite<=0;holeLowerWhite<=0;
+            holeUpperWhite<=0;holeLowerWhite<=0;
             for(int i=0;i<4;i++)begin cornerX[i]<=0;cornerY[i]<=0;pointX[i]<=0;pointY[i]<=0;end
             for(int i=0;i<7;i++)strokeProjection[i]<=0;
         end else begin
@@ -201,7 +210,7 @@ module projectiveMarkerReader #(
                     minPlus<=21'sd1048575;maxPlus<=-21'sd1048575;
                     minMinus<=21'sd1048575;maxMinus<=-21'sd1048575;
                     foregroundCount<=0;geometryRejected<=0;mapRejected<=0;
-                    anchorColumns<=0;anchorRows<=0;anchorCount<=0;holeUpperWhite<=0;holeLowerWhite<=0;
+                    holeUpperWhite<=0;holeLowerWhite<=0;
                     for(int i=0;i<4;i++)begin cornerX[i]<=0;cornerY[i]<=0;end
                     for(int i=0;i<7;i++)strokeProjection[i]<=0;
                     state<=SCAN_INIT;
@@ -237,7 +246,9 @@ module projectiveMarkerReader #(
                     state<=GEOMETRY;
                 end
                 GEOMETRY:if(!quadrilateralGood)begin geometryRejected<=1;state<=DECIDE;end
-                    else state<=HOMO_DELTAS;
+                    else state<=ANCHOR_START;
+                ANCHOR_START:state<=ANCHOR_WAIT;
+                ANCHOR_WAIT:if(anchorDone)state<=HOMO_DELTAS;
                 HOMO_DELTAS:begin
                     dx1<=pointX[1]-pointX[2];dx2<=pointX[3]-pointX[2];dx3<=pointX[0]-pointX[1]+pointX[2]-pointX[3];
                     dy1<=pointY[1]-pointY[2];dy2<=pointY[3]-pointY[2];dy3<=pointY[0]-pointY[1]+pointY[2]-pointY[3];
@@ -324,9 +335,6 @@ module projectiveMarkerReader #(
                         if(gridY>=23&&gridY<=29)begin
                             if(gridX>=21&&gridX<=24)strokeProjection[2][gridY-23]<=1;
                             if(gridX>=7&&gridX<=10)strokeProjection[4][gridY-23]<=1;
-                        end
-                        if(gridX<=5&&gridY>=1&&gridY<=5)begin
-                            anchorCount<=anchorCount+6'd1;anchorColumns[gridX]<=1;anchorRows[gridY-1]<=1;
                         end
                         if(gridX>=13&&gridX<=18)begin
                             if(gridY>=12&&gridY<=15)holeUpperWhite<=holeUpperWhite+6'd1;

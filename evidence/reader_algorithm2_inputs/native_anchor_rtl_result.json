@@ -1,0 +1,20 @@
+{
+  "level": "RTL_SIM",
+  "status": "PASS",
+  "top": "nativeAnchorReader_tb",
+  "vectorDirectory": "build/member_b/algorithm2_production_vectors",
+  "rois": 188,
+  "valid": 166,
+  "ambiguous": 1,
+  "overflow": 1,
+  "maxCycles": 3697,
+  "sourceAndMetadataSha256": {
+    "rtl\\vision\\nativeAnchorReader.sv": "85d6b9efe3a36e31ab197a62f73109f40f4ab2d06fa5e260b337fb8e52a14c80",
+    "tests\\rtl\\nativeAnchorReader_tb.sv": "0eef41968e8aff37df389771a2bdef687a6e973ba5779065119da57c4cac2af6",
+    "build\\member_b\\algorithm2_production_vectors\\anchor_count.hex": "e6077203e453682a8034a037d27865b6b2cb465da0521ab49621999f2a5d36d7",
+    "build\\member_b\\algorithm2_production_vectors\\anchor_meta.hex": "b16e7e3ee5dc7ba780440ef7a220ec36d4a7891adc0210912745f2b8d0eb4e75"
+  },
+  "log": "build\\member_b\\reader_algorithm2\\portable_sim\\native.log",
+  "logSha256": "230e4c530fbe2a71cef99ae263d8962edcce923a78cae6d2db618bcc14f6535c",
+  "limitations": "No Quartus/Fitter/programmed or new hardware evidence from this test."
+}

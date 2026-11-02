@@ -1,0 +1,238 @@
+{
+  "status": "PASS",
+  "layer": "HOST_FIXTURE_REGRESSION",
+  "productionRtlChanged": false,
+  "projectiveHexFilesUnchanged": 526,
+  "anchorFilesUnchanged": 2,
+  "algorithm2Cases": 75,
+  "algorithm1Cases": 63,
+  "pythonTests": 9,
+  "testSeconds": 29.745,
+  "oldHardcoded61": {
+    "index": 61,
+    "name": "red_rejected_3_4_5_6",
+    "inputSource": "SYNTHETIC_PDF_OR_PIXEL_COUNTERFACTUAL",
+    "candidateOverflow": true
+  },
+  "namedFixtures": [
+    {
+      "alias": "recorded_frame13139",
+      "caseName": "real_frame13139",
+      "index": 0,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 13139,
+      "sourcePng": "evidence/real_inputs/frame13139.png",
+      "sourcePngSha256": "a82b6babea7dd9b4364cecbeb241b3532e49982d52a337e83b02b397bf9e60aa",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame13139_rgb565.hex",
+          "sourcePath": "projective_0_rgb565.hex",
+          "sha256": "822281506bf07a1c7f016301bfcee1074e168a68808d55e0afc149365e01cbf8"
+        }
+      },
+      "decodedRgb565LfSha256": "f9f62e564cafc9a8edbc947e14cc1f97c961dfcffbfd9dbb99b3be129be90e5b",
+      "resolvedBlue1Boxes": [
+        [
+          165,
+          18,
+          204,
+          87
+        ]
+      ]
+    },
+    {
+      "alias": "recorded_frame13511",
+      "caseName": "real_frame13511",
+      "index": 1,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 13511,
+      "sourcePng": "evidence/real_inputs/frame13511.png",
+      "sourcePngSha256": "71cec2c8cdb7ca1bf6e3ff24caa94aabc056ca21c0972504090b197dca904a70",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame13511_rgb565.hex",
+          "sourcePath": "projective_1_rgb565.hex",
+          "sha256": "67a0926909c869406d66a041af502516e3b5ca07a8ce3b62785c711560592d86"
+        }
+      },
+      "decodedRgb565LfSha256": "bee7e610c590f45b08044919056a39838a8e1e21bb1a7eb364f72556bd843f8b",
+      "resolvedBlue1Boxes": [
+        [
+          165,
+          18,
+          204,
+          87
+        ]
+      ]
+    },
+    {
+      "alias": "recorded_frame13675",
+      "caseName": "real_frame13675",
+      "index": 2,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 13675,
+      "sourcePng": "evidence/real_inputs/frame13675.png",
+      "sourcePngSha256": "3206193dde4003b093b178af412645793c4bc2ce3118a12b535a35110df0e9b8",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame13675_rgb565.hex",
+          "sourcePath": "projective_2_rgb565.hex",
+          "sha256": "02560ac122f1613a62a56e4f0820bd3054fe21452d535311b5248ac2f89e278f"
+        }
+      },
+      "decodedRgb565LfSha256": "4544e069c45dfa276f83a70e78b3f020d9bfa7e1b4bd7c4496a3875be29f6066",
+      "resolvedBlue1Boxes": [
+        [
+          165,
+          18,
+          204,
+          87
+        ]
+      ]
+    },
+    {
+      "alias": "recorded_frame25046",
+      "caseName": "real_frame25046",
+      "index": 3,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 25046,
+      "sourcePng": "evidence/hsv_audit/frame25046.png",
+      "sourcePngSha256": "76bb3dd58bfed55fce45e9362ed8f2a91000a66276b719ce7f00cd1afd180955",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame25046_rgb565.hex",
+          "sourcePath": "projective_3_rgb565.hex",
+          "sha256": "7a24aeeee7be27618ea4f7431d42a2e3112d95f2c5c6b31cd7b5e489af2c905d"
+        }
+      },
+      "decodedRgb565LfSha256": "efbb13ad9d599542f3be53545829b1c17bcec0b9498955319bee6dad5d317113",
+      "resolvedBlue1Boxes": [
+        [
+          164,
+          19,
+          203,
+          88
+        ]
+      ]
+    },
+    {
+      "alias": "recorded_frame47630",
+      "caseName": "real_frame47630",
+      "index": 4,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 47630,
+      "sourcePng": "evidence/camera_counterexample_47630/frame.png",
+      "sourcePngSha256": "e8ed1a3d7d4db63d63a34daabfc30f0077fc7e4c9db9246e8782d7c2405b3678",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame47630_rgb565.hex",
+          "sourcePath": "projective_4_rgb565.hex",
+          "sha256": "2d049d129bc9a9fa601fdc83ba64b108ba47c29dcc8a82c28d9771fd864d38b0"
+        }
+      },
+      "decodedRgb565LfSha256": "42c329281d188b888b10981210956efba083659d149c581168af9001d35994f5",
+      "resolvedBlue1Boxes": [
+        [
+          164,
+          18,
+          202,
+          86
+        ]
+      ]
+    },
+    {
+      "alias": "recorded_frame2462",
+      "caseName": "real_frame2462",
+      "index": 5,
+      "inputSource": "RECORDED_OV7670_STATIONARY_BASELINE",
+      "frameId": 2462,
+      "sourcePng": "evidence/reader_algorithm2_inputs/frame2462.png",
+      "sourcePngSha256": "4cf21fe20b49e448ca2dae052e24d637cce23f9ddfbf4e3563bb95b95eceb279",
+      "files": {
+        "rgb565": {
+          "path": "recorded_frame2462_rgb565.hex",
+          "sourcePath": "projective_5_rgb565.hex",
+          "sha256": "68a24f3c67ee10ed0b37d04b077c0e839c4c4690aeb7b3413698c6d67b347117"
+        }
+      },
+      "decodedRgb565LfSha256": "10b3f220140aca89d4dafa118d98dbb1eada00fa1a342a8163ec9d51cade3333",
+      "resolvedBlue1Boxes": [
+        [
+          190,
+          6,
+          232,
+          74
+        ]
+      ]
+    },
+    {
+      "alias": "continuous_0",
+      "caseName": "pdf_full_page",
+      "index": 50,
+      "inputSource": "SYNTHETIC_PDF_OR_PIXEL_COUNTERFACTUAL",
+      "files": {
+        "rgb565": {
+          "path": "continuous_0_rgb565.hex",
+          "sourcePath": "projective_50_rgb565.hex",
+          "sha256": "794d92c9b843c694a6610d2a6623af112d55b3e143e220e5def2d5523c0129c5"
+        },
+        "candidates": {
+          "path": "continuous_0_candidates.hex",
+          "sourcePath": "projective_50_candidates.hex",
+          "sha256": "69cbb680d32abf8e0262eaf26148030cafe6fae03a813ebd3c8572e0b2e0477a"
+        },
+        "expected": {
+          "path": "continuous_0_expected.hex",
+          "sourcePath": "projective_50_expected.hex",
+          "sha256": "5a509f3d0adb4b7adff3e1c08c1a13be2e1a0fa26c479e74d1eb75791892e7e4"
+        }
+      },
+      "resolvedBlue1Boxes": [
+        [
+          175,
+          22,
+          229,
+          82
+        ]
+      ]
+    },
+    {
+      "alias": "continuous_1",
+      "caseName": "counterfactual_swapped",
+      "index": 51,
+      "inputSource": "SYNTHETIC_PDF_OR_PIXEL_COUNTERFACTUAL",
+      "files": {
+        "rgb565": {
+          "path": "continuous_1_rgb565.hex",
+          "sourcePath": "projective_51_rgb565.hex",
+          "sha256": "1e15543eeea8cf9183e3df083a453aa3604530b8bfbfed6eba917e2676a64a44"
+        },
+        "candidates": {
+          "path": "continuous_1_candidates.hex",
+          "sourcePath": "projective_51_candidates.hex",
+          "sha256": "aa35d76704d3fb3c2cd69ea17cc658e77413316f102a9293786444e1b3dfcdae"
+        },
+        "expected": {
+          "path": "continuous_1_expected.hex",
+          "sourcePath": "projective_51_expected.hex",
+          "sha256": "227337cf83dc2cd3264997f48f587c7d66221f14de559f973a973e2b1956fb6c"
+        }
+      },
+      "resolvedBlue1Boxes": [
+        [
+          240,
+          22,
+          294,
+          82
+        ]
+      ]
+    }
+  ],
+  "sourceSha256": {
+    "tools/lib/export_projective_vectors.py": "7dddd17d9c8d640c1c50e037b454dfa20a282e5208b1c117372b3541703ea480",
+    "tests/python/test_projective.py": "571dcac473f2fffc73f145feb57e5ac76a70829554332eee50c1388c465226f4",
+    "tests/rtl/perceptionCoreReplay_tb.sv": "68d763bcdb7fee61ba1e6b558e08862c114d8c67d488956814ce1c39764f0478",
+    "tests/rtl/manifest.json": "18d73978363c78d5a2e57f4a7259cb26fe2780941000d6d4c22433b3d1ffe1bd"
+  },
+  "rtlValidation": "Pending parent full20 run; no new RTL pass asserted"
+}

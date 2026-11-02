@@ -1,0 +1,15 @@
+# vsim -c -onfinish exit -lib build/proposed_vga_contours/simlib memberBVgaOverlayContours_tb -l build/proposed_vga_contours/contour_labels_sop_before.log -do "run -all; quit -code 0" 
+# Start time: 23:46:46 on Nov 02,2026
+# Loading sv_std.std
+# Loading build/proposed_vga_contours/simlib.memberBVgaOverlayContours_tb
+# Loading build/proposed_vga_contours/simlib.memberBVgaOverlay
+# Loading build/proposed_vga_contours/simlib.memberBVgaContour
+# Loading build/proposed_vga_contours/simlib.hsvColourGate
+# Loading build/proposed_vga_contours/simlib.memberBVgaLabels
+# run -all
+# ** Fatal: SOP debug metadata changed in flight
+#    Time: 655260 ns  Scope: memberBVgaOverlayContours_tb File: build/proposed_vga_contours/memberBVgaOverlayContours_tb.sv Line: 77
+# ** Note: $finish    : build/proposed_vga_contours/memberBVgaOverlayContours_tb.sv(77)
+#    Time: 655260 ns  Iteration: 1  Instance: /memberBVgaOverlayContours_tb
+# End time: 23:46:46 on Nov 02,2026, Elapsed time: 0:00:00
+# Errors: 1, Warnings: 0

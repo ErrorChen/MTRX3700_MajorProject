@@ -16,11 +16,11 @@ module cameraStreamBridge (
     output logic transportFault
 );
     logic [31:0] timeGray;
-    (* async_reg="true" *) logic [31:0] timeGrayMeta, timeGraySync;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [31:0] timeGrayMeta, timeGraySync;
     logic [31:0] cameraTime;
     logic [15:0] frameId;
     logic sourceFault,frameDrop;
-    (* async_reg="true" *) logic [1:0] faultSync;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [1:0] faultSync;
     logic [21:0] cameraRequest;
     wire kept=pixelValid && !pixelX[0] && !pixelY[0] && pixelX<640 && pixelY<480;
     logic [79:0] fifoData;

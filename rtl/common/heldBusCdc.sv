@@ -10,7 +10,7 @@ module heldBusCdc #(parameter int WIDTH=22) (
 );
     logic [WIDTH-1:0] heldData;
     logic requestToggle, acknowledgeToggle;
-    (* async_reg = "true" *) logic [1:0] requestSync, acknowledgeSync;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [1:0] requestSync, acknowledgeSync;
     always_ff @(posedge sourceClk) begin
         if(sourceReset) begin
             heldData<='0; requestToggle<=0; acknowledgeSync<=0;

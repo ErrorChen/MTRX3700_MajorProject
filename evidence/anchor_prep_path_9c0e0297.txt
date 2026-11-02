@@ -1,0 +1,395 @@
+----------------
+; Command Info ;
+----------------
+Report Timing: Found 10 setup paths (10 violated).  Worst case slack is -45.030 
+
+Tcl Command:
+    report_timing -setup -file C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/6_slow_1100mv_0c_ANCHOR_INPUT.txt -to [get_registers {*core|reader|anchorReader|*}] -npaths 10 -detail full_path
+
+Options:
+    -to [get_registers {*core|reader|anchorReader|*}] 
+    -setup 
+    -npaths 10 
+    -detail full_path 
+    -file {C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/6_slow_1100mv_0c_ANCHOR_INPUT.txt} 
+
+Delay Model:
+    Slow 1100mV 0C Model
+
++-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Summary of Paths                                                                                                                                                                                                                              ;
++---------+----------------------------------------------------------------+----------------------------------------------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; Slack   ; From Node                                                      ; To Node                                                                                      ; Launch Clock ; Latch Clock ; Relationship ; Clock Skew ; Data Delay ;
++---------+----------------------------------------------------------------+----------------------------------------------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+; -45.030 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.749     ;
+; -45.030 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[2] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.749     ;
+; -45.030 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[3] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.749     ;
+; -45.028 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.747     ;
+; -45.028 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[2] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.747     ;
+; -45.028 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[3] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.747     ;
+; -45.016 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.735     ;
+; -45.016 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[2] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.735     ;
+; -45.016 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[3] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.735     ;
+; -45.014 ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0] ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ; CLOCK_50     ; CLOCK_50    ; 20.000       ; -0.121     ; 64.733     ;
++---------+----------------------------------------------------------------+----------------------------------------------------------------------------------------------+--------------+-------------+--------------+------------+------------+
+
+Path #1: Setup slack is -45.030 (VIOLATED)
+===============================================================================
++-------------------------------------------------------------------------------------------------------------------+
+; Path Summary                                                                                                      ;
++--------------------+----------------------------------------------------------------------------------------------+
+; Property           ; Value                                                                                        ;
++--------------------+----------------------------------------------------------------------------------------------+
+; From Node          ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]                               ;
+; To Node            ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ;
+; Launch Clock       ; CLOCK_50                                                                                     ;
+; Latch Clock        ; CLOCK_50                                                                                     ;
+; Data Arrival Time  ; 70.938                                                                                       ;
+; Data Required Time ; 25.908                                                                                       ;
+; Slack              ; -45.030 (VIOLATED)                                                                           ;
++--------------------+----------------------------------------------------------------------------------------------+
+
++------------------------------------------------------------------------------------+
+; Statistics                                                                         ;
++------------------------+--------+-------+-------------+------------+-------+-------+
+; Property               ; Value  ; Count ; Total Delay ; % of Total ; Min   ; Max   ;
++------------------------+--------+-------+-------------+------------+-------+-------+
+; Setup Relationship     ; 20.000 ;       ;             ;            ;       ;       ;
+; Clock Skew             ; -0.121 ;       ;             ;            ;       ;       ;
+; Data Delay             ; 64.749 ;       ;             ;            ;       ;       ;
+; Number of Logic Levels ;        ; 28    ;             ;            ;       ;       ;
+; Physical Delays        ;        ;       ;             ;            ;       ;       ;
+;  Arrival Path          ;        ;       ;             ;            ;       ;       ;
+;   Clock                ;        ;       ;             ;            ;       ;       ;
+;    IC                  ;        ; 2     ; 5.150       ; 83         ; 0.150 ; 5.000 ;
+;    Cell                ;        ; 2     ; 1.039       ; 17         ; 0.484 ; 0.555 ;
+;   Data                 ;        ;       ;             ;            ;       ;       ;
+;    IC                  ;        ; 139   ; 30.660      ; 47         ; 0.150 ; 2.790 ;
+;    Cell                ;        ; 140   ; 34.089      ; 53         ; 0.000 ; 3.287 ;
+;    uTco                ;        ; 1     ; 0.000       ; 0          ; 0.000 ; 0.000 ;
+;  Required Path         ;        ;       ;             ;            ;       ;       ;
+;   Clock                ;        ;       ;             ;            ;       ;       ;
+;    IC                  ;        ; 2     ; 5.150       ; 85         ; 0.150 ; 5.000 ;
+;    Cell                ;        ; 2     ; 0.918       ; 15         ; 0.363 ; 0.555 ;
++------------------------+--------+-------+-------------+------------+-------+-------+
+Note: Negative delays are omitted from totals when calculating percentages
+
++--------------------------------------------------------------------------------------------------------------------------------------------------------+
+; Data Arrival Path                                                                                                                                      ;
++----------+---------+----+------+--------+------------+-------------------------------------------------------------------------------------------------+
+; Total    ; Incr    ; RF ; Type ; Fanout ; Location   ; Element                                                                                         ;
++----------+---------+----+------+--------+------------+-------------------------------------------------------------------------------------------------+
+; 0.000    ; 0.000   ;    ;      ;        ;            ; launch edge time                                                                                ;
+; 6.189    ; 6.189   ;    ;      ;        ;            ; clock path                                                                                      ;
+;   0.000  ;   0.000 ;    ;      ;        ;            ; source latency                                                                                  ;
+;   0.000  ;   0.000 ;    ;      ; 1      ; Unassigned ; CLOCK_50                                                                                        ;
+;   0.150  ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; CLOCK_50~input|i                                                                                ;
+;   0.705  ;   0.555 ; RR ; CELL ; 19030  ; Unassigned ; CLOCK_50~input|o                                                                                ;
+;   5.705  ;   5.000 ; RR ; IC   ; 1      ; Unassigned ; core|reader|pointX[0][0]|clk                                                                    ;
+;   6.189  ;   0.484 ; RR ; CELL ; 1      ; Unassigned ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]                                  ;
+; 70.938   ; 64.749  ;    ;      ;        ;            ; data path                                                                                       ;
+;   6.189  ;   0.000 ;    ; uTco ; 1      ; Unassigned ; perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]                                  ;
+;   6.189  ;   0.000 ; FF ; CELL ; 44     ; Unassigned ; core|reader|pointX[0][0]|q                                                                      ;
+;   7.689  ;   1.500 ; FF ; IC   ; 16     ; Unassigned ; core|reader|anchorReader|Mult2~8|ay[0]                                                          ;
+;   10.976 ;   3.287 ; FR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Mult2~8|resulta[0]                                                     ;
+;   11.126 ;   0.150 ; RR ; IC   ; 3      ; Unassigned ; core|reader|anchorReader|Add16~65|datac                                                         ;
+;   11.880 ;   0.754 ; RF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~65|cout                                                          ;
+;   12.030 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~1|cin                                                            ;
+;   12.098 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~1|cout                                                           ;
+;   12.248 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~61|cin                                                           ;
+;   12.316 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~61|cout                                                          ;
+;   12.466 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~53|cin                                                           ;
+;   12.534 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~53|cout                                                          ;
+;   12.684 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~57|cin                                                           ;
+;   12.752 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~57|cout                                                          ;
+;   12.902 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~41|cin                                                           ;
+;   12.970 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~41|cout                                                          ;
+;   13.120 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~45|cin                                                           ;
+;   13.188 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~45|cout                                                          ;
+;   13.338 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~49|cin                                                           ;
+;   13.406 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~49|cout                                                          ;
+;   13.556 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~29|cin                                                           ;
+;   13.624 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~29|cout                                                          ;
+;   13.774 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~33|cin                                                           ;
+;   13.842 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~33|cout                                                          ;
+;   13.992 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~37|cin                                                           ;
+;   14.060 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~37|cout                                                          ;
+;   14.210 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~13|cin                                                           ;
+;   14.278 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~13|cout                                                          ;
+;   14.428 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~17|cin                                                           ;
+;   14.496 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~17|cout                                                          ;
+;   14.646 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~21|cin                                                           ;
+;   14.714 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~21|cout                                                          ;
+;   14.864 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~25|cin                                                           ;
+;   14.932 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~25|cout                                                          ;
+;   15.082 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add16~5|cin                                                            ;
+;   15.150 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add16~5|cout                                                           ;
+;   15.300 ;   0.150 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Add16~9|cin                                                            ;
+;   15.642 ;   0.342 ; FF ; CELL ; 9      ; Unassigned ; core|reader|anchorReader|Add16~9|sumout                                                         ;
+;   16.032 ;   0.390 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan3~0|datad                                                      ;
+;   16.515 ;   0.483 ; FF ; CELL ; 89     ; Unassigned ; core|reader|anchorReader|LessThan3~0|combout                                                    ;
+;   19.305 ;   2.790 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|maxNumeratorY~2|dataa                                                  ;
+;   19.836 ;   0.531 ; FR ; CELL ; 2      ; Unassigned ; core|reader|anchorReader|maxNumeratorY~2|combout                                                ;
+;   20.016 ;   0.180 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan11~1|datad                                                     ;
+;   20.423 ;   0.407 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|LessThan11~1|combout                                                   ;
+;   20.573 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan11~3|datad                                                     ;
+;   21.040 ;   0.467 ; RF ; CELL ; 2      ; Unassigned ; core|reader|anchorReader|LessThan11~3|combout                                                   ;
+;   21.220 ;   0.180 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan11~17|dataa                                                    ;
+;   21.751 ;   0.531 ; FR ; CELL ; 20     ; Unassigned ; core|reader|anchorReader|LessThan11~17|combout                                                  ;
+;   22.471 ;   0.720 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|maxNumeratorY~24|datac                                                 ;
+;   22.878 ;   0.407 ; RR ; CELL ; 2      ; Unassigned ; core|reader|anchorReader|maxNumeratorY~24|combout                                               ;
+;   23.058 ;   0.180 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan19~3|datad                                                     ;
+;   23.525 ;   0.467 ; RF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|LessThan19~3|combout                                                   ;
+;   23.675 ;   0.150 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan19~7|datab                                                     ;
+;   24.207 ;   0.532 ; FR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|LessThan19~7|combout                                                   ;
+;   24.357 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|LessThan19~23|datad                                                    ;
+;   24.824 ;   0.467 ; RF ; CELL ; 17     ; Unassigned ; core|reader|anchorReader|LessThan19~23|combout                                                  ;
+;   25.454 ;   0.630 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~65|dataa                                                         ;
+;   26.340 ;   0.886 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~65|cout                                                          ;
+;   26.490 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~61|cin                                                           ;
+;   26.558 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~61|cout                                                          ;
+;   26.708 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~57|cin                                                           ;
+;   26.776 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~57|cout                                                          ;
+;   26.926 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~53|cin                                                           ;
+;   26.994 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~53|cout                                                          ;
+;   27.144 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~49|cin                                                           ;
+;   27.212 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~49|cout                                                          ;
+;   27.362 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~41|cin                                                           ;
+;   27.430 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~41|cout                                                          ;
+;   27.580 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~1|cin                                                            ;
+;   27.648 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~1|cout                                                           ;
+;   27.798 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~45|cin                                                           ;
+;   27.866 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~45|cout                                                          ;
+;   28.016 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~37|cin                                                           ;
+;   28.084 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~37|cout                                                          ;
+;   28.234 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~33|cin                                                           ;
+;   28.302 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~33|cout                                                          ;
+;   28.452 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~13|cin                                                           ;
+;   28.520 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~13|cout                                                          ;
+;   28.670 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~17|cin                                                           ;
+;   28.738 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~17|cout                                                          ;
+;   28.888 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~21|cin                                                           ;
+;   28.956 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~21|cout                                                          ;
+;   29.106 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~25|cin                                                           ;
+;   29.174 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~25|cout                                                          ;
+;   29.324 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~29|cin                                                           ;
+;   29.392 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add52~29|cout                                                          ;
+;   29.542 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add52~5|cin                                                            ;
+;   29.887 ;   0.345 ; FR ; CELL ; 3      ; Unassigned ; core|reader|anchorReader|Add52~5|sumout                                                         ;
+;   30.097 ;   0.210 ; RR ; IC   ; 3      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[4]~9|datad    ;
+;   30.360 ;   0.263 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[4]~9|shareout ;
+;   30.510 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[5]~5|sharein  ;
+;   31.069 ;   0.559 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[5]~5|cout     ;
+;   31.219 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[6]~1|cin      ;
+;   31.555 ;   0.336 ; RF ; CELL ; 17     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|add_sub_5_result_int[6]~1|sumout   ;
+;   32.185 ;   0.630 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|StageOut[36]~58|dataa              ;
+;   32.716 ;   0.531 ; FR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|StageOut[36]~58|combout            ;
+;   32.866 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~21|datab                     ;
+;   33.836 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~21|cout                      ;
+;   33.986 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~25|cin                       ;
+;   34.047 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~25|cout                      ;
+;   34.197 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~29|cin                       ;
+;   34.258 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~29|cout                      ;
+;   34.408 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~9|cin                        ;
+;   34.469 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~9|cout                       ;
+;   34.619 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~6|cin                        ;
+;   34.680 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~6|cout                       ;
+;   34.830 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~1|cin                        ;
+;   35.158 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_14~1|sumout                     ;
+;   35.698 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~13|datab                     ;
+;   36.668 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~13|cout                      ;
+;   36.818 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~17|cin                       ;
+;   36.879 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~17|cout                      ;
+;   37.029 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~21|cin                       ;
+;   37.090 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~21|cout                      ;
+;   37.240 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~25|cin                       ;
+;   37.301 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~25|cout                      ;
+;   37.451 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~9|cin                        ;
+;   37.512 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~9|cout                       ;
+;   37.662 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~6|cin                        ;
+;   37.723 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~6|cout                       ;
+;   37.873 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~1|cin                        ;
+;   38.201 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_15~1|sumout                     ;
+;   38.741 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~25|datab                     ;
+;   39.711 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~25|cout                      ;
+;   39.861 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~9|cin                        ;
+;   39.922 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~9|cout                       ;
+;   40.072 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~13|cin                       ;
+;   40.133 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~13|cout                      ;
+;   40.283 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~17|cin                       ;
+;   40.344 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~17|cout                      ;
+;   40.494 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~21|cin                       ;
+;   40.555 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~21|cout                      ;
+;   40.705 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~6|cin                        ;
+;   40.766 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~6|cout                       ;
+;   40.916 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~1|cin                        ;
+;   41.244 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_16~1|sumout                     ;
+;   41.784 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~25|datab                     ;
+;   42.754 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~25|cout                      ;
+;   42.904 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~21|cin                       ;
+;   42.965 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~21|cout                      ;
+;   43.115 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~9|cin                        ;
+;   43.176 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~9|cout                       ;
+;   43.326 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~13|cin                       ;
+;   43.387 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~13|cout                      ;
+;   43.537 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~17|cin                       ;
+;   43.598 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~17|cout                      ;
+;   43.748 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~6|cin                        ;
+;   43.809 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~6|cout                       ;
+;   43.959 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~1|cin                        ;
+;   44.287 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_17~1|sumout                     ;
+;   44.827 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~33|datab                      ;
+;   45.797 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~33|cout                       ;
+;   45.947 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~25|cin                        ;
+;   46.008 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~25|cout                       ;
+;   46.158 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~21|cin                        ;
+;   46.219 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~21|cout                       ;
+;   46.369 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~13|cin                        ;
+;   46.430 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~13|cout                       ;
+;   46.580 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~17|cin                        ;
+;   46.641 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~17|cout                       ;
+;   46.791 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~6|cin                         ;
+;   46.852 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~6|cout                        ;
+;   47.002 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~1|cin                         ;
+;   47.330 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_3~1|sumout                      ;
+;   47.870 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~9|datab                       ;
+;   48.840 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~9|cout                        ;
+;   48.990 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~29|cin                        ;
+;   49.051 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~29|cout                       ;
+;   49.201 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~21|cin                        ;
+;   49.262 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~21|cout                       ;
+;   49.412 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~17|cin                        ;
+;   49.473 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~17|cout                       ;
+;   49.623 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~13|cin                        ;
+;   49.684 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~13|cout                       ;
+;   49.834 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~6|cin                         ;
+;   49.895 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~6|cout                        ;
+;   50.045 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~1|cin                         ;
+;   50.373 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_4~1|sumout                      ;
+;   50.913 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~21|datab                      ;
+;   51.883 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~21|cout                       ;
+;   52.033 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~9|cin                         ;
+;   52.094 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~9|cout                        ;
+;   52.244 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~25|cin                        ;
+;   52.305 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~25|cout                       ;
+;   52.455 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~17|cin                        ;
+;   52.516 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~17|cout                       ;
+;   52.666 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~13|cin                        ;
+;   52.727 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~13|cout                       ;
+;   52.877 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~6|cin                         ;
+;   52.938 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~6|cout                        ;
+;   53.088 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~1|cin                         ;
+;   53.416 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_5~1|sumout                      ;
+;   53.956 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~25|datab                      ;
+;   54.926 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~25|cout                       ;
+;   55.076 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~17|cin                        ;
+;   55.137 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~17|cout                       ;
+;   55.287 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~9|cin                         ;
+;   55.348 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~9|cout                        ;
+;   55.498 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~21|cin                        ;
+;   55.559 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~21|cout                       ;
+;   55.709 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~13|cin                        ;
+;   55.770 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~13|cout                       ;
+;   55.920 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~6|cin                         ;
+;   55.981 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~6|cout                        ;
+;   56.131 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~1|cin                         ;
+;   56.459 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_6~1|sumout                      ;
+;   56.999 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~25|datab                      ;
+;   57.969 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~25|cout                       ;
+;   58.119 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~21|cin                        ;
+;   58.180 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~21|cout                       ;
+;   58.330 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~17|cin                        ;
+;   58.391 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~17|cout                       ;
+;   58.541 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~9|cin                         ;
+;   58.602 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~9|cout                        ;
+;   58.752 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~13|cin                        ;
+;   58.813 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~13|cout                       ;
+;   58.963 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~6|cin                         ;
+;   59.024 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~6|cout                        ;
+;   59.174 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~1|cin                         ;
+;   59.502 ;   0.328 ; RR ; CELL ; 14     ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_7~1|sumout                      ;
+;   60.042 ;   0.540 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~25|datab                      ;
+;   61.012 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~25|cout                       ;
+;   61.162 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~21|cin                        ;
+;   61.223 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~21|cout                       ;
+;   61.373 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~17|cin                        ;
+;   61.434 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~17|cout                       ;
+;   61.584 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~13|cin                        ;
+;   61.645 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~13|cout                       ;
+;   61.795 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~5|cin                         ;
+;   61.856 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~5|cout                        ;
+;   62.006 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~10|cin                        ;
+;   62.067 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~10|cout                       ;
+;   62.217 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~1|cin                         ;
+;   62.545 ;   0.328 ; RR ; CELL ; 7      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_8~1|sumout                      ;
+;   62.875 ;   0.330 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~26|datab                      ;
+;   63.845 ;   0.970 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~26|cout                       ;
+;   63.995 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~22|cin                        ;
+;   64.056 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~22|cout                       ;
+;   64.206 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~18|cin                        ;
+;   64.267 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~18|cout                       ;
+;   64.417 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~14|cin                        ;
+;   64.478 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~14|cout                       ;
+;   64.628 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~10|cin                        ;
+;   64.689 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~10|cout                       ;
+;   64.839 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~6|cin                         ;
+;   64.900 ;   0.061 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~6|cout                        ;
+;   65.050 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~1|cin                         ;
+;   65.378 ;   0.328 ; RR ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Div3|auto_generated|divider|divider|op_9~1|sumout                      ;
+;   65.528 ;   0.150 ; RR ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~9|datad                                                          ;
+;   66.207 ;   0.679 ; RF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~9|cout                                                           ;
+;   66.357 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~65|cin                                                           ;
+;   66.425 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~65|cout                                                          ;
+;   66.575 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~61|cin                                                           ;
+;   66.643 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~61|cout                                                          ;
+;   66.793 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~57|cin                                                           ;
+;   66.861 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~57|cout                                                          ;
+;   67.011 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~37|cin                                                           ;
+;   67.079 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~37|cout                                                          ;
+;   67.229 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~41|cin                                                           ;
+;   67.297 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~41|cout                                                          ;
+;   67.447 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~45|cin                                                           ;
+;   67.515 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~45|cout                                                          ;
+;   67.665 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~49|cin                                                           ;
+;   67.733 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~49|cout                                                          ;
+;   67.883 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~53|cin                                                           ;
+;   67.951 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~53|cout                                                          ;
+;   68.101 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~13|cin                                                           ;
+;   68.169 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~13|cout                                                          ;
+;   68.319 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~17|cin                                                           ;
+;   68.387 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~17|cout                                                          ;
+;   68.537 ;   0.150 ; FF ; IC   ; 2      ; Unassigned ; core|reader|anchorReader|Add53~21|cin                                                           ;
+;   68.605 ;   0.068 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|Add53~21|cout                                                          ;
+;   68.755 ;   0.150 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|Add53~25|cin                                                           ;
+;   69.100 ;   0.345 ; FR ; CELL ; 2      ; Unassigned ; core|reader|anchorReader|Add53~25|sumout                                                        ;
+;   69.280 ;   0.180 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|upperBoundary~0|datad                                                  ;
+;   69.747 ;   0.467 ; RF ; CELL ; 7      ; Unassigned ; core|reader|anchorReader|upperBoundary~0|combout                                                ;
+;   70.077 ;   0.330 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|roiYMax~4|datad                                                        ;
+;   70.560 ;   0.483 ; FF ; CELL ; 1      ; Unassigned ; core|reader|anchorReader|roiYMax~4|combout                                                      ;
+;   70.710 ;   0.150 ; FF ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|roiYMax[1]|d                                                           ;
+;   70.938 ;   0.228 ; FF ; CELL ; 1      ; Unassigned ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]    ;
++----------+---------+----+------+--------+------------+-------------------------------------------------------------------------------------------------+
+
++-----------------------------------------------------------------------------------------------------------------------------------------------------+
+; Data Required Path                                                                                                                                  ;
++----------+---------+----+------+--------+------------+----------------------------------------------------------------------------------------------+
+; Total    ; Incr    ; RF ; Type ; Fanout ; Location   ; Element                                                                                      ;
++----------+---------+----+------+--------+------------+----------------------------------------------------------------------------------------------+
+; 20.000   ; 20.000  ;    ;      ;        ;            ; latch edge time                                                                              ;
+; 26.068   ; 6.068   ;    ;      ;        ;            ; clock path                                                                                   ;
+;   20.000 ;   0.000 ;    ;      ;        ;            ; source latency                                                                               ;
+;   20.000 ;   0.000 ;    ;      ; 1      ; Unassigned ; CLOCK_50                                                                                     ;
+;   20.150 ;   0.150 ; RR ; IC   ; 1      ; Unassigned ; CLOCK_50~input|i                                                                             ;
+;   20.705 ;   0.555 ; RR ; CELL ; 19030  ; Unassigned ; CLOCK_50~input|o                                                                             ;
+;   25.705 ;   5.000 ; RR ; IC   ; 1      ; Unassigned ; core|reader|anchorReader|roiYMax[1]|clk                                                      ;
+;   26.068 ;   0.363 ; RR ; CELL ; 1      ; Unassigned ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ;
+; 25.908   ; -0.160  ;    ;      ;        ;            ; clock uncertainty                                                                            ;
+; 25.908   ; 0.000   ;    ; uTsu ; 1      ; Unassigned ; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1] ;
++----------+---------+----+------+--------+------------+----------------------------------------------------------------------------------------------+
+
+----------------------------
+; Extra Fitter Information ;
+----------------------------
+HTML report is unavailable in plain text report export.
+
+

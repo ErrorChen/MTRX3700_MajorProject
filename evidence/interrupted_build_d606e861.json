@@ -1,0 +1,28 @@
+{
+  "schema": "echo7-interrupted-build-v1",
+  "status": "INTERRUPTED_NOT_FIT_COMPLETE",
+  "evidenceLevel": "QUARTUS_SYNTHESIS_AND_POST_MAP_DIAGNOSTIC",
+  "buildId": "d606e861",
+  "compileResult": "build/member_b/20261102T104921_037584Z_build/result.json",
+  "stoppedUtc": "2026-11-02T11:28:05.390814+00:00",
+  "reason": [
+    "Source identity changed during this run; it cannot be programmed under the initial build identity.",
+    "Independent post-map timing diagnostic identified long VGA division and repeated CCL root lookup paths; equivalent corrections are being validated."
+  ],
+  "sourceBefore": "d606e861ad842f9bb9314f5c87065e450650e9d707e9a4a92880b63a212e4546",
+  "sourceAtDecisionBeforeCorrections": "b5b68a78e0ce72400e901535171db91842b3492fe9c9af86282a582978eeb03a",
+  "termination": {
+    "parentPid": 129664,
+    "parentProcess": "quartus_sh",
+    "parentStartLocal": "2026-11-02 21:49:21",
+    "treeStopped": true
+  },
+  "fitComplete": false,
+  "programmed": false,
+  "reports": {
+    "PartBDebug.flow.rpt": "75437234fb1987b8c2cb2472c0e5ba7ec5870014aa11a6ed1d541ba828ffd959",
+    "PartBDebug.map.rpt": "edf3d146318105488b7495774cef93c83d654c1ab3f7da0ada57aa3689ed7289",
+    "PartBDebug.map.smsg": "da24fe30a121549f9e2c18c3ef65ecb459cabf4a77035eafea65ccdcf49d88ae",
+    "PartBDebug.map.summary": "b158a07788dbae4984d2757d38cf916a959fa08797bff3a153329e9c70a787e5"
+  }
+}

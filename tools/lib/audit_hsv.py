@@ -93,7 +93,7 @@ def candidateReport(image,mask):
         for colour in ('red','blue'):
             for entry in oracle[colour]:
                 candidate={'colour':colour,'bbox':[entry['xmin'],entry['ymin'],entry['xmax'],entry['ymax']],'area':entry['area']}
-                decision=projective_reference.classifyProjective(image,candidate)
+                decision=projective_reference.classifyProjective(image,candidate,readerAlgorithm=1)
                 simple={key:decision[key] for key in ('colour','bbox','digit','quality','reasonName')}
                 (accepted if decision['accepted'] else rejected).append(simple)
     return {'oracle':oracle,'accepted':accepted,'rejected':rejected}

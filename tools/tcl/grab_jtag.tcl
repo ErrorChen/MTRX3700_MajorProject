@@ -48,11 +48,41 @@ if {$OUT eq ""} { set OUT [clock format [clock seconds] -format "grab_%Y%m%d_%H%
 file mkdir $OUT
 set LOG [open [file join $OUT grab_jtag.log] a]
 set T0  [clock milliseconds]
+set BEFORE {}; set ACCEPTED {}; set READ_BEFORE {}; set READ_AFTER {}
+set REQUEST_TOGGLE null; set ACCEPTED_AT null; set READ_STARTED null; set READ_FINISHED null
+set TOTAL_WORDS null; set HW ""; set DEV ""
+proc jsonString {value} {
+    set escaped [string map [list "\\" "\\\\" "\"" "\\\"" "\n" "\\n" "\r" "\\r" "\t" "\\t"] $value]
+    return [format {"%s"} $escaped]
+}
+proc probeJson {state} {
+    if {$state eq ""} { return null }
+    set parts {}
+    foreach field {count ack busy ready mode source} {
+        lappend parts [format {"%s":%d} $field [dict get $state $field]]
+    }
+    return "\{[join $parts ,]\}"
+}
+proc writeMetadata {verified reason} {
+    set mode [expr {$::HELD ? "held" : "fresh"}]
+    set fields [list {"schema":"echo7-snapshot-transaction-v1"} \
+        "\"mode\":[jsonString $mode]" "\"verified\":$verified" \
+        "\"reason\":[jsonString $reason]" \
+        "\"target\":\{\"cable\":[jsonString $::HW],\"device\":[jsonString $::DEV]\}" \
+        "\"requestBefore\":[probeJson $::BEFORE]" "\"requestedToggle\":$::REQUEST_TOGGLE" \
+        "\"accepted\":[probeJson $::ACCEPTED]" "\"readBefore\":[probeJson $::READ_BEFORE]" \
+        "\"readAfter\":[probeJson $::READ_AFTER]" "\"startedHostMs\":$::T0" \
+        "\"acceptedHostMs\":$::ACCEPTED_AT" "\"readStartedHostMs\":$::READ_STARTED" \
+        "\"readFinishedHostMs\":$::READ_FINISHED" "\"memoryWords\":$::TOTAL_WORDS"]
+    set f [open [file join $::OUT snapshot_metadata.json] w]
+    puts $f "\{[join $fields ,]\}"
+    close $f
+}
 proc say {msg} {
     set line [format "%6.2f s  %s" [expr {([clock milliseconds] - $::T0) / 1000.0}] $msg]
     puts $line; puts $::LOG $line; flush stdout; flush $::LOG
 }
-proc give_up {msg} { say "ERROR: $msg"; close $::LOG; exit 1 }
+proc give_up {msg} { say "ERROR: $msg"; writeMetadata false $msg; close $::LOG; exit 1 }
 
 # ---- 1. the cable, the FPGA, the probes and the memory ----------------------------------------------------------------
 set HW ""; set DEV ""; set MATCHES {}
@@ -97,27 +127,55 @@ proc probe {} {
         if {$a eq $b} { break }
         if {[clock milliseconds] > $deadline} { give_up "GCTL never stabilised within 3 s" }
     }
+    if {![regexp {^[01]{1,21}$} $a]} { give_up "invalid GCTL probe bits" }
     set s [string range "[string repeat 0 21]$a" end-20 end]
     set count 0; foreach c [split [string range $s 0 15] ""] { set count [expr {($count << 1) | $c}] }
-    return [list count $count ack [string index $s 16] busy [string index $s 17] ready [string index $s 18]]
+    return [list count $count ack [string index $s 16] busy [string index $s 17] ready [string index $s 18] \
+        mode [expr {2*[string index $s 19]+[string index $s 20]}]]
+}
+proc controlState {} {
+    set source [read_source_data -instance_index $::PROBES]
+    if {![regexp {^[01]$} $source]} { give_up "invalid GCTL source bit" }
+    set state [probe]
+    if {[read_source_data -instance_index $::PROBES] ne $source} {
+        give_up "GCTL source changed during state read; another controller is active"
+    }
+    dict set state source $source
+    return $state
+}
+proc sameSnapshot {expected actual} {
+    foreach field {count ack busy ready mode source} {
+        if {[dict get $expected $field] != [dict get $actual $field]} { return 0 }
+    }
+    return 1
 }
 
 # ---- 2. the snapshot ------------------------------------------------------------------------------------------------------
 start_insystem_source_probe -hardware_name $HW -device_name $DEV
-set p [probe]
+set p [controlState]
 if {$HELD} {
-    if {![dict get $p ready]} {
+    if {![dict get $p ready] || [dict get $p busy] || [dict get $p ack] != [dict get $p source]} {
         end_insystem_source_probe
         give_up "no whole snapshot is held (LEDR3 is off): press KEY1 first, or leave out --held"
     }
+    set BEFORE $p
     say "reading the snapshot already held (number [dict get $p count] since the board was programmed)"
 } else {
-    set req [string index [read_source_data -instance_index $PROBES] end]
+    # Finish any preceding request before toggling; never cancel a pending one.
+    set idleDeadline [expr {[clock milliseconds]+3000}]
+    while {[dict get $p busy] || [dict get $p ack] != [dict get $p source]} {
+        if {[clock milliseconds]>$idleDeadline} { give_up "GCTL did not become idle before request" }
+        after 5; set p [controlState]
+    }
+    set BEFORE $p
+    set req [dict get $p source]
     set new [expr {$req eq "1" ? 0 : 1}]
+    set REQUEST_TOGGLE $new
     set t [clock milliseconds]
     write_source_data -instance_index $PROBES -value $new
     while 1 {
-        set q [probe]
+        set q [controlState]
+        if {[dict get $q source] != $new} { give_up "GCTL source changed after request" }
         if {[dict get $q count] != [dict get $p count] && ![dict get $q busy] && [dict get $q ready] && [dict get $q ack] == $new} { break }
         if {[clock milliseconds] - $t > 3000} {
             end_insystem_source_probe
@@ -131,6 +189,8 @@ if {$HELD} {
     set p $q
     say "snapshot [dict get $p count] taken in [expr {[clock milliseconds] - $t}] ms"
 }
+set ACCEPTED $p
+set ACCEPTED_AT [clock milliseconds]
 end_insystem_source_probe
 
 # ---- 3. and 4. read the memory, write dump.bin --------------------------------------------------------------------------
@@ -141,6 +201,13 @@ proc words {start n} {                  ;# n words from start, as hex in address
     return $out
 }
 set t [clock milliseconds]
+# Check the same completed snapshot immediately before and after the memory
+# transaction. A physical trigger/other host must not replace it mid-transfer.
+start_insystem_source_probe -hardware_name $HW -device_name $DEV
+set READ_BEFORE [controlState]
+end_insystem_source_probe
+set READ_STARTED [clock milliseconds]
+if {![sameSnapshot $ACCEPTED $READ_BEFORE]} { give_up "snapshot replaced before memory read" }
 if {[catch {begin_memory_edit -hardware_name $HW -device_name $DEV} err]} { give_up "cannot open the memory for reading: $err" }
 set head [words 0 7]
 scan $head "%4x%4x%4x%4x%4x%4x%4x" m1 m2 version w h fmt n
@@ -150,16 +217,23 @@ if {$m1 != 0x4752 || $m2 != 0x4142} {
 }
 set pix [expr {$fmt == 2 ? $w * $h / 2 : $w * $h}]
 set total [expr {7 + 2 * $n + $pix + 1}]
+set TOTAL_WORDS $total
 if {$total > $MEM_DEPTH} { end_memory_edit; give_up "the header says $total words, but the memory has only $MEM_DEPTH" }
 set data ""
 for {set s 0} {$s < $total} {incr s 16384} {
     append data [words $s [expr {min(16384, $total - $s)}]]
 }
 end_memory_edit
+start_insystem_source_probe -hardware_name $HW -device_name $DEV
+set READ_AFTER [controlState]
+end_insystem_source_probe
+set READ_FINISHED [clock milliseconds]
+if {![sameSnapshot $READ_BEFORE $READ_AFTER]} { give_up "snapshot replaced during memory read" }
 set dt [expr {[clock milliseconds] - $t}]
 set f [open [file join $OUT dump.bin] wb]
 puts -nonewline $f [binary format H* $data]
 close $f
+writeMetadata true "stable snapshot transaction; CRC and schema are checked separately"
 say "read $total words ([expr {2 * $total}] bytes: $w x $h, format $fmt, $n result words) in $dt ms; wrote [file join $OUT dump.bin]"
 
 # ---- 5. decode it with tools/capture/grab.py ------------------------------------------------------------------------------------------

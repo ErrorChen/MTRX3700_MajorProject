@@ -61,6 +61,17 @@ module camera_display #(
     // returns the next pixel while the controller has not taken this one: it then accepts the
     // wrong pixel after every stall, one per line at the least. Avalon-ST: data holds until the
     // handshake.) A stored pixel covers a 2x2 block of the screen, hence the >> 1.
+    // For unsigned coordinates 0..511, floor(2*n/3) equals floor(683*n/1024).
+    // The 9x10-bit product is exact in 19 bits; this removes signed 32-bit /3
+    // logic while preserving every visible pixel, including scale boundaries.
+    function automatic logic [8:0] twoThirds(input logic [8:0] coordinate);
+        logic [18:0] product;
+        begin
+            product = coordinate * 19'd683;
+            twoThirds = product[18:10];
+        end
+    endfunction
+
     logic handshake;
     assign handshake = valid && ready;
     logic image_pixel;
@@ -72,8 +83,8 @@ module camera_display #(
         always_comb begin
             rd_x='0; rd_y='0;
             if(fetch_x>=140 && fetch_x<500) begin
-                rd_x=($clog2(W))'(319-(int'(fetch_y)*2)/3);
-                rd_y=($clog2(H))'(((int'(fetch_x)-140)*2)/3);
+                rd_x=9'd319-twoThirds(fetch_y);
+                rd_y=8'(twoThirds(9'(fetch_x-10'd140)));
             end
         end
         assign image_pixel=(x>=140 && x<500);

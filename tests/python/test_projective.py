@@ -6,11 +6,13 @@ _sys.path[:0]=[str(_repositoryRoot/"tools/lib"),str(_repositoryRoot/"tools"),str
 """Independent warped artwork, counterfactual and recorded-camera model tests."""
 from pathlib import Path
 import json
+import hashlib
+import tempfile
 import unittest
 
 import numpy as np
 from PIL import Image,ImageDraw
-from projective_reference import recogniseProjective
+from projective_reference import recogniseProjective,whiteProfileFor,whitePixelsFor
 from test_vision import singleMarker
 
 root=Path(__file__).resolve().parents[2]
@@ -54,7 +56,103 @@ def warpedCases():
         if orientation:yield f'wrong_orientation_{orientation}',image,0,[]
 
 
+def recordedFrames():
+    """Six actual acquisitions; all are now known regression/tuning inputs."""
+    index=json.loads((root/'evidence/reader_algorithm2_inputs/index.json').read_text())
+    for record in index['records']:yield record['frameId'],root/record['image']
+
+
+def nativeAnchorCases():
+    for name,mode in [('two_valid_anchor_components','two'),('one_anchor_and_one_speck','speck'),
+                      ('native_anchor_label_stress','stress'),('sequential_small_components_retire','serial')]:
+        image=Image.new('RGB',(320,240),'white');card=singleMarker('BC',size=(72,81));draw=ImageDraw.Draw(card)
+        if mode=='two':draw.rectangle((12,5,14,7),fill='white')
+        elif mode=='speck':draw.point((13,6),fill='white')
+        elif mode=='serial':
+            for y in range(1,18,2):draw.point((17,y),fill='white')
+        else:
+            draw.rectangle((0,0,20,17),fill='#0057B8')
+            for x in range(2,20,2):draw.line((x,2,x,12),fill='white',width=1)
+        image.paste(card,(100,60))
+        yield name,image,0,[('blue',1)] if mode in ('speck','serial') else []
+
+
+def algorithm2Cases():
+    """Current reader vectors with explicit expected pixel content/source."""
+    full=[('blue',i) for i in range(1,7)]+[('red',1),('red',2)]
+    for frameId,path in recordedFrames():
+        with Image.open(path) as sourceImage:image=sourceImage.convert('RGB')
+        yield f'real_frame{frameId}',image,0,full,'RECORDED_OV7670_STATIONARY_BASELINE'
+    for name,image,orientation,expected in warpedCases():yield name,image,orientation,expected,'SYNTHETIC_INDEPENDENT_PERSPECTIVE'
+    from export_vision_vectors import cases
+    for index,(name,image,orientation) in enumerate(cases()):
+        expected=full if index<3 else ([('blue',2)] if name.startswith('orientation_') else [])
+        yield name,image,orientation,expected,'SYNTHETIC_PDF_OR_PIXEL_COUNTERFACTUAL'
+    original=Image.open(root/'evidence/camera_counterexample_47630/frame.png').convert('RGB')
+    for name,roi,bay in [('erase_anchor2',(211,30,214,36),2),('erase_anchor4',(210,98,214,104),4),
+                         ('erase_anchor6',(209,168,213,173),6),('erase_C6',(229,195,233,209),6)]:
+        image=original.copy();ImageDraw.Draw(image).rectangle(roi,fill=(16,24,57))
+        yield name,image,0,[item for item in full if item!=('blue',bay)],'RECORDED_PIXEL_COUNTERFACTUAL'
+    yield 'whole_real_wrong_orientation',original.transpose(Image.Transpose.ROTATE_180),0,[],'RECORDED_PIXEL_COUNTERFACTUAL'
+    yield 'whole_real_correct_orientation2',original.transpose(Image.Transpose.ROTATE_180),2,full,'RECORDED_PIXEL_COUNTERFACTUAL'
+    for name,image,orientation,expected in nativeAnchorCases():yield name,image,orientation,expected,'SYNTHETIC_NATIVE_ANCHOR_COUNTERFACTUAL'
+
+
 class ProjectiveTests(unittest.TestCase):
+    def test_named_replay_bindings_survive_reordering(self):
+        from export_projective_vectors import namedFixtureBindings,RECORDED_SOURCE
+        vectors=list(algorithm2Cases())
+        # This is the exact former hardcoded recorded index. It is an intentional
+        # overflowing synthetic negative, so rejecting its frame was correct.
+        oldName,oldImage,_,_,oldSource=next(case for case in vectors if case[0]=='red_rejected_3_4_5_6')
+        self.assertEqual(oldName,'red_rejected_3_4_5_6')
+        self.assertNotEqual(oldSource,RECORDED_SOURCE)
+        self.assertTrue(recogniseProjective(oldImage)['overflow'])
+        cases=[{'index':index,'name':name,'inputSource':source,'candidateOverflow':False}
+               for index,(name,_,_,_,source) in enumerate(vectors)]
+        original=namedFixtureBindings(cases)
+        reordered=[dict(case,index=index) for index,case in enumerate(reversed(cases))]
+        moved=namedFixtureBindings(reordered)
+        self.assertEqual([(r['alias'],r['caseName'],r.get('sourcePngSha256')) for r in original],
+                         [(r['alias'],r['caseName'],r.get('sourcePngSha256')) for r in moved])
+        self.assertNotEqual([r['index'] for r in original],[r['index'] for r in moved])
+        self.assertEqual(len([r for r in original if r['inputSource']==RECORDED_SOURCE]),6)
+        selected=next(r for r in original if r['alias']=='recorded_frame13675')
+        self.assertEqual(selected['sourcePngSha256'],'3206193dde4003b093b178af412645793c4bc2ce3118a12b535a35110df0e9b8')
+        self.assertEqual([r['caseName'] for r in original if r['alias'].startswith('continuous_')],
+                         ['pdf_full_page','counterfactual_swapped'])
+        poisoned=[dict(case,inputSource='SYNTHETIC_PIXELS') if case['name']=='real_frame13675' else case for case in cases]
+        with self.assertRaisesRegex(ValueError,'mislabelled'):namedFixtureBindings(poisoned)
+        with self.assertRaisesRegex(ValueError,'Duplicate'):namedFixtureBindings(cases+[cases[0]])
+
+    def test_named_alias_hashes_and_recorded_pixel_mismatch(self):
+        from export_projective_vectors import namedFixtureBindings,writeNamedAliases,rgb565Text
+        from vision_reference import quantise565
+        vectors=list(algorithm2Cases())
+        cases=[{'index':index,'name':name,'inputSource':source,'candidateOverflow':False}
+               for index,(name,_,_,_,source) in enumerate(vectors)]
+        bindings=namedFixtureBindings(cases)
+        # Isolated transport fixture: classification is tested independently;
+        # these short candidate/expected files check exact alias copying only.
+        with tempfile.TemporaryDirectory() as temporary:
+            destination=Path(temporary)
+            for binding in bindings:
+                index=binding['index'];prefix=destination/f'projective_{index}'
+                Path(str(prefix)+'_rgb565.hex').write_text(rgb565Text(quantise565(vectors[index][1])),encoding='ascii')
+                for suffix in ('candidates','expected'):
+                    Path(str(prefix)+f'_{suffix}.hex').write_text(f'{index:08x}\n',encoding='ascii')
+            result=writeNamedAliases(destination,cases)
+            for binding in result['fixtures']:
+                for exported in binding['files'].values():
+                    self.assertEqual((destination/exported['path']).read_bytes(),(destination/exported['sourcePath']).read_bytes())
+                    self.assertEqual(hashlib.sha256((destination/exported['path']).read_bytes()).hexdigest(),exported['sha256'])
+            self.assertNotEqual((destination/'continuous_0_rgb565.hex').read_bytes(),
+                                (destination/'continuous_1_rgb565.hex').read_bytes())
+            selected=next(r for r in bindings if r['alias']=='recorded_frame13675')
+            negativeImage=next(case[1] for case in vectors if case[0]=='red_rejected_3_4_5_6')
+            (destination/f"projective_{selected['index']}_rgb565.hex").write_text(rgb565Text(quantise565(negativeImage)),encoding='ascii')
+            with self.assertRaisesRegex(ValueError,'do not match source PNG'):writeNamedAliases(destination,cases)
+
     def test_warped_digits_rejection_and_orientation(self):
         out.mkdir(parents=True,exist_ok=True)
         records=[]
@@ -79,9 +177,8 @@ class ProjectiveTests(unittest.TestCase):
                     self.assertEqual([m['digit'] for m in top],[2,1])
 
     def test_recorded_camera_frames(self):
-        for frameId in (13139,13511,13675,25046):
+        for frameId,path in recordedFrames():
             with self.subTest(frameId=frameId):
-                path=root/(f'evidence/real_inputs/frame{frameId}.png' if frameId!=25046 else 'evidence/hsv_audit/frame25046.png')
                 self.assertTrue(path.is_file(),'Recorded input must be supplied explicitly')
                 result=recogniseProjective(Image.open(path),inputSource='RECORDED_OV7670_PART_A')
                 self.assertEqual(sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted']),
@@ -94,10 +191,51 @@ class ProjectiveTests(unittest.TestCase):
         for frameId in (13139,13511,13675):
             image=Image.open(root/f'evidence/real_inputs/frame{frameId}.png')
             for algorithm,redMin,blueMin in ((0,64,32),(1,37,30)):
-                result=recogniseProjective(image,redMin=redMin,blueMin=blueMin,colourAlgorithm=algorithm,inputSource='RECORDED_OV7670_PART_A')
+                result=recogniseProjective(image,redMin=redMin,blueMin=blueMin,colourAlgorithm=algorithm,
+                    readerAlgorithm=1 if algorithm==0 else 2,inputSource='RECORDED_OV7670_PART_A')
                 self.assertFalse(result['overflow'])
                 self.assertEqual(sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted']),
                                  [('blue',i) for i in range(1,7)]+[('red',1),('red',2)])
+
+    def test_algorithm1_history_and_algorithm2_white_semantics(self):
+        for frameId,path in recordedFrames():
+            result=recogniseProjective(Image.open(path),readerAlgorithm=1)
+            expectedCount=5 if frameId==47630 else 4 if frameId==2462 else 8
+            self.assertEqual(sum(m['accepted'] for m in result['markers']),expectedCount)
+            self.assertEqual(result['whiteProfile']['mode'],'MINIMUM_RGB_CHANNEL')
+            self.assertEqual(result['whiteProfile']['minimum'],112)
+        profile=whiteProfileFor(2)
+        self.assertEqual(profile['mode'],'WEIGHTED_LUMA')
+        self.assertEqual(profile['sumMinimum'],384)
+        # Actual dim C-stroke RGB and adjacent blue foreground; this verifies
+        # signed widened arithmetic, not a mirror of an implementation formula.
+        self.assertEqual(whitePixelsFor(np.array([[[99,109,140],[16,24,33]]],dtype=np.uint8),profile).tolist(),[[True,False]])
+        with self.assertRaises(ValueError):whiteProfileFor(2,112,64)
+
+    def test_native_anchor_ambiguity_overflow_and_retirement(self):
+        for name,image,orientation,expected in nativeAnchorCases():
+            result=recogniseProjective(image,orientation=orientation)
+            actual=sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted'])
+            self.assertEqual(actual,expected,name)
+            anchor=next(m['windowScores']['anchor'] for m in result['markers'] if 'anchor' in m['windowScores'])
+            if name=='two_valid_anchor_components':self.assertTrue(anchor['ambiguous'])
+            elif name=='native_anchor_label_stress':self.assertTrue(anchor['overflow'])
+            elif name=='sequential_small_components_retire':
+                self.assertGreater(anchor['completedComponents'],8)
+                self.assertFalse(anchor['overflow'])
+                self.assertLessEqual(anchor['peakActiveHandles'],8)
+
+    def test_new_real_pixel_counterfactuals(self):
+        records=[]
+        for name,image,orientation,expected,source in algorithm2Cases():
+            if source!='RECORDED_PIXEL_COUNTERFACTUAL':continue
+            result=recogniseProjective(image,orientation=orientation,inputSource=source)
+            actual=sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted'])
+            self.assertEqual(actual,expected,name)
+            self.assertFalse(result['overflow'])
+            records.append({'case':name,'expected':expected,'actual':actual,'readerAlgorithm':2})
+        out.mkdir(parents=True,exist_ok=True)
+        (out/'recorded_counterfactual_results.json').write_text(json.dumps({'layer':'MODEL','cases':records},indent=2)+'\n',encoding='utf-8')
 
 
 if __name__=='__main__':unittest.main(verbosity=2)

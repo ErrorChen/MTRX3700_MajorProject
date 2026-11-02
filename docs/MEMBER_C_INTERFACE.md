@@ -4,7 +4,7 @@
 
 任务输入曾引用 `reference_interfaces/` 中的代码、规范和 64 组 **v1 历史示例**；该目录并未随当前迁移检出提供。不得把旧示例的 1–3 默认配置、75 bit 状态或功能牌离场规则当作当前契约。当前交接以本文为准；实现与测试应逐项对应本文，不以旧示例通过代替 v2 通过。
 
-2026-11-02 实现状态：当前已加入 v2 共享 package、视觉核心、目标跟踪、固定纸面交互和无运动 C 模拟器，并执行对应模型及 RTL 自检。用户最新要求将真实语音输入后移，当前通过 C 模拟器直接 SELECT 1–6；这类接口激励不属于语音识别证据。当前源码映射、实际验证层级及硬件限制统一记录在 [主 README](README.md) 与 [版本 README](VERSION_README.md)。本文仍是唯一 B/C 行为契约，协议版本不因测试后移而改变。
+2026-11-02 实现状态：当前已加入 v2 共享 package、视觉核心、目标跟踪、固定纸面交互和无运动 C 模拟器，并执行对应模型及 RTL 自检。用户最新要求将真实语音输入后移，当前通过 C 模拟器直接 SELECT 1–6；这类接口激励不属于语音识别证据。当前源码映射、实际验证层级及硬件限制统一记录在 [主 README](../README.md) 与 [版本 README](../VERSION_README.md)。本文仍是唯一 B/C 行为契约，协议版本不因测试后移而改变。
 
 ## 1. 版本与本次固定配置
 
@@ -235,7 +235,7 @@ typedef struct packed {
 
 - 校色尚处于 WAIT_PERMIT 时 permit=0 是正常等待；一旦已经开始，permit 撤销即停止继续使用未完成样本，作废未提交 shadow 配置。活跃话语同样停止采样/分类并作废未完成结果。
 - 空闲 SPEECH_ARMED 时 permit=0 不产生一条取消事件，因为此时没有正在执行的话语；保留武装意图，暂停新话语起点并清空不完整的起点检测历史。重新许可后要先满足静音条件，再开始新话语。
-- 校色提交发生在相机域：**已在提交域同步可见的撤销优先，已经提交的配置不回滚。** CLOCK_50 刚撤销但撤销尚未到达提交域，不能证明提交没有发生。
+- 当前实现的校色提交域为 `CLOCK_50`：核心处理从相机 FIFO 收到的 SOF token 时原子切换配置。`interactionEnable/interactionPermit` 已在同一时钟域，**该边沿可见的撤销优先，已经提交的配置不回滚。** 若未来将提交移到 PCLK，必须加入一致的请求/确认握手；CLOCK_50 刚撤销但撤销尚未到达提交域，不能证明提交没有发生。
 - 若提交请求正在跨域往返，B 要等待该提交事务的最终“已提交/未提交”结果：已提交则报告 CALIBRATION_DONE 及新版本，未提交的取消则报告 INTERACTION_CANCELLED。不能先宣称取消且未提交，随后又为同一 interactionId 发第二个完成事件。
 - 事件已经入队/展示后，即使许可随后撤销，也不得抽走或改写一条 stalled 的 userEvent。C 在 enable/permit 撤销时立即停止接纳语音提议，记录撤销时的 timeUs 为 `cancelCutoffUs`，并记录当时仍活跃的 interactionId 为已取消会话；不必等待取消事件到达才执行拒收。
 - 撤销覆盖**撤销前已完成但尚未消费的所有语音提议**，不仅是 status.interactionId 对应的一条。重新许可后，除拒绝已取消会话，还要拒绝 issuedAtUs 在 cancelCutoffUs 之前或同一微秒的旧提议，模时间比较见第 9 节。这样 FIFO 中更早完成的结果不会在下一次许可窗口复活。C 应保持 userEventReady 接收并丢弃这些旧提议，使队列能继续前进。
@@ -312,7 +312,7 @@ speechArmed=1 的空闲等声期 busy=0，因此不会永久阻止 C 接受视�
 
 ## 11. 当前交接范围与必须验证的差异
 
-本文固定接口和行为；当前实现使用 `ECHOPHACE1/rtl/member_b/common/perception_pkg.sv` 和 `perceptionLink.sv`。目标跟踪、C 模拟器、固定纸面交互及合成像素核心回放已实际执行 ModelSim 自检；精确测试范围和来源见版本 README 与 `ECHOPHACE1/evidence/member_b/metadata.json`。这不意味着真实麦克风或全部板上验收已经完成，也不继承旧 v1 示例的测试结论。B/C 集成必须使用同一份 v2 package，核对 22/139/104/76 bit 位宽与状态编码。
+本文固定接口和行为；当前实现使用 [perception_pkg.sv](../rtl/common/perception_pkg.sv) 和 [perceptionLink.sv](../rtl/common/perceptionLink.sv)。生产入口为 [perceptionCore.sv](../rtl/top/perceptionCore.sv)，无运动消费者为 [memberCSimulator.sv](../rtl/debug/memberCSimulator.sv)。目标跟踪、C 模拟器、固定纸面交互及像素核心回放已实际执行 ModelSim 自检；精确测试范围和来源见 [版本 README](../VERSION_README.md) 与 [证据索引](../evidence/metadata.json)。这不意味着真实麦克风或全部板上验收已经完成，也不继承旧 v1 示例的测试结论。B/C 集成必须使用同一份 v2 package，核对 22/139/104/76 bit 位宽与状态编码。持久 RTL 入口位于 [测试清单](../tests/rtl/manifest.json)，由 `tools/echo7.py test --rtl` 调用。
 
 在原握手、年龄、序号、请求和配置向量之外，v2 必须验证以下变化：
 
@@ -326,3 +326,28 @@ speechArmed=1 的空闲等声期 busy=0，因此不会永久阻止 C 接受视�
 - 撤销时已经 stalled 的结果保持稳定；重新许可后，C 同时拒收撤销前队列中更早完成的旧提议，以及撤销后才形成的已取消活跃会话结果。
 
 上述验证应区分参考模型、真实 RTL 仿真、综合时序和板级证据；不能用一层的成功代替另一层。本文件用于用户审阅及后续交接。
+
+### 11.1 JTAG schema 2 的帧归属与丢弃诊断
+
+调试记录为 96 个 32 bit 字；word 1 的高 16 bit 为 debug schema 2，低 16 bit 为 B/C contract 2。它是调试序列化格式，不改变三个事务 payload 和 76 bit status 的布局。
+
+| 字段 | schema 2 语义 |
+|---|---|
+| word 3、4、5 | 最近一次已接受处理完成帧的 frameId、原始 captureStartUs、完成时间 |
+| word 6 | 上述同一帧使用的 configVersion；高 16 bit 为 0 |
+| word 7 bits 19:18 | 上述同一帧使用的 orientationProfile |
+| word 7 bits 15:8、7:0 | 上述同一帧的红、蓝 HSV V 下限；其余位保留为 0 |
+| word 24–87 | 上述完成帧的标牌记录，不从当前格子位置推导数字 |
+| word 94 bits 31:16 | `completionDiscardCount`，16 bit 饱和计数，共同复位清零 |
+| word 94 bits 15:4 | 保留为 0 |
+| word 94 bits 3、2、1、0 | 相机传输故障历史、最近完成帧候选溢出、候选错误、候选调度 overrun |
+| word 95 bits 31:24、23:16 | 颜色算法与数字识别算法；当前分别为 1（HSV）与 2（原生局部锚点） |
+| word 95 bits 15:8、7:0 | 固定白字门槛与最大通道差；算法 2 当前为 96 与 64，96 表示 `(R+2G+B)/4` 的下限 |
+
+每个 WRITING bank 在自己的 SOF 保存实际生效的红蓝下限及方向；获准提交时保存 shadow 的新值，许可已撤销时保留旧值。截断后重用 WRITING bank 也按新 SOF 重新绑定。word 6/7 仅随该 bank 的有效完成发布而更新，因此另一帧在识别期间发生校色或方向切换，不会把新配置贴到旧图像、候选和字形上。`status.activeCfgVersion` 仍表示当前生效配置，允许比 word 6 更新；C 的当前配置检查继续使用 status，回放模型解释采集图像时使用 word 6/7。
+
+白字门槛必须结合 readerAlgorithm 解释。历史算法 1 的 word 95 门槛是三个 RGB 通道各自的最小值；算法 2 使用固定整数条件 `R+2G+B >= 4*96` 且 `max(R,G,B)-min(R,G,B) <= 64`。它是本次成像条件下验证的固定前端，不属于自动白字校色，红蓝自动校色不会更改它。算法 2 保留原四角、单应采样、笔画和洞区规则，只把锚点改为原生局部 ROI 中唯一、封闭的四连通白块；碰 ROI 边界、多块歧义或活动标签溢出都拒识。原生锚点像素数不再等于规范化网格重复采样的白点数。调试回放必须保留算法 1 的解释路径，不能用算法 2 的模型替旧采集结果改写识别结论。
+
+若较新帧的截断/资源丢失与较旧帧处理完成同拍发生，较新的无效观测优先，旧 READING bank 仍正常释放，但不发布该旧结果的 `completedFrame`、快照标牌或校色进展，并将 `completionDiscardCount` 饱和加一。这与 `bufferDropCount`（采集缓存丢帧）及 `status.reportDropCount`（未展示报告被替换）是三个不同计数。已经展示的 stalled 报告仍遵守 valid/ready 不可改写规则。
+
+`perceptionCoreProfile_tb` 覆盖提交在完成前、完成后及同拍、方向切换、WRITING bank 重用和许可撤销；`perceptionCoreCollision_tb` 覆盖新丢帧优先及三帧重新锁定。它们是明确标识的协议故障/配置注入 RTL 测试，不属于相机识别或板上验收证据。

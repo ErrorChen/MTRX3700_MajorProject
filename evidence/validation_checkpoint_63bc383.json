@@ -1,0 +1,413 @@
+{
+  "schema": "ECHO7_VALIDATION_CHECKPOINT_1",
+  "checkpoint": "After cleanup and user fixture commit; before new timing/profile integration",
+  "gitHead": "63bc383",
+  "cleanupEvidence": "repository_cleanup.json",
+  "rtlRuns": [
+    {
+      "path": "build/member_b/20261102T104803_176316Z_test/result.json",
+      "sha256": "bb62e4c28d963f5cd67a9bca5d56784ba4322889af74e420710d520b2721f393",
+      "status": "PASS",
+      "tests": [
+        {
+          "name": "boundedCandidates_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "targetTracker_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "memberCSimulator_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "cdcTransport_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "fixedSheetInteraction_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "colourSampler_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "memberBDebug_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "memberBVgaOverlay_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "lateSnapshot_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "hsvColourGate_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "horizontalRunFilter_tb",
+          "status": "PASS"
+        }
+      ]
+    },
+    {
+      "path": "build/member_b/20261102T104921_481664Z_test/result.json",
+      "sha256": "f03dfccfb37c1602ac7bc708e84f05799b2b7b42ed8c107cee849b30e50da366",
+      "status": "FAIL",
+      "tests": [
+        {
+          "name": "perceptionCoreReplay_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "projectiveMarkerReader_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "perceptionCoreRecordedReplay_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "perceptionCoreContinuous_tb",
+          "status": "FAIL"
+        }
+      ],
+      "notRunAfterFailure": [
+        "perceptionCoreCollision_tb"
+      ]
+    },
+    {
+      "path": "build/member_b/20261102T110912_418609Z_test/result.json",
+      "sha256": "435e3c763e7e142dff736c5cbd0d2c27064bd6dec8bb6449a42bc34e9c972c7d",
+      "status": "PASS",
+      "tests": [
+        {
+          "name": "perceptionCoreContinuous_tb",
+          "status": "PASS"
+        },
+        {
+          "name": "perceptionCoreCollision_tb",
+          "status": "PASS"
+        }
+      ]
+    }
+  ],
+  "build": {
+    "path": "build/member_b/20261102T104921_037584Z_build/result.json",
+    "sha256": "1586268ab3f1d832d067427a9ad0be752f39070bcedbcef3cf4a6f3e6bd1bc5c",
+    "buildId": "0xd606e861",
+    "rawCliStatus": "FAIL",
+    "rawExitCode": 1,
+    "interpretation": "ACTIVELY_TERMINATED_NO_COMPLETED_FIT",
+    "interpretationSource": "Coordinator session record; compiler log ends during register packing, without a final completed Fitter result",
+    "sourceAttribution": "Current source byte identity differs; line-ending changes are explicitly checked below. No final current-source build/timing acceptance.",
+    "sourceComparisons": [
+      {
+        "path": "quartus/MemberBCdc.sdc",
+        "builtSourceSha256": "578ef77034cb13cb626a64f2da4df4c60c3d1cdd9298f1fe35771c7d9ad14d8e",
+        "currentSha256": "1fb43544d413c7d8c63659d4a567d80a3ce8ca830b64ee486969c3e9f38d8b2e",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "quartus/PartBDebug.qpf",
+        "builtSourceSha256": "6ebd2b4114b75875ced92f6196490d1f0c9476b87be5c30bf037766de24eac91",
+        "currentSha256": "4573096ea666044c9b73346a96615200bd6efeee80b73aadb5c71ce673ca5d0f",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "quartus/PartBDebug.qsf",
+        "builtSourceSha256": "3efab795843aa461ab6633d6e82bee7dd14fa3bfd7fcf71ec04225452ebdff94",
+        "currentSha256": "82dccb12a95e35ec26bab2335eaabfee1c42955a93f19b03a5c5768584b30793",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "quartus/PartBDebug.sdc",
+        "builtSourceSha256": "218d32eb7ef26d9ec06330f0e7debee00a3e6355bbe7cbaed3c13df2300d0c2d",
+        "currentSha256": "3ab66737699ad34915ef204ffd1e837470a87d4aa077d8ff1ce3f7cbb4dae492",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "quartus/vga_sink.qsys",
+        "builtSourceSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+        "currentSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+        "rawMatch": true,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/capture/cameraStreamBridge.sv",
+        "builtSourceSha256": "5673ac0454818ad40e3edc2891ba3dfdbfd2aae6c99c6222246fc3c5b9a57f43",
+        "currentSha256": "d50dc33a7343e847bafe10571b862bcec384996066b843aa625cb49154b599b6",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/capture/clock_divider.sv",
+        "builtSourceSha256": "3f79ba7fdffa6f693ae37dbee83ea4e45df707899558e22256ae3d028d1a662d",
+        "currentSha256": "2eea9e58a6c64c40bbc701012f596e6076e70867b50151513630378278070c42",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/capture/i2c_master.sv",
+        "builtSourceSha256": "cb596717626220148b56c32b97674ac7c5085c2053b401e409d122babf0a21d2",
+        "currentSha256": "466847848a5f17e8af0b954b0418fe0ece0dfcb743d72ce19f1eda7483d7824a",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/capture/ov7670_capture.sv",
+        "builtSourceSha256": "9b4594e3d1cfa6b51b4d8eb7d8443baab2848f5c9befeea041cd2ae794ede15b",
+        "currentSha256": "883a8f8ce6d65524b41d96b66fe1642227e8d6fd90983484174ddf6e29cd60d1",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/capture/ov7670_config.sv",
+        "builtSourceSha256": "48023e59f20e9251c95f6beb64ce18555628c1ee4e896e2904d009502d60b555",
+        "currentSha256": "5c679f7a5f638cdeb9e38a5147e5edc8fff75490200506629ac1b121cd78c9ae",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/common/asyncPixelFifo.sv",
+        "builtSourceSha256": "43a80ebf304275d07adf1d3aad71173dcb06121c259db34106979dba1c661e70",
+        "currentSha256": "542ec953cb7a8ec0968d06207d1c57d4bb18d3040111589f8b1b3b7a8d9b905d",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/common/camera_pkg.sv",
+        "builtSourceSha256": "475ca7e3df0e4a285ca6ef0c498c79700b6e773c6075543a124d5adbdeac12d3",
+        "currentSha256": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/common/heldBusCdc.sv",
+        "builtSourceSha256": "5558f4ab249057d42ac7545f5ee2f83839fa59dd44968b9e3ef2b5c7791e485b",
+        "currentSha256": "a382e9b0af5ab44e1f004173500ace0df7e4c33a85b022648200d87d69fae72d",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/common/perception_pkg.sv",
+        "builtSourceSha256": "3c7d74fd15831c05d9306b00df2d07e9d8433797d452642d426629bb2d9dd53c",
+        "currentSha256": "06464b2d4d2ff38205053499bbdd25c3a6645bf078aa4428a754bcdc224510c4",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/common/video_pll.sv",
+        "builtSourceSha256": "baf26b5deec926780bccbb39af25f1f1f2b21a45fea37ccfe448cfefdd92ffef",
+        "currentSha256": "65bfdd798c15f8677c338eacb6dca28b04fd8ea29aac2d0b6e5010829b13a8bd",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/common/vision_pkg.sv",
+        "builtSourceSha256": "1d3d3393a0a180d744305d2d46373e887c26db3ea89853460a8bc6ef60490e0c",
+        "currentSha256": "7fbbdc413163e18b62abd59e215ca61b331b28fe5faab0e4bc241accaa9fcecb",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/debug/frame_snap.sv",
+        "builtSourceSha256": "9b9a84d84a78d35dedaa2d03a05ff326838d3cb0d82d8395352c329043a9fa0d",
+        "currentSha256": "93ae5bd32da82206b3f27d4de1ea421756bb89b324df040d97122256a765acc6",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/debug/memberBDebug.sv",
+        "builtSourceSha256": "dca8d39d8bdc575df6344fc952a258ff5bf07f73f551e49050d446b08a92ed41",
+        "currentSha256": "88e08701625eb3021fcef3792a39fc7ebf2c6b640db96cb3166131269c00e9b2",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/debug/memberBVgaOverlay.sv",
+        "builtSourceSha256": "157f08b959de60db471aa2dd9734806a33f47e9bd2e2c6a8f251124254b3f0de",
+        "currentSha256": "33938ce5ba9aad4e1f966182fc3092b313ae4972b77ccd62a0fabf6ec96255c5",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/debug/memberCSimulator.sv",
+        "builtSourceSha256": "f28c7b372bcc28cc227067741d0838fa995572a89aa884b540ebad5cd81aa02a",
+        "currentSha256": "c584739d481307a033432151e0d7ecc32d4340d353a51ab3779d1291cdd3694f",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/debug/snapshot_probes.sv",
+        "builtSourceSha256": "c3bd6f7c8a5a450b481371e78be78d8e4dbab2685f990dc637825ba76ad64d21",
+        "currentSha256": "d71e1422827ffd0cbdfe5b39fac4e6d4edd50b8adebc9d8eddb0061b20f7d389",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/debug/snapshot_ram.sv",
+        "builtSourceSha256": "b809fd6e8e92775239fe0e4d6de22e6f67d7dacf3d418b9e0ad75d1ff279fdf4",
+        "currentSha256": "9c3e48932fce35de40de402e38fdd2521e0b9f2627a2a6ae0d4e8a71ee2b0749",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/display/camera_display.sv",
+        "builtSourceSha256": "3df88d926d6af20a30da654b4da3f2d4e07e61c2ce57815d2504cf1407548c79",
+        "currentSha256": "0a53644e8c2af1b0e4be77ae3282b6436aa9952165616f20862c787b22a3751b",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/display/frame_buffer.sv",
+        "builtSourceSha256": "69a6e48a316c4aed2bb54f265d83d62f5e9163e4effbf4d642be116c6692f0aa",
+        "currentSha256": "0e54b911566ea57982deda9de31cf4372ccb39645ff8835a8a465fdf51086993",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/interaction/colourSampler.sv",
+        "builtSourceSha256": "a3f5c909a2889d7122f057672c4eca7523ef447b4f124365a4ad805407155ee8",
+        "currentSha256": "436ef692ddbd71c7a74b65c62b7534aea37380c2484a853d898eafe200edcd04",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/interaction/fixedSheetInteraction.sv",
+        "builtSourceSha256": "444babd4d13fdff08bb64588414ea32449108ca945defd1b31d121e0cc7fb449",
+        "currentSha256": "0416dcdc5e78c523ab2b40537804e812f67c4abdb8e04f6ef21d95ab0f661686",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/top/perceptionCore.sv",
+        "builtSourceSha256": "24b438081f0174a018a241ddcf761d4d9a301d37a33814fa2c30e4dd930edfe5",
+        "currentSha256": "a9f9174ba97c8d5ca73c8796b7bb293cc86003a165b3a6815f558fdca8da2e2b",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/top/perceptionDemoTop.sv",
+        "builtSourceSha256": "6fb9dc3f37d08b83e5ac9d0924815e34835181f10027b516f0973fbd52ebf204",
+        "currentSha256": "3c164afd0f9e2900e9f3b5efc34bd3c013e29d1408fe4a03b994ebf65840aa9f",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/tracking/targetTracker.sv",
+        "builtSourceSha256": "be78c9463a67f2ff4de689335bbdc8de0a36cbeb7192bef6d28cdf51faa7816e",
+        "currentSha256": "f44682ebbb474bd1a4497f658bd8265c6ece2646b95161238a57a69de83cae6c",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/boundedCandidates.sv",
+        "builtSourceSha256": "e20307f4bc3256711f36aa89a1d05cac5a386b37cd94302de5ed363990c76d44",
+        "currentSha256": "2527e73df8b33600644c9493712cfdac16c111d2bcdd308a9673ea73ee3facb3",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": false
+      },
+      {
+        "path": "rtl/vision/candidate_pkg.sv",
+        "builtSourceSha256": "736870fdf72a48278390d4dcdcc3f7b7a40424eb6d4d5eaeaabe99b07e57eda4",
+        "currentSha256": "5c9e7629e13e4cc1ccaa04ac4aba488e56959436288996fe3c828121e424c2ee",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/causalMaskCleanup.sv",
+        "builtSourceSha256": "92cd338c4f929806d96617b12db1259e9aceea4b72ea39ce8d5ed7bfa9fe5e34",
+        "currentSha256": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/glyphBanks.sv",
+        "builtSourceSha256": "e00304c3b2d5574b0a096f535ad72a7f5fde963b70f536a70dc90016bd197aba",
+        "currentSha256": "ea36e726412f036a4d6695d392e59b67de745ee8f39beb07cca6155d6ad411c1",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/horizontalRunFilter.sv",
+        "builtSourceSha256": "6614c87a22617cfb05e17fa096d9f2a48e50bcd43919d3b66513df8a62c56440",
+        "currentSha256": "5f4bde7f46af2f95b596cd6e84f0e4851307b6e38cf8ae2e431f2e628b3cc426",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/hsvColourGate.sv",
+        "builtSourceSha256": "bb74ccd1d0eb93b12d186e410befee1a8c049403eaa6aa75d8bd99d6d4dac55c",
+        "currentSha256": "e8dbcd581a922d2489ee1620d422f75b872b3ee0c2c76ca5b5a5d42aee6971fc",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      },
+      {
+        "path": "rtl/vision/projectiveMarkerReader.sv",
+        "builtSourceSha256": "a1420dfe8cab2cf5bb133b5848edc7b0e4bfdf2b05b16a898a87bb17c2dade02",
+        "currentSha256": "3edaaf95e1cc65f4ebfb8cf4cf04e64037325b619672074013f7aa17f07467e3",
+        "rawMatch": false,
+        "currentLfConvertedToCrlfMatches": true
+      }
+    ],
+    "mapResourceEvidence": "map_warning_audit_d606e861.json"
+  },
+  "postMapTiming": {
+    "path": "build/member_b/post_map_d606e861/diagnostics/paths.tsv",
+    "sha256": "f4bc6d493bc173c1f6e5038b01f4f25acbccd270f7697cda78e11305ca4d1f54",
+    "worstPaths": [
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "ALL",
+        "rank": "1",
+        "slackNs": "-31.361",
+        "dataDelayNs": "71.080",
+        "logicLevels": "36",
+        "from": "camera_display:disp_u|x[4]",
+        "to": "memberBVgaOverlay:overlay|outData[7]",
+        "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+        "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "group": "CLOCK_50",
+        "rank": "1",
+        "slackNs": "-24.884",
+        "dataDelayNs": "44.603",
+        "logicLevels": "42",
+        "from": "perceptionCore:core|causalMaskCleanup:cleanup|out_x[4]",
+        "to": "perceptionCore:core|boundedCandidates:candidates|boxes[1][7].xmax[8]",
+        "launchClock": "CLOCK_50",
+        "latchClock": "CLOCK_50"
+      }
+    ],
+    "layer": "ISOLATED_POST_MAP_DIAGNOSTIC_NOT_FINAL_POST_FIT"
+  },
+  "frameProfile": {
+    "proposalPath": "build/member_b/proposed_frame_profile/proposal.json",
+    "sha256": "0a2a6c008c35ec24a6de355bc76c4de12bb4ca46d3a21d0735eb2130cc700ae9",
+    "status": "ISOLATED_PROPOSAL_VALIDATED_INTEGRATION_PENDING",
+    "negativeControl": "EXPECTED_FAIL on completed frame1: expected cfg0 floors48/32 while actual wrongly cfg1 floors37/30",
+    "proposedResult": "PASS 15 profile checks / 9 accepted completions",
+    "inputSource": "PROTOCOL_CONFIG_INJECTION",
+    "debugWords": "6/7 must bind to completed frame profile; live public activeCfgVersion remains separate"
+  },
+  "debugSchema": {
+    "version": 2,
+    "contractVersion": 2,
+    "word94High16": "saturating completionDiscardCount",
+    "word94Low4": "unchanged transport/candidate faults"
+  },
+  "hardware": "PENDING_CURRENT_BUILD_PROGRAMME_AND_FRESH_CAMERA_VALIDATION",
+  "lightingLimit": "Synthetic gain0.75 after run3 avoids overflow but loses white glyphs; gain0.5 still blue overflow. No lighting invariance claim."
+}

@@ -6,7 +6,7 @@
 // Run with +VECTORS=path if the simulator's cwd differs from the ECHOPHACE1 root.
 module boundedCandidates_tb;
     import candidate_pkg::*;
-    localparam int W=320, H=240, PIX=W*H, CAP=8, CASES=18, WORDS=134;
+    localparam int W=320, H=240, PIX=W*H, CAP=8, CASES=26, WORDS=134;
     localparam int ROW_GAP=W+CAP, FINAL_LATENCY=ROW_GAP+1;
     logic clk=0;
     always #5 clk=~clk;
@@ -24,7 +24,34 @@ module boundedCandidates_tb;
     logic [31:0] expected[0:CASES*WORDS-1];
     string vectors="work/part_a_reclaimed_vectors";
     int cycles=0, expected_id=0, last_pixel_cycle;
+    integer invariantChecks=0,nestedUnionEvents=0,maxRedirectedAliases=0;
     always @(posedge clk) cycles=cycles+1;
+    // Check the direct-root invariant after every possible parent-table update,
+    // including retirement. Aliases remain occupied until the original row seal.
+    // Nested-union coverage requires an existing group of seven aliases to be
+    // redirected on one edge; a one-level lookup without flattening must fail.
+    always @(posedge clk)begin : parentInvariant
+        integer aliases,rootLabel;
+        bit tableChanged;
+        tableChanged=!reset&&(dut.starting||dut.state==dut.RETIRE||
+            (dut.accepting&&dut.coords_ok&&(dut.allocate_pixel||dut.merged_label!=0)));
+        if(!reset&&dut.accepting&&dut.coords_ok&&dut.merged_label!=0)begin
+            aliases=0;
+            for(int slot=0;slot<CAP;slot++)
+                if(!dut.free_slots[dut.colour][slot]&&dut.parent[dut.colour][slot]==dut.merged_label)aliases++;
+            if(aliases>1)nestedUnionEvents++;
+            if(aliases>maxRedirectedAliases)maxRedirectedAliases=aliases;
+        end
+        #2;
+        if(!reset&&tableChanged)for(int colour=0;colour<2;colour++)for(int slot=0;slot<CAP;slot++)begin
+            if(!dut.free_slots[colour][slot])begin
+                rootLabel=int'(dut.parent[colour][slot]);
+                if(rootLabel<1||rootLabel>CAP||dut.parent[colour][rootLabel-1]!=rootLabel)
+                    $fatal(1,"FAIL parent is not a direct canonical root colour%0d slot%0d",colour,slot);
+                invariantChecks++;
+            end
+        end
+    end
 
     task automatic pixel(input int m,input int x,input int y,input bit sop,input bit eop);
         @(negedge clk);
@@ -220,7 +247,9 @@ module boundedCandidates_tb;
         expected_id++;for(int i=0;i<40;i++)pixel(i<4?1:0,i,0,i==0,0);
         reset_dut();
         send_case(5,0);wait_publish();check_case(5);
-        $display("PASS boundedCandidates: 18 V2 native-frame BFS cases; row reclamation, separate capacities, aliases, exact gaps, geometry, reset, framing and overrun");
+        if(invariantChecks==0||nestedUnionEvents<6||maxRedirectedAliases<7)
+            $fatal(1,"FAIL nested-union coverage missing events=%0d maxAliases=%0d",nestedUnionEvents,maxRedirectedAliases);
+        $display("PASS boundedCandidates: 18 original + 8 nested-union BFS cases; invariantChecks=%0d nestedUnions=%0d maxRedirectedAliases=%0d; exact gap328/final329, geometry, reset, framing and overrun",invariantChecks,nestedUnionEvents,maxRedirectedAliases);
         $finish;
     end
     initial begin #100ms;$fatal(1,"FAIL boundedCandidates watchdog");end

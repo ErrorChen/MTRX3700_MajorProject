@@ -1,0 +1,128 @@
+{
+  "schema": "echo7-vga-contour-validation-v1",
+  "recordedUtc": "2026-11-02T12:53:05.980751+00:00",
+  "statusByLayer": {
+    "MODEL": "PASS",
+    "RTL_SIM": "PASS",
+    "QUARTUS_MAP_RAM_INFERENCE": "PASS",
+    "QUARTUS_FIT_TIMING": "NOT_EXECUTED",
+    "PROGRAMMED": "NOT_EXECUTED",
+    "VGA_HW": "NOT_EXECUTED"
+  },
+  "semantics": {
+    "coordinateSpace": "640x480 camera_display RGB raster; native320x240 is already rotated/scaled upstream",
+    "contours": "raw HSV class transitions, independent of cleanup/CCL/marker acceptance",
+    "closedEdges": "left/top current pixel; right/bottom first outside pixel; clipped x639/y479 edge forced inside foreground",
+    "colourContact": "current nonzero class wins; on empty intersections left transition has priority over above",
+    "labels": "accepted pixel-derived marker IDs only; blue calibration reference gets contour but no ID",
+    "frameProfile": "red/blue floors held at accepted SOP; marker metadata held through contour delay and guarded against consecutive SOP overwrite",
+    "lineRam": "640x2 synchronous previous-row classifications; first row ignores old RAM; accepted pixels only advance RAM and raster"
+  },
+  "regression": {
+    "sourceHashes": {
+      "rtl/common/camera_pkg.sv": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+      "rtl/vision/hsvColourGate.sv": "e8dbcd581a922d2489ee1620d422f75b872b3ee0c2c76ca5b5a5d42aee6971fc",
+      "rtl/debug/memberBVgaContour.sv": "b63da521350f31e6b4be1a7cc1261fcbeec744f0b8f5ebb821b743535ef145f4",
+      "rtl/debug/memberBVgaLabels.sv": "b9028c3c3e36450bace0c1c56a82e37364fdda08f24833f3530856f9df1e475f",
+      "rtl/debug/memberBVgaOverlay.sv": "03343f77aeb7f4fe1dfa5286b6a19d14451986698e73a175aece2136066afb68",
+      "rtl/display/camera_display.sv": "0a53644e8c2af1b0e4be77ae3282b6436aa9952165616f20862c787b22a3751b",
+      "tests/rtl/memberBVgaContour_tb.sv": "6c5402823e4329c0ad45947b82388e24fad507bd6faca558d5cb535723c15e72",
+      "tests/rtl/memberBVgaOverlay_tb.sv": "8402d30671ad9d6fd7f2cf8fc5442cd0907c01e62ab14ca1b1766a3087bc9c27",
+      "tests/rtl/vgaMapping_tb.sv": "fc5002b4ffaa21ed4fd68afeec34d56b23f328397bbe59ee136ed0b7b06c5e62"
+    },
+    "tests": [
+      {
+        "name": "production_compile_fixed",
+        "exitCode": 0,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\proposed_vga_contours\\production_compile_fixed_production.log",
+        "sha256": "23fe4a7fb85a1d45b2625bcc13851fd371592aa0bedd4e1bb88065d377829f98",
+        "retainedLog": "evidence/vga_contours/production_compile_fixed_production.log"
+      },
+      {
+        "name": "memberBVgaContour_tb",
+        "exitCode": 0,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\proposed_vga_contours\\memberBVgaContour_tb_production.log",
+        "sha256": "ea831a4c11741555ff7080e972c7eea65e3f27dab4aa8584e3282bc8f0a466d9",
+        "retainedLog": "evidence/vga_contours/memberBVgaContour_tb_production.log"
+      },
+      {
+        "name": "memberBVgaOverlay_tb",
+        "exitCode": 0,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\proposed_vga_contours\\memberBVgaOverlay_tb_production.log",
+        "sha256": "fdd9f992d48ec4f66caf03cf5e5fefad4016abb28ad37ff94aedc07b6f9fda23",
+        "retainedLog": "evidence/vga_contours/memberBVgaOverlay_tb_production.log"
+      },
+      {
+        "name": "vgaMapping_tb",
+        "exitCode": 0,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\proposed_vga_contours\\vgaMapping_tb_production.log",
+        "sha256": "b9065058c122122b9018da20ebb53e36b1627370624b1bffd8005aab3bd319c8",
+        "retainedLog": "evidence/vga_contours/vgaMapping_tb_production.log"
+      }
+    ]
+  },
+  "pixelCoverage": {
+    "contour": 931600,
+    "postResetFirstRow": 640,
+    "contourStalls": 395588,
+    "inputBubbles": 84751,
+    "combinedLabels": 11208,
+    "cameraMapping": 307200,
+    "cameraMappingStalls": 165690
+  },
+  "observedCounterexample": {
+    "name": "consecutive SOP replaced in-flight debug metadata",
+    "before": "evidence/vga_contours/contour_labels_sop_before.log",
+    "after": "evidence/vga_contours/contour_labels_sop_fixed.log",
+    "fix": "stall a new SOP until prior SOP reaches label stage"
+  },
+  "isolatedMap": {
+    "map_baseline": {
+      "fullReport": "build/proposed_vga_contours/map_baseline/output_files/VgaResource.map.rpt",
+      "fullReportSha256": "72fd337d67a7bff71bea767fab66b20c213313d767273457ef1b54413ef7c09f",
+      "retainedExcerpt": "evidence/vga_contours/map_baseline_resource_excerpt.txt",
+      "mapExitCode": 0,
+      "warningCodes": [
+        "15720",
+        "15725",
+        "15752"
+      ]
+    },
+    "map_contour": {
+      "fullReport": "build/proposed_vga_contours/map_contour/output_files/VgaResource.map.rpt",
+      "fullReportSha256": "ca7974316d348678053d124ca04530653efbe1769ecbffe6c455fb928a6184c4",
+      "retainedExcerpt": "evidence/vga_contours/map_contour_resource_excerpt.txt",
+      "mapExitCode": 0,
+      "warningCodes": [
+        "15720",
+        "15725",
+        "15752"
+      ]
+    }
+  },
+  "resourceComparison": {
+    "baseline": {
+      "registers": 734,
+      "combinationalAluts": 2879,
+      "estimatedAlms": 3595,
+      "dsp": 2,
+      "logicalRamBits": 0
+    },
+    "contoursFinal": {
+      "registers": 1548,
+      "combinationalAluts": 2408,
+      "estimatedAlms": 3399,
+      "dsp": 0,
+      "logicalRamBits": 1280,
+      "mapRamSegments": 2
+    },
+    "ramPrimitive": "M10K simple dual port with READ_DURING_WRITE_MODE_MIXED_PORTS=OLD_DATA"
+  },
+  "limitations": [
+    "Isolated virtual-pin map is not fitted timing or full-system resource acceptance.",
+    "The standalone audit uses broad virtual pins; map warns for virtual pin assignments to internal/unused nodes. No such wildcard was added to production QSF.",
+    "No FPGA download or real VGA view of this contour version has occurred.",
+    "Display RAM tearing inherited from upstream camera_display remains separate from contour logic."
+  ],
+  "rootIntegrationPatch": "build/proposed_vga_contours/root_integration.patch"
+}

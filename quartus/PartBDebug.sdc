@@ -1,15 +1,15 @@
-# AI-assisted Part A timing integration; Member A name/SID pending.
-# Camera.sdc -- timing constraints for the OV7670 camera project (DE1-SoC, Quartus 18.1).
+# Member B timing constraints, retaining the verified OV7670 physical interface.
+# DE1-SoC, Quartus 18.1; MemberBCdc.sdc adds bounded perception crossings.
 #
 # Five clocks: the 50 MHz oscillator, the 25 MHz pixel clock and the 10 MHz camera XCLK the PLL
 # makes from it, the camera's own 20 MHz PCLK coming back in on GPIO_1[21], and the 100 kHz SCCB
 # clock from a counter (below). PCLK is NOT a PLL
 # clock: XCLK went out through 33 R and a ribbon, and the sensor's own PLL multiplied it, so PCLK
-# is a separate, unrelated clock. The Lesson 4 rule applies: every path between two domains is either a
-# proper crossing (the frame buffer's dual-clock RAM) or a false path.
+# is a separate, unrelated clock. Crossing logic uses dual-clock RAM, Gray
+# pointers, or held-payload handshakes; a timing exception alone is not a CDC circuit.
 
 create_clock -name CLOCK_50 -period 20.000 [get_ports CLOCK_50]
-# Required physical setting: top_level CAMERA_FPS=25 -> CLKRC=0x81 (prescaler/2),
+# Required physical setting: perceptionDemoTop CAMERA_FPS=25 -> CLKRC=0x81 (prescaler/2),
 # DBLV=0x4A (PLLx4), XCLK=10MHz -> PCLK=20MHz. Top rejects any other FPS.
 create_clock -name PCLK     -period 50.000 [get_ports {GPIO_1[21]}]
 derive_pll_clocks
@@ -28,8 +28,9 @@ create_generated_clock -name sccb_clk -source [get_pins {video_pll_u|altera_pll_
 set_input_delay -clock PCLK -clock_fall -max 7.0 [get_ports {GPIO_1[12] GPIO_1[13] GPIO_1[14] GPIO_1[15] GPIO_1[16] GPIO_1[17] GPIO_1[18] GPIO_1[19] GPIO_1[22] GPIO_1[23]}]
 set_input_delay -clock PCLK -clock_fall -min 0.0 [get_ports {GPIO_1[12] GPIO_1[13] GPIO_1[14] GPIO_1[15] GPIO_1[16] GPIO_1[17] GPIO_1[18] GPIO_1[19] GPIO_1[22] GPIO_1[23]}]
 
-# Domains that only meet through the frame buffer RAM (PCLK -> pixel clock), through synchronisers
-# (KEY0's reset) or not at all (the frame toggle only drives an LED): asynchronous.
+# The video domain uses the dual-clock display RAM and resultToDisplay handshake.
+# CLOCK_50 and PCLK remain in one analysis group so the separate MemberBCdc.sdc
+# maximum-skew/delay checks are not silently removed by Quartus 18.1.
 set_clock_groups -asynchronous -group [get_clocks {CLOCK_50 PCLK}] \
     -group [get_clocks {*video_pll* sccb_clk}]
 

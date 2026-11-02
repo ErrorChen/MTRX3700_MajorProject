@@ -11,12 +11,32 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
+from unittest.mock import patch
+from datetime import datetime, timezone
 
 import echo7
 
 
 class TimingGateTests(unittest.TestCase):
+    def testVendorWarningsWithoutMessageNumbersAreRetained(self):
+        output = ("Info: 0 errors, 87 warnings\n"
+                  "Warning (10230): truncated value with size 32\n"
+                  "  Warning: RST port on the PLL is tied to GND\n"
+                  "Critical Warning (332148): Timing requirements not met\n"
+                  "Info: quoted Warning (12345) is not a diagnostic\n")
+        self.assertEqual(echo7.collectQuartusWarnings(output), [
+            "Warning (10230): truncated value with size 32",
+            "Warning: RST port on the PLL is tied to GND",
+            "Critical Warning (332148): Timing requirements not met"])
+
+    def testPostMapCannotQualifyFittedSynchroniserCoverage(self):
+        with self.assertRaisesRegex(RuntimeError, "post-fit"):
+            echo7.checkSynchroniserReports(Path("unused"), {"analysisStage": "POST_MAP_CONSTRAINT_AUDIT"})
+        with self.assertRaisesRegex(RuntimeError, "no fitted corners"):
+            echo7.checkSynchroniserReports(Path("unused"), {"analysisStage": "POST_FIT", "checks": []})
+
     def testRejectNegativeAndMissingTiming(self):
         with self.assertRaises(RuntimeError):
             echo7.checkTimingReports("", "")
@@ -34,6 +54,19 @@ class TimingGateTests(unittest.TestCase):
 
 
 class ProcessTimeoutTests(unittest.TestCase):
+    def testEqualWindowsTimestampsKeepEvidenceSeparate(self):
+        args = argparse.Namespace(command="directory_selftest", timeout=1)
+        with tempfile.TemporaryDirectory(prefix="runner_names_", dir=echo7.WORK) as folder:
+            with patch.object(echo7, "WORK", Path(folder)), patch.object(echo7, "datetime") as clock:
+                clock.now.return_value = datetime(2026, 1, 1, tzinfo=timezone.utc)
+                first = echo7.Runner(args)
+                sentinel = first.out / "must_not_be_overwritten.txt"
+                sentinel.write_text("original evidence")
+                second = echo7.Runner(args)
+                self.assertNotEqual(first.out, second.out)
+                self.assertEqual(sentinel.read_text(), "original evidence")
+                self.assertTrue(second.out.name.endswith("_001"))
+
     def testOwnedProcessTimeoutIsNonzeroAndRecorded(self):
         args = argparse.Namespace(command="timeout_selftest", timeout=1)
         runner = echo7.Runner(args)
@@ -42,6 +75,71 @@ class ProcessTimeoutTests(unittest.TestCase):
         self.assertEqual(runner.result["steps"][0]["returncode"], 124)
         self.assertLess(runner.result["steps"][0]["elapsedSeconds"], 8)
         self.assertIn("timed out", output)
+        self.assertIn("started", output)
+        step = runner.result["steps"][0]
+        persisted = Path(step["log"]).read_bytes().decode(step["logEncoding"])
+        self.assertIn("started", persisted)
+        self.assertIn("TIMEOUT", persisted)
+        self.assertTrue(step["timedOut"])
+        self.assertFalse(step["ownedParentMayRemain"])
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows inherited stdout regression")
+    def testSurvivingShortDescendantCannotHoldRunnerStdoutPipe(self):
+        args = argparse.Namespace(command="descendant_selftest", timeout=0.3)
+        runner = echo7.Runner(args)
+        childCode = "import time; print('descendant started',flush=True); time.sleep(3); print('descendant ended',flush=True)"
+        parentCode = ("import subprocess,sys,time; print('parent started',flush=True); "
+                      f"subprocess.Popen([sys.executable,'-c',{childCode!r}]); time.sleep(10)")
+        # Simulate the exact OS failure observed during Quartus timeout: tree
+        # enumeration is denied but the directly-owned process can be killed.
+        # Only our short-lived test descendant survives; it exits by itself.
+        realRun = subprocess.run
+        def noTreeTermination(command, **kwargs):
+            if command[0] == "taskkill":
+                return subprocess.CompletedProcess(command, 1)
+            return realRun(command, **kwargs)
+        started = time.monotonic()
+        with patch.object(echo7.subprocess, "run", side_effect=noTreeTermination):
+            code, output = runner.run("parent_with_descendant", [sys.executable, "-c", parentCode], checked=False)
+        elapsed = time.monotonic() - started
+        self.assertEqual(code, 124)
+        self.assertLess(elapsed, 2.5, "Runner waited for inherited descendant stdout")
+        self.assertIn("parent started", output)
+        self.assertIn("descendant started", output)
+        self.assertFalse(runner.result["steps"][0]["treeTerminationConfirmed"])
+        self.assertTrue(any("descendants may remain" in warning for warning in runner.result["terminationWarnings"]))
+        time.sleep(max(0, 3.4 - elapsed))
+        step = runner.result["steps"][0]
+        persisted = Path(step["log"]).read_bytes().decode(step["logEncoding"])
+        self.assertIn("descendant ended", persisted)
+
+    def testNonzeroProcessKeepsCompleteOutputAndDoesNotShareLog(self):
+        runner = echo7.Runner(argparse.Namespace(command="log_selftest", timeout=2))
+        code, output = runner.run("same_label", [sys.executable, "-c", "print('first output'); raise SystemExit(7)"], checked=False)
+        self.assertEqual(code, 7)
+        self.assertIn("first output", output)
+        firstLog = Path(runner.result["steps"][0]["log"])
+        runner.run("same_label", [sys.executable, "-c", "print('second output')"])
+        self.assertNotEqual(firstLog, Path(runner.result["steps"][1]["log"]))
+        self.assertIn("first output", firstLog.read_text())
+        self.assertNotIn("second output", firstLog.read_text())
+
+
+class VectorNamespaceTests(unittest.TestCase):
+    def testContourWriterCannotReplaceConnectedComponentVectors(self):
+        from export_contour_vectors import writeVectors
+        with tempfile.TemporaryDirectory(prefix="vector_namespace_") as folder:
+            output = Path(folder)
+            candidateFiles = {"masks.hex": "00\n", "expected.hex": "00000001\n", "metadata.json": "{}\n"}
+            for name, text in candidateFiles.items():
+                (output / name).write_text(text)
+            writeVectors(output, [0x80000000, 0x40000000], [0x80000000, 0x40000000], [0x3020, 0x3020], [])
+            for name, text in candidateFiles.items():
+                self.assertEqual((output / name).read_text(), text)
+            newFiles = {path.name for path in output.iterdir()} - set(candidateFiles)
+            self.assertEqual(newFiles, {"contour_input.hex", "contour_expected.hex", "contour_profile.hex",
+                                       "contour_vector_count.hex", "contour_vectors.json"})
+            self.assertEqual((output / "contour_vector_count.hex").read_text(), "00000002\n")
 
 
 class DeferredAudioControlTests(unittest.TestCase):
@@ -119,6 +217,7 @@ proc get_editable_mem_instances {args} {return {{0 100 16 a b GRAB}}}
 proc start_insystem_source_probe {args} {}
 proc end_insystem_source_probe {} {}
 proc read_probe_data {args} {return 000000000000000000100}
+proc read_source_data {args} {return 0}
 proc begin_memory_edit {args} {}
 proc end_memory_edit {} {}
 proc read_content_from_memory {args} {

@@ -1,7 +1,8 @@
 `timescale 1ns/1ps
-// Synthetic RGB565 replay at the post-capture pixel interface. The 320x240
+// Synthetic RGB565 by default, or explicitly selected recorded-camera pixels,
+// replayed at the post-capture pixel interface. The 320x240
 // fixture is expanded to even 640x480 coordinates with sensor-like idle cycles.
-// This is not an OV7670 byte stream, physical photograph or microphone test.
+// This does not exercise a live OV7670 byte stream or microphone chain.
 module perceptionCoreReplay_tb;
     import perception_pkg::*;
     logic clk=0,pclk=0,reset=1,resetPclk=1;
@@ -235,9 +236,11 @@ module perceptionCoreReplay_tb;
         targetRequest='0;lastReport='0;
         if(!$value$plusargs("VECTOR_DIR=%s",vectorDir))vectorDir="vectors";
         if(!$test$plusargs("COLLISION_ONLY"))begin
-            if($test$plusargs("CONTINUOUS"))$readmemh({vectorDir,"/projective_0_rgb565.hex"},pixels);
+            if($test$plusargs("CONTINUOUS"))$readmemh({vectorDir,"/continuous_0_rgb565.hex"},pixels);
             else $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
             if($value$plusargs("SCENE_FILE=%s",sceneFile))$readmemh(sceneFile,pixels);
+            else if($test$plusargs("REAL_FRAME_REPEAT"))
+                $fatal(1,"Recorded replay requires an explicitly bound SCENE_FILE");
         end
         repeat(10)@(negedge pclk);reset=0;resetPclk=0;
         if($test$plusargs("COLLISION_ONLY"))begin collisionRegression();$finish;end
@@ -252,18 +255,23 @@ module perceptionCoreReplay_tb;
             for(int fixture=0;fixture<2;fixture++)begin
                 integer blueOneCount;
                 blueOneCount=0;
-                $readmemh($sformatf("%s/projective_%0d_candidates.hex",vectorDir,fixture),continuousCandidateWords);
-                $readmemh($sformatf("%s/projective_%0d_expected.hex",vectorDir,fixture),continuousExpectedWords);
+                $readmemh($sformatf("%s/continuous_%0d_candidates.hex",vectorDir,fixture),continuousCandidateWords);
+                $readmemh($sformatf("%s/continuous_%0d_expected.hex",vectorDir,fixture),continuousExpectedWords);
                 for(int slot=8;slot<16;slot++)if(continuousExpectedWords[slot][24]&&continuousExpectedWords[slot][19:16]==1)begin
                     expectedBlueBoxes[fixture]=continuousCandidateWords[slot];blueOneCount++;
                 end
                 if(blueOneCount!=1||!expectedBlueBoxes[fixture].valid)
                     $fatal(1,"Expected exactly one independent blue1 bbox in projective fixture %0d",fixture);
             end
+            if(expectedBlueBoxes[0].xmin==expectedBlueBoxes[1].xmin&&
+               expectedBlueBoxes[0].xmax==expectedBlueBoxes[1].xmax&&
+               expectedBlueBoxes[0].ymin==expectedBlueBoxes[1].ymin&&
+               expectedBlueBoxes[0].ymax==expectedBlueBoxes[1].ymax)
+                $fatal(1,"Continuous fixtures must place blue1 at different pixel-derived positions");
             selectBay(1,1);continuousMode=1;continuousStart=totalCycles;
             for(int n=1;n<=6;n++)begin
-                if(n%2)$readmemh({vectorDir,"/projective_0_rgb565.hex"},pixels);
-                else $readmemh({vectorDir,"/projective_1_rgb565.hex"},pixels);
+                if(n%2)$readmemh({vectorDir,"/continuous_0_rgb565.hex"},pixels);
+                else $readmemh({vectorDir,"/continuous_1_rgb565.hex"},pixels);
                 continuousSourceFrame();
             end
             cyclesWait:for(int n=0;n<1000000;n++)begin

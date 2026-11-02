@@ -44,11 +44,14 @@ module perceptionCore (
     wire [1:0] colourMask;
     hsvColourGate colourGate (.rgb(rgb),.redMinimum(activeRedMinimum),
         .blueMinimum(activeBlueMinimum),.colourMask(colourMask));
-    // Fixed white profile selected from independent unfiltered paper/anchor/
-    // stroke samples in three real captures. Runtime auto-calibration changes
-    // only the red/blue floors and never silently updates this white profile.
-    localparam int WHITE_MINIMUM=112;
-    wire whitePixel=r>=WHITE_MINIMUM&&g>=WHITE_MINIMUM&&b>=WHITE_MINIMUM&&
+    // Reader algorithm 2 has a fixed camera-measured luma/spread white gate.
+    // This is NOT automatic white calibration: red/blue calibration never
+    // changes the fixed threshold. R+2G+B spans 0..1020 and fits ten bits.
+    // Debug word95's white byte is quarter-luma units only for algorithm 2;
+    // historical algorithm 1 keeps its minimum-channel interpretation.
+    localparam int WHITE_LUMA_QUARTER=96;
+    wire [9:0] whiteLumaSum=r+(g<<1)+b;
+    wire whitePixel=whiteLumaSum>=10'(4*WHITE_LUMA_QUARTER)&&
         r<=g+64&&g<=r+64&&r<=b+64&&b<=r+64&&g<=b+64&&b<=g+64;
     cameraStreamBridge cameraBridge (
         .pclk(pclk),.resetPclk(resetPclk),.frameStart(cameraFrameStart),
@@ -87,6 +90,9 @@ module perceptionCore (
     frameObservation_t bankMeta[0:1],captureMeta,observation,processedObservation;
     candidate_array_t bankRed[0:1],bankBlue[0:1];
     logic [1:0] bankOrientation[0:1];
+    // The segmentation profile belongs to the captured bank, not the later
+    // global profile when that bank finishes recognition.
+    logic [7:0] bankRedMinimum[0:1],bankBlueMinimum[0:1];
     logic [3:0] bankRedCount[0:1],bankBlueCount[0:1],bankPeakRed[0:1],bankPeakBlue[0:1];
     logic [2:0] bankCandidateFaults[0:1];
     logic writeBank,haveWriteBank,readBank,readerStart,readerBusy,readerDone;
@@ -240,7 +246,9 @@ module perceptionCore (
         .calibrationAttempt(calibrationAttempt),.sampleCount(sampleCount),.calibrated(calibrated),.speechArmed(speechArmed),
         .busy(interactionBusy),.kind(interactionKind),.state(interactionState),.interactionId(interactionId),
         .userEvent(userEvent),.userEventValid(userEventValid),.userEventReady(userEventReady),.eventOverflow(eventOverflow));
-    logic [15:0] faults,lastFrameId;
+    logic [15:0] faults,lastFrameId,lastFrameConfigVersion;
+    logic [1:0] lastFrameOrientation;
+    logic [7:0] lastFrameRedMinimum,lastFrameBlueMinimum;
     logic haveFrame,lastFrameGood;
     logic [31:0] lastCompletionUs,lastCaptureUs;
     logic [3:0] lastRedCount,lastBlueCount,lastPeakRed,lastPeakBlue;
@@ -253,9 +261,12 @@ module perceptionCore (
             lastMarkers<='0;lastFrameId<=0;lastCaptureUs<=0;lastRedCount<=0;lastBlueCount<=0;roiValid<=0;
             lastPairRed<='0;lastPairBlue<='0;completedFrame<=0;completedFrameId<=0;lastFrameGood<=0;
             lastPeakRed<=0;lastPeakBlue<=0;lastCandidateFaults<=0;
+            lastFrameConfigVersion<=0;lastFrameOrientation<=0;
+            lastFrameRedMinimum<=48;lastFrameBlueMinimum<=32;
             completionDiscardCount<=0;
             for(int i=0;i<2;i++)begin
                 bankState[i]<=FREE;bankMeta[i]<='0;bankRed[i]<='0;bankBlue[i]<='0;bankOrientation[i]<=0;
+                bankRedMinimum[i]<=48;bankBlueMinimum[i]<=32;
                 bankRedCount[i]<=0;bankBlueCount[i]<=0;bankPeakRed[i]<=0;bankPeakBlue[i]<=0;bankCandidateFaults[i]<=0;
                 bankSampling[i]<=0;bankSampleGood[i]<=0;bankSampleRedMin[i]<=0;bankSampleBlueMin[i]<=0;
                 bankSampleRed[i]<='0;bankSampleBlue[i]<='0;
@@ -289,12 +300,16 @@ module perceptionCore (
                     observation<=captureMeta;observation.frameGood<=0;
                     observation.resourceDrop<=1;observationValid<=1;
                     bankOrientation[writeBank]<=orientationProfile;
+                    bankRedMinimum[writeBank]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowRedMinimum:activeRedMinimum;
+                    bankBlueMinimum[writeBank]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[writeBank]<=collectEnable;
                     if(bufferDropCount!=16'hffff)bufferDropCount<=bufferDropCount+16'd1;
                     faults[FAULT_CAMERA_TRANSPORT]<=1;
                 end else if(bankState[0]==FREE||bankState[1]==FREE)begin
                     writeBank<=bankState[0]==FREE?1'b0:1'b1;haveWriteBank<=1;
                     bankState[bankState[0]==FREE?0:1]<=WRITING;bankOrientation[bankState[0]==FREE?0:1]<=orientationProfile;
+                    bankRedMinimum[bankState[0]==FREE?0:1]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowRedMinimum:activeRedMinimum;
+                    bankBlueMinimum[bankState[0]==FREE?0:1]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[bankState[0]==FREE?0:1]<=collectEnable;
                 end else begin
                     haveWriteBank<=0;captureMeta.resourceDrop<=1;
@@ -336,6 +351,9 @@ module perceptionCore (
                 lastMarkers<=markers;lastFrameId<=processedObservation.frameId;lastCaptureUs<=processedObservation.captureStartUs;
                 lastCompletionUs<=timeUs;haveFrame<=1;completedFrame<=1;completedFrameId<=processedObservation.frameId;
                 lastFrameGood<=processedObservation.frameGood;
+                lastFrameConfigVersion<=processedObservation.configVersion;
+                lastFrameOrientation<=bankOrientation[readBank];
+                lastFrameRedMinimum<=bankRedMinimum[readBank];lastFrameBlueMinimum<=bankBlueMinimum[readBank];
                 lastRedCount<=bankRedCount[readBank];lastBlueCount<=bankBlueCount[readBank];
                 lastPeakRed<=bankPeakRed[readBank];lastPeakBlue<=bankPeakBlue[readBank];
                 lastCandidateFaults<=bankCandidateFaults[readBank];
@@ -351,8 +369,8 @@ module perceptionCore (
         debugWords='0;
         debugWords[0*32+:32]=32'h45425031;debugWords[1*32+:32]=32'h00020002;
         debugWords[2*32+:32]=timeUs;debugWords[3*32+:32]={16'd0,lastFrameId};debugWords[4*32+:32]=lastCaptureUs;
-        debugWords[5*32+:32]=lastCompletionUs;debugWords[6*32+:32]={16'd0,configVersion};
-        debugWords[7*32+:32]={12'd0,activeOrientation,2'd0,activeRedMinimum,activeBlueMinimum};
+        debugWords[5*32+:32]=lastCompletionUs;debugWords[6*32+:32]={16'd0,lastFrameConfigVersion};
+        debugWords[7*32+:32]={12'd0,lastFrameOrientation,2'd0,lastFrameRedMinimum,lastFrameBlueMinimum};
         debugWords[8*32+:32]={16'd0,bufferDropCount};debugWords[9*32+:32]={24'd0,lastBlueCount,lastRedCount};
         debugWords[10*32+:76]=status;debugWords[13*32+:139]=targetReport;debugWords[18*32+:104]=userEvent;
         debugWords[22*32+:32]={15'd0,redSamples};debugWords[23*32+:32]={15'd0,blueSamples};
@@ -367,6 +385,6 @@ module perceptionCore (
         debugWords[91*32+:32]={31'd0,lastFrameGood};
         debugWords[93*32+:32]={24'd0,lastPeakBlue,lastPeakRed};
         debugWords[94*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
-        debugWords[95*32+:32]={8'd1,8'd1,8'(WHITE_MINIMUM),8'd64};
+        debugWords[95*32+:32]={8'd1,8'd2,8'(WHITE_LUMA_QUARTER),8'd64};
     end
 endmodule

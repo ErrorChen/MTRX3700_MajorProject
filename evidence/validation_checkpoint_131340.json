@@ -1,0 +1,71 @@
+{
+  "schema": "echo7-validation-checkpoint-v1",
+  "recordedUtc": "2026-11-02T13:28:25.168929+00:00",
+  "scope": "Documentation checkpoint before native-anchor pipeline regression and full fit",
+  "supersedesLiveStatusOnly": "evidence/reader_algorithm2_inputs/validation.json",
+  "historicalArtifactsUnmodified": true,
+  "structural": {
+    "status": "PASS",
+    "projectDependencies": 37,
+    "rtlBenches": 20,
+    "command": [
+      "python",
+      "tools/check_repository.py"
+    ],
+    "boundary": "Dependency and layout verification only"
+  },
+  "model": {
+    "status": "PASS",
+    "unittests": 61,
+    "visionScenarioGroups": 11,
+    "sourceRun": "build/member_b/20261102T131340_527966Z_test/result.json",
+    "artifacts": [
+      {
+        "source": "build/member_b/20261102T131340_527966Z_test/result.json",
+        "retained": "evidence/model_131340/result.json",
+        "sha256": "2c29f018a611a7f5cfac44d3b095a6f25545cd9406d282b5ddd7e97db98eee3b",
+        "bytes": 2154
+      },
+      {
+        "source": "build/member_b/20261102T131340_527966Z_test/member_b_models.log",
+        "retained": "evidence/model_131340/member_b_models.log",
+        "sha256": "67fe1b7513b17d0fc772fc882e8952c87ba958bd374318208b7f0f46b39044c3",
+        "bytes": 8377
+      },
+      {
+        "source": "build/member_b/20261102T131340_527966Z_test/vision_counterfactuals.log",
+        "retained": "evidence/model_131340/vision_counterfactuals.log",
+        "sha256": "074fd3113606cd8ec52142d3463ce237e41891f49c696784cd8e39b8e06f1ece",
+        "bytes": 3488
+      }
+    ]
+  },
+  "rtl": {
+    "lastFullSuiteStatus": "FAIL",
+    "lastFullSuiteRun": "build/member_b/20261102T125848_299841Z_test/result.json",
+    "reason": "Contour exporter overwrote generic expected.hex used by candidate bench",
+    "targetedCorrectionStatus": "PASS",
+    "targetedCorrectionRun": "build/member_b/20261102T130527_555927Z_test/result.json",
+    "evidence": "evidence/vector_namespace_regression.json",
+    "fullRerunStatus": "PENDING_AFTER_NATIVE_ANCHOR_PIPELINE_CHANGE"
+  },
+  "map": {
+    "buildId": "0x9c0e0297",
+    "executionStatus": "PASS",
+    "timingDiagnosticStatus": "FAIL",
+    "evidence": "evidence/post_map_9c0e0297.json",
+    "worstDataDelayNs": 64.749,
+    "worstSetupSlackNs": -45.03,
+    "internalAnchorSetupSlackNs": -0.024,
+    "stage": "POST_MAP_UNROUTED_DIAGNOSTIC",
+    "fitStarted": false
+  },
+  "hardware": {
+    "currentMemberBFit": "NOT_COMPLETED",
+    "currentMemberBProgrammed": false,
+    "currentMemberBCameraRecognition": "NOT_EXECUTED",
+    "boardImage": "EARLIER_STATIONARY_CAMERA_BASELINE",
+    "latestIndependentCameraSample": "evidence/camera_frame43817/index.json"
+  },
+  "indexBoundary": "Does not replace current_index.json or constitute final build acceptance."
+}

@@ -1,0 +1,79 @@
+{
+  "schema": "ECHO7_READER_ALGORITHM2_VALIDATION_1",
+  "statusByLayer": {
+    "MODEL": "PASS",
+    "RTL_SIM_NATIVE_ANCHOR": "PASS",
+    "RTL_SIM_FULL_CURRENT_SUITE": "RUNNING",
+    "QUARTUS_FIT_TIMING": "PENDING",
+    "PROGRAMMED_CURRENT": "NOT_EXECUTED",
+    "CAMERA_HW_CURRENT_B": "NOT_EXECUTED"
+  },
+  "readerAlgorithm": 2,
+  "colourAlgorithm": 1,
+  "whiteProfile": {
+    "mode": "WEIGHTED_LUMA",
+    "minimum": 96,
+    "sumWeights": [
+      1,
+      2,
+      1
+    ],
+    "sumMinimum": 384,
+    "maximumSpread": 64,
+    "automaticWhiteCalibration": false
+  },
+  "modelUnittests": 60,
+  "visionScenarioGroups": 11,
+  "readerFixtures": 75,
+  "nativeAnchorRois": 188,
+  "independentRecordedInputs": 6,
+  "recordedRecognition": "Each known regression image yields red1/red2/blue1..6 in MODEL; no unseen generalisation claim",
+  "sourceSha256": {
+    "tools/lib/projective_reference.py": "2b88236bd4f90d8fed742390dae2d0a6867b1cce9ddc50c6b318b77f15746d0a",
+    "tools/lib/export_projective_vectors.py": "26198a1dd305d8bc5e7b800899e728292b2481279a27e2083653584509e2a9ed",
+    "tests/python/test_projective.py": "e9bbc4f260efe5f364daa043a7d6835435b06c967c4245e039e401eac7474594",
+    "tools/lib/audit_calibration.py": "4ee194a6f2b566db097580a83c7c4f980332145d8440bb86b2e13591e17a4346",
+    "tools/lib/audit_hsv.py": "6b981faf7866bef5d25d3be4a9ef677c2d0955b215bbf3f0fa35d287e2297fef"
+  },
+  "retained": {
+    "model_result.json": {
+      "source": "build/member_b/20261102T125550_024247Z_test/result.json",
+      "sha256": "4f68061e332f55a50f5e2714b4e7095cd2302f1db75eac0d7f419e2f61f7236f"
+    },
+    "model_unittest.log": {
+      "source": "build/member_b/20261102T125550_024247Z_test/member_b_models.log",
+      "sha256": "7eda30a4bb61027335a7578a84f87cb9d39994939703dd9bd616339edba1e4cb"
+    },
+    "native_anchor_rtl_result.json": {
+      "source": "build/member_b/reader_algorithm2/portable_sim/result.json",
+      "sha256": "283281223aafd9fb9b40bdbb7e3628e4ec4687e6e227cf95f00bd5c68c34e4c2"
+    },
+    "native_anchor_rtl.log": {
+      "source": "build/member_b/reader_algorithm2/portable_sim/native.log",
+      "sha256": "230e4c530fbe2a71cef99ae263d8962edcce923a78cae6d2db618bcc14f6535c"
+    },
+    "algorithm1_byte_compatibility.json": {
+      "source": "build/member_b/algorithm1_compatibility_vectors/comparison_to_historical.json",
+      "sha256": "d52c42b91a099c93cd10a09e88558ee125ff6125e1562817ccf245ee02da12f0"
+    },
+    "algorithm2_isolated_byte_compatibility.json": {
+      "source": "build/member_b/algorithm2_production_vectors/comparison_to_isolated.json",
+      "sha256": "21e9318edfed1670c4e6b1e78976ec6e7cfdbb555281d0b7599663c5ae2305fe"
+    },
+    "algorithm2_model_comparison.png": {
+      "source": "build/member_b/frame47630_diagnostic/algorithm2_model_comparison.png",
+      "sha256": "5ebd71a19e00d83650a53e6bb7261d389881f2172cd90e1df9d62cf4a2c142d4"
+    },
+    "frame47630_physical_measurements.json": {
+      "source": "build/member_b/frame47630_diagnostic/physical_measurements.json",
+      "sha256": "466a99bcebfab8df8f9c427e695cf6b606bb6b19ae1bed8a33052005723ef04c"
+    },
+    "frame2462_raw_samples.json": {
+      "source": "build/member_b/frame47630_diagnostic/frame2462_raw_samples.json",
+      "sha256": "7c656b10eb3945fd9b8c3bc61412681b6272a6df6b8c1f97af9caa237634daa9"
+    }
+  },
+  "currentFullSuiteRun": "build/member_b/20261102T125848_299841Z_test",
+  "currentMapDiagnostic": "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic",
+  "indexBoundary": "Checkpoint only; no current_index.json refresh or final build acceptance implied"
+}

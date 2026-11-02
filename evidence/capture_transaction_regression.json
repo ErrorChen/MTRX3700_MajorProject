@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "evidenceLevel": "HOST_AND_QUARTUS_TCL_PROTOCOL_TEST",
+  "checks": [
+    {
+      "test": "test_capture_transaction.py",
+      "exitCode": 0,
+      "log": "build/member_b/capture_transaction_regression/test_capture_transaction.py.log",
+      "logSha256": "be6f5b57df3ce6acdd9fd79b16ef71ee4a3f940a035d79a8f64d11c0583fbbd7"
+    },
+    {
+      "test": "test_tools.py",
+      "exitCode": 0,
+      "log": "build/member_b/capture_transaction_regression/test_tools.py.log",
+      "logSha256": "35052c24516c6a19784a9af833809349c7d77969d0e55063cd1726dbbc7eed71"
+    },
+    {
+      "test": "test_debug_decode.py",
+      "exitCode": 0,
+      "log": "build/member_b/capture_transaction_regression/test_debug_decode.py.log",
+      "logSha256": "dd42489368daebbd9bd7f72e822f5a17e48f87df9edfde51c3ad35aba2a5f602"
+    }
+  ],
+  "sourceHashes": {
+    "tools/echo7.py": "dbbeb6c347e6309217f3bfefdba9b2e648219bac82e1bafe8d1dc25feded3a7c",
+    "tools/tcl/grab_jtag.tcl": "7ff3afdd5e713704af01ec9db23cb725e87eeaa31c443c2bc6a98f927a741362",
+    "tools/lib/capture_transaction.py": "cba8632b5b5e0d9f2b96308ac4b96da10656ce4af8573c1f0db9336276a697fa",
+    "tests/python/test_capture_transaction.py": "a978ac74f96e278136b2a224024366577bacc91c94b49cd1ec89f7ca74608fad",
+    "tests/python/test_tools.py": "21879348e29b1e980e94ed8ca3413537575d91cb378483bdcfc9b8338664796a"
+  },
+  "coverage": [
+    "freshrequestcount+ack+source",
+    "heldcannotcountasfresh",
+    "ackmismatch",
+    "unchangedsnapshotcount",
+    "GCTL65535to0",
+    "native65535to0",
+    "shortrepeatedorbackwardframe",
+    "longidlehalfrangeorfullwrapisincomparable",
+    "snapshotreplacementduringmemoryread",
+    "targetmismatch",
+    "badCRCnonzeroexit",
+    "wrongbuildandframebinding(existingdecoderregression)",
+    "equalWindowswallclocktimestampsallocateuniqueevidencedirectories"
+  ],
+  "hardwareEvidence": "evidence/snapshot_transaction_hardware.json",
+  "hostTimeMeaning": "Only limits applicability of16bitmodular ordering; never substitutescaptureStartUs ormeasuresFPGA processinglatency",
+  "comparisonWindowMs": 600000,
+  "limitations": [
+    "Tcl protocol tests mock allJTAGAPI calls; they are notcameraevidence.",
+    "The independenthardwarecapture usedexistingEPA2baseline; currentBfit/program/cameraacceptance remainsseparate."
+  ]
+}

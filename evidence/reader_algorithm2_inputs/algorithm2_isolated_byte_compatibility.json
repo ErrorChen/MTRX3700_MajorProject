@@ -1,0 +1,7 @@
+{
+  "status": "PASS",
+  "comparedHexFiles": 518,
+  "mismatch": [],
+  "newCases": 75,
+  "nativeAnchorRois": 188
+}

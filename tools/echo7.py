@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 import hashlib
 import importlib.util
 import json
+import locale
 import os
 from pathlib import Path
 import re
@@ -114,6 +115,16 @@ def sourceIdentity():
     return {"sha256": identity, "buildId": int(identity[:8], 16), "files": hashes}
 
 
+def collectQuartusWarnings(output):
+    """Keep both numbered compiler warnings and unnumbered vendor IP warnings.
+
+    Quartus 18.1 PLL elaboration emits ``Warning: RST port ...`` without a
+    message number. These still require review and must survive in the JSON.
+    """
+    return [line.strip() for line in output.splitlines()
+            if re.match(r"\s*(?:Critical\s+)?Warning\s*(?:\(\d+\)|:)", line)]
+
+
 def checkTimingReports(summaryText, reportText):
     """Require all four corner summaries and no unconstrained clock/path rows."""
     items = re.findall(r"Type\s*:\s*(.+)\nSlack\s*:\s*(-?\d+(?:\.\d+)?)", summaryText)
@@ -134,11 +145,48 @@ def checkTimingReports(summaryText, reportText):
             "unconstrainedSummary": rows}
 
 
+def checkSynchroniserReports(folder, timing):
+    """Bind explicit two-stage chain coverage to each analysed fitted corner.
+
+    A reported MTBF headline is deliberately not an acceptance criterion.
+    Source/SOF identity and setup/hold checks are separate build gates.
+    """
+    from synchronisers import validateSynchronisers
+    if timing.get("analysisStage") != "POST_FIT":
+        raise RuntimeError("synchroniser build coverage requires post-fit reports")
+    corners = sorted({row["corner"] for row in timing.get("checks", [])})
+    if not corners:
+        raise RuntimeError("no fitted corners supplied for synchroniser coverage")
+    records = []
+    for corner in corners:
+        reportPath = Path(folder) / f"synchronisers_{corner}.txt"
+        coverage = validateSynchronisers(reportPath.read_text(encoding="utf-8", errors="replace"))
+        records.append({"corner": corner, "report": str(reportPath), "sha256": digest(reportPath),
+                        "expectedChainCount": coverage["expectedChainCount"],
+                        "reportedChainCount": coverage["reportedChainCount"],
+                        "coverageStatus": coverage["coverageStatus"], "mtbfAcceptance": "NOT_ASSESSED"})
+        (Path(folder) / f"synchronisers_{corner}.json").write_text(
+            json.dumps(coverage, indent=2) + "\n", encoding="utf-8", newline="\n")
+        if coverage["coverageStatus"] != "PASS":
+            raise RuntimeError(f"fitted synchroniser coverage failed for {corner}: {coverage['errors']}")
+    return records
+
+
 class Runner:
     def __init__(self, args):
         self.args = args
-        self.out = WORK / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ") + "_" + args.command)
-        self.out.mkdir(parents=True)
+        base = WORK / (datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S_%fZ") + "_" + args.command)
+        self.out = base
+        collision = 0
+        # Windows wall-clock resolution may give consecutive calls the same
+        # timestamp. Atomic creation prevents mixing two evidence directories.
+        while True:
+            try:
+                self.out.mkdir(parents=True)
+                break
+            except FileExistsError:
+                collision += 1
+                self.out = base.with_name(base.name + f"_{collision:03d}")
         self.result = {"schema": "echo7-cli-v1", "command": args.command, "status": "RUNNING",
                        "startedUtc": datetime.now(timezone.utc).isoformat(), "inputSource": "NONE",
                        "outputDirectory": str(self.out), "python": sys.executable,
@@ -155,43 +203,68 @@ class Runner:
         scriptHashes = {arg: digest(arg) for arg in command[1:]
                         if Path(arg).suffix.lower() in (".py", ".tcl") and Path(arg).is_file()}
         started = time.monotonic()
-        process = None
-        try:
-            process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                                       text=True, errors="replace", shell=False, start_new_session=(os.name == "posix"))
-            output, _ = process.communicate(timeout=timeout or self.args.timeout)
-            code = process.returncode
-        except subprocess.TimeoutExpired as exc:
-            # Stop only this owned command and its descendants. A Quartus shell
-            # timeout must not leave its compiler writing the build DB behind.
-            if os.name == "nt":
-                try:
-                    terminated = subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"], capture_output=True, timeout=5)
-                    treeStopped = terminated.returncode == 0
-                except (OSError, subprocess.SubprocessError):
-                    treeStopped = False
-                if not treeStopped:
-                    self.result.setdefault("terminationWarnings", []).append(
-                        "taskkill could not enumerate/terminate the owned tree; directly terminating the owned process handle")
-                if process.poll() is None:
-                    process.kill()
-            else:
-                os.killpg(process.pid, signal.SIGKILL)
+        # External programs write directly to a persistent regular file. A
+        # descendant may inherit stdout after its parent exits; using a pipe
+        # would make communicate()/close() depend on that descendant's lifetime
+        # and could lose all pre-timeout Quartus output. Closing our file handle
+        # never waits for a child to close its independent inherited handle.
+        logEncoding = locale.getpreferredencoding(False)
+        timedOut = False
+        treeStopped = None
+        parentRunning = False
+        with logPath.open("wb", buffering=0) as log:
+            def note(message):
+                log.write((message + "\n").encode(logEncoding, errors="replace"))
+            note("COMMAND " + json.dumps(command))
+            note("LOG_ENCODING " + logEncoding)
+            outputOffset = log.tell()
+            process = subprocess.Popen(command, cwd=cwd, stdout=log, stderr=subprocess.STDOUT,
+                                       shell=False, start_new_session=(os.name == "posix"))
             try:
-                trailing, _ = process.communicate(timeout=15)
-            except subprocess.TimeoutExpired:
-                # An unkillable descendant can retain the stdout pipe even
-                # after its parent has stopped. Preserve bounded failure and
-                # explicitly record the remaining cleanup uncertainty.
-                process.stdout.close()
-                trailing = "owned command stopped; descendant stdout pipe did not close"
-                self.result.setdefault("terminationWarnings", []).append(trailing)
-            output = str(exc) + "\n" + trailing
-            code = 124
-        logPath.write_text("COMMAND " + json.dumps(command) + "\n" + output, encoding="utf-8")
+                code = process.wait(timeout=timeout if timeout is not None else self.args.timeout)
+            except subprocess.TimeoutExpired as exc:
+                timedOut = True
+                note("TIMEOUT " + str(exc))
+                # Stop only this command's PID/tree. If OS permissions prevent
+                # tree cleanup, report uncertainty rather than claiming that no
+                # compiler remains. Both cleanup attempts have bounded waits.
+                treeStopped = False
+                if os.name == "nt":
+                    try:
+                        terminated = subprocess.run(["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                                                    stdout=log, stderr=subprocess.STDOUT, timeout=5)
+                        treeStopped = terminated.returncode == 0
+                    except (OSError, subprocess.SubprocessError) as cleanupError:
+                        note("TREE_CLEANUP " + str(cleanupError))
+                else:
+                    try:
+                        os.killpg(process.pid, signal.SIGKILL)
+                        treeStopped = True
+                    except OSError as cleanupError:
+                        note("TREE_CLEANUP " + str(cleanupError))
+                if not treeStopped:
+                    warning = "owned process tree cleanup was not confirmed; descendants may remain"
+                    self.result.setdefault("terminationWarnings", []).append(warning)
+                    note("TERMINATION_WARNING " + warning)
+                try:
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait(timeout=2)
+                except (OSError, subprocess.TimeoutExpired) as cleanupError:
+                    warning = "owned parent termination was not confirmed: " + str(cleanupError)
+                    self.result.setdefault("terminationWarnings", []).append(warning)
+                    note("TERMINATION_WARNING " + warning)
+                parentRunning = process.poll() is None
+                code = 124
+        # The log remains authoritative if a surviving descendant writes later.
+        # This return value is explicitly a snapshot taken when the call ends.
+        output = logPath.read_bytes()[outputOffset:].decode(logEncoding, errors="replace")
         self.result["steps"].append({"name": label, "command": command, "returncode": code,
                                      "level": self.result.get("level", "TOOLS"),
                                      "scriptSha256": scriptHashes,
+                                     "logEncoding": logEncoding, "timedOut": timedOut,
+                                     "treeTerminationConfirmed": treeStopped,
+                                     "ownedParentMayRemain": parentRunning,
                                      "elapsedSeconds": round(time.monotonic() - started, 3), "log": str(logPath)})
         if checked and code:
             raise RuntimeError(f"{label} exited {code}; see {logPath}")
@@ -287,7 +360,10 @@ class Runner:
                                     "--write-vectors", vectors])
         if (HERE / "export_vision_vectors.py").exists():
             self.run("vision_vectors", [sys.executable, HERE / "export_vision_vectors.py", "--out", vectors])
-        if any("projectiveMarkerReader.sv" in path for test in config["tests"] for path in test["sources"]):
+        if any("memberBVgaContour.sv" in path for test in config["tests"] for path in test["sources"]):
+            self.run("contour_vectors", [sys.executable, HERE / "export_contour_vectors.py", "--out", vectors])
+        if any(Path(path).name in ("projectiveMarkerReader.sv", "nativeAnchorReader.sv")
+               for test in config["tests"] for path in test["sources"]):
             self.run("projective_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors])
             self.result["inputSource"] = "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY"
         for test in config["tests"]:
@@ -343,13 +419,14 @@ class Runner:
         identity = sourceIdentity()
         header = ROOT / "rtl/common/memberBBuildId.svh"
         header.parent.mkdir(parents=True, exist_ok=True)
-        header.write_text("// Generated by echo7.py build from sourceIdentity().\n`define MEMBER_B_BUILD_ID 32'h%08x\n" % identity["buildId"])
+        header.write_text("// Generated by echo7.py build from sourceIdentity().\n`define MEMBER_B_BUILD_ID 32'h%08x\n" % identity["buildId"],
+                          encoding="utf-8", newline="\n")
         self.result["source"] = identity
         self.run("quartus_version", [self.qt("quartus_sh"), "--version"])
         sof = ROOT / "quartus/output_files/PartBDebug.sof"
         oldTime = sof.stat().st_mtime_ns if sof.exists() else None
         _, compileOutput = self.run("compile", [self.qt("quartus_sh"), "--flow", "compile", "PartBDebug"], ROOT / "quartus", timeout=max(self.args.timeout, 3600))
-        self.result["warnings"] = [line.strip() for line in compileOutput.splitlines() if "Warning (" in line]
+        self.result["warnings"] = collectQuartusWarnings(compileOutput)
         if any("Critical Warning" in line for line in self.result["warnings"]):
             raise RuntimeError("critical Quartus warnings require correction/review before this build can be programmed")
         if sourceIdentity()["sha256"] != identity["sha256"]:
@@ -366,6 +443,7 @@ class Runner:
         self.result["timing"] = timing
         if timing.get("status") != "PASS":
             raise RuntimeError("timing checks did not pass")
+        self.result["synchroniserCoverage"] = checkSynchroniserReports(self.out, timing)
         self.result["sof"] = {"path": str(sof), "sha256": digest(sof)}
         self.result["fitterSummary"] = (ROOT / "quartus/output_files/PartBDebug.fit.summary").read_text()
         self.result["status"] = "PASS"
@@ -438,6 +516,12 @@ class Runner:
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         dump = self.out / "capture/dump.bin"
+        from capture_transaction import validateSnapshotTransaction, validateFrameProgress
+        metadataPath = self.out / "capture/snapshot_metadata.json"
+        metadata = json.loads(metadataPath.read_text(encoding="utf-8"))
+        transaction = validateSnapshotTransaction(metadata, target, held, dump.stat().st_size)
+        self.result["snapshotTransaction"] = metadata
+        self.result["snapshotTransactionValidation"] = transaction
         decoded = module.decode(dump.read_bytes())
         if decoded["offset"] != 0 or decoded["bytes"] != dump.stat().st_size:
             raise RuntimeError("snapshot has prefix/trailing bytes; exact GRAB framing is required")
@@ -452,14 +536,15 @@ class Runner:
         self.result["packetType"] = "MEMBER_B"
         self.result["recognition"] = decodeGrabWords(decoded["results"], expectedBuildId)
         self.result["frameId"] = decoded["results"][96]
-        self.result["fresh"] = not held
+        self.result["fresh"] = transaction["fresh"]
         comparison = compareMarkerPixels(self.out / "capture/frame.png", self.result["recognition"], self.out / "glyph_check")
         self.result["glyphAgreement"] = comparison
         recognition = self.result["recognition"]
-        script = "projective_reference.py" if recognition["readerAlgorithm"] == 1 else "vision_reference.py"
+        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2) else "vision_reference.py"
         profileArgs = (["--white-min", str(recognition["whiteMinimum"]), "--max-spread", str(recognition["whiteMaxSpread"]),
-                        "--colour-algorithm", str(recognition["colourAlgorithm"])]
-                       if recognition["readerAlgorithm"] == 1 else ["--cleanup"])
+                        "--colour-algorithm", str(recognition["colourAlgorithm"]),
+                        "--reader-algorithm", str(recognition["readerAlgorithm"])]
+                       if recognition["readerAlgorithm"] in (1, 2) else ["--cleanup"])
         self.run("pixel_reference", [sys.executable, HERE / script, self.out / "capture/frame.png",
                  "--orientation", str(recognition["orientationProfile"]),
                  "--red-min", str(recognition["redMinimum"]),
@@ -473,14 +558,13 @@ class Runner:
         epoch = context.get("startedUtc", context.get("programmedAtUtc", "UNRECORDED"))
         if not held:
             historyPath = WORK / "last_capture.json"
-            if historyPath.exists():
-                previous = json.loads(historyPath.read_text())
-                if previous.get("target") == target and previous.get("programmingEpoch") == epoch:
-                    delta = (self.result["frameId"] - previous["frameId"]) & 0xffff
-                    if not 0 < delta < 0x8000:
-                        raise RuntimeError("fresh capture did not advance native frameId; repeated held frames cannot confirm lock")
+            previous = json.loads(historyPath.read_text()) if historyPath.exists() else None
+            self.result["nativeFrameComparison"] = validateFrameProgress(
+                self.result["frameId"], previous, target, epoch, transaction["hostObservedMs"])
             historyPath.write_text(json.dumps({"target": target, "frameId": self.result["frameId"],
-                                               "programmingEpoch": epoch, "dumpSha256": digest(dump)}))
+                                               "programmingEpoch": epoch, "dumpSha256": digest(dump),
+                                               "hostObservedMs": transaction["hostObservedMs"],
+                                               "snapshotCount": transaction["snapshotCount"]}))
 
     def hardware(self):
         self.result["level"] = "CAMERA_HW"

@@ -9,6 +9,7 @@ of automatic red/blue calibration. Source minima/spread must match the capture.
 from __future__ import annotations
 
 import argparse
+from collections import deque
 import json
 import math
 from pathlib import Path
@@ -16,6 +17,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image,ImageDraw
 from vision_reference import colourMask,quantise565,recognise,DIGITS
+from candidates_reclaimed_model import candidates_reclaimed
 
 
 def canonicalOffsets(x,y,width,height,orientation):
@@ -92,15 +94,90 @@ def projectionScores(white):
     return scores
 
 
-def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteMin=112,maxSpread=64,output=None,colourAlgorithm=1):
+def whiteProfileFor(readerAlgorithm=2,whiteMin=None,maxSpread=64):
+    """Resolve explicit historical/new white-bank semantics, never relabel them.
+
+    Algorithm 1 reproduces the original minimum-channel threshold. Algorithm 2
+    is the measured fixed weighted-brightness profile; it is not calibrated by
+    the red/blue interaction. A mismatched hardware profile is a caller error.
+    """
+    if readerAlgorithm not in (1,2):raise ValueError('readerAlgorithm must be 1 or 2')
+    if whiteMin is None:whiteMin=112 if readerAlgorithm==1 else 96
+    if not 0<=whiteMin<=255 or not 0<=maxSpread<=255:raise ValueError('White profile fields must be unsigned 8-bit')
+    if readerAlgorithm==2 and (whiteMin!=96 or maxSpread!=64):
+        raise ValueError('Reader algorithm 2 requires fixed weighted-luma minimum 96 and maximum channel spread 64')
+    profile={'mode':'MINIMUM_RGB_CHANNEL' if readerAlgorithm==1 else 'WEIGHTED_LUMA',
+        'minimum':whiteMin,'maximumChannelSpread':maxSpread,'source':'FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION'}
+    if readerAlgorithm==2:profile.update(sumWeights=[1,2,1],sumMinimum=384)
+    return profile
+
+
+def whitePixelsFor(array,profile):
+    """Boolean white bank from bit-replicated RGB565 samples; signed 16-bit math."""
+    source=np.asarray(array,dtype=np.int16)
+    intensity=(source.min(axis=2)>=profile['minimum']) if profile['mode']=='MINIMUM_RGB_CHANNEL' else (
+        source[:,:,0]+2*source[:,:,1]+source[:,:,2]>=profile['sumMinimum'])
+    return intensity&(np.ptp(source,axis=2)<=profile['maximumChannelSpread'])
+
+
+def nativeAnchorScores(nativeWhite,quadHalfPixels,capacity=8):
+    """Read a bounded native white neighbourhood without normalisation aliases.
+
+    The existing canonical corner order already incorporates orientation. Four
+    integer affine points define a search rectangle around the physical anchor.
+    Four-connected white components touching that rectangle's perimeter are
+    paper/background evidence and cannot become an anchor. Exactly one small
+    closed component must qualify. Its count/rows/columns are native units.
+
+    The independent row-graph oracle measures transient handles including alias
+    labels. Only active handle overflow rejects: completed components retire
+    continuously and are not held in an eight-object output array.
+    """
+    q=np.asarray(quadHalfPixels,dtype=np.int64);spanHalf=q.max(axis=0)-q.min(axis=0)
+    numerators=np.array([20*q[0]+s*(q[1]-q[0])+t*(q[3]-q[0]) for s in (-3,5) for t in (-1,4)])
+    x0,y0=np.maximum(numerators.min(axis=0)//40-1,(0,0))
+    x1,y1=np.minimum((numerators.max(axis=0)+39)//40+1,(319,239))
+    roi=[int(x0),int(y0),int(x1),int(y1)]
+    patch=np.asarray(nativeWhite[y0:y1+1,x0:x1+1],dtype=bool)
+    height,width=patch.shape
+    oracle=candidates_reclaimed(patch.astype(int).tolist(),cap=capacity,min_area=1)
+    visited=np.zeros_like(patch,dtype=bool);eligible=[];completedCount=0
+    for py,px in np.argwhere(patch):
+        if visited[py,px]:continue
+        visited[py,px]=True;queue=deque([(int(py),int(px))]);points=[]
+        while queue:
+            cy,cx=queue.popleft();points.append((cy,cx))
+            for ny,nx in ((cy-1,cx),(cy+1,cx),(cy,cx-1),(cy,cx+1)):
+                if 0<=ny<height and 0<=nx<width and patch[ny,nx] and not visited[ny,nx]:
+                    visited[ny,nx]=True;queue.append((ny,nx))
+        completedCount+=1
+        ys,xs=zip(*points);boxWidth=max(xs)-min(xs)+1;boxHeight=max(ys)-min(ys)+1
+        closed=min(xs)>0 and max(xs)<width-1 and min(ys)>0 and max(ys)<height-1
+        if (closed and len(points)>=3 and boxWidth>=2 and boxHeight>=2 and
+            100*boxWidth<=11*spanHalf[0] and 100*boxHeight<=11*spanHalf[1] and
+            200*len(points)<=spanHalf[0]*spanHalf[1]):
+            eligible.append({'white':len(points),'rows':boxHeight,'columns':boxWidth,
+                'bbox':[int(x0+min(xs)),int(y0+min(ys)),int(x0+max(xs)),int(y0+max(ys))]})
+    overflow=bool(oracle['red_active_overflow'])
+    result={'white':0,'samples':width*height,'rows':0,'columns':0,'roi':roi,
+        'source':'NATIVE_LOCAL_CLOSED_COMPONENT','units':'native pixels/rows/columns',
+        'capacity':capacity,'peakActiveHandles':oracle['red_max_row_handles'],
+        'completedComponents':completedCount,'eligibleCount':min(2,len(eligible)),
+        'ambiguous':len(eligible)>1,'overflow':overflow}
+    if len(eligible)==1 and not overflow:result.update(eligible[0])
+    return result
+
+
+def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=1,readerAlgorithm=2):
     image=quantise565(image)
     if image.size!=(320,240):raise ValueError('Projective native frame must be 320x240')
     if orientation not in range(4):raise ValueError('orientation must be 0..3')
-    if any(not 0<=value<=255 for value in (redMin,blueMin,whiteMin,maxSpread)):raise ValueError('Thresholds must be unsigned 8-bit')
+    profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
+    if any(not 0<=value<=255 for value in (redMin,blueMin)):raise ValueError('Thresholds must be unsigned 8-bit')
     bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
-    result={**candidate,'readerAlgorithm':1,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,'kind':'UNKNOWN','quality':0,
+    result={**candidate,'readerAlgorithm':readerAlgorithm,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,'kind':'UNKNOWN','quality':0,
             'orientationProfile':orientation,'reasonCode':1,'reasonName':'GEOMETRY','quad':None,'windowScores':{},
-            'inputWhiteProfile':{'minimum':whiteMin,'maximumChannelSpread':maxSpread},'segments':''}
+            'inputWhiteProfile':profile,'segments':''}
     width,height=x1-x0+1,y1-y0+1
     canonicalWidth,canonicalHeight=(height,width) if orientation&1 else (width,height)
     if not (0<=x0<=x1<320 and 0<=y0<=y1<240 and width>=24 and height>=24):return result
@@ -128,8 +205,10 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
         result.update(reasonCode=6,reasonName='PROJECTIVE_RANGE');return result
     source=np.asarray(image,dtype=np.int16)
     rectified=np.array([source[y,x] for x,y in addresses],dtype=np.int16).reshape(40,32,3)
-    white=(rectified.min(axis=2)>=whiteMin)&(np.ptp(rectified,axis=2)<=maxSpread)
-    scores=projectionScores(white);result['windowScores']=scores
+    white=whitePixelsFor(rectified,profile)
+    scores=projectionScores(white)
+    if readerAlgorithm==2:scores['anchor']=nativeAnchorScores(whitePixelsFor(source,profile),quad2)
+    result['windowScores']=scores
     result['uniqueSourceSamples']=len(set(map(tuple,addresses)))
     result['minimumHorizontalEdgePixels']=math.sqrt(min(edgeSquared[0],edgeSquared[2]))/2
     pattern=''.join(name for name in 'ABCDEFG' if scores[name]['white']*10>=scores[name]['samples']*6)
@@ -151,6 +230,11 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
         image.crop((x0,y0,x1+1,y1+1)).save(out/'native_crop.png')
         Image.fromarray(rectified.astype(np.uint8)).save(out/'rectified_rgb.png')
         Image.fromarray((white*255).astype(np.uint8)).save(out/'rectified_white.png')
+        if readerAlgorithm==2:
+            ax0,ay0,ax1,ay1=scores['anchor']['roi']
+            image.crop((ax0,ay0,ax1+1,ay1+1)).save(out/'native_anchor_rgb.png')
+            nativeWhite=whitePixelsFor(source,profile)
+            Image.fromarray((nativeWhite[ay0:ay1+1,ax0:ax1+1]*255).astype(np.uint8)).save(out/'native_anchor_white.png')
         overlay=image.copy();draw=ImageDraw.Draw(overlay);draw.line(corners+[corners[0]],fill='yellow',width=1)
         for index,(x,y) in enumerate(corners):draw.text((x,y),str(index),fill='lime')
         overlay.crop((max(0,x0-4),max(0,y0-4),min(320,x1+5),min(240,y1+5))).save(out/'corners.png')
@@ -159,17 +243,17 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
     return result
 
 
-def recogniseProjective(image,orientation=0,redMin=48,blueMin=32,whiteMin=112,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=1):
+def recogniseProjective(image,orientation=0,redMin=48,blueMin=32,whiteMin=None,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=1,readerAlgorithm=2):
     image=quantise565(image)
+    profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
     base=recognise(image,orientation=orientation,redMin=redMin,blueMin=blueMin,cleanup=cleanup,inputSource=inputSource,colourAlgorithm=colourAlgorithm)
     result={key:value for key,value in base.items() if key!='markers'}
-    result.update(schema='ECHO7_PROJECTIVE_MODEL_2',readerAlgorithm=1,colourAlgorithm=colourAlgorithm,markers=[],
-                  whiteProfile={'minimum':whiteMin,'maximumChannelSpread':maxSpread,'source':'FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION'})
+    result.update(schema='ECHO7_PROJECTIVE_MODEL_3',readerAlgorithm=readerAlgorithm,colourAlgorithm=colourAlgorithm,markers=[],whiteProfile=profile)
     out=Path(output) if output else None
     if out:out.mkdir(parents=True,exist_ok=True)
     for index,candidate in enumerate(base['markers']):
         fields={key:candidate[key] for key in ('colour','area','bbox')}
-        marker=classifyProjective(image,fields,orientation,redMin,blueMin,whiteMin,maxSpread,out/f'candidate_{index:02d}' if out else None,colourAlgorithm=colourAlgorithm)
+        marker=classifyProjective(image,fields,orientation,redMin,blueMin,profile['minimum'],maxSpread,out/f'candidate_{index:02d}' if out else None,colourAlgorithm=colourAlgorithm,readerAlgorithm=readerAlgorithm)
         if result['overflow']:marker.update(accepted=False,quality=0,reasonCode=7,reasonName='FRAME_CAPACITY_OVERFLOW')
         marker['candidateIndex']=index;result['markers'].append(marker)
     if out:(out/'projective.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
@@ -183,9 +267,10 @@ def main():
     parser.add_argument('--orientation',type=int,choices=range(4),default=0)
     parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,default=32)
     parser.add_argument('--colour-algorithm',type=int,choices=(0,1),default=1,help='0=historical ratio; 1=HSV plus run3 candidate support')
-    parser.add_argument('--white-min',type=int,default=112);parser.add_argument('--max-spread',type=int,default=64)
+    parser.add_argument('--reader-algorithm',type=int,choices=(1,2),default=2)
+    parser.add_argument('--white-min',type=int,help='Default: algo1 min-RGB112; algo2 fixed weighted-luma96');parser.add_argument('--max-spread',type=int,default=64)
     args=parser.parse_args()
-    result=recogniseProjective(Image.open(args.image),args.orientation,args.red_min,args.blue_min,args.white_min,args.max_spread,output=args.out,inputSource=args.source,colourAlgorithm=args.colour_algorithm)
+    result=recogniseProjective(Image.open(args.image),args.orientation,args.red_min,args.blue_min,args.white_min,args.max_spread,output=args.out,inputSource=args.source,colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm)
     print(json.dumps(result))
     return int(result['overflow'])
 

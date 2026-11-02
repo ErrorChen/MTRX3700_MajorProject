@@ -50,10 +50,13 @@ def decodeWords(words):
     # each; old captures must never be silently reinterpreted as HSV inputs.
     readerAlgorithm = words[95] >> 16 if debugSchema == 1 else (words[95] >> 16) & 255
     colourAlgorithm = 0 if debugSchema == 1 else words[95] >> 24
-    if readerAlgorithm not in (0, 1):
+    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else (0, 1, 2)):
         raise ValueError("unsupported EBP1 reader algorithm")
     if colourAlgorithm not in (0, 1):
         raise ValueError("unsupported EBP1 colour algorithm")
+    whiteMinimum, whiteSpread = (words[95] >> 8) & 255, words[95] & 255
+    if readerAlgorithm == 2 and (whiteMinimum != 96 or whiteSpread != 64):
+        raise ValueError("reader algorithm 2 requires weighted-luma floor96 and spread64")
     captureAge = (words[2] - words[4]) & 0xffffffff
     return {"schema": "EBP1", "debugSchemaVersion": debugSchema, "contractVersion": 2, "timeUs": words[2], "frameId": words[3],
             "captureStartUs": words[4], "completionUs": words[5], "configVersion": words[6],
@@ -70,7 +73,9 @@ def decodeWords(words):
             "completionDiscardCount": (words[94] >> 16) if debugSchema == 2 else 0,
             "buildId": words[92], "readerAlgorithm": readerAlgorithm,
             "colourAlgorithm": colourAlgorithm,
-            "whiteMinimum": (words[95] >> 8) & 255, "whiteMaxSpread": words[95] & 255,
+            "whiteMinimum": whiteMinimum, "whiteMaxSpread": whiteSpread,
+            "whiteMode": "QUARTER_WEIGHTED_LUMA" if readerAlgorithm == 2 else "MIN_RGB_CHANNEL",
+            "whiteThresholdExpression": "R+2*G+B >= 4*whiteMinimum" if readerAlgorithm == 2 else "min(R,G,B) >= whiteMinimum",
             "userEventValid": bool(words[90] & 1), "captureAgeAtSnapshotUs": captureAge,
             "processingLatencyUs": (words[5] - words[4]) & 0xffffffff,
             "freshAtSnapshot": freshTime(words[2], words[4], 150000)}
@@ -124,14 +129,16 @@ def compareMarkerPixels(imagePath, decoded, output):
         if not (0 <= bbox[0] <= bbox[2] < 320 and 0 <= bbox[1] <= bbox[3] < 240):
             raise ValueError("candidate bbox is not an in-frame colour main area")
         candidate = {"colour": "blue" if index >= 8 else "red", "bbox": bbox}
-        if decoded["readerAlgorithm"] == 1:
+        if decoded["readerAlgorithm"] in (1, 2):
             expected = classifyProjective(image, candidate, decoded["orientationProfile"],
                 decoded["redMinimum"], decoded["blueMinimum"], decoded["whiteMinimum"],
                 decoded["whiteMaxSpread"], output / f"marker_{index:02d}_projective",
-                colourAlgorithm=decoded["colourAlgorithm"])
+                colourAlgorithm=decoded["colourAlgorithm"], readerAlgorithm=decoded["readerAlgorithm"])
             crop = image.crop((bbox[0], bbox[1], bbox[2]+1, bbox[3]+1))
             mask = Image.new("L", crop.size)
-            mask.putdata([255 if min(pixel) >= decoded["whiteMinimum"] and max(pixel)-min(pixel) <= decoded["whiteMaxSpread"] else 0
+            mask.putdata([255 if ((pixel[0]+2*pixel[1]+pixel[2] >= 4*decoded["whiteMinimum"])
+                                  if decoded["readerAlgorithm"] == 2 else (min(pixel) >= decoded["whiteMinimum"]))
+                          and max(pixel)-min(pixel) <= decoded["whiteMaxSpread"] else 0
                           for pixel in pixelsOf(crop)])
         else:
             expected, crop, mask = classify(image, candidate, decoded["orientationProfile"], decoded["whiteMinimum"])
@@ -142,7 +149,7 @@ def compareMarkerPixels(imagePath, decoded, output):
             differences.append("accepted")
         if measured["accepted"] and expected["accepted"]:
             differences.extend(field for field in ("digit", "quality") if measured[field] != expected[field])
-        if decoded["readerAlgorithm"] == 1:
+        if decoded["readerAlgorithm"] in (1, 2):
             if measured["reason"] != expected["reasonCode"]:
                 differences.append("reason")
             if expected["windowScores"]:
@@ -154,6 +161,8 @@ def compareMarkerPixels(imagePath, decoded, output):
     result = {"schema": "echo7-captured-glyph-check-v1", "level": "CAMERA_HW_WITH_MODEL_COMPARISON",
               "source": "RECORDED_CAMERA_SAME_FRAME", "frameId": decoded["frameId"],
               "readerAlgorithm": decoded["readerAlgorithm"], "comparedCandidateCount": len(comparisons),
+              "whiteMode": decoded["whiteMode"], "whiteMinimum": decoded["whiteMinimum"],
+              "whiteMaxSpread": decoded["whiteMaxSpread"],
               "debugSchemaVersion": decoded["debugSchemaVersion"], "colourAlgorithm": decoded["colourAlgorithm"],
               "status": "PASS" if all(c["match"] for c in comparisons) else "FAIL", "comparisons": comparisons}
     (output / "comparison.json").write_text(json.dumps(result, indent=2) + "\n")

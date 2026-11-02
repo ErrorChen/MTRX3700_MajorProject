@@ -1,0 +1,15 @@
+# vsim -c -onfinish exit -lib simlib vgaTimingEquivalence_tb -l equivalence.log -do "run -all; quit -code 0" 
+# Start time: 22:29:50 on Nov 02,2026
+# Loading sv_std.std
+# Loading simlib.vgaTimingEquivalence_tb
+# Loading simlib.camera_pkg
+# Loading simlib.camera_display
+# Loading simlib.camera_display_old
+# Loading simlib.memberBVgaOverlay
+# Loading simlib.memberBVgaOverlay_old
+# run -all
+# PASS vgaTimingEquivalence_tb pixels=307200 stalls=165691 cycles=472896
+# ** Note: $finish    : vgaTimingEquivalence_tb.sv(85)
+#    Time: 18915860 ns  Iteration: 1  Instance: /vgaTimingEquivalence_tb
+# End time: 22:29:55 on Nov 02,2026, Elapsed time: 0:00:05
+# Errors: 0, Warnings: 0

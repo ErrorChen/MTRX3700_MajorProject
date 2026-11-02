@@ -1,0 +1,55 @@
+{
+  "schema": "echo7-vector-namespace-regression-v1",
+  "failure": {
+    "run": "build/member_b/20261102T125848_299841Z_test",
+    "kind": "TEST_FIXTURE_COLLISION",
+    "description": "contour exporter replaced CCL expected.hex with931600display pixels; CCL bench rejected case0 instead of evaluating its intended vectors",
+    "unexpectedFirstWord": "bff00000",
+    "retainedLog": "evidence/vector_namespace/before_collision.log"
+  },
+  "fix": "All five contour output files and matching TB reads use contour_ prefix. Production RTL unchanged.",
+  "after": {
+    "status": "PASS",
+    "exitCode": 0,
+    "run": "build/member_b/20261102T130527_555927Z_test",
+    "tests": [
+      {
+        "name": "boundedCandidates_tb",
+        "status": "PASS",
+        "sourceSha256": {
+          "rtl\\vision\\candidate_pkg.sv": "5c9e7629e13e4cc1ccaa04ac4aba488e56959436288996fe3c828121e424c2ee",
+          "rtl\\vision\\boundedCandidates.sv": "7492887642fd839d22e9ab47873b48b994956b1313c6fc1bbbccddd03e19b286",
+          "tests\\rtl\\boundedCandidates_tb.sv": "acbeb739d153b3a4bd35446cfcb9fe91d297011c708ff1936d0ef2efc7bfd3f8"
+        },
+        "inputSource": "SYNTHETIC_RTL_VECTORS",
+        "simulationModelDefines": []
+      },
+      {
+        "name": "memberBVgaContour_tb",
+        "status": "PASS",
+        "sourceSha256": {
+          "rtl\\vision\\hsvColourGate.sv": "e8dbcd581a922d2489ee1620d422f75b872b3ee0c2c76ca5b5a5d42aee6971fc",
+          "rtl\\debug\\memberBVgaContour.sv": "b63da521350f31e6b4be1a7cc1261fcbeec744f0b8f5ebb821b743535ef145f4",
+          "tests\\rtl\\memberBVgaContour_tb.sv": "5797fac1a92e0468b42f89231648e3d2db4f0c501916798d594aa2c50169b047"
+        },
+        "inputSource": "SYNTHETIC_DISPLAY_RGB_INDEPENDENT_HSV_ORACLE",
+        "simulationModelDefines": []
+      }
+    ],
+    "retainedLogs": [
+      "evidence/vector_namespace/after_candidates.log",
+      "evidence/vector_namespace/after_contours.log"
+    ],
+    "cclExpectedWordCount": 3484,
+    "contourExpectedWordCount": 931600
+  },
+  "namespaceUnitTest": {
+    "name": "test_tools.VectorNamespaceTests.testContourWriterCannotReplaceConnectedComponentVectors",
+    "status": "PASS"
+  },
+  "sourceHashes": {
+    "tools/lib/export_contour_vectors.py": "55ea82e0c681eb4424fb20ac00c3b4b520192b43b5a045b10f0f920278500a3a",
+    "tests/rtl/memberBVgaContour_tb.sv": "5797fac1a92e0468b42f89231648e3d2db4f0c501916798d594aa2c50169b047",
+    "tests/python/test_tools.py": "8ef343b470ae49f7a46fc7af6a925aa6cf9f975cabefec4a1d5820a63fbe8ba7"
+  }
+}

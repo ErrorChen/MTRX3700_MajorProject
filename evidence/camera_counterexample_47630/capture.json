@@ -1,0 +1,227 @@
+{
+  "schema": "echo7-camera-counterexample-v1",
+  "layer": "CAMERA_HW_BASELINE_WITH_MODEL_REPLAY",
+  "cameraCapture": "PASS",
+  "memberBRecognitionHardware": "NOT_TESTED",
+  "modelFixedSheet": "FAIL",
+  "nativeFrameId": 47630,
+  "gctlSequence": 6,
+  "crc": 23115,
+  "dumpSha256": "3a9b88110c45f7bfa2004c3529599cf2299d94143f739a3d3203afd63616149c",
+  "snapshotFormat": "GRAB_RGB565_EPA2_78_WORDS",
+  "freshRequest": true,
+  "held": false,
+  "mvfp": 7,
+  "rawImageSha256": "e8ed1a3d7d4db63d63a34daabfc30f0077fc7e4c9db9246e8782d7c2405b3678",
+  "target": {
+    "cable": "DE-SoC [USB-1]",
+    "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)"
+  },
+  "recordedUtc": "2026-11-02T12:03:06.233459+00:00",
+  "recordedUtcMeaning": "Host evidence creation time, not camera capture time.",
+  "programmedBaselineEvidence": "build/member_b/20261102T091351_346262Z_baseline_program/result.json",
+  "buildIdReadback": "UNSUPPORTED_BY_LEGACY_BASELINE",
+  "runDirectory": "build/member_b/20261102T115700Z_baseline_camera_check",
+  "modelProfile": {
+    "redMinimum": 48,
+    "blueMinimum": 32,
+    "whiteMinimum": 112,
+    "whiteMaxSpread": 64,
+    "orientation": 0,
+    "colourAlgorithm": 1
+  },
+  "actualModelDecisions": [
+    {
+      "colour": "red",
+      "digit": 1,
+      "accepted": true,
+      "reason": "OK",
+      "bbox": [
+        41,
+        0,
+        102,
+        88
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": 1,
+      "accepted": true,
+      "reason": "OK",
+      "bbox": [
+        164,
+        18,
+        202,
+        86
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": null,
+      "accepted": false,
+      "reason": "ANCHOR_OR_HOLE",
+      "bbox": [
+        212,
+        30,
+        241,
+        90
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": null,
+      "accepted": false,
+      "reason": "GEOMETRY",
+      "bbox": [
+        40,
+        91,
+        99,
+        107
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": 3,
+      "accepted": true,
+      "reason": "OK",
+      "bbox": [
+        162,
+        94,
+        201,
+        161
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": null,
+      "accepted": false,
+      "reason": "ANCHOR_OR_HOLE",
+      "bbox": [
+        211,
+        97,
+        240,
+        157
+      ]
+    },
+    {
+      "colour": "red",
+      "digit": 2,
+      "accepted": true,
+      "reason": "OK",
+      "bbox": [
+        39,
+        151,
+        99,
+        237
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": null,
+      "accepted": false,
+      "reason": "UNCERTAIN_STROKE",
+      "bbox": [
+        209,
+        164,
+        239,
+        226
+      ]
+    },
+    {
+      "colour": "blue",
+      "digit": 5,
+      "accepted": true,
+      "reason": "OK",
+      "bbox": [
+        161,
+        168,
+        200,
+        238
+      ]
+    },
+    {
+      "colour": "red",
+      "digit": null,
+      "accepted": false,
+      "reason": "GEOMETRY",
+      "bbox": [
+        267,
+        190,
+        278,
+        204
+      ]
+    },
+    {
+      "colour": "red",
+      "digit": null,
+      "accepted": false,
+      "reason": "GEOMETRY",
+      "bbox": [
+        262,
+        207,
+        274,
+        214
+      ]
+    }
+  ],
+  "limitations": [
+    "This is a newly acquired real image; FPGA Member B decisions were not running.",
+    "Right-column anchors and strokes are under diagnosis. No forced identity or slot-derived answer was used."
+  ],
+  "programmedBaselineManifestSha256": "7cff96be2d1d0837f4a83be36c198ddc1d7193c46cf3697f19e58bdc3631fb8f",
+  "programmedBaselineManifest": {
+    "schema": "echo7-cli-v1",
+    "command": "baseline_program",
+    "status": "PASS",
+    "startedUtc": "2026-11-02T09:13:51.347263+00:00",
+    "inputSource": "CURRENT_RUN_ISOLATED_BUILD",
+    "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T091351_346262Z_baseline_program",
+    "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+    "steps": [
+      {
+        "name": "jtag_targets",
+        "command": [
+          "C:\\intelFPGA_lite\\18.1\\quartus\\bin64\\quartus_stp.exe",
+          "-t",
+          "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\jtag_control.tcl",
+          "list"
+        ],
+        "returncode": 0,
+        "elapsedSeconds": 0.953,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T091351_346262Z_baseline_program\\jtag_targets.log"
+      },
+      {
+        "name": "program",
+        "command": [
+          "C:\\intelFPGA_lite\\18.1\\quartus\\bin64\\quartus_pgm.exe",
+          "-c",
+          "DE-SoC [USB-1]",
+          "-m",
+          "JTAG",
+          "-o",
+          "p;C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\baseline_source_20261102T085706_218888Z\\quartus\\output_files\\PartAPipeline.sof@2"
+        ],
+        "returncode": 0,
+        "elapsedSeconds": 4.453,
+        "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T091351_346262Z_baseline_program\\program.log"
+      }
+    ],
+    "target": {
+      "cable": "DE-SoC [USB-1]",
+      "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)",
+      "index": 2
+    },
+    "level": "PROGRAMMED",
+    "sourceManifest": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\baseline_source_20261102T085706_218888Z\\manifest.json",
+    "sof": {
+      "path": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\baseline_source_20261102T085706_218888Z\\quartus\\output_files\\PartAPipeline.sof",
+      "sha256": "db1c857362333ac5f2e4272987c876ea56d1675c1a23c466c6fc129c55372662"
+    },
+    "timingReview": {
+      "allReportedSlackNonnegative": true,
+      "minimumSlackNs": 0.135,
+      "boundary": "Dedicated vendor JTAG external TDI/TMS/TDO IO remain unconstrained; all user design clocks constrained; no critical warnings",
+      "fitSummary": "Fitter Status : Successful - Mon Nov 02 20:10:08 2026\nQuartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Lite Edition\nRevision Name : PartAPipeline\nTop-level Entity Name : top_level\nFamily : Cyclone V\nDevice : 5CSEMA5F31C6\nTiming Models : Final\nLogic utilization (in ALMs) : 10,837 / 32,070 ( 34 % )\nTotal registers : 12967\nTotal pins : 106 / 457 ( 23 % )\nTotal virtual pins : 0\nTotal block memory bits : 2,460,864 / 4,065,280 ( 61 % )\nTotal RAM Blocks : 305 / 397 ( 77 % )\nTotal DSP Blocks : 12 / 87 ( 14 % )\nTotal HSSI RX PCSs : 0\nTotal HSSI PMA RX Deserializers : 0\nTotal HSSI TX PCSs : 0\nTotal HSSI PMA TX Serializers : 0\nTotal PLLs : 1 / 6 ( 17 % )\nTotal DLLs : 0 / 4 ( 0 % )\n"
+    }
+  }
+}

@@ -1,0 +1,7 @@
+; Total registers                 ; 734                                         ;
+; Total block memory bits         ; 0                                           ;
+; Total DSP Blocks                ; 2                                           ;
+; Estimate of Logic utilization (ALMs needed) ; 3595  ;
+; Combinational ALUT usage for logic          ; 2879  ;
+; Total DSP Blocks                            ; 2     ;
+; Total registers                              ; 734   ;

@@ -1,0 +1,1408 @@
+{
+  "schemaVersion": 1,
+  "buildId": "9c0e0297",
+  "sourceSha256": "9c0e029770ae5f6be97801293bf86d6afd410f2ae301d91cb359ae44e115c9cc",
+  "analysisStage": "POST_MAP_DIAGNOSTIC_ONLY",
+  "executionStatus": "PASS",
+  "sourceIdentityBeforeAfterEqual": true,
+  "fitStartedByThisAudit": false,
+  "runResult": "build\\member_b\\20261102T130025_095588Z_reader2_map_diagnostic\\result.json",
+  "resourceSummary": {
+    "Total registers": 25162,
+    "Estimate of Logic utilization (ALMs needed)": 18666,
+    "Combinational ALUT usage for logic": 21826,
+    "Total block memory bits": 2790208,
+    "Total DSP Blocks": 29
+  },
+  "resourceByEntity": {
+    "|perceptionDemoTop": {
+      "combinationalAluts": "21826 (54)",
+      "registers": "25162 (1433)",
+      "memoryBits": "2790208",
+      "dspBlocks": "29",
+      "fullHierarchy": "|perceptionDemoTop"
+    },
+    "|camera_display:disp_u|": {
+      "combinationalAluts": "117 (117)",
+      "registers": "36 (36)",
+      "memoryBits": "0",
+      "dspBlocks": "2",
+      "fullHierarchy": "|perceptionDemoTop|camera_display:disp_u"
+    },
+    "|clock_divider:sccb_clk_u|": {
+      "combinationalAluts": "16 (16)",
+      "registers": "8 (8)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|clock_divider:sccb_clk_u"
+    },
+    "|frame_buffer:fb_u|": {
+      "combinationalAluts": "149 (65)",
+      "registers": "38 (34)",
+      "memoryBits": "1228800",
+      "dspBlocks": "2",
+      "fullHierarchy": "|perceptionDemoTop|frame_buffer:fb_u"
+    },
+    "|altsyncram:mem_rtl_0|": {
+      "combinationalAluts": "84 (0)",
+      "registers": "4 (0)",
+      "memoryBits": "1228800",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_buffer:fb_u|altsyncram:mem_rtl_0"
+    },
+    "|altsyncram_ejj1:auto_generated|": {
+      "combinationalAluts": "84 (0)",
+      "registers": "4 (4)",
+      "memoryBits": "1228800",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated"
+    },
+    "|decode_g2a:rden_decode_b|": {
+      "combinationalAluts": "10 (10)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank0_rtl_0|altsyncram_bqk1:auto_generated|decode_g2a:rden_decode_b"
+    },
+    "|decode_nma:decode2|": {
+      "combinationalAluts": "10 (10)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank1_rtl_0|altsyncram_bqk1:auto_generated|decode_nma:decode2"
+    },
+    "|mux_mib:mux3|": {
+      "combinationalAluts": "64 (64)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated|mux_mib:mux3"
+    },
+    "|frame_snap:snap_u|": {
+      "combinationalAluts": "1217 (988)",
+      "registers": "1769 (1673)",
+      "memoryBits": "1232064",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u"
+    },
+    "|snapshot_probes:probes_u|": {
+      "combinationalAluts": "22 (0)",
+      "registers": "33 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_probes:probes_u"
+    },
+    "|altsource_probe:issp_u|": {
+      "combinationalAluts": "326 (0)",
+      "registers": "233 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl|snapshot_probes:probes|altsource_probe:issp_u"
+    },
+    "|altsource_probe_body:altsource_probe_body_inst|": {
+      "combinationalAluts": "326 (2)",
+      "registers": "233 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl|snapshot_probes:probes|altsource_probe:issp_u|altsource_probe_body:altsource_probe_body_inst"
+    },
+    "|altsource_probe_impl:\\wider_probe_gen:wider_probe_inst|": {
+      "combinationalAluts": "324 (314)",
+      "registers": "233 (225)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl|snapshot_probes:probes|altsource_probe:issp_u|altsource_probe_body:altsource_probe_body_inst|altsource_probe_impl:\\wider_probe_gen:wider_probe_inst"
+    },
+    "|sld_rom_sr:\\instance_id_gen:rom_info_inst|": {
+      "combinationalAluts": "10 (10)",
+      "registers": "8 (8)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl|snapshot_probes:probes|altsource_probe:issp_u|altsource_probe_body:altsource_probe_body_inst|altsource_probe_impl:\\wider_probe_gen:wider_probe_inst|sld_rom_sr:\\instance_id_gen:rom_info_inst"
+    },
+    "|snapshot_ram:ram_u|": {
+      "combinationalAluts": "207 (0)",
+      "registers": "63 (0)",
+      "memoryBits": "1232064",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u"
+    },
+    "|altsyncram:ram_u|": {
+      "combinationalAluts": "207 (0)",
+      "registers": "63 (0)",
+      "memoryBits": "1232064",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u"
+    },
+    "|altsyncram_6fq1:auto_generated|": {
+      "combinationalAluts": "207 (0)",
+      "registers": "63 (0)",
+      "memoryBits": "1232064",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated"
+    },
+    "|altsyncram_crg2:altsyncram1|": {
+      "combinationalAluts": "107 (0)",
+      "registers": "8 (8)",
+      "memoryBits": "1232064",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1"
+    },
+    "|decode_g2a:rden_decode_a|": {
+      "combinationalAluts": "11 (11)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1|decode_g2a:rden_decode_a"
+    },
+    "|decode_nma:decode4|": {
+      "combinationalAluts": "11 (11)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1|decode_nma:decode4"
+    },
+    "|decode_nma:decode5|": {
+      "combinationalAluts": "11 (11)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1|decode_nma:decode5"
+    },
+    "|mux_mib:mux6|": {
+      "combinationalAluts": "48 (48)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1|mux_mib:mux6"
+    },
+    "|mux_mib:mux7|": {
+      "combinationalAluts": "16 (16)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|altsyncram_crg2:altsyncram1|mux_mib:mux7"
+    },
+    "|sld_mod_ram_rom:mgl_prim2|": {
+      "combinationalAluts": "100 (82)",
+      "registers": "55 (46)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|sld_mod_ram_rom:mgl_prim2"
+    },
+    "|sld_rom_sr:\\ram_rom_logic_gen:name_gen:info_rom_sr|": {
+      "combinationalAluts": "18 (18)",
+      "registers": "9 (9)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|frame_snap:snap_u|snapshot_ram:ram_u|altsyncram:ram_u|altsyncram_6fq1:auto_generated|sld_mod_ram_rom:mgl_prim2|sld_rom_sr:\\ram_rom_logic_gen:name_gen:info_rom_sr"
+    },
+    "|heldBusCdc:resultToCamera|": {
+      "combinationalAluts": "915 (915)",
+      "registers": "3082 (3082)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|heldBusCdc:resultToCamera"
+    },
+    "|heldBusCdc:resultToDisplay|": {
+      "combinationalAluts": "850 (850)",
+      "registers": "2128 (2128)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|heldBusCdc:resultToDisplay"
+    },
+    "|memberBDebug:debugControl|": {
+      "combinationalAluts": "831 (505)",
+      "registers": "1674 (1441)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl"
+    },
+    "|snapshot_probes:probes|": {
+      "combinationalAluts": "326 (0)",
+      "registers": "233 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBDebug:debugControl|snapshot_probes:probes"
+    },
+    "|memberBVgaOverlay:overlay|": {
+      "combinationalAluts": "2447 (15)",
+      "registers": "1503 (722)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay"
+    },
+    "|memberBVgaContour:contours|": {
+      "combinationalAluts": "349 (84)",
+      "registers": "78 (78)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay|memberBVgaContour:contours"
+    },
+    "|altsyncram:previousRow_rtl_0|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0"
+    },
+    "|altsyncram_rvr1:auto_generated|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0|altsyncram_rvr1:auto_generated"
+    },
+    "|hsvColourGate:gate|": {
+      "combinationalAluts": "265 (265)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay|memberBVgaContour:contours|hsvColourGate:gate"
+    },
+    "|memberBVgaLabels:labels|": {
+      "combinationalAluts": "2083 (2083)",
+      "registers": "703 (703)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberBVgaOverlay:overlay|memberBVgaLabels:labels"
+    },
+    "|memberCSimulator:cModel|": {
+      "combinationalAluts": "189 (189)",
+      "registers": "203 (203)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|memberCSimulator:cModel"
+    },
+    "|ov7670_capture:cap_u|": {
+      "combinationalAluts": "24 (24)",
+      "registers": "77 (77)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|ov7670_capture:cap_u"
+    },
+    "|ov7670_config:cfg_u|": {
+      "combinationalAluts": "116 (92)",
+      "registers": "72 (38)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|ov7670_config:cfg_u"
+    },
+    "|i2c_master:u_master|": {
+      "combinationalAluts": "24 (24)",
+      "registers": "34 (34)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|ov7670_config:cfg_u|i2c_master:u_master"
+    },
+    "|perceptionCore:core|": {
+      "combinationalAluts": "14695 (1403)",
+      "registers": "12948 (3108)",
+      "memoryBits": "328064",
+      "dspBlocks": "25",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core"
+    },
+    "|boundedCandidates:candidates|": {
+      "combinationalAluts": "5471 (5471)",
+      "registers": "4692 (4692)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|boundedCandidates:candidates"
+    },
+    "|cameraStreamBridge:cameraBridge|": {
+      "combinationalAluts": "225 (151)",
+      "registers": "313 (116)",
+      "memoryBits": "18944",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|cameraStreamBridge:cameraBridge"
+    },
+    "|asyncPixelFifo:fifo|": {
+      "combinationalAluts": "58 (58)",
+      "registers": "149 (149)",
+      "memoryBits": "18944",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo"
+    },
+    "|altsyncram:memory_rtl_0|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "18944",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|altsyncram:memory_rtl_0"
+    },
+    "|altsyncram_b7l1:auto_generated|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "18944",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|cameraStreamBridge:cameraBridge|asyncPixelFifo:fifo|altsyncram:memory_rtl_0|altsyncram_b7l1:auto_generated"
+    },
+    "|heldBusCdc:requestCdc|": {
+      "combinationalAluts": "16 (16)",
+      "registers": "48 (48)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|cameraStreamBridge:cameraBridge|heldBusCdc:requestCdc"
+    },
+    "|causalMaskCleanup:cleanup|": {
+      "combinationalAluts": "24 (24)",
+      "registers": "45 (45)",
+      "memoryBits": "640",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|causalMaskCleanup:cleanup"
+    },
+    "|altsyncram:previous_row_rtl_0|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "640",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|causalMaskCleanup:cleanup|altsyncram:previous_row_rtl_0"
+    },
+    "|altsyncram_8ji1:auto_generated|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "640",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|causalMaskCleanup:cleanup|altsyncram:previous_row_rtl_0|altsyncram_8ji1:auto_generated"
+    },
+    "|colourSampler:sampler|": {
+      "combinationalAluts": "539 (539)",
+      "registers": "262 (262)",
+      "memoryBits": "0",
+      "dspBlocks": "1",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|colourSampler:sampler"
+    },
+    "|fixedSheetInteraction:interaction|": {
+      "combinationalAluts": "298 (298)",
+      "registers": "546 (546)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|fixedSheetInteraction:interaction"
+    },
+    "|glyphBanks:glyphMemory|": {
+      "combinationalAluts": "52 (6)",
+      "registers": "9 (1)",
+      "memoryBits": "307200",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory"
+    },
+    "|altsyncram:bank0_rtl_0|": {
+      "combinationalAluts": "29 (0)",
+      "registers": "4 (0)",
+      "memoryBits": "153600",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank0_rtl_0"
+    },
+    "|altsyncram_bqk1:auto_generated|": {
+      "combinationalAluts": "17 (0)",
+      "registers": "4 (4)",
+      "memoryBits": "153600",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank1_rtl_0|altsyncram_bqk1:auto_generated"
+    },
+    "|mux_1hb:mux3|": {
+      "combinationalAluts": "7 (7)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank1_rtl_0|altsyncram_bqk1:auto_generated|mux_1hb:mux3"
+    },
+    "|altsyncram:bank1_rtl_0|": {
+      "combinationalAluts": "17 (0)",
+      "registers": "4 (0)",
+      "memoryBits": "153600",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|glyphBanks:glyphMemory|altsyncram:bank1_rtl_0"
+    },
+    "|horizontalRunFilter:runFilter|": {
+      "combinationalAluts": "49 (49)",
+      "registers": "72 (72)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|horizontalRunFilter:runFilter"
+    },
+    "|hsvColourGate:colourGate|": {
+      "combinationalAluts": "263 (263)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|hsvColourGate:colourGate"
+    },
+    "|projectiveMarkerReader:reader|": {
+      "combinationalAluts": "6133 (2853)",
+      "registers": "3551 (2795)",
+      "memoryBits": "1280",
+      "dspBlocks": "24",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader"
+    },
+    "|nativeAnchorReader:anchorReader|": {
+      "combinationalAluts": "3116 (2396)",
+      "registers": "629 (629)",
+      "memoryBits": "1280",
+      "dspBlocks": "10",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader"
+    },
+    "|altsyncram:lineLabels_rtl_0|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0"
+    },
+    "|altsyncram_00q1:auto_generated|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "1280",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0|altsyncram_00q1:auto_generated"
+    },
+    "|lpm_divide:Div0|": {
+      "combinationalAluts": "178 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div0"
+    },
+    "|lpm_divide_nbm:auto_generated|": {
+      "combinationalAluts": "182 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div3|lpm_divide_nbm:auto_generated"
+    },
+    "|sign_div_unsign_tlh:divider|": {
+      "combinationalAluts": "182 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div3|lpm_divide_nbm:auto_generated|sign_div_unsign_tlh:divider"
+    },
+    "|alt_u_div_00f:divider|": {
+      "combinationalAluts": "182 (182)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div3|lpm_divide_nbm:auto_generated|sign_div_unsign_tlh:divider|alt_u_div_00f:divider"
+    },
+    "|lpm_divide:Div1|": {
+      "combinationalAluts": "182 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div1"
+    },
+    "|lpm_divide:Div2|": {
+      "combinationalAluts": "178 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div2"
+    },
+    "|lpm_divide:Div3|": {
+      "combinationalAluts": "182 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|lpm_divide:Div3"
+    },
+    "|projectiveSerialMultiply:coefficientMultiplier|": {
+      "combinationalAluts": "164 (164)",
+      "registers": "127 (127)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader|projectiveSerialMultiply:coefficientMultiplier"
+    },
+    "|targetTracker:tracker|": {
+      "combinationalAluts": "238 (238)",
+      "registers": "350 (350)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|perceptionCore:core|targetTracker:tracker"
+    },
+    "|sld_hub:auto_hub|": {
+      "combinationalAluts": "138 (1)",
+      "registers": "116 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub"
+    },
+    "|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|": {
+      "combinationalAluts": "137 (0)",
+      "registers": "116 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric"
+    },
+    "|alt_sld_fab:instrumentation_fabric|": {
+      "combinationalAluts": "137 (0)",
+      "registers": "116 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric"
+    },
+    "|alt_sld_fab_alt_sld_fab:alt_sld_fab|": {
+      "combinationalAluts": "137 (1)",
+      "registers": "116 (7)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab"
+    },
+    "|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|": {
+      "combinationalAluts": "136 (0)",
+      "registers": "109 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric"
+    },
+    "|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|": {
+      "combinationalAluts": "136 (98)",
+      "registers": "109 (80)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub"
+    },
+    "|sld_rom_sr:hub_info_reg|": {
+      "combinationalAluts": "19 (19)",
+      "registers": "10 (10)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|sld_rom_sr:hub_info_reg"
+    },
+    "|sld_shadow_jsm:shadow_jsm|": {
+      "combinationalAluts": "19 (19)",
+      "registers": "19 (19)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|sld_shadow_jsm:shadow_jsm"
+    },
+    "|vga_sink:vga_u|": {
+      "combinationalAluts": "68 (0)",
+      "registers": "75 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|vga_sink:vga_u"
+    },
+    "|vga_sink_video_vga_controller_0:video_vga_controller_0|": {
+      "combinationalAluts": "68 (1)",
+      "registers": "75 (28)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|vga_sink:vga_u|vga_sink_video_vga_controller_0:video_vga_controller_0"
+    },
+    "|altera_up_avalon_video_vga_timing:VGA_Timing|": {
+      "combinationalAluts": "67 (67)",
+      "registers": "47 (47)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|vga_sink:vga_u|vga_sink_video_vga_controller_0:video_vga_controller_0|altera_up_avalon_video_vga_timing:VGA_Timing"
+    },
+    "|video_pll:video_pll_u|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|video_pll:video_pll_u"
+    },
+    "|altera_pll:altera_pll_i|": {
+      "combinationalAluts": "0 (0)",
+      "registers": "0 (0)",
+      "memoryBits": "0",
+      "dspBlocks": "0",
+      "fullHierarchy": "|perceptionDemoTop|video_pll:video_pll_u|altera_pll:altera_pll_i"
+    }
+  },
+  "worstPerGroupPerCorner": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -42.522,
+      "dataDelayNs": 62.23,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.146,
+      "dataDelayNs": 6.29,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -42.522,
+      "dataDelayNs": 62.23,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.292,
+      "dataDelayNs": 0.416,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3033]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3033]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 18.479,
+      "dataDelayNs": 21.182,
+      "logicLevels": 6,
+      "from": "rs25[1]",
+      "to": "frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated|ram_block1a56~portb_address_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.383,
+      "dataDelayNs": 5.325,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 23.526,
+      "dataDelayNs": 16.186,
+      "logicLevels": 14,
+      "from": "camera_display:disp_u|x[8]",
+      "to": "memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0|altsyncram_rvr1:auto_generated|ram_block1a1~porta_datain_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "ANCHOR_INPUT",
+      "rank": 1,
+      "slackNs": -42.522,
+      "dataDelayNs": 62.23,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "ANCHOR",
+      "rank": 1,
+      "slackNs": 0.56,
+      "dataDelayNs": 19.148,
+      "logicLevels": 11,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|scanIndex[0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|firstEligibleWidth[8]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "OVERLAY",
+      "rank": 1,
+      "slackNs": 25.362,
+      "dataDelayNs": 14.346,
+      "logicLevels": 8,
+      "from": "memberBVgaOverlay:overlay|memberBVgaContour:contours|outSop",
+      "to": "memberBVgaOverlay:overlay|memberBVgaLabels:labels|outData[6]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 2.839,
+      "dataDelayNs": 16.869,
+      "logicLevels": 6,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_x[5]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|line_label[1][213][2]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": -42.522,
+      "dataDelayNs": 62.23,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -42.522,
+      "dataDelayNs": 62.23,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -45.03,
+      "dataDelayNs": 64.749,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 10.037,
+      "dataDelayNs": 6.387,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -45.03,
+      "dataDelayNs": 64.749,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.296,
+      "dataDelayNs": 0.423,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3033]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3033]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 17.996,
+      "dataDelayNs": 21.712,
+      "logicLevels": 6,
+      "from": "rs25[1]",
+      "to": "frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated|ram_block1a56~portb_address_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9994.197,
+      "dataDelayNs": 5.522,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[4]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 22.804,
+      "dataDelayNs": 16.915,
+      "logicLevels": 14,
+      "from": "camera_display:disp_u|x[8]",
+      "to": "memberBVgaOverlay:overlay|memberBVgaContour:contours|leftClass[1]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "ANCHOR_INPUT",
+      "rank": 1,
+      "slackNs": -45.03,
+      "dataDelayNs": 64.749,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "ANCHOR",
+      "rank": 1,
+      "slackNs": -0.024,
+      "dataDelayNs": 19.636,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0|altsyncram_00q1:auto_generated|ram_block1a0~portb_re_reg",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|components[2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "OVERLAY",
+      "rank": 1,
+      "slackNs": 25.022,
+      "dataDelayNs": 14.697,
+      "logicLevels": 8,
+      "from": "memberBVgaOverlay:overlay|memberBVgaContour:contours|outSop",
+      "to": "memberBVgaOverlay:overlay|memberBVgaLabels:labels|outData[6]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 2.6,
+      "dataDelayNs": 17.119,
+      "logicLevels": 6,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_x[5]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|line_label[1][213][2]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": -45.03,
+      "dataDelayNs": 64.749,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -45.03,
+      "dataDelayNs": 64.749,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -25.77,
+      "dataDelayNs": 45.554,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.134,
+      "dataDelayNs": 5.652,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -25.77,
+      "dataDelayNs": 45.554,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.473,
+      "dataDelayNs": 0.311,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3033]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3033]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 23.1,
+      "dataDelayNs": 16.685,
+      "logicLevels": 6,
+      "from": "rs25[1]",
+      "to": "frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated|ram_block1a56~portb_address_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.809,
+      "dataDelayNs": 3.975,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 28.276,
+      "dataDelayNs": 11.531,
+      "logicLevels": 14,
+      "from": "camera_display:disp_u|x[8]",
+      "to": "memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0|altsyncram_rvr1:auto_generated|ram_block1a1~porta_datain_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "ANCHOR_INPUT",
+      "rank": 1,
+      "slackNs": -25.77,
+      "dataDelayNs": 45.554,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "ANCHOR",
+      "rank": 1,
+      "slackNs": 4.064,
+      "dataDelayNs": 15.643,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0|altsyncram_00q1:auto_generated|ram_block1a0~portb_re_reg",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|components[2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "OVERLAY",
+      "rank": 1,
+      "slackNs": 27.801,
+      "dataDelayNs": 11.983,
+      "logicLevels": 8,
+      "from": "memberBVgaOverlay:overlay|memberBVgaContour:contours|outSop",
+      "to": "memberBVgaOverlay:overlay|memberBVgaLabels:labels|outData[6]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 4.54,
+      "dataDelayNs": 15.244,
+      "logicLevels": 6,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_x[5]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|line_label[1][213][2]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": -25.77,
+      "dataDelayNs": 45.554,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -25.77,
+      "dataDelayNs": 45.554,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "ALL",
+      "rank": 1,
+      "slackNs": -25.809,
+      "dataDelayNs": 45.597,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "altera_reserved_tck",
+      "rank": 1,
+      "slackNs": 11.164,
+      "dataDelayNs": 5.647,
+      "logicLevels": 2,
+      "from": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|virtual_ir_scan_reg",
+      "to": "sld_hub:auto_hub|alt_sld_fab_with_jtag_input:\\instrumentation_fabric_with_node_gen:fabric_gen_new_way:with_jtag_input_gen:instrumentation_fabric|alt_sld_fab:instrumentation_fabric|alt_sld_fab_alt_sld_fab:alt_sld_fab|alt_sld_fab_alt_sld_fab_sldfabric:sldfabric|sld_jtag_hub:\\jtag_hub_gen:real_sld_jtag_hub|tdo",
+      "launchClock": "altera_reserved_tck",
+      "latchClock": "altera_reserved_tck"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CLOCK_50",
+      "rank": 1,
+      "slackNs": -25.809,
+      "dataDelayNs": 45.597,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "PCLK",
+      "rank": 1,
+      "slackNs": 19.48,
+      "dataDelayNs": 0.308,
+      "logicLevels": 0,
+      "from": "heldBusCdc:resultToCamera|heldData[3033]",
+      "to": "heldBusCdc:resultToCamera|destinationData[3033]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "PCLK"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "rank": 1,
+      "slackNs": 23.143,
+      "dataDelayNs": 16.671,
+      "logicLevels": 6,
+      "from": "rs25[1]",
+      "to": "frame_buffer:fb_u|altsyncram:mem_rtl_0|altsyncram_ejj1:auto_generated|ram_block1a56~portb_address_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "sccb_clk",
+      "rank": 1,
+      "slackNs": 9995.815,
+      "dataDelayNs": 3.973,
+      "logicLevels": 3,
+      "from": "ov7670_config:cfg_u|index[3]",
+      "to": "ov7670_config:cfg_u|index[6]",
+      "launchClock": "sccb_clk",
+      "latchClock": "sccb_clk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "VGA",
+      "rank": 1,
+      "slackNs": 28.3,
+      "dataDelayNs": 11.536,
+      "logicLevels": 14,
+      "from": "camera_display:disp_u|x[8]",
+      "to": "memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0|altsyncram_rvr1:auto_generated|ram_block1a1~porta_datain_reg0",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "ANCHOR_INPUT",
+      "rank": 1,
+      "slackNs": -25.809,
+      "dataDelayNs": 45.597,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "ANCHOR",
+      "rank": 1,
+      "slackNs": 4.036,
+      "dataDelayNs": 15.646,
+      "logicLevels": 9,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0|altsyncram_00q1:auto_generated|ram_block1a0~portb_re_reg",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|components[2].area[16]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "OVERLAY",
+      "rank": 1,
+      "slackNs": 27.818,
+      "dataDelayNs": 11.97,
+      "logicLevels": 8,
+      "from": "memberBVgaOverlay:overlay|memberBVgaContour:contours|outSop",
+      "to": "memberBVgaOverlay:overlay|memberBVgaLabels:labels|outData[6]",
+      "launchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk",
+      "latchClock": "video_pll_u|altera_pll_i|general[0].gpll~PLL_OUTPUT_COUNTER|divclk"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CCL",
+      "rank": 1,
+      "slackNs": 4.55,
+      "dataDelayNs": 15.238,
+      "logicLevels": 6,
+      "from": "perceptionCore:core|boundedCandidates:candidates|expected_x[5]",
+      "to": "perceptionCore:core|boundedCandidates:candidates|line_label[1][213][2]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "READER",
+      "rank": 1,
+      "slackNs": -25.809,
+      "dataDelayNs": 45.597,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "group": "CORE",
+      "rank": 1,
+      "slackNs": -25.809,
+      "dataDelayNs": 45.597,
+      "logicLevels": 28,
+      "from": "perceptionCore:core|projectiveMarkerReader:reader|pointX[0][0]",
+      "to": "perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|roiYMax[1]",
+      "launchClock": "CLOCK_50",
+      "latchClock": "CLOCK_50"
+    }
+  ],
+  "newRamRows": [
+    "; memberBVgaOverlay:overlay|memberBVgaContour:contours|altsyncram:previousRow_rtl_0|altsyncram_rvr1:auto_generated|ALTSYNCRAM                             ; M10K block ; Simple Dual Port ; 640          ; 2            ; 640          ; 2            ; 1280    ; None ;",
+    "; perceptionCore:core|projectiveMarkerReader:reader|nativeAnchorReader:anchorReader|altsyncram:lineLabels_rtl_0|altsyncram_00q1:auto_generated|ALTSYNCRAM ; AUTO       ; Simple Dual Port ; 320          ; 4            ; 320          ; 4            ; 1280    ; None ;"
+  ],
+  "grayMappings": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "writeGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "readGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "6_slow_1100mv_85c",
+      "stem": "timeGray",
+      "sourceCount": 32,
+      "destinationCount": 32,
+      "timedCount": 32,
+      "falseCount": 0
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "writeGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "readGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "stem": "timeGray",
+      "sourceCount": 32,
+      "destinationCount": 32,
+      "timedCount": 32,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "writeGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "readGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "stem": "timeGray",
+      "sourceCount": 32,
+      "destinationCount": 32,
+      "timedCount": 32,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "writeGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "readGray",
+      "sourceCount": 9,
+      "destinationCount": 9,
+      "timedCount": 9,
+      "falseCount": 0
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "stem": "timeGray",
+      "sourceCount": 32,
+      "destinationCount": 32,
+      "timedCount": 32,
+      "falseCount": 0
+    }
+  ],
+  "maxSkew": [
+    {
+      "corner": "6_slow_1100mv_85c",
+      "pathCount": 6,
+      "worstSlackNs": 19.235
+    },
+    {
+      "corner": "6_slow_1100mv_0c",
+      "pathCount": 6,
+      "worstSlackNs": 19.252
+    },
+    {
+      "corner": "MIN_fast_1100mv_85c",
+      "pathCount": 6,
+      "worstSlackNs": 19.462
+    },
+    {
+      "corner": "MIN_fast_1100mv_0c",
+      "pathCount": 6,
+      "worstSlackNs": 19.471
+    }
+  ],
+  "synchronisers": {
+    "coverageStatus": "PASS",
+    "expectedChainCount": 57,
+    "reportedChainCount": 57,
+    "reportedLengths": {
+      "2": 38,
+      "3": 19
+    },
+    "errors": [],
+    "mtbfAcceptance": "NOT_ASSESSED"
+  },
+  "warningCounts": {
+    "10230": 14,
+    "10270": 1,
+    "10034": 2,
+    "10036": 10,
+    "276020": 1,
+    "276027": 2,
+    "12241": 1,
+    "13039": 2,
+    "13040": 11,
+    "13034": 1,
+    "13035": 3,
+    "13032": 1,
+    "13033": 1,
+    "13009": 1,
+    "13010": 3,
+    "13024": 1,
+    "13410": 22,
+    "21074": 1,
+    "15610": 7
+  },
+  "limits": [
+    "Unrouted map delay is diagnostic, not fitted setup/hold acceptance.",
+    "Map resource estimates are not physical fitter utilisation.",
+    "No SOF programming or camera recognition acceptance follows from this audit."
+  ],
+  "reports": {
+    "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/PartBDebug.map.rpt": "323d8148aee425f2cf800671cb0c33f530fd82f53dad9b3ad9edd6b5319316db",
+    "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/paths.tsv": "eacd3fdf4ef62a69e758041b4c028295ac2d3e5b40251eb7ed563a829f834a40",
+    "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/gray.tsv": "58ad1a059a34af0f23b323e76beca3ed34d1a3b80d0cbc276f05de41e0281395",
+    "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/skew.tsv": "0dc3cc511b3013e065a5d8ae996821022757563ab08835d62191944969261658",
+    "build/member_b/20261102T130025_095588Z_reader2_map_diagnostic/diagnostics/metastability_post_map.txt": "4605bc794e90d98b451d1d78e3c8d664c2af93c75c095ad5fc3e6319e7c2d1ad"
+  }
+}

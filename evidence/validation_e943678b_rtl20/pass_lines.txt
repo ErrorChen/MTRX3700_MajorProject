@@ -1,0 +1,40 @@
+boundedCandidates_tb
+# PASS boundedCandidates: 18 original + 8 nested-union BFS cases; invariantChecks=51505 nestedUnions=39 maxRedirectedAliases=7; exact gap328/final329, geometry, reset, framing and overrun
+targetTracker_tb
+# PASS targetTracker_tb
+memberCSimulator_tb
+# PASS memberCSimulator_tb
+cdcTransport_tb
+# PASS cdcTransport_tb
+fixedSheetInteraction_tb
+# PASS fixedSheetInteraction_tb
+colourSampler_tb
+# PASS colourSampler_tb
+memberBDebug_tb
+# PASS memberBDebug_tb: coherent commands, backpressure, 96 frozen words, reset
+memberBVgaOverlay_tb
+# PASS memberBVgaOverlay_tb: 11208 pixels, raw contours, accepted digits only, no boxes, stale/bad frames, stalls
+perceptionCoreReplay_tb
+# PASS perceptionCoreReplay_tb frames=43 source=SYNTHETIC_RGB565_POST_CAPTURE
+lateSnapshot_tb
+# PASS lateSnapshot_tb late-results same-frame RAM ownership timeout recovery
+projectiveMarkerReader_tb
+# PASS projectiveMarkerReader_tb vectors=75 coordinateChecks=240640 maxCycles=217032
+perceptionCoreRecordedReplay_tb
+# PASS perceptionCoreRecordedReplay_tb frames=33 source=ONE_RECORDED_FRAME_REPEATED_IN_RTL
+perceptionCoreContinuous_tb
+# PASS perceptionCoreContinuous_tb frames=6 overlapCycles=1077550 elapsedCycles=5363800 reportDropCount=4 source=ALTERNATING_SYNTHETIC_RGB565
+hsvColourGate_tb
+# PASS hsvColourGate_tb checks=131619 profiles=2 exhaustiveRGB565=131072
+horizontalRunFilter_tb
+# PASS horizontalRunFilter_tb rows=2841 orderedPixels=909120 exhaustiveLocalPatterns=243
+perceptionCoreCollision_tb
+# PASS perceptionCoreCollision_tb collisions=2 reports=11 source=PROTOCOL_FAULT_INJECTION
+perceptionCoreProfile_tb
+# PASS perceptionCoreProfile_tb checks=15 acceptedCompletions=9 source=PROTOCOL_CONFIG_INJECTION
+vgaMapping_tb
+# PASS vgaMapping_tb pixels=307200 stalls=165690 cycles=472897
+memberBVgaContour_tb
+# PASS memberBVgaContour_tb pixels=931600 plusresetrow640 stalls=395588 bubbles=84751
+nativeAnchorReader_tb
+# PASS nativeAnchorReader_tb rois=188 valid=166 ambiguous=1 overflow=1 maxCycles=3719 dividerChecks=131072 boundaryChecks=524288 inputMutationChecks=188

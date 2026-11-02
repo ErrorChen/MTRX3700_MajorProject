@@ -1,0 +1,26 @@
+COMMAND ["C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe", "-c", "-onfinish", "exit", "-lib", "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T135055_875419Z_test\\vgaMapping_tb\\simlib", "vgaMapping_tb", "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T135055_875419Z_test/vectors", "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T135055_875419Z_test/vectors", "-do", "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"]
+LOG_ENCODING cp936
+Reading C:/intelFPGA_lite/18.1/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -onfinish exit -lib C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib vgaMapping_tb "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T135055_875419Z_test/vectors" "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T135055_875419Z_test/vectors" -do "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0" 
+# Start time: 01:03:43 on Nov 03,2026
+# Loading sv_std.std
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.vgaMapping_tb
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.camera_pkg
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.camera_display
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.memberBVgaOverlay
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.memberBVgaContour
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.hsvColourGate
+# Loading C:\intelFPGA_lite\MTRX3700\major\build\member_b\20261102T135055_875419Z_test\vgaMapping_tb\simlib.memberBVgaLabels
+# onerror {quit -code 1}
+#  Warning: onerror command for use within macro
+#  onbreak {quit -code 1}
+#  Warning: onbreak command for use within macro
+#  run -all
+# PASS vgaMapping_tb pixels=307200 stalls=165690 cycles=472897
+# ** Note: $finish    : C:/intelFPGA_lite/MTRX3700/major/tests/rtl/vgaMapping_tb.sv(75)
+#    Time: 18915900 ns  Iteration: 1  Instance: /vgaMapping_tb
+# End time: 01:03:46 on Nov 03,2026, Elapsed time: 0:00:03
+# Errors: 0, Warnings: 0

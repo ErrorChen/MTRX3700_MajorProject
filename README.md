@@ -4,9 +4,13 @@ This repository contains the stationary MTRX3700 Member B perception demonstrati
 
 The maintained entry point is `python tools/echo7.py`. [VERSION_README.md](VERSION_README.md) records actual checks, failed builds, hardware evidence and remaining limits. These are the two maintained README files. The single B/C contract is [docs/MEMBER_C_INTERFACE.md](docs/MEMBER_C_INTERFACE.md).
 
+The current source passed all 20 self-checking RTL benches and the latest MODEL run passed 64 unit tests plus 11 vision groups. [The completed regression record](evidence/validation_e943678b_rtl20/index.json) retains the original PASS lines, logs and 45 tested source hashes. Pipelining ROI preparation reduced its mapped path from 64.749 ns to 11.526 ns. Source `0xe943678b` still has −0.723 ns worst unrouted setup slack; its full build is running, so fitted timing remains unverified. The board still runs the earlier stationary camera baseline; current B download and on-board recognition have not been executed.
+
 ## Start here
 
 Use a verified Python installation with NumPy and Pillow. The inspected Windows machine uses the following executable; the initial PATH Python entries were Windows Store aliases.
+
+Exact Python dependency versions are recorded in [requirements.txt](requirements.txt). `.editorconfig` and `.gitattributes` define UTF-8/LF source conventions. `python tools/check_repository.py` checks the single-project layout, explicit dependency closure and ignore rules; it does not simulate or build the FPGA.
 
 ```powershell
 $python = 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe'
@@ -49,7 +53,7 @@ A fresh capture must pass frame, packet schema and CRC checks, and its on-board 
 | `evidence/` | Small immutable historical results and current evidence indices |
 | `build/` | Ignored compiler databases, bitstreams, vectors, recordings and detailed run logs |
 
-The source baseline is commit `1a46e9a49e8ec676cf14e998c04888c4705729bf`. The user-authorised cleanup removes obsolete demonstration trees and generated clutter from the active layout; Git retains their history. The project is derived from the repository identified in the supplied source notes, not from a replacement starter archive. An initial 274-file byte comparison established correspondence with the supplied source snapshot; it did not establish authenticated remote ancestry. [metadata.json](evidence/metadata.json) preserves that historical audit.
+The source baseline is commit `1a46e9a49e8ec676cf14e998c04888c4705729bf`. The user-authorised cleanup removed obsolete demonstration trees and generated clutter after Git-content and dependency checks; [repository_cleanup.json](evidence/repository_cleanup.json) and [the reviewed changes](evidence/cleanup_reviewed_changes.patch) preserve that decision. Commit `c67b34e` records the active Member B layout, followed by the user's `63bc383` cleanup/fixture commit. Git retains earlier history. The project is derived from the repository identified in the supplied source notes, not from a replacement starter archive. An initial 274-file byte comparison established correspondence with the supplied source snapshot; it did not establish authenticated remote ancestry. [metadata.json](evidence/metadata.json) preserves that historical audit.
 
 Historical JSON/log contents and their original source hashes remain unchanged. [relocation_index.json](evidence/relocation_index.json) maps former paths to their current locations. `python tools/lib/collect_evidence.py` writes a current index without rewriting historical evidence or requiring removed demonstration directories.
 
@@ -80,18 +84,30 @@ The current real samples show upright native digits, so `orientationProfile=0`. 
 | `vision/hsvColourGate`, `horizontalRunFilter`, `causalMaskCleanup`, `boundedCandidates` | Classify colour, retain supported horizontal runs, suppress isolated pixels and form bounded main-region candidates |
 | `vision/glyphBanks` | Two 320 × 240 banks, each with white and raw-colour foreground bits; 37.5 KiB logical capacity |
 | `vision/projectiveMarkerReader` | Recover foreground corners, normalise perspective and classify pixel-derived strokes/anchor/holes |
+| `vision/nativeAnchorReader` | Check an isolated native white component in a small corner neighbourhood; reject boundary paper, ambiguity and active-label overflow |
 | `interaction/colourSampler`, `fixedSheetInteraction` | Pair red 1 with its own reference, sample raw RGB, validate and atomically commit a complete colour profile |
 | `tracking/targetTracker`, `debug/memberCSimulator` | Accept public requests, report only current observations and enforce acquisition/loss/age rules |
-| `debug/memberBDebug`, `frame_snap`, `memberBVgaOverlay` | Acknowledged debug controls, same-frame snapshots and fresh marker overlays |
+| `debug/memberBDebug`, `frame_snap` | Acknowledged debug controls and same-frame snapshots |
+| `debug/memberBVgaContour`, `memberBVgaLabels`, `memberBVgaOverlay` | Raw HSV region contours and separate accepted pixel-derived digit labels, with coherent frame metadata and stalled-stream handling |
 | `top/perceptionCore`, `perceptionDemoTop` | Integratable CLOCK_50 core and isolated board wrapper |
 
 Current colour algorithm 1 uses red signed hue −24° through 0°, blue hue 200° through 250°, saturation at least 0.5, and initial value floors red=48/blue=32. Signed integer cross-products implement HSV without division. This measured narrow red interval rejects most of the observed orange background; it is not a general lighting-invariance claim. Algorithm 0 remains explicit in historical host replay only.
 
 Before candidate extraction, both colours retain complete horizontal runs of at least three pixels, then use the inherited causal left-or-above support rule. The raw colour bit stored for corner extraction is not eroded by these filters. Candidate capacity remains eight per colour. Noise, active labels and completed candidates are measured independently; overflow invalidates the frame. The row-reclaimed extractor requires its real row-maintenance gap and must not be validated with a fictitious zero-gap input stream.
 
-The reader finds four actual foreground corners using normalised diagonal extrema, checks convexity and geometry, and maps a 32 × 40 canonical grid through an integer homography into the same-frame white bank. Shared sequential arithmetic controls resource cost. Exact seven-stroke projections, a separate direction anchor and two empty-hole checks yield a supported digit or an explicit rejection. Blue accepts 1–6; red accepts functions 1/2. The blank blue calibration strip is not a bay. Geometry requires edges of at least 24 pixels; any edge below 40 pixels caps quality at 192.
+Reader algorithm 2 finds four actual foreground corners using normalised diagonal extrema, checks convexity and geometry, and maps a 32 × 40 canonical grid through an integer homography into the same-frame white bank. Shared sequential arithmetic controls resource cost. Exact seven-stroke projections and two empty-hole checks use that grid. The independent direction anchor is checked in native pixels, where its small separation from surrounding paper is still present. Blue accepts 1–6; red accepts functions 1/2. The blank blue calibration strip is not a bay. Geometry requires edges of at least 24 pixels; any edge below 40 pixels caps quality at 192.
 
-The fixed white threshold is min(R,G,B) ≥112 with maximum channel spread 64. Independent unfiltered samples showed that the previous floor of 160 erased real printed ink. Automatic calibration changes only red/blue value floors. White calibration would require its own pure reference samples and is not silently enabled.
+`nativeAnchorReader` scans a corner neighbourhood derived from the oriented colour quad. A qualifying four-connected white component must be closed inside that neighbourhood, contain at least three native pixels spanning two rows and two columns, and satisfy bounded size/area checks. Exactly one may qualify. Boundary-connected paper, multiple qualifying blocks and active-label overflow reject. Completed components retire; more than eight sequential small components do not alone cause overflow. This uses the existing white bank and a bounded row-label table, not another RGB frame.
+
+Anchor preparation captures the quad at request acceptance, registers vertex arithmetic and extrema, performs exact division by 40 over 17 steps, then registers the clipped ROI. Exhaustive arithmetic and input-mutation tests preserve the original geometry. This adds 22 cycles per candidate; the largest tested complete reader workload takes 217,032 CLOCK_50 cycles, or 4.34064 ms, excluding capture, candidate extraction and transport.
+
+Timing-oriented changes preserve the observable results: the candidate extractor maintains flattened label aliases, and the VGA paths use an exact bounded unsigned multiply/shift for the two-thirds coordinate mapping instead of wide signed division. The label invariants, all 512 relevant arithmetic inputs and complete stalled VGA frames were tested. These equivalence checks do not establish final FPGA timing.
+
+Algorithm 2's fixed white predicate is `R + 2*G + B >= 384` and `max(R,G,B)-min(R,G,B) <= 64`: weighted brightness at least 96, with bounded channel spread. Independent raw samples from two new camera counterexamples showed that the earlier minimum-channel rule erased thin blue-6 strokes. This is a fixed empirical white profile. Automatic calibration changes only red/blue value floors; white auto-calibration is not implemented.
+
+Historical reader algorithm 1 remains explicit in host replay as `--reader-algorithm 1`, with its original `min(R,G,B) >=112` default. The current model defaults to algorithm 2. Debug reader IDs and white-profile modes prevent old captures from silently acquiring the new meaning.
+
+VGA contours follow raw red/blue HSV transitions, including separate regions of the same colour and the blank blue reference strip. Contours indicate colour segmentation only. Digit labels require accepted pixel-derived markers; a blue outline does not grant a bay ID. A 640 × 2-bit synchronous row memory supports contours without another full-colour frame. The new display logic has simulation and isolated RAM-inference evidence; its current physical VGA output still needs the matching successful build and download. Upstream display-buffer tearing remains a separate limitation.
 
 Bank ownership separates FREE, WRITING, READY and READING. Candidate frame ID, original capture time, configuration version and bank identity remain bound to the pixels. A busy bank causes an explicit full-frame drop, never a read of overwritten data. Multi-bit descriptors and configurations use a handshake or FIFO; independently synchronising each bit is not atomic transfer. Final BRAM/resource mapping and all relevant timing checks require a successful current Fitter run.
 
@@ -103,9 +119,35 @@ SELECT and CLEAR are distinct operations. `activeBayMask=10'h07E` permits only I
 
 A unique observed target locks only after three consecutive distinct good frames. A new request, configuration change, missing/bad frame or same-ID ambiguity immediately clears acquisition history. When observed is false, public centre, dimensions and quality are zero. C checks current tag, configuration and age from original `captureStartUs`, including while no new report arrives. The initial 150 ms age budget is not a measured latency guarantee; wraparound is legal.
 
+When a newer capture-drop observation and an older processing completion arrive on the same cycle, the newer invalid observation takes priority. The older reader bank is still released, but its result cannot overwrite the newer loss or advance calibration. This is separately tested from ordinary report backpressure.
+
 Fixed-sheet mode sequences resident red cards instead of declaring a permanent conflict: identify red 1 and its own blue reference; collect eight valid stable raw sampling frames; commit the entire shadow profile at SOP; then recognise red 2 under the new version and arm interaction. Red 1 staying visible does not repeatedly recalibrate. Sample failure preserves the old complete profile. Permit revocation cancels uncommitted work; a revocation already observed in the commit domain takes priority. Idle arming is separate from busy sampling/classification.
 
 Microphone input and vocabulary acceptance are deferred. The earlier microphone sources were statically reviewed before cleanup and their hashes/findings remain in historical evidence. No activity gate, debug digit, synthetic PCM or selected target is presented as recognition of spoken numbers.
+
+## Debug schema and frame identity
+
+The public B/C contract remains version 2. The private BCTL/EBP1 debug schema is version 2, with a 96-word frozen status payload. BCTL uses whole-word stability followed by a held toggle/acknowledgement transaction. SELECT/CLEAR acknowledgement occurs only when the C simulator accepts the request; address changes can read another frozen word without issuing a new command.
+
+| EBP1 word | Meaning |
+|---|---|
+| 0–1 | Magic `0x45425031`, debug schema 2 and contract 2 |
+| 2–5 | Snapshot time, completed native frame ID, its original capture time and completion time |
+| 6–7 | Configuration version, orientation and red/blue floors belonging to that completed frame's bank |
+| 8–9 | Whole-frame buffer-drop count and red/blue candidate counts |
+| 10–12 | Live public status, including current `activeCfgVersion` |
+| 24–87 | Sixteen colour-typed candidate/marker slots, with pixel-derived digit, quality and native bbox |
+| 91–93 | Completed-frame validity, source build ID and peak active label counts |
+| 94 | Bits 31:16 saturating `completionDiscardCount`; bits 15:4 reserved zero; bits 3:0 transport/candidate fault diagnostics |
+| 95 | `{colourAlgorithm[7:0], readerAlgorithm[7:0], whiteMinimum[7:0], whiteMaxSpread[7:0]}`; current values are 1/2/96/64, with weighted-luma semantics for reader 2 |
+
+`completionDiscardCount` counts older processing completions discarded by newer-drop arbitration. It is distinct from dropped capture frames and overwritten pending reports. Word 94 low bits remain bit3 transport-fault history, bit2 candidate overflow, bit1 candidate error and bit0 candidate overrun. Schema 1 historical packets use the old word-95 interpretation and must not be silently interpreted as HSV.
+
+A configuration may change while an earlier frame is still being processed. Debug words 6/7 therefore describe that frame's bank-held profile; live status can already report a newer version. A negative-control bench exposed the former use of live values. The correction is merged and its production RTL passed 15 profile checks across nine accepted completions, followed by the affected integration regression. Current frame-profile hardware acceptance still requires a matching fitted/programmed build and fresh capture.
+
+A full image GRAB appends native frame binding and build identity as words 96/97. The host checks those against the 96-word payload, target report, programmed source and packet CRC before comparing the captured pixels with the explicitly selected colour/reader algorithms.
+
+The current QSF uses two parallel processors and `FITTER_EFFORT="AUTO FIT"`, as checked against the installed Quartus 18.1 help. Automatic effort may reduce additional optimisation once timing requirements are satisfied; it does not relax the SDC or make an incomplete fit acceptable. A prior 60-minute timeout under measured memory pressure is recorded separately from routing failure and timing failure.
 
 ## Requirements traceability
 

@@ -141,6 +141,46 @@ def candidates_reclaimed(mask, cap=8, min_area=32):
     return answer
 
 
+def adversarialUnionCases():
+    """Eight native-frame fixtures that require redirecting existing aliases.
+
+    One new component appears on each of eight rows while all older components
+    remain live. A bridge then visits the labels in reverse/permuted spatial
+    order within one row. Expected results still come from the row-graph BFS;
+    this fixture generator contains no parent-table or RTL result emulation.
+    """
+    def addChain(mask, colour, order, baseX=20, baseY=10, spacing=4, thickness=1):
+        for birth, position in enumerate(order):
+            x = baseX + spacing*position
+            for y in range(baseY+birth, baseY+8):
+                mask[y][x:x+thickness] = [colour]*thickness
+        first = baseX + spacing*min(order)
+        last = baseX + spacing*max(order) + thickness - 1
+        mask[baseY+8][first:last+1] = [colour]*(last-first+1)
+        for y in range(baseY+9, min(240, baseY+12)):
+            mask[y][first] = colour
+
+    orders = [list(reversed(range(8))), [7,0,6,1,5,2,4,3],
+              [3,4,2,5,1,6,0,7], [0,7,1,6,2,5,3,4]]
+    result = []
+    for case in range(8):
+        mask = [[0]*320 for _ in range(240)]
+        if case < 2:
+            addChain(mask, case+1, orders[0])
+        elif case == 2:
+            addChain(mask, 1, orders[0], baseX=291, baseY=228)
+        elif case == 3:
+            addChain(mask, 2, orders[0], baseX=0, baseY=0, thickness=2)
+        elif case == 4:
+            addChain(mask, 1, orders[0], baseX=20)
+            addChain(mask, 2, orders[0], baseX=120)
+        else:
+            addChain(mask, 1 if case%2 else 2, orders[case-4],
+                     baseX=60, baseY=40, spacing=6, thickness=2)
+        result.append((f"adversarial_nested_union_{case}", mask))
+    return result
+
+
 def vector_cases():
     cases = legacy_vector_cases()
     def blank():
@@ -183,6 +223,7 @@ def vector_cases():
         rect(a, 1, x, 2, x, 3)
     rect(a, 1, 30, 4, 32, 4)
     cases.append(("old_absent_roots_still_occupy_handles_until_row_seal", a))
+    cases.extend(adversarialUnionCases())
     return cases
 
 

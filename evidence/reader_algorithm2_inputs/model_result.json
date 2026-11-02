@@ -1,0 +1,56 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "test",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T12:55:50.025245+00:00",
+  "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_REPLAY",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T125550_024247Z_test",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "a995c2f843e6e59933fb31c47fd1ecd59301866c95f90c4cb7ad82e156a118a0",
+  "steps": [
+    {
+      "name": "member_b_models",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tests\\python",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 71.219,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T125550_024247Z_test\\member_b_models.log"
+    },
+    {
+      "name": "vision_counterfactuals",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tests\\python\\test_vision.py"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tests\\python\\test_vision.py": "2ee8865f5d7f5933dcdfe6b7e9f3ea87d78139079f9066904f17cefab8202e75"
+      },
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 1.5,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T125550_024247Z_test\\vision_counterfactuals.log"
+    }
+  ],
+  "level": "MODEL",
+  "exitCode": 0,
+  "finishedUtc": "2026-11-02T12:57:02.747758+00:00"
+}

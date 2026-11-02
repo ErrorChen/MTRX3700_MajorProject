@@ -1,0 +1,77 @@
+{
+  "scope": "LIVE_BASELINE_CAMERA_TRANSPORT_ONLY",
+  "status": "PASS",
+  "exitCode": 0,
+  "out": "build/member_b/20261102T121014_409663Z_capture_transaction_hardware",
+  "transaction": {
+    "schema": "echo7-snapshot-transaction-v1",
+    "mode": "fresh",
+    "verified": true,
+    "reason": "stable snapshot transaction; CRC and schema are checked separately",
+    "target": {
+      "cable": "DE-SoC [USB-1]",
+      "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)"
+    },
+    "requestBefore": {
+      "count": 6,
+      "ack": 0,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 0
+    },
+    "requestedToggle": 1,
+    "accepted": {
+      "count": 7,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "readBefore": {
+      "count": 7,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "readAfter": {
+      "count": 7,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "startedHostMs": 1793621414935,
+    "acceptedHostMs": 1793621416760,
+    "readStartedHostMs": 1793621417097,
+    "readFinishedHostMs": 1793621420115,
+    "memoryWords": 76964
+  },
+  "validation": {
+    "status": "PASS",
+    "fresh": true,
+    "countDelta": 1,
+    "snapshotCount": 7,
+    "hostObservedMs": 1793621416760,
+    "proof": "request toggle, changed GCTL count, matching ack and stable pre/post memory state",
+    "hostTimeMeaning": "Host transaction chronology only; not the FPGA capture timestamp"
+  },
+  "dumpSha256": "2b813716f437b2b791f63d62c91c6688e265a100bde6cb4ee674ed74eba2843a",
+  "crc": 1898,
+  "nativeFrameId": 2462,
+  "packetMagic": "0x45504132",
+  "pixelSize": [
+    320,
+    240
+  ],
+  "limits": "Existing EPA2 baseline only; not current MemberB hardware recognition or programmed-build evidence.",
+  "sources": {
+    "tools/tcl/grab_jtag.tcl": "7ff3afdd5e713704af01ec9db23cb725e87eeaa31c443c2bc6a98f927a741362",
+    "tools/lib/capture_transaction.py": "cba8632b5b5e0d9f2b96308ac4b96da10656ce4af8573c1f0db9336276a697fa",
+    "tools/echo7.py": "f956d679d215b2bf6e6b6f668d988f25a33bfdff4c61f2fb7ed47c3398232dab"
+  }
+}

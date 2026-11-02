@@ -52,6 +52,9 @@ foreach_in_collection corner [get_available_operating_conditions] {
     }
     # Quartus 18.1 returns {number-of-paths worst-slack}; get_timing_paths
     # does not expose maximum-skew paths. Keep each real corner's full report.
+    # Preserve actual chain identity; numerical MTBF is not this timing gate.
+    set syncFile [file join [file dirname $output] "synchronisers_$corner.txt"]
+    report_metastability -nchains 5000 -file $syncFile
     set skewFile [file join [file dirname $output] "max_skew_$corner.txt"]
     set skewResult [report_max_skew -file $skewFile -npaths 1 -detail full_path]
     set skewCount [lindex $skewResult 0]

@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "status": "PASS",
+  "evidenceLevel": "RTL_SIM",
+  "productionMerged": true,
+  "sourceHashes": [
+    {
+      "path": "rtl/display/camera_display.sv",
+      "beforeSha256": "4774f7d496b598a000dee1fa70cc4f1b2c8b1c4bd69313989fb3cf4011373d6a",
+      "afterSha256": "0a53644e8c2af1b0e4be77ae3282b6436aa9952165616f20862c787b22a3751b"
+    },
+    {
+      "path": "rtl/debug/memberBVgaOverlay.sv",
+      "beforeSha256": "197676aa7b36be3dec613169bad3102795661cb42a50492ff4ba0140fe216960",
+      "afterSha256": "33938ce5ba9aad4e1f966182fc3092b313ae4972b77ccd62a0fabf6ec96255c5"
+    },
+    {
+      "path": "tests/rtl/vgaMapping_tb.sv",
+      "afterSha256": "4f58af1a851ff690151a1b30d58af9bbb6bedafe8bfe1f7285f5f1a06dfb4326"
+    }
+  ],
+  "change": "Both overlay coordinate mapping and camera display read-address mapping replace signed32-bit /3 with exact9-bit-coordinate times683 followed byrightshift10;19-bit unsigned product. No state, handshake,frame layout or observable pixels changed.",
+  "arithmeticOracle": {
+    "checkedUnsignedInputs": 512,
+    "formula": "(n*683)>>10 == (2*n)//3",
+    "status": "PASS"
+  },
+  "tests": {
+    "preservedOldNewEquivalence": {
+      "pixels": 307200,
+      "stallCycles": 165691,
+      "cycles": 472896,
+      "status": "PASS"
+    },
+    "independentProductionRasterOracle": {
+      "pixels": 307200,
+      "stallCycles": 165691,
+      "status": "PASS"
+    },
+    "existingOverlayRegression": {
+      "pixels": 11200,
+      "coverage": [
+        "heldMetadata",
+        "boxAndDigitDrawing",
+        "staleBadFrames",
+        "backpressure"
+      ],
+      "status": "PASS"
+    }
+  },
+  "logs": [
+    {
+      "path": "evidence/vga_equivalence.log",
+      "sha256": "0cedf395d9830a4d69bb814202f4386c8da14e589633e53029f8097329684d26",
+      "passMarker": "PASS vgaTimingEquivalence_tb",
+      "exitCode": 0
+    },
+    {
+      "path": "evidence/vga_overlay_regression.log",
+      "sha256": "2269ad72598bec907b107a6a61930bbf76ce4d8b3ef11eb5d30410c057903d6d",
+      "passMarker": "PASS memberBVgaOverlay_tb",
+      "exitCode": 0
+    },
+    {
+      "path": "evidence/vga_mapping_production.log",
+      "sha256": "fd3ee1035a2049ba2e01980f20e9aad5fc9e3b69bac24bf0c8ba58dc66c11bea",
+      "passMarker": "PASS vgaMapping_tb",
+      "exitCode": 0
+    }
+  ],
+  "simulator": "ModelSim10.5b actual vlog/vsim",
+  "compileWarnings": "camera_display old and new produce the same four ModelSim vlog2583 unsupported always_comb conflict-check notices. Runtime has0errors0warnings.",
+  "timingBefore": "evidence/post_map_d606e861.json records36logic levels and71.080ns estimated data delay through signed overlayDiv0; map also inferred camera_displayDiv0/Div1 forsame32-bit signed expressions.",
+  "timingAfter": "NOT_TESTED: next map and final fit must establish new resource/timing result.",
+  "patch": "build/proposed_vga_timing/vga_timing.patch",
+  "noModelOutputUsedAsHardwareEvidence": true
+}

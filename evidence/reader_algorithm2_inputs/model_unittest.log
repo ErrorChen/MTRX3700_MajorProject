@@ -1,0 +1,67 @@
+COMMAND ["C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe", "-m", "unittest", "discover", "-s", "C:\\intelFPGA_lite\\MTRX3700\\major\\tests\\python", "-p", "test_*.py", "-v"]
+LOG_ENCODING cp936
+testFreshAndCounterWrap (test_capture_transaction.SnapshotHostTests.testFreshAndCounterWrap) ... ok
+testHeldCannotBecomeFreshEvidence (test_capture_transaction.SnapshotHostTests.testHeldCannotBecomeFreshEvidence) ... ok
+testLongIdleHalfWrapIsIndeterminateNotStale (test_capture_transaction.SnapshotHostTests.testLongIdleHalfWrapIsIndeterminateNotStale) ... ok
+testShortRepeatBackwardsAndNativeWrap (test_capture_transaction.SnapshotHostTests.testShortRepeatBackwardsAndNativeWrap) ... ok
+testWrongAckUnchangedCountAndReplacedSnapshot (test_capture_transaction.SnapshotHostTests.testWrongAckUnchangedCountAndReplacedSnapshot) ... ok
+testActualTclFreshHeldAndCountWrap (test_capture_transaction.SnapshotTclTests.testActualTclFreshHeldAndCountWrap) ... ok
+testActualTclRejectsBadAckUnchangedCountAndReadReplacement (test_capture_transaction.SnapshotTclTests.testActualTclRejectsBadAckUnchangedCountAndReadReplacement) ... ok
+test_bbox_vectors (test_contract.ContractModelTests.test_bbox_vectors) ... ok
+test_consumer_current_real_observations_only (test_contract.ContractModelTests.test_consumer_current_real_observations_only) ... ok
+test_no_silent_truncation (test_contract.ContractModelTests.test_no_silent_truncation) ... ok
+test_public_layout (test_contract.ContractModelTests.test_public_layout) ... ok
+test_sequence_and_time_wrap (test_contract.ContractModelTests.test_sequence_and_time_wrap) ... ok
+testCompletionDiscardCountAndReservedBits (test_debug_decode.DebugDecodeTests.testCompletionDiscardCountAndReservedBits) ... ok
+testLegacyCaptureRejectedExplicitly (test_debug_decode.DebugDecodeTests.testLegacyCaptureRejectedExplicitly) ... ok
+testMatchingFrameAndBuild (test_debug_decode.DebugDecodeTests.testMatchingFrameAndBuild) ... ok
+testPixelComparisonSelectsRecordedReaderAndExportsItsWhiteMask (test_debug_decode.DebugDecodeTests.testPixelComparisonSelectsRecordedReaderAndExportsItsWhiteMask) ... ok
+testReader2WhiteThresholdHasExplicitDifferentMeaning (test_debug_decode.DebugDecodeTests.testReader2WhiteThresholdHasExplicitDifferentMeaning) ... ok
+testSchema2ExplicitHsvAndUnknownAlgorithms (test_debug_decode.DebugDecodeTests.testSchema2ExplicitHsvAndUnknownAlgorithms) ... ok
+testSchemaAndReservedRejected (test_debug_decode.DebugDecodeTests.testSchemaAndReservedRejected) ... ok
+testUnsupportedPixelDigitRejected (test_debug_decode.DebugDecodeTests.testUnsupportedPixelDigitRejected) ... ok
+testWrongFrameAndBuildRejected (test_debug_decode.DebugDecodeTests.testWrongFrameAndBuildRejected) ... ok
+test_formal_red_zero_hue_and_orange_distinction (test_hsv.HsvTests.test_formal_red_zero_hue_and_orange_distinction) ... ok
+test_integer_predicate_matches_hsv_formula (test_hsv.HsvTests.test_integer_predicate_matches_hsv_formula) ... ok
+test_run_support_keeps_complete_runs_and_row_boundary (test_hsv.HsvTests.test_run_support_keeps_complete_runs_and_row_boundary) ... ok
+test_algorithm1_history_and_algorithm2_white_semantics (test_projective.ProjectiveTests.test_algorithm1_history_and_algorithm2_white_semantics) ... ok
+test_calibrated_hsv_and_historical_ratio (test_projective.ProjectiveTests.test_calibrated_hsv_and_historical_ratio) ... ok
+test_native_anchor_ambiguity_overflow_and_retirement (test_projective.ProjectiveTests.test_native_anchor_ambiguity_overflow_and_retirement) ... ok
+test_new_real_pixel_counterfactuals (test_projective.ProjectiveTests.test_new_real_pixel_counterfactuals) ... ok
+test_original_full_page_and_counterfactual (test_projective.ProjectiveTests.test_original_full_page_and_counterfactual) ... ok
+test_recorded_camera_frames (test_projective.ProjectiveTests.test_recorded_camera_frames) ... ok
+test_warped_digits_rejection_and_orientation (test_projective.ProjectiveTests.test_warped_digits_rejection_and_orientation) ... ok
+test_absent_old_roots_not_reused_before_row_seal (test_reclaimed_model.ReclaimedModelTests.test_absent_old_roots_not_reused_before_row_seal) ... ok
+test_adversarial_nested_union_fixtures_against_whole_image_bfs (test_reclaimed_model.ReclaimedModelTests.test_adversarial_nested_union_fixtures_against_whole_image_bfs) ... ok
+test_aliases_reclaimed_after_late_union (test_reclaimed_model.ReclaimedModelTests.test_aliases_reclaimed_after_late_union) ... ok
+test_diagonal_is_not_four_connected (test_reclaimed_model.ReclaimedModelTests.test_diagonal_is_not_four_connected) ... ok
+test_empty_and_single_pixel_border (test_reclaimed_model.ReclaimedModelTests.test_empty_and_single_pixel_border) ... ok
+test_exactly_eight_completed_per_colour_is_valid (test_reclaimed_model.ReclaimedModelTests.test_exactly_eight_completed_per_colour_is_valid) ... ok
+test_invalid_input_rejected (test_reclaimed_model.ReclaimedModelTests.test_invalid_input_rejected) ... ok
+test_late_merge_exact_area_bounds_and_bbox_midpoint (test_reclaimed_model.ReclaimedModelTests.test_late_merge_exact_area_bounds_and_bbox_midpoint) ... ok
+test_native_all_foreground_exact_area_and_final_row_retirement (test_reclaimed_model.ReclaimedModelTests.test_native_all_foreground_exact_area_and_final_row_retirement) ... ok
+test_nine_concurrent_handles_overflow_even_when_eventually_one_blob (test_reclaimed_model.ReclaimedModelTests.test_nine_concurrent_handles_overflow_even_when_eventually_one_blob) ... ok
+test_nine_serial_valid_components_overflow_completed_pool_only (test_reclaimed_model.ReclaimedModelTests.test_nine_serial_valid_components_overflow_completed_pool_only) ... ok
+test_random_small_frames_against_independent_whole_prefix_bfs (test_reclaimed_model.ReclaimedModelTests.test_random_small_frames_against_independent_whole_prefix_bfs) ... ok
+test_serial_subminimum_noise_does_not_fill_completed_pool (test_reclaimed_model.ReclaimedModelTests.test_serial_subminimum_noise_does_not_fill_completed_pool) ... ok
+testActualTwoAndThreeRegisterChains (test_synchronisers.SynchroniserReportTests.testActualTwoAndThreeRegisterChains) ... ok
+testMissingChainFailsEvenWithLargeMtbfHeadline (test_synchronisers.SynchroniserReportTests.testMissingChainFailsEvenWithLargeMtbfHeadline) ... ok
+testWrongSecondStageAndAutomaticIdentificationFail (test_synchronisers.SynchroniserReportTests.testWrongSecondStageAndAutomaticIdentificationFail) ... ok
+testArmIsOnlyVisualOpcodeAndNeverANumberProposal (test_tools.DeferredAudioControlTests.testArmIsOnlyVisualOpcodeAndNeverANumberProposal) ... ok
+testRecordIsExplicitlyDeferred (test_tools.DeferredAudioControlTests.testRecordIsExplicitlyDeferred) ... ok
+testDiscardBeforeCurrentTargetReportStillFails (test_tools.HardwareDiagnosticGateTests.testDiscardBeforeCurrentTargetReportStillFails) ... ok
+testSaturatedDiscardCounterCannotProveNoNewDrops (test_tools.HardwareDiagnosticGateTests.testSaturatedDiscardCounterCannotProveNoNewDrops) ... ok
+testEqualWindowsTimestampsKeepEvidenceSeparate (test_tools.ProcessTimeoutTests.testEqualWindowsTimestampsKeepEvidenceSeparate) ... ok
+testNonzeroProcessKeepsCompleteOutputAndDoesNotShareLog (test_tools.ProcessTimeoutTests.testNonzeroProcessKeepsCompleteOutputAndDoesNotShareLog) ... ok
+testOwnedProcessTimeoutIsNonzeroAndRecorded (test_tools.ProcessTimeoutTests.testOwnedProcessTimeoutIsNonzeroAndRecorded) ... ok
+testSurvivingShortDescendantCannotHoldRunnerStdoutPipe (test_tools.ProcessTimeoutTests.testSurvivingShortDescendantCannotHoldRunnerStdoutPipe) ... ok
+testDecoderBadCrcIsNonzero (test_tools.TclFailurePropagationTests.testDecoderBadCrcIsNonzero) ... ok
+testTwoTargetsAreRejected (test_tools.TclFailurePropagationTests.testTwoTargetsAreRejected) ... ok
+testPostMapCannotQualifyFittedSynchroniserCoverage (test_tools.TimingGateTests.testPostMapCannotQualifyFittedSynchroniserCoverage) ... ok
+testRejectNegativeAndMissingTiming (test_tools.TimingGateTests.testRejectNegativeAndMissingTiming) ... ok
+testRejectUnconstrained (test_tools.TimingGateTests.testRejectUnconstrained) ... ok
+
+----------------------------------------------------------------------
+Ran 60 tests in 70.536s
+
+OK

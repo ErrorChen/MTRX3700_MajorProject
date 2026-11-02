@@ -4,8 +4,11 @@ _repositoryRoot=_Path(__file__).resolve().parents[2]
 _sys.path[:0]=[str(_repositoryRoot/"tools/lib"),str(_repositoryRoot/"tools"),str(_repositoryRoot/"tests/python")]
 """MODEL checks for frozen status and same-frame GRAB schema boundaries."""
 import unittest
+import tempfile
+from pathlib import Path
+from unittest.mock import patch
 from contract_model import FIELD_LAYOUTS, packPayload
-from debug_decode import decodeWords, decodeGrabWords
+from debug_decode import decodeWords, decodeGrabWords, compareMarkerPixels
 
 
 def fixture():
@@ -71,6 +74,50 @@ class DebugDecodeTests(unittest.TestCase):
         words[94] |= 0x10
         with self.assertRaisesRegex(ValueError, "reserved"):
             decodeWords(words)
+
+    def testReader2WhiteThresholdHasExplicitDifferentMeaning(self):
+        words = fixture()[:96]
+        words[1] = 0x00020002
+        words[95] = (1 << 24) | (2 << 16) | (96 << 8) | 64
+        decoded = decodeWords(words)
+        self.assertEqual(decoded["readerAlgorithm"], 2)
+        self.assertEqual(decoded["whiteMinimum"], 96)
+        self.assertEqual(decoded["whiteMode"], "QUARTER_WEIGHTED_LUMA")
+        self.assertEqual(decoded["whiteThresholdExpression"], "R+2*G+B >= 4*whiteMinimum")
+        words[95] = (1 << 24) | (1 << 16) | (112 << 8) | 64
+        legacy = decodeWords(words)
+        self.assertEqual(legacy["whiteMode"], "MIN_RGB_CHANNEL")
+        self.assertEqual(legacy["whiteMinimum"], 112)
+        for white, spread in ((112, 64), (96, 63)):
+            words[95] = (1 << 24) | (2 << 16) | (white << 8) | spread
+            with self.assertRaisesRegex(ValueError, "weighted-luma"):
+                decodeWords(words)
+        words[1] = 0x00010002
+        words[95] = (2 << 16) | (96 << 8) | 64
+        with self.assertRaisesRegex(ValueError, "reader algorithm"):
+            decodeWords(words)
+
+    def testPixelComparisonSelectsRecordedReaderAndExportsItsWhiteMask(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory(prefix="reader_semantics_") as folder:
+            imagePath = Path(folder) / "pixel.png"
+            Image.new("RGB", (320, 240), (80, 112, 80)).save(imagePath)
+            for algorithm, minimum, expectedWhite in ((1, 112, 0), (2, 96, 255)):
+                words = fixture()[:96]
+                words[1] = 0x00020002
+                words[9] = 1
+                words[24] = 4 << 8
+                words[95] = (1 << 24) | (algorithm << 16) | (minimum << 8) | 64
+                reference = {"accepted": False, "reasonCode": 4, "windowScores": {}, "segments": ""}
+                with patch("projective_reference.classifyProjective", return_value=reference) as model:
+                    output = Path(folder) / f"algorithm{algorithm}"
+                    result = compareMarkerPixels(imagePath, decodeWords(words), output)
+                self.assertEqual(result["status"], "PASS")
+                self.assertEqual(model.call_args.kwargs["readerAlgorithm"], algorithm)
+                self.assertEqual(model.call_args.kwargs["colourAlgorithm"], 1)
+                self.assertEqual(model.call_args.args[5], minimum)
+                with Image.open(output / "marker_00_white.png") as mask:
+                    self.assertEqual(mask.getpixel((0, 0)), expectedWhite)
 
     def testWrongFrameAndBuildRejected(self):
         words = fixture()

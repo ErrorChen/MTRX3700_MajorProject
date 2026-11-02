@@ -77,6 +77,9 @@
       "name": "memberBVgaOverlay_tb",
       "passMarker": "PASS memberBVgaOverlay_tb",
       "sources": [
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaContour.sv",
+        "rtl/debug/memberBVgaLabels.sv",
         "rtl/debug/memberBVgaOverlay.sv",
         "tests/rtl/memberBVgaOverlay_tb.sv"
       ],
@@ -96,6 +99,7 @@
         "rtl/vision/causalMaskCleanup.sv",
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -128,6 +132,7 @@
       "sources": [
         "rtl/vision/candidate_pkg.sv",
         "rtl/common/vision_pkg.sv",
+        "rtl/vision/nativeAnchorReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "tests/rtl/projectiveMarkerReader_tb.sv"
       ],
@@ -149,6 +154,7 @@
         "rtl/vision/causalMaskCleanup.sv",
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -160,7 +166,7 @@
       ],
       "plusargs": [
         "+REAL_FRAME_REPEAT",
-        "+SCENE_FILE={vectors}/projective_61_rgb565.hex"
+        "+SCENE_FILE={vectors}/recorded_frame13675_rgb565.hex"
       ],
       "inputSource": "ONE_RECORDED_FRAME_REPEATED_IN_RTL",
       "timeoutSeconds": 900
@@ -180,6 +186,7 @@
         "rtl/vision/causalMaskCleanup.sv",
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -227,6 +234,7 @@
         "rtl/vision/causalMaskCleanup.sv",
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -242,6 +250,69 @@
       "plusargs": [
         "+COLLISION_ONLY"
       ]
+    },
+    {
+      "name": "perceptionCoreProfile_tb",
+      "passMarker": "PASS perceptionCoreProfile_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreProfile_tb.sv"
+      ],
+      "timeoutSeconds": 60,
+      "inputSource": "PROTOCOL_CONFIG_INJECTION"
+    },
+    {
+      "name": "vgaMapping_tb",
+      "passMarker": "PASS vgaMapping_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/display/camera_display.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaContour.sv",
+        "rtl/debug/memberBVgaLabels.sv",
+        "rtl/debug/memberBVgaOverlay.sv",
+        "tests/rtl/vgaMapping_tb.sv"
+      ],
+      "timeoutSeconds": 120,
+      "inputSource": "SYNTHETIC_VGA_MAPPING_AND_BACKPRESSURE"
+    },
+    {
+      "name": "memberBVgaContour_tb",
+      "passMarker": "PASS memberBVgaContour_tb",
+      "sources": [
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaContour.sv",
+        "tests/rtl/memberBVgaContour_tb.sv"
+      ],
+      "timeoutSeconds": 120,
+      "inputSource": "SYNTHETIC_DISPLAY_RGB_INDEPENDENT_HSV_ORACLE"
+    },
+    {
+      "name": "nativeAnchorReader_tb",
+      "passMarker": "PASS nativeAnchorReader_tb",
+      "sources": [
+        "rtl/vision/nativeAnchorReader.sv",
+        "tests/rtl/nativeAnchorReader_tb.sv"
+      ],
+      "timeoutSeconds": 120,
+      "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_NATIVE_ROI_REPLAY"
     }
   ]
 }

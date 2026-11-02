@@ -1,0 +1,30 @@
+{
+  "schema": "echo7-build-timeout-v1",
+  "buildId": "fd9950d9",
+  "status": "TIMEOUT_NOT_FIT_COMPLETE",
+  "compileReturnCode": 124,
+  "buildResult": "build/member_b/20261102T113929_022924Z_build/result.json",
+  "sourceSha256": "fd9950d98a33b408a8b1c9b22ef21d45a0b794755eb2ff44003b435f90de370a",
+  "timeLimitSeconds": 3600,
+  "observedFreeMemoryMiB": [
+    495,
+    838,
+    761
+  ],
+  "fitterPrivateMemoryMiB": 2349,
+  "diagnosis": "Memory pressure was observed during the long fit; this does not establish the final timing outcome or a sole cause of the timeout.",
+  "fitComplete": false,
+  "programmed": false,
+  "residualProcessCleanup": {
+    "pid": 136184,
+    "startLocal": "2026-11-02 22:41:48",
+    "terminatedWithReviewedTaskkill": true
+  },
+  "logLimitation": "The old communicate/timeout branch lost buffered Quartus stdout when a descendant retained the pipe. Existing map reports are retained; runner repair is in progress.",
+  "retainedReports": {
+    "PartBDebug.flow.rpt": "c4b2a33004783c5bcf83afaf2c7da901698fe82070996d1a37d250d5eaef8a20",
+    "PartBDebug.map.rpt": "56ac83df05ef251af4adb1d0cee2475d2270daff534099058458280c04db154b",
+    "PartBDebug.map.smsg": "da24fe30a121549f9e2c18c3ef65ecb459cabf4a77035eafea65ccdcf49d88ae",
+    "PartBDebug.map.summary": "ffe43042ee9c51f29205745b808778d82179fa166caa179c8ab1dc28a89671ba"
+  }
+}

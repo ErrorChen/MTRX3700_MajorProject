@@ -60,7 +60,7 @@ def sample(image, redBox, blueBox):
 
 
 def profileSummary(image, redMin, blueMin):
-    result=recogniseProjective(image,redMin=redMin,blueMin=blueMin,inputSource='RECORDED_CAMERA',colourAlgorithm=0)
+    result=recogniseProjective(image,redMin=redMin,blueMin=blueMin,inputSource='RECORDED_CAMERA',colourAlgorithm=0,readerAlgorithm=1)
     return {key:result[key] for key in ('colourProfile','candidateCounts','allComponentsBeforeAreaGate','boundedCandidateOracle','overflow')} | {
         'acceptedMarkers':[{'colour':m['colour'],'digit':m['digit'],'bbox':m['bbox'],'quality':m['quality']}
                            for m in result['markers'] if m['accepted']]}
@@ -72,7 +72,7 @@ def audit(inputDirectory, outputDirectory):
     heldPair=None
     for frameId in (13139,13511,13675):
         image=Image.open(inputDirectory/f'frame{frameId}.png').convert('RGB')
-        recognised=recogniseProjective(image,redMin=64,inputSource='RECORDED_CAMERA',colourAlgorithm=0)
+        recognised=recogniseProjective(image,redMin=64,inputSource='RECORDED_CAMERA',colourAlgorithm=0,readerAlgorithm=1)
         cards=[m for m in recognised['markers'] if m['accepted'] and m['colour']=='red' and m['digit']==1]
         pairs=[(card['bbox'],blue['bbox']) for card in cards for blue in recognised['markers'] if blue['colour']=='blue' and paired(card['bbox'],blue['bbox'])]
         if len(pairs)!=1:raise AssertionError(f'Expected unique measured red1/reference pair, got {pairs}')

@@ -1,0 +1,1557 @@
+{
+  "schema": "ECHO7_PROJECTIVE_MODEL_3",
+  "layer": "MODEL",
+  "inputSource": "RECORDED_CAMERA",
+  "imageSize": [
+    320,
+    240
+  ],
+  "orientationProfile": 0,
+  "capacityPerColour": 8,
+  "colourProfile": {
+    "redMin": 48,
+    "blueMin": 32,
+    "colourAlgorithm": 1,
+    "redSignedHueDegrees": [
+      -24,
+      0
+    ],
+    "blueHueDegrees": [
+      200,
+      250
+    ],
+    "minimumSaturation": 0.5,
+    "horizontalRunSupport": 3
+  },
+  "whiteProfile": {
+    "mode": "WEIGHTED_LUMA",
+    "minimum": 96,
+    "maximumChannelSpread": 64,
+    "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+    "sumWeights": [
+      1,
+      2,
+      1
+    ],
+    "sumMinimum": 384
+  },
+  "cleanup": "RUN3_THEN_PART_A_CAUSAL_LEFT_OR_UPPER",
+  "boundedCandidateOracle": {
+    "frame_valid": true,
+    "overflow": false,
+    "red_overflow": false,
+    "blue_overflow": false,
+    "red": [
+      {
+        "valid": 1,
+        "xmin": 65,
+        "xmax": 129,
+        "ymin": 0,
+        "ymax": 84,
+        "area": 4741,
+        "cx": 97,
+        "cy": 42
+      },
+      {
+        "valid": 1,
+        "xmin": 72,
+        "xmax": 138,
+        "ymin": 147,
+        "ymax": 239,
+        "area": 4449,
+        "cx": 105,
+        "cy": 193
+      }
+    ],
+    "blue": [
+      {
+        "valid": 1,
+        "xmin": 189,
+        "xmax": 232,
+        "ymin": 6,
+        "ymax": 74,
+        "area": 2363,
+        "cx": 210,
+        "cy": 40
+      },
+      {
+        "valid": 1,
+        "xmin": 240,
+        "xmax": 274,
+        "ymin": 14,
+        "ymax": 75,
+        "area": 1347,
+        "cx": 257,
+        "cy": 44
+      },
+      {
+        "valid": 1,
+        "xmin": 195,
+        "xmax": 238,
+        "ymin": 84,
+        "ymax": 153,
+        "area": 2123,
+        "cx": 216,
+        "cy": 118
+      },
+      {
+        "valid": 1,
+        "xmin": 245,
+        "xmax": 277,
+        "ymin": 84,
+        "ymax": 146,
+        "area": 1448,
+        "cx": 261,
+        "cy": 115
+      },
+      {
+        "valid": 1,
+        "xmin": 69,
+        "xmax": 129,
+        "ymin": 89,
+        "ymax": 105,
+        "area": 928,
+        "cx": 99,
+        "cy": 97
+      },
+      {
+        "valid": 1,
+        "xmin": 250,
+        "xmax": 281,
+        "ymin": 151,
+        "ymax": 216,
+        "area": 1210,
+        "cx": 265,
+        "cy": 183
+      },
+      {
+        "valid": 1,
+        "xmin": 200,
+        "xmax": 241,
+        "ymin": 158,
+        "ymax": 232,
+        "area": 2097,
+        "cx": 220,
+        "cy": 195
+      }
+    ],
+    "red_active_overflow": false,
+    "red_output_overflow": false,
+    "red_max_row_handles": 5,
+    "red_lifetime_seeds": 59,
+    "red_qualifying_completed": 2,
+    "red_total_retired": 25,
+    "blue_active_overflow": false,
+    "blue_output_overflow": false,
+    "blue_max_row_handles": 6,
+    "blue_lifetime_seeds": 97,
+    "blue_qualifying_completed": 7,
+    "blue_total_retired": 7
+  },
+  "candidateCounts": {
+    "red": 2,
+    "blue": 7
+  },
+  "allComponentsBeforeAreaGate": {
+    "red": 25,
+    "blue": 7
+  },
+  "modelPeakOverlappingBboxes": {
+    "red": 1,
+    "blue": 3
+  },
+  "overflow": false,
+  "frameGood": true,
+  "capacityBoundary": "Independent BFS; counts do not prove streaming active-label or row-scheduling bounds",
+  "readerAlgorithm": 2,
+  "colourAlgorithm": 1,
+  "markers": [
+    {
+      "colour": "red",
+      "area": 4741,
+      "bbox": [
+        65,
+        0,
+        129,
+        84
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 1,
+      "kind": "FUNCTION",
+      "quality": 255,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          65,
+          0
+        ],
+        [
+          125,
+          6
+        ],
+        [
+          129,
+          82
+        ],
+        [
+          68,
+          83
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "G": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "D": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "F": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "E": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "anchor": {
+          "white": 24,
+          "samples": 580,
+          "rows": 5,
+          "columns": 5,
+          "roi": [
+            54,
+            0,
+            82,
+            19
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 2,
+          "completedComponents": 2,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            68,
+            3,
+            72,
+            7
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "BC",
+      "foregroundCount": 4761,
+      "quadHalfPixels": [
+        [
+          129,
+          -1
+        ],
+        [
+          251,
+          11
+        ],
+        [
+          259,
+          165
+        ],
+        [
+          135,
+          167
+        ]
+      ],
+      "coefficients": [
+        2766396,
+        57972,
+        2465448,
+        248396,
+        3140676,
+        -19112,
+        1732,
+        -420,
+        19112
+      ],
+      "crossProducts": [
+        18692,
+        19112,
+        20844,
+        20424
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        15028,
+        23780,
+        15380,
+        28260
+      ],
+      "areaPixels": 4942.0,
+      "touchesFrameBoundary": true,
+      "uniqueSourceSamples": 1280,
+      "minimumHorizontalEdgePixels": 61.29437168288782,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_00",
+      "candidateIndex": 0
+    },
+    {
+      "colour": "blue",
+      "area": 2363,
+      "bbox": [
+        189,
+        6,
+        232,
+        74
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 1,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          189,
+          6
+        ],
+        [
+          228,
+          13
+        ],
+        [
+          232,
+          74
+        ],
+        [
+          194,
+          73
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "G": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "D": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "F": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "E": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "anchor": {
+          "white": 14,
+          "samples": 483,
+          "rows": 5,
+          "columns": 4,
+          "roi": [
+            181,
+            0,
+            201,
+            22
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 3,
+          "completedComponents": 2,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            190,
+            9,
+            193,
+            13
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "BC",
+      "foregroundCount": 2374,
+      "quadHalfPixels": [
+        [
+          377,
+          11
+        ],
+        [
+          457,
+          25
+        ],
+        [
+          465,
+          149
+        ],
+        [
+          387,
+          147
+        ]
+      ],
+      "coefficients": [
+        1198404,
+        155384,
+        3640312,
+        158484,
+        1335560,
+        106216,
+        932,
+        152,
+        9656
+      ],
+      "crossProducts": [
+        9808,
+        9656,
+        10588,
+        10740
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        6596,
+        15440,
+        6088,
+        18596
+      ],
+      "areaPixels": 2549.5,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1280,
+      "minimumHorizontalEdgePixels": 39.01281840626232,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_01",
+      "candidateIndex": 1
+    },
+    {
+      "colour": "blue",
+      "area": 1347,
+      "bbox": [
+        240,
+        14,
+        274,
+        75
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 2,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          240,
+          14
+        ],
+        [
+          268,
+          19
+        ],
+        [
+          274,
+          74
+        ],
+        [
+          244,
+          74
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "F": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "E": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "anchor": {
+          "white": 9,
+          "samples": 357,
+          "rows": 4,
+          "columns": 3,
+          "roi": [
+            233,
+            8,
+            249,
+            28
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 2,
+          "completedComponents": 2,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            239,
+            17,
+            241,
+            20
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "ABDEG",
+      "foregroundCount": 1357,
+      "quadHalfPixels": [
+        [
+          479,
+          27
+        ],
+        [
+          537,
+          37
+        ],
+        [
+          549,
+          149
+        ],
+        [
+          487,
+          149
+        ]
+      ],
+      "coefficients": [
+        735692,
+        -221064,
+        3326176,
+        92380,
+        762536,
+        187488,
+        620,
+        -568,
+        6944
+      ],
+      "crossProducts": [
+        6376,
+        6944,
+        7564,
+        6996
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        3464,
+        12688,
+        3844,
+        14948
+      ],
+      "areaPixels": 1742.5,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1207,
+      "minimumHorizontalEdgePixels": 29.427877939124322,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_02",
+      "candidateIndex": 2
+    },
+    {
+      "colour": "blue",
+      "area": 2123,
+      "bbox": [
+        195,
+        84,
+        238,
+        153
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 3,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          195,
+          84
+        ],
+        [
+          233,
+          84
+        ],
+        [
+          237,
+          148
+        ],
+        [
+          199,
+          153
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "F": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "E": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "anchor": {
+          "white": 17,
+          "samples": 441,
+          "rows": 5,
+          "columns": 4,
+          "roi": [
+            187,
+            79,
+            207,
+            99
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 3,
+          "completedComponents": 2,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            195,
+            87,
+            198,
+            91
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "ABCDG",
+      "foregroundCount": 2145,
+      "quadHalfPixels": [
+        [
+          389,
+          167
+        ],
+        [
+          467,
+          167
+        ],
+        [
+          475,
+          297
+        ],
+        [
+          397,
+          307
+        ]
+      ],
+      "coefficients": [
+        1161420,
+        50000,
+        3975580,
+        130260,
+        1406240,
+        1706740,
+        780,
+        -80,
+        10220
+      ],
+      "crossProducts": [
+        10140,
+        10220,
+        11000,
+        10920
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        6084,
+        16964,
+        6184,
+        19664
+      ],
+      "areaPixels": 2642.5,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1280,
+      "minimumHorizontalEdgePixels": 39.0,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_03",
+      "candidateIndex": 3
+    },
+    {
+      "colour": "blue",
+      "area": 1448,
+      "bbox": [
+        245,
+        84,
+        277,
+        146
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 4,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          245,
+          84
+        ],
+        [
+          275,
+          85
+        ],
+        [
+          277,
+          141
+        ],
+        [
+          249,
+          146
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 0,
+          "samples": 8,
+          "projectionBits": 0
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "F": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "E": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "anchor": {
+          "white": 11,
+          "samples": 360,
+          "rows": 4,
+          "columns": 3,
+          "roi": [
+            238,
+            79,
+            255,
+            98
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 2,
+          "completedComponents": 3,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            244,
+            87,
+            246,
+            90
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "BCFG",
+      "foregroundCount": 1464,
+      "quadHalfPixels": [
+        [
+          489,
+          167
+        ],
+        [
+          551,
+          169
+        ],
+        [
+          555,
+          283
+        ],
+        [
+          497,
+          293
+        ]
+      ],
+      "coefficients": [
+        817960,
+        255992,
+        3252828,
+        137688,
+        957696,
+        1110884,
+        736,
+        408,
+        6652
+      ],
+      "crossProducts": [
+        7060,
+        6652,
+        7388,
+        7796
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        3848,
+        13012,
+        3464,
+        15940
+      ],
+      "areaPixels": 1806.0,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1202,
+      "minimumHorizontalEdgePixels": 29.427877939124322,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_04",
+      "candidateIndex": 4
+    },
+    {
+      "colour": "blue",
+      "area": 928,
+      "bbox": [
+        69,
+        89,
+        129,
+        105
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": false,
+      "digit": null,
+      "kind": "UNKNOWN",
+      "quality": 0,
+      "orientationProfile": 0,
+      "reasonCode": 1,
+      "reasonName": "GEOMETRY",
+      "quad": null,
+      "windowScores": {},
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "",
+      "candidateIndex": 5
+    },
+    {
+      "colour": "red",
+      "area": 4449,
+      "bbox": [
+        72,
+        147,
+        138,
+        239
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 2,
+      "kind": "FUNCTION",
+      "quality": 255,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          72,
+          154
+        ],
+        [
+          133,
+          147
+        ],
+        [
+          138,
+          225
+        ],
+        [
+          78,
+          239
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "B": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "C": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "F": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "E": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "anchor": {
+          "white": 29,
+          "samples": 868,
+          "rows": 6,
+          "columns": 6,
+          "roi": [
+            60,
+            146,
+            90,
+            173
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 3,
+          "completedComponents": 2,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            75,
+            157,
+            80,
+            162
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "ABDEG",
+      "foregroundCount": 4482,
+      "quadHalfPixels": [
+        [
+          143,
+          307
+        ],
+        [
+          267,
+          293
+        ],
+        [
+          277,
+          451
+        ],
+        [
+          155,
+          479
+        ]
+      ],
+      "coefficients": [
+        2895932,
+        261952,
+        2796508,
+        243068,
+        3447936,
+        6003692,
+        1764,
+        176,
+        19556
+      ],
+      "crossProducts": [
+        19732,
+        19556,
+        21320,
+        21496
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        15572,
+        25064,
+        15668,
+        29728
+      ],
+      "areaPixels": 5131.5,
+      "touchesFrameBoundary": true,
+      "uniqueSourceSamples": 1280,
+      "minimumHorizontalEdgePixels": 62.39390995922599,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_06",
+      "candidateIndex": 6
+    },
+    {
+      "colour": "blue",
+      "area": 1210,
+      "bbox": [
+        250,
+        151,
+        281,
+        216
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 6,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          250,
+          155
+        ],
+        [
+          278,
+          151
+        ],
+        [
+          281,
+          207
+        ],
+        [
+          252,
+          216
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "B": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "C": {
+          "white": 6,
+          "samples": 7,
+          "projectionBits": 126
+        },
+        "F": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "E": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "anchor": {
+          "white": 10,
+          "samples": 336,
+          "rows": 4,
+          "columns": 3,
+          "roi": [
+            244,
+            149,
+            259,
+            169
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 3,
+          "completedComponents": 4,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            249,
+            158,
+            251,
+            161
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "ACDEFG",
+      "foregroundCount": 1254,
+      "quadHalfPixels": [
+        [
+          499,
+          309
+        ],
+        [
+          557,
+          301
+        ],
+        [
+          563,
+          415
+        ],
+        [
+          503,
+          433
+        ]
+      ],
+      "coefficients": [
+        717132,
+        -117072,
+        3467052,
+        114180,
+        736848,
+        2146932,
+        564,
+        -288,
+        6948
+      ],
+      "crossProducts": [
+        6660,
+        6948,
+        7512,
+        7224
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        3428,
+        13032,
+        3924,
+        15392
+      ],
+      "areaPixels": 1771.5,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1205,
+      "minimumHorizontalEdgePixels": 29.274562336608895,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_07",
+      "candidateIndex": 7
+    },
+    {
+      "colour": "blue",
+      "area": 2097,
+      "bbox": [
+        200,
+        158,
+        241,
+        232
+      ],
+      "readerAlgorithm": 2,
+      "colourAlgorithm": 1,
+      "accepted": true,
+      "digit": 5,
+      "kind": "BAY",
+      "quality": 192,
+      "orientationProfile": 0,
+      "reasonCode": 0,
+      "reasonName": "OK",
+      "quad": [
+        [
+          200,
+          164
+        ],
+        [
+          238,
+          158
+        ],
+        [
+          241,
+          220
+        ],
+        [
+          203,
+          232
+        ]
+      ],
+      "windowScores": {
+        "A": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "G": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "D": {
+          "white": 8,
+          "samples": 8,
+          "projectionBits": 255
+        },
+        "B": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "C": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "F": {
+          "white": 7,
+          "samples": 7,
+          "projectionBits": 127
+        },
+        "E": {
+          "white": 0,
+          "samples": 7,
+          "projectionBits": 0
+        },
+        "anchor": {
+          "white": 17,
+          "samples": 480,
+          "rows": 5,
+          "columns": 4,
+          "roi": [
+            192,
+            157,
+            211,
+            180
+          ],
+          "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+          "units": "native pixels/rows/columns",
+          "capacity": 8,
+          "peakActiveHandles": 3,
+          "completedComponents": 3,
+          "eligibleCount": 1,
+          "ambiguous": false,
+          "overflow": false,
+          "bbox": [
+            200,
+            166,
+            203,
+            170
+          ]
+        },
+        "upperHole": {
+          "white": 0,
+          "samples": 24
+        },
+        "lowerHole": {
+          "white": 0,
+          "samples": 24
+        }
+      },
+      "inputWhiteProfile": {
+        "mode": "WEIGHTED_LUMA",
+        "minimum": 96,
+        "maximumChannelSpread": 64,
+        "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+        "sumWeights": [
+          1,
+          2,
+          1
+        ],
+        "sumMinimum": 384
+      },
+      "segments": "ACDFG",
+      "foregroundCount": 2129,
+      "quadHalfPixels": [
+        [
+          399,
+          327
+        ],
+        [
+          477,
+          315
+        ],
+        [
+          483,
+          441
+        ],
+        [
+          405,
+          465
+        ]
+      ],
+      "coefficients": [
+        1224288,
+        30672,
+        3978828,
+        175176,
+        1342656,
+        3260844,
+        936,
+        -72,
+        9972
+      ],
+      "crossProducts": [
+        9900,
+        9972,
+        10908,
+        10836
+      ],
+      "edgeSquaredHalfPixelUnits": [
+        6228,
+        15912,
+        6660,
+        19080
+      ],
+      "areaPixels": 2601.0,
+      "touchesFrameBoundary": false,
+      "uniqueSourceSamples": 1280,
+      "minimumHorizontalEdgePixels": 39.45883931389772,
+      "artifacts": "build\\member_b\\20261102T132128_443689Z_baseline_fresh_after_memory\\model\\candidate_08",
+      "candidateIndex": 8
+    }
+  ]
+}

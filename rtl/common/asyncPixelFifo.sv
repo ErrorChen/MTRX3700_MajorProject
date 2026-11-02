@@ -13,8 +13,8 @@ module asyncPixelFifo #(parameter int WIDTH=80, ADDRESS_BITS=8) (
     localparam int POINTER_BITS=ADDRESS_BITS+1;
     (* ramstyle="M10K, no_rw_check" *) logic [WIDTH-1:0] memory [0:(1<<ADDRESS_BITS)-1];
     logic [POINTER_BITS-1:0] writeBinary, writeGray, readBinary, readGray;
-    (* async_reg="true" *) logic [POINTER_BITS-1:0] readGrayMeta, readGraySync;
-    (* async_reg="true" *) logic [POINTER_BITS-1:0] writeGrayMeta, writeGraySync;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [POINTER_BITS-1:0] readGrayMeta, readGraySync;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [POINTER_BITS-1:0] writeGrayMeta, writeGraySync;
     wire [POINTER_BITS-1:0] writeNext=writeBinary+{{ADDRESS_BITS{1'b0}},(writeValid&&!full)};
     wire [POINTER_BITS-1:0] readNext=readBinary+{{ADDRESS_BITS{1'b0}},(readEnable&&!empty)};
     wire [POINTER_BITS-1:0] writeNextGray=(writeNext>>1)^writeNext;
