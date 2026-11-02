@@ -1,0 +1,25 @@
+{
+  "contractVersion": 2,
+  "source": "Design contract v2 integer vectors; not camera or microphone recordings",
+  "activeBayMask": 126,
+  "widths": {"targetRequest": 22, "targetReport": 139, "userEvent": 104, "status": 76},
+  "bbox": [
+    {"native": [10, 13, 20, 24], "expected": {"centreU": 22, "centreV": 307, "boxWidth": 5, "boxHeight": 4}},
+    {"native": [0, 319, 0, 239], "expected": {"centreU": 119, "centreV": 159, "boxWidth": 240, "boxHeight": 320}},
+    {"native": [319, 319, 239, 239], "expected": {"centreU": 239, "centreV": 0, "boxWidth": 1, "boxHeight": 1}},
+    {"native": [1, 2, 2, 3], "expected": {"centreU": 2, "centreV": 317, "boxWidth": 2, "boxHeight": 2}}
+  ],
+  "sequence": [
+    {"previous": 65535, "next": 0, "newer": true},
+    {"previous": 0, "next": 0, "newer": false},
+    {"previous": 10, "next": 9, "newer": false},
+    {"previous": 0, "next": 32767, "newer": true},
+    {"previous": 0, "next": 32768, "newer": false}
+  ],
+  "time": [
+    {"now": 32, "stamp": 4294967280, "budget": 100, "fresh": true},
+    {"now": 101, "stamp": 0, "budget": 100, "fresh": false},
+    {"now": 100, "stamp": 0, "budget": 100, "fresh": true},
+    {"now": 100, "stamp": 101, "budget": 100, "fresh": false}
+  ]
+}

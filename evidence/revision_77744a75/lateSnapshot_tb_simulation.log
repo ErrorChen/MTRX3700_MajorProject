@@ -1,0 +1,23 @@
+COMMAND ["C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe", "-c", "-onfinish", "exit", "-lib", "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb\\simlib", "lateSnapshot_tb", "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors", "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors", "-do", "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"]
+Reading C:/intelFPGA_lite/18.1/modelsim_ase/tcl/vsim/pref.tcl
+
+# 10.5b
+
+# vsim -c -onfinish exit -lib C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib lateSnapshot_tb "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors" "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors" -do "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0" 
+# Start time: 21:07:11 on Nov 02,2026
+# Loading sv_std.std
+# Loading C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib.lateSnapshot_tb
+# Loading C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib.camera_pkg
+# Loading C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib.frame_snap
+# Loading C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib.snapshot_ram
+# Loading C:\intelFPGA_lite\MTRX3700\major\ECHOPHACE1\work\member_b\20261102T100149_339329Z_test\lateSnapshot_tb\simlib.snapshot_probes
+# onerror {quit -code 1}
+#  Warning: onerror command for use within macro
+#  onbreak {quit -code 1}
+#  Warning: onbreak command for use within macro
+#  run -all
+# PASS lateSnapshot_tb late-results same-frame RAM ownership timeout recovery
+# ** Note: $finish    : C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/tb/member_b/lateSnapshot_tb.sv(48)
+#    Time: 6911726 ns  Iteration: 0  Instance: /lateSnapshot_tb
+# End time: 21:07:12 on Nov 02,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0

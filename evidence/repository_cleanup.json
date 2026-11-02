@@ -1,0 +1,64 @@
+﻿{
+    "deletedRoots":  [
+                         "alltest",
+                         "Chassis + emergencystop",
+                         "Chassis + Robot Adaptor Board",
+                         "V2026.3 Camera Code",
+                         "MTRX3700-Major-Project-codex-echo7-part-a.zip",
+                         "ECHOPHACE1"
+                     ],
+    "activeSourceDependencyCheck":  "36 selected files all exist",
+    "classification":  [
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  60
+                                          },
+                               "root":  "alltest"
+                           },
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  92
+                                          },
+                               "root":  "Chassis + emergencystop"
+                           },
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  32
+                                          },
+                               "root":  "Chassis + Robot Adaptor Board"
+                           },
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  75
+                                          },
+                               "root":  "V2026.3 Camera Code"
+                           },
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  1
+                                          },
+                               "root":  "MTRX3700-Major-Project-codex-echo7-part-a.zip"
+                           },
+                           {
+                               "counts":  {
+                                              "TRACKED_MATCHES_GIT":  133,
+                                              "TRACKED_CHANGED":  3,
+                                              "UNTRACKED_GENERATED":  617,
+                                              "UNTRACKED_REVIEW":  4
+                                          },
+                               "root":  "ECHOPHACE1"
+                           }
+                       ],
+    "modelRegression":  "build/member_b/20261102T104001_122301Z_test/result.json",
+    "userSettingPreserved":  "quartus/PartBDebug.qsf RESERVE_ALL_UNUSED_PINS_NO_OUTPUT_GND",
+    "initialWorktree":  "CLEAN",
+    "decision":  "Delete obsolete content after exact Git/source provenance and current dependency verification",
+    "sourceHead":  "1a46e9a49e8ec676cf14e998c04888c4705729bf",
+    "reviewedChanges":  "cleanup_reviewed_changes.patch",
+    "replacedSessionFiles":  [
+                                 "ECHOPHACE1/rtl/member_b/vision/sevenSegmentReader.sv",
+                                 "ECHOPHACE1/tb/member_b/sevenSegmentReader_tb.sv",
+                                 "ECHOPHACE1/tools/member_b/baseline_build.py",
+                                 "ECHOPHACE1/tools/member_b/create_project.py"
+                             ]
+}

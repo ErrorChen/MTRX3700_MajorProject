@@ -1,0 +1,224 @@
+{
+  "schema": "ECHO7_FAILED_FIT_REVIEW_1",
+  "level": "QUARTUS_FAILED_FIT_ANALYSIS",
+  "status": "FAIL_ROUTING_CONGESTION",
+  "buildId": "77744a75",
+  "sourceSha256": "77744a756271bf8182e53b37f6ef9c566e0ca9e122f2c719df050b478a2860ee",
+  "sourceBuildResult": "ECHOPHACE1\\work\\member_b\\20261102T094247_147032Z_build\\result.json",
+  "archivedReports": "ECHOPHACE1\\work\\member_b\\20261102T094247_147032Z_build\\failed_reports",
+  "reportHashes": [
+    {
+      "file": "PartBDebug.fit.rpt",
+      "sha256": "25087689fd932f6160c235cb64ba09bb727c8ee3a1a3da72b124613b85973167",
+      "bytes": 1173925
+    },
+    {
+      "file": "PartBDebug.fit.smsg",
+      "sha256": "d41fedc43df491b98368049ad3b6ffcc74efe806a6ed495dbb30294481fbd8a9",
+      "bytes": 482
+    },
+    {
+      "file": "PartBDebug.fit.summary",
+      "sha256": "d017ff64c9798c1dcf2c2ce4d4538eeae5ff2545b90f03271b0c70ecb1bfe89b",
+      "bytes": 706
+    },
+    {
+      "file": "PartBDebug.flow.rpt",
+      "sha256": "3741ce7bab9bd8770e648a378631354e8340de38249b4b6d5d1870a0bc82ca1d",
+      "bytes": 8301
+    },
+    {
+      "file": "PartBDebug.map.rpt",
+      "sha256": "68f4931b28c50ddd00215707d8f32abbc286a4fd5de22847a2cb19da878ea6d5",
+      "bytes": 5206684
+    },
+    {
+      "file": "PartBDebug.map.smsg",
+      "sha256": "83a25c1c5fd91ca649f53234c180b08360805e7c735f1b453f5df5c297329135",
+      "bytes": 1056
+    },
+    {
+      "file": "PartBDebug.map.summary",
+      "sha256": "9d281080a6fa38ab350f3dac0adae8f84b8b6b148b06f167a4482d040da79518",
+      "bytes": 543
+    }
+  ],
+  "summary": {
+    "neededAlms": 25463.2,
+    "placedAlms": 28166.2,
+    "availableAlms": 32070,
+    "logicRegisters": 22123,
+    "ioRegisters": 10,
+    "ramBlocks": 345,
+    "availableRamBlocks": 397,
+    "dspBlocks": 77,
+    "availableDspBlocks": 87,
+    "averageInterconnectPercent": 40.4,
+    "peakInterconnectPercent": 78.9,
+    "peakVerticalInterconnectPercent": 82.3
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "scope": "perceptionCore exclusive; children excluded",
+      "neededAlms": 11737.9,
+      "aluts": 19148,
+      "registers": 2784,
+      "reportLine": 2241,
+      "note": "Largest logic contributor. Root identified replicated marker/reference pairing as the principal combinational expansion."
+    },
+    {
+      "rank": 2,
+      "line": 2242,
+      "path": "|perceptionDemoTop|perceptionCore:core|boundedCandidates:candidates",
+      "entity": "boundedCandidates",
+      "neededAlms": "5519.5 (5519.5)",
+      "placedAlms": "5607.4 (5607.4)",
+      "aluts": "8227 (8227)",
+      "registers": "4684 (4684)",
+      "memoryBits": "0",
+      "dsps": "0",
+      "note": "Existing CAP8 row/label algorithm. Preserve validated row scheduling before considering any architectural change."
+    },
+    {
+      "rank": 3,
+      "line": 2263,
+      "path": "|perceptionDemoTop|perceptionCore:core|projectiveMarkerReader:reader",
+      "entity": "projectiveMarkerReader",
+      "neededAlms": "2328.7 (2328.7)",
+      "placedAlms": "2360.5 (2360.5)",
+      "aluts": "3120 (3120)",
+      "registers": "2359 (2359)",
+      "memoryBits": "0",
+      "dsps": "74",
+      "note": "74 of all 77 DSP blocks; width-bounded arithmetic is the primary DSP optimisation."
+    },
+    {
+      "rank": 4,
+      "line": 2227,
+      "path": "|perceptionDemoTop|memberBVgaOverlay:overlay",
+      "entity": "memberBVgaOverlay",
+      "neededAlms": "1867.6 (1778.7)",
+      "placedAlms": "1854.2 (1765.7)",
+      "aluts": "3316 (3137)",
+      "registers": "719 (719)",
+      "memoryBits": "0",
+      "dsps": "0",
+      "note": "Sixteen per-pixel border/label paths. A secondary bounded-width optimisation candidate."
+    }
+  ],
+  "debugAndCdc": {
+    "entities": [
+      {
+        "line": 2201,
+        "path": "|perceptionDemoTop|frame_snap:snap_u",
+        "entity": "frame_snap",
+        "neededAlms": "832.3 (657.5)",
+        "placedAlms": "1065.3 (891.9)",
+        "aluts": "1119 (891)",
+        "registers": "1583 (1487)",
+        "memoryBits": "1232064",
+        "dsps": "0"
+      },
+      {
+        "line": 2221,
+        "path": "|perceptionDemoTop|memberBDebug:debugControl",
+        "entity": "memberBDebug",
+        "neededAlms": "681.4 (455.3)",
+        "placedAlms": "915.4 (684.7)",
+        "aluts": "839 (492)",
+        "registers": "1642 (1409)",
+        "memoryBits": "0",
+        "dsps": "0"
+      },
+      {
+        "line": 2219,
+        "path": "|perceptionDemoTop|heldBusCdc:resultToCamera",
+        "entity": "heldBusCdc",
+        "neededAlms": "472.1 (472.1)",
+        "placedAlms": "1183.4 (1183.4)",
+        "aluts": "833 (833)",
+        "registers": "2710 (2710)",
+        "memoryBits": "0",
+        "dsps": "0"
+      },
+      {
+        "line": 2220,
+        "path": "|perceptionDemoTop|heldBusCdc:resultToDisplay",
+        "entity": "heldBusCdc",
+        "neededAlms": "513.8 (513.8)",
+        "placedAlms": "968.2 (968.2)",
+        "aluts": "831 (831)",
+        "registers": "2095 (2095)",
+        "memoryBits": "0",
+        "dsps": "0"
+      }
+    ],
+    "neededAlmsTotal": 2499.6,
+    "registersTotal": 8030,
+    "registerFractionPercent": 36.3,
+    "scope": "Four entities above; excludes top-level completedWords and VGA overlay registers.",
+    "conclusion": "Substantial register and control fan-out cost, but about 9.8% of needed ALMs, not the dominant logic expansion."
+  },
+  "memory": {
+    "cameraDisplayM10K": 152,
+    "grabSnapshotM10K": 152,
+    "whiteColourGlyphBanksM10K": 38,
+    "asyncPixelFifoM10K": 2,
+    "cleanupRowM10K": 1,
+    "note": "Real BRAM inference verified. Full-colour display and immutable JTAG capture dominate M10K usage; glyph banks use 19 blocks each."
+  },
+  "highFanout": [
+    {
+      "net": "rs50[1]",
+      "fanout": 11086,
+      "line": 3208
+    },
+    {
+      "net": "rsPclk[1]",
+      "fanout": 1555,
+      "line": 3209
+    },
+    {
+      "net": "candidates|Equal5~0",
+      "fanout": 1524,
+      "line": 3210
+    },
+    {
+      "net": "core|always0~0",
+      "fanout": 1484,
+      "line": 3211
+    },
+    {
+      "net": "resultToCamera|heldData[66]~0",
+      "fanout": 1353,
+      "line": 3215
+    },
+    {
+      "net": "resultToCamera|acknowledgeToggle~0",
+      "fanout": 1353,
+      "line": 3216
+    },
+    {
+      "net": "completedWords[82]~0",
+      "fanout": 1351,
+      "line": 3217
+    },
+    {
+      "net": "debugControl|frozenWords[156]~2",
+      "fanout": 1351,
+      "line": 3218
+    }
+  ],
+  "recommendations": [
+    "First serialise the replicated core marker/reference matching, then reduce reader arithmetic widths using proved coordinate bounds and identical-pixel vector replay.",
+    "If further reduction is required, feed the VGA mailbox only the 737 consumed data bits (16 markers x 40 bits plus frame/config/time/capture/frameGood). The old destination was already pruned; the main expected saving is about 614 source-held registers and its comparison/control load, not two full 3072-bit banks.",
+    "Keep the held-data/request/ack ownership and immutable GRAB/BCTL snapshots. Removing copies without explicit ownership/backpressure invalidates atomic CDC evidence.",
+    "Review the 11086-load synchronous reset net after the major logic reduction; do not hide it with false paths or remove resets without valid-data/initial-state proof."
+  ],
+  "limits": [
+    "Resource figures are from a failed placement/routing attempt, not a successful fitted design.",
+    "Text reports establish resource and high-fanout contributors; a precise physical congestion hotspot was not inspected in Chip Planner.",
+    "No production RTL, QSF or SDC was modified for this review."
+  ]
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "test",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T10:03:42.600497+00:00",
+  "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_REPLAY",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100342_599462Z_test",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "84692e225095ffa75f18607e0c75b2f88dfde2d3f993ab3f6297687472e655a3",
+  "steps": [
+    {
+      "name": "part_a_models",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\part_a",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.906,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100342_599462Z_test\\part_a_models.log"
+    },
+    {
+      "name": "member_b_models",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b",
+        "-p",
+        "test_*.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {},
+      "elapsedSeconds": 11.891,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100342_599462Z_test\\member_b_models.log"
+    },
+    {
+      "name": "vision_counterfactuals",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\test_vision.py"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\test_vision.py": "74d8185f07322cc7c2160153f9849ce0456d1dd61a113b2d39c2e0e3b0717b81"
+      },
+      "elapsedSeconds": 1.109,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100342_599462Z_test\\vision_counterfactuals.log"
+    }
+  ],
+  "level": "MODEL",
+  "finishedUtc": "2026-11-02T10:03:56.509527+00:00"
+}

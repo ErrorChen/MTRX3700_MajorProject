@@ -1,0 +1,12 @@
+# vsim -c -onfinish exit -lib ECHOPHACE1/work/member_b/debug_rtl/simlib memberBDebug_tb -do "run -all; quit -code 0" -l ECHOPHACE1/work/member_b/debug_rtl/debug_simulation.log 
+# Start time: 20:12:47 on Nov 02,2026
+# Loading sv_std.std
+# Loading ECHOPHACE1/work/member_b/debug_rtl/simlib.memberBDebug_tb
+# Loading ECHOPHACE1/work/member_b/debug_rtl/simlib.memberBDebug
+# Loading ECHOPHACE1/work/member_b/debug_rtl/simlib.snapshot_probes
+# run -all
+# PASS memberBDebug_tb: coherent commands, backpressure, 96 frozen words, reset
+# ** Note: $finish    : ECHOPHACE1/tb/member_b/memberBDebug_tb.sv(85)
+#    Time: 17880 ns  Iteration: 1  Instance: /memberBDebug_tb
+# End time: 20:12:47 on Nov 02,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

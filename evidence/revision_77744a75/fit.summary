@@ -1,0 +1,20 @@
+Fitter Status : Failed - Mon Nov 02 21:03:20 2026
+Quartus Prime Version : 18.1.0 Build 625 09/12/2018 SJ Lite Edition
+Revision Name : PartBDebug
+Top-level Entity Name : perceptionDemoTop
+Family : Cyclone V
+Device : 5CSEMA5F31C6
+Timing Models : Final
+Logic utilization (in ALMs) : 25,463 / 32,070 ( 79 % )
+Total registers : 22133
+Total pins : 106 / 457 ( 23 % )
+Total virtual pins : 0
+Total block memory bits : 2,787,648 / 4,065,280 ( 69 % )
+Total RAM Blocks : 345 / 397 ( 87 % )
+Total DSP Blocks : 77 / 87 ( 89 % )
+Total HSSI RX PCSs : 0
+Total HSSI PMA RX Deserializers : 0
+Total HSSI TX PCSs : 0
+Total HSSI PMA TX Serializers : 0
+Total PLLs : 1 / 6 ( 17 % )
+Total DLLs : 0 / 4 ( 0 % )

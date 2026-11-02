@@ -1,0 +1,12 @@
+# vsim -c -quiet -l C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/colourSampler.log -onfinish exit -lib C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/work colourSampler_tb -do "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0" 
+# Start time: 20:05:16 on Nov 02,2026
+# onerror {quit -code 1}
+#  Warning: onerror command for use within macro
+#  onbreak {quit -code 1}
+#  Warning: onbreak command for use within macro
+#  run -all
+# PASS colourSampler_tb
+# ** Note: $finish    : C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/tb/member_b/colourSampler_tb.sv(49)
+#    Time: 3536540 ns  Iteration: 1  Instance: /colourSampler_tb
+# End time: 20:05:17 on Nov 02,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0

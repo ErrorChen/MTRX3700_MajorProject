@@ -1,0 +1,327 @@
+{
+  "schema": "ECHO7_PATH_RELOCATION_1",
+  "historicalWorkspace": "C:/intelFPGA_lite/MTRX3700/major",
+  "historicalBaseline": "1a46e9a49e8ec676cf14e998c04888c4705729bf",
+  "mappings": [
+    {
+      "former": "ECHOPHACE1/evidence/member_b/",
+      "current": "evidence/",
+      "kind": "prefix"
+    },
+    {
+      "former": "ECHOPHACE1/work/member_b/",
+      "current": "build/member_b/",
+      "kind": "prefix"
+    },
+    {
+      "former": "ECHOPHACE1/rtl/member_b/",
+      "current": "rtl/",
+      "kind": "prefix"
+    },
+    {
+      "former": "ECHOPHACE1/tb/member_b/",
+      "current": "tests/rtl/",
+      "kind": "prefix"
+    },
+    {
+      "former": "ECHOPHACE1/tools/member_b/echo7.py",
+      "current": "tools/echo7.py",
+      "kind": "exact"
+    },
+    {
+      "former": "ECHOPHACE1/tools/member_b/",
+      "current": "tools/lib/",
+      "kind": "prefix with test files moved to tests/python"
+    },
+    {
+      "former": "ECHOPHACE1/tools/part_a/",
+      "current": "tools/lib/",
+      "kind": "retained helper files only"
+    },
+    {
+      "former": "ECHOPHACE1/tcl/",
+      "current": "tools/tcl/",
+      "kind": "retained Tcl files only"
+    },
+    {
+      "former": "ECHOPHACE1/quartus/",
+      "current": "quartus/",
+      "kind": "retained current B configuration only"
+    },
+    {
+      "former": "markers/",
+      "current": "assets/markers/",
+      "kind": "prefix"
+    },
+    {
+      "former": "ECHO7_All_Markers_A4_v2.pdf",
+      "current": "assets/markers/ECHO7_All_Markers_A4_v2.pdf",
+      "kind": "exact"
+    },
+    {
+      "former": "MEMBER_C_INTERFACE.md",
+      "current": "docs/MEMBER_C_INTERFACE.md",
+      "kind": "exact"
+    },
+    {
+      "former": "COURSE_REQUIREMENTS.md",
+      "current": "docs/inputs/COURSE_REQUIREMENTS.md",
+      "kind": "exact"
+    },
+    {
+      "former": "SOURCE_NOTES.md",
+      "current": "docs/inputs/SOURCE_NOTES.md",
+      "kind": "exact"
+    },
+    {
+      "former": "ARCHITECTURE.md",
+      "current": "docs/inputs/ARCHITECTURE.md",
+      "kind": "exact"
+    },
+    {
+      "former": "ECHO-7_Three-Person_Proposal.pdf",
+      "current": "docs/inputs/ECHO-7_Three-Person_Proposal.pdf",
+      "kind": "exact"
+    },
+    {
+      "former": "ECHOPHACE1/OWNERS.md",
+      "current": "docs/inputs/OWNERS.md",
+      "kind": "exact"
+    },
+    {
+      "former": "ECHOPHACE1/rtl/part_a/part_a_pkg.sv",
+      "current": "rtl/vision/candidate_pkg.sv",
+      "kind": "renamed package; source changed and needs new validation"
+    },
+    {
+      "former": "ECHOPHACE1/rtl/part_a/boundedCandidates.sv",
+      "current": "rtl/vision/boundedCandidates.sv",
+      "kind": "exact"
+    },
+    {
+      "former": "ECHOPHACE1/rtl/part_a/causalMaskCleanup.sv",
+      "current": "rtl/vision/causalMaskCleanup.sv",
+      "kind": "exact"
+    }
+  ],
+  "precedence": "Apply exact mappings and test-file special cases before generic prefixes.",
+  "testSpecialCase": "ECHOPHACE1/tools/member_b/test_*.py -> tests/python/test_*.py",
+  "retiredTrees": [
+    "alltest/",
+    "Chassis + emergencystop/",
+    "Chassis + Robot Adaptor Board/",
+    "V2026.3 Camera Code/"
+  ],
+  "retiredPolicy": "Historical content remains retrievable from Git; not an active entrypoint or current validation source.",
+  "immutableHistoricalJsonAtRelocation": [
+    {
+      "path": "evidence/calibration/calibration_profile_audit.json",
+      "sha256": "fc49067eb328f61282d1f3cbefff7e9f4eb47c8f8b41ffe769d14b72bc24c022"
+    },
+    {
+      "path": "evidence/cdc_constraint_audit.json",
+      "sha256": "9b050fc6fe86c3a42ab06efe79d7079f2cd5da9aa065b9f982ff6fdc4838c4b4"
+    },
+    {
+      "path": "evidence/failed_fit_77744a75.json",
+      "sha256": "1047426776740cd848bda6b9ee84df8eff9a0388cf50f3832791d44b35961ae3"
+    },
+    {
+      "path": "evidence/hsv_audit/gain_fullframe25046.json",
+      "sha256": "22dc5e4f141228aa4b3e838ad8dd242dd677577d37e9a72a103a8ef8f7b1edcb"
+    },
+    {
+      "path": "evidence/hsv_audit/horizontal_run_support.json",
+      "sha256": "b3c944e16714a788e944dd8e7b2688628eadd40a126c5aef5fb33c34f31799bd"
+    },
+    {
+      "path": "evidence/hsv_audit/hsv_audit.json",
+      "sha256": "ee61214b031d7e70424f7e6152579c5c6f77778b821ab7f4d43191e5fdf07677"
+    },
+    {
+      "path": "evidence/hsv_audit/hsv_cleanup_matrix.json",
+      "sha256": "84b69c7891345e792473e9873afd2914c007791a86e2c4ab71e9cb19130024f9"
+    },
+    {
+      "path": "evidence/hsv_audit/hsv_profile_matrix.json",
+      "sha256": "1bd0666da85a7ea0bbebb9fb466ff8f6a801e4051926855a77eb15982d0a2ad9"
+    },
+    {
+      "path": "evidence/hsv_model_update.json",
+      "sha256": "de2fc7ff774e3f00c4a5012ed9c6b1cf7adea58b8a211533a6656ab413a6a4ad"
+    },
+    {
+      "path": "evidence/metadata.json",
+      "sha256": "f9b30408d2a6ece37cc321e5edfc82396a7d81e1ef40c702aa37dc116dbd7d68"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_00/result.json",
+      "sha256": "426adce47fb83d36974ade4eaf6fa0e42c28a38ca7120517a5f9573388163e5d"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_01/result.json",
+      "sha256": "00448519eab4e51424c1114bbfb0b9ea2c254db55f9536609f778ee9f3b705d8"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_02/result.json",
+      "sha256": "fd0131a7e7b94ed0e76c99504d3b9bcd243fe09f4c7f6764e401e3efe0886e94"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_03/result.json",
+      "sha256": "2d38668d0c6bda31a81227c7a9c4b7ffab0afb121cde98bab925e39d57bf3fa9"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_05/result.json",
+      "sha256": "41889aa6113a5d83fb428c109f709173336561963c7d6668eda9db38160f060d"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_06/result.json",
+      "sha256": "4cbeac944d87b2e55154c6a0678a13975b3310b4d0071ac08d24e54393fc83fb"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_08/result.json",
+      "sha256": "c38ceb507e4e5377491c2daaa2083d54850ea7d520ea679f2b7ba126e43e9b36"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_09/result.json",
+      "sha256": "b6664d1a5b58008a299c6759f262b8106f1eea5b0bc180e97247ae74ac8bbddf"
+    },
+    {
+      "path": "evidence/projective/frame13139/candidate_10/result.json",
+      "sha256": "60f8018e76a3c1a2f8ec1e1f39aa29fb4a83c862c3d379af03a4a398e2c6877b"
+    },
+    {
+      "path": "evidence/projective/frame13139/projective.json",
+      "sha256": "f54e58da2daed6f079ed9bf7bd5a7a18d9bd066607414f214d180a5b8934a556"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_00/result.json",
+      "sha256": "3157b446acba6482b00b124ced0b03f21427bdc65f0463d70b15441a270fa76a"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_01/result.json",
+      "sha256": "3408a6279451868a4457b6ae35b449c5a58e905a04b7af50fb459fe76cbeb45e"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_02/result.json",
+      "sha256": "b342d1f30f97f108cc5e9563e895b94f084362c8d90fc30c594558cae3b5a2e3"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_03/result.json",
+      "sha256": "e0f825edf3f9f288b93f654124c656a6c14d989bbc5d8835f8df498ddd896c88"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_05/result.json",
+      "sha256": "2da429ec831dae4976559a5f2fba529ffe9a7f967b7f24025c62ad3ad35db0f7"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_06/result.json",
+      "sha256": "b808dc3a81cac519f7c3b45b638552897ed2dc433bf1680c78a88d83b98b5488"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_08/result.json",
+      "sha256": "f155ce8e6520313b14b049776a9d14a4335d8e741af50b15be2edc44af3a13ce"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_09/result.json",
+      "sha256": "000d758559bdaa9a933f9047ae81db2db0313fbc0f0c76ae23cfa760f0b7675c"
+    },
+    {
+      "path": "evidence/projective/frame13511/candidate_10/result.json",
+      "sha256": "917daafd8d27d495502d9126aeb881cb60e0b2d6a6f2b11fb25d18fc7ae29438"
+    },
+    {
+      "path": "evidence/projective/frame13511/projective.json",
+      "sha256": "cadd3d57e04f0058805f7b01e25ab7f1acac3738a48aca44d8e9d51bdb75113b"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_00/result.json",
+      "sha256": "e6ba6f57ac2041b4cb684f23d0d8f20af42b960469be00ed87fb72217a8d6028"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_01/result.json",
+      "sha256": "af7594db610b209547c587417f8e2db837d49f93c43d391ea976344b198749fd"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_02/result.json",
+      "sha256": "70f04f2e869b529a83e73cf95c2966db00728e8b0b61847e17437897f2c8f414"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_05/result.json",
+      "sha256": "3e5d4abef666df7e225bad0cb67017e0e6613aec4ee969d36c2367b69722b17e"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_06/result.json",
+      "sha256": "4bf9f2b8eb40411e3c79adc1c44522ed282011f92ed715244a94611d9be7d394"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_08/result.json",
+      "sha256": "af2409a2be1f8d94d59a8814e8bd08694abaca866dd1a70032f42ca1c6c9d69e"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_09/result.json",
+      "sha256": "f99e2b2cb351e4beaeff453bde2b6e74a072ad5bb9a703121530f1f997647f33"
+    },
+    {
+      "path": "evidence/projective/frame13675/candidate_10/result.json",
+      "sha256": "cddda0886101633270e5c999568c8bc61f9aaba15fea192a3984c1f92351be32"
+    },
+    {
+      "path": "evidence/projective/frame13675/projective.json",
+      "sha256": "68d395a685362caf5701cfd91a8a7182a75e0138491eef4ebfc08e45d28e5d07"
+    },
+    {
+      "path": "evidence/projective_model_results.json",
+      "sha256": "8e5abb862a2a829d86d7065c9683eab6039917daa4bd51de665ee5d26b1f148a"
+    },
+    {
+      "path": "evidence/projective_warp_results.json",
+      "sha256": "a907cc849425c5113d815231e002211e0e4b8cad0966371f57db96492498cc3d"
+    },
+    {
+      "path": "evidence/real_inputs/index.json",
+      "sha256": "291861b6337c8879ef4bd5d4af101d7dcfcd520592fdf6b42890334a83456be1"
+    },
+    {
+      "path": "evidence/repository_cleanup.json",
+      "sha256": "cd25191f8c056e0efe9991500c1ebfc98bfb710e47ebd55a2c975036c18d5815"
+    },
+    {
+      "path": "evidence/revision_77744a75/build_result.json",
+      "sha256": "a735ce4bb16e7aa6776af7bd68cc04f6f442df5b8296c755821227e63b88ca06"
+    },
+    {
+      "path": "evidence/revision_77744a75/earlier_component_result.json",
+      "sha256": "3ccaf039e3efa729e8c4708e578fadb08f62bf8ea4a10e63ceb4bc8a5070910c"
+    },
+    {
+      "path": "evidence/revision_77744a75/index.json",
+      "sha256": "434fc9c61e643b3eb9394da83e86c45063cc93828fc54d6a6b5cdf480e0734fb"
+    },
+    {
+      "path": "evidence/revision_77744a75/model_result.json",
+      "sha256": "d425a5cd2ea4d45bc6d3e171db030aa5792dd7ddf578e8d0d9ac55d8ec08bee3"
+    },
+    {
+      "path": "evidence/revision_77744a75/resource_report_excerpts.json",
+      "sha256": "2887389d0ea5f94d2802b454fef412a0e6e81c73626ddeae997ba413fec08f89"
+    },
+    {
+      "path": "evidence/revision_77744a75/rtl_result.json",
+      "sha256": "36da89818b3884f1caff5ad834bcf9ea68c37809d88895e6e6819caeb0704ad6"
+    },
+    {
+      "path": "evidence/tracked_generated_audit.json",
+      "sha256": "da47ace4ae3b89e5228e30dc015259318c9fb53efe51527237a134e26bed688d"
+    },
+    {
+      "path": "evidence/vision_model_summary.json",
+      "sha256": "c69c38632aa6b33ae7cb1732a7de3cf4217fe726e58c8109a044e2af222528c1"
+    },
+    {
+      "path": "evidence/white_sample_measurements.json",
+      "sha256": "de4c28e7c624553d24c1b38460fbbbc4c8d47dc1b0bdcc861a950fbd6ccae534"
+    }
+  ],
+  "boundary": "Mapping explains relocated files; it does not rewrite old evidence, recompute its original source hash or promote historical results to current acceptance."
+}

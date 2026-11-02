@@ -1,0 +1,247 @@
+{
+  "schema": "echo7-rtl-tests-v1",
+  "tests": [
+    {
+      "name": "boundedCandidates_tb",
+      "passMarker": "PASS boundedCandidates:",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "tests/rtl/boundedCandidates_tb.sv"
+      ]
+    },
+    {
+      "name": "targetTracker_tb",
+      "passMarker": "PASS targetTracker_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/perceptionLink.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/debug/memberCSimulator.sv",
+        "tests/rtl/targetTracker_tb.sv"
+      ]
+    },
+    {
+      "name": "memberCSimulator_tb",
+      "passMarker": "PASS memberCSimulator_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/perceptionLink.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/debug/memberCSimulator.sv",
+        "tests/rtl/memberCSimulator_tb.sv"
+      ]
+    },
+    {
+      "name": "cdcTransport_tb",
+      "passMarker": "PASS cdcTransport_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "tests/rtl/cdcTransport_tb.sv"
+      ]
+    },
+    {
+      "name": "fixedSheetInteraction_tb",
+      "passMarker": "PASS fixedSheetInteraction_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "tests/rtl/fixedSheetInteraction_tb.sv"
+      ]
+    },
+    {
+      "name": "colourSampler_tb",
+      "passMarker": "PASS colourSampler_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/interaction/colourSampler.sv",
+        "tests/rtl/colourSampler_tb.sv"
+      ]
+    },
+    {
+      "name": "memberBDebug_tb",
+      "passMarker": "PASS memberBDebug_tb",
+      "sources": [
+        "rtl/debug/snapshot_probes.sv",
+        "rtl/debug/memberBDebug.sv",
+        "tests/rtl/memberBDebug_tb.sv"
+      ],
+      "defines": [
+        "VERILATOR"
+      ]
+    },
+    {
+      "name": "memberBVgaOverlay_tb",
+      "passMarker": "PASS memberBVgaOverlay_tb",
+      "sources": [
+        "rtl/debug/memberBVgaOverlay.sv",
+        "tests/rtl/memberBVgaOverlay_tb.sv"
+      ],
+      "defines": []
+    },
+    {
+      "name": "perceptionCoreReplay_tb",
+      "passMarker": "PASS perceptionCoreReplay_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreReplay_tb.sv"
+      ],
+      "timeoutSeconds": 900,
+      "inputSource": "SYNTHETIC_RGB565_POST_CAPTURE"
+    },
+    {
+      "name": "lateSnapshot_tb",
+      "passMarker": "PASS lateSnapshot_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/debug/snapshot_ram.sv",
+        "rtl/debug/snapshot_probes.sv",
+        "rtl/debug/frame_snap.sv",
+        "tests/rtl/lateSnapshot_tb.sv"
+      ],
+      "defines": [
+        "VERILATOR"
+      ]
+    },
+    {
+      "name": "projectiveMarkerReader_tb",
+      "passMarker": "PASS projectiveMarkerReader_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "tests/rtl/projectiveMarkerReader_tb.sv"
+      ],
+      "timeoutSeconds": 600,
+      "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_PIXEL_VECTORS"
+    },
+    {
+      "name": "perceptionCoreRecordedReplay_tb",
+      "top": "perceptionCoreReplay_tb",
+      "passMarker": "PASS perceptionCoreRecordedReplay_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreReplay_tb.sv"
+      ],
+      "plusargs": [
+        "+REAL_FRAME_REPEAT",
+        "+SCENE_FILE={vectors}/projective_61_rgb565.hex"
+      ],
+      "inputSource": "ONE_RECORDED_FRAME_REPEATED_IN_RTL",
+      "timeoutSeconds": 900
+    },
+    {
+      "name": "perceptionCoreContinuous_tb",
+      "top": "perceptionCoreReplay_tb",
+      "passMarker": "PASS perceptionCoreContinuous_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreReplay_tb.sv"
+      ],
+      "plusargs": [
+        "+CONTINUOUS"
+      ],
+      "inputSource": "SYNTHETIC_CONTINUOUS_FRAME_AND_BACKPRESSURE",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "hsvColourGate_tb",
+      "passMarker": "PASS hsvColourGate_tb",
+      "sources": [
+        "rtl/vision/hsvColourGate.sv",
+        "tests/rtl/hsvColourGate_tb.sv"
+      ],
+      "inputSource": "EXHAUSTIVE_RGB565_AND_BOUNDARY_VECTORS"
+    },
+    {
+      "name": "horizontalRunFilter_tb",
+      "passMarker": "PASS horizontalRunFilter_tb",
+      "sources": [
+        "rtl/vision/horizontalRunFilter.sv",
+        "tests/rtl/horizontalRunFilter_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_PIXEL_RUNS_AND_METADATA"
+    },
+    {
+      "name": "perceptionCoreCollision_tb",
+      "passMarker": "PASS perceptionCoreCollision_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreReplay_tb.sv"
+      ],
+      "timeoutSeconds": 900,
+      "inputSource": "PROTOCOL_FAULT_INJECTION",
+      "top": "perceptionCoreReplay_tb",
+      "plusargs": [
+        "+COLLISION_ONLY"
+      ]
+    }
+  ]
+}

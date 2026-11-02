@@ -1,0 +1,1488 @@
+{
+  "schema": "ECHO7_HSV_MODEL_UPDATE_1",
+  "layer": "MODEL_AND_VECTOR_GENERATION",
+  "colourAlgorithm": 1,
+  "readerAlgorithm": 1,
+  "defaults": {
+    "redMinimum": 48,
+    "blueMinimum": 32,
+    "whiteMinimum": 112,
+    "whiteMaximumSpread": 64
+  },
+  "candidateFilter": "Full horizontal same-colour runs>=3 followed by original causal OR",
+  "cornerForeground": "Raw HSV, not the candidate support filter",
+  "tests": {
+    "allNativeRgb565CodesComparedToIndependentHsv": 65536,
+    "hsvUnitTests": 3,
+    "projectiveGroups": 4,
+    "vectorCases": 63
+  },
+  "legacyApi": "colourAlgorithm=0 explicitly retains RGB ratio/no run support; projective API default is1",
+  "sourceHashes": {
+    "ECHOPHACE1/tools/member_b/vision_reference.py": "1b767ea3453e069ce4c2bd9b3037d9aff2f0af18cb9c936d3bf09dca4c5d6298",
+    "ECHOPHACE1/tools/member_b/projective_reference.py": "7f281275a7479a58136808520c5b6b782a800732778e9aaffd23f1b2704b611a",
+    "ECHOPHACE1/tools/member_b/export_projective_vectors.py": "1ae22ad24893632156db44e23c24a7b4ffd56cc735c2c8502d1cb6764ce46b7e",
+    "ECHOPHACE1/tools/member_b/test_hsv.py": "8d1afd1d004124721e87abe68efef061658b71ac5609fc9d5a1ecf6164ea3738",
+    "ECHOPHACE1/tools/member_b/test_projective.py": "25661a3d4ea1d35ec0993014babd81c688f4451c286614b6b147b7a3e86383bd"
+  },
+  "cases": [
+    {
+      "case": "pdf_full_page",
+      "index": 0,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            175,
+            22,
+            229,
+            82
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            240,
+            22,
+            294,
+            82
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            58,
+            29,
+            111,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            175,
+            90,
+            229,
+            150
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            240,
+            90,
+            294,
+            150
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            58,
+            136,
+            111,
+            196
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            175,
+            157,
+            229,
+            217
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            240,
+            157,
+            294,
+            217
+          ]
+        }
+      ]
+    },
+    {
+      "case": "counterfactual_swapped",
+      "index": 1,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            175,
+            22,
+            229,
+            82
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            240,
+            22,
+            294,
+            82
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            58,
+            29,
+            111,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            175,
+            90,
+            229,
+            150
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            240,
+            90,
+            294,
+            150
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            58,
+            136,
+            111,
+            196
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            175,
+            157,
+            229,
+            217
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            240,
+            157,
+            294,
+            217
+          ]
+        }
+      ]
+    },
+    {
+      "case": "candidate_first_colour_pixel_missing",
+      "index": 2,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            175,
+            22,
+            229,
+            82
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            240,
+            22,
+            294,
+            82
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            58,
+            29,
+            111,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            175,
+            90,
+            229,
+            150
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            240,
+            90,
+            294,
+            150
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            58,
+            136,
+            111,
+            196
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            175,
+            157,
+            229,
+            217
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            240,
+            157,
+            294,
+            217
+          ]
+        }
+      ]
+    },
+    {
+      "case": "orientation_0",
+      "index": 3,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            40,
+            50,
+            93,
+            110
+          ]
+        }
+      ]
+    },
+    {
+      "case": "orientation_1",
+      "index": 4,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            40,
+            50,
+            100,
+            103
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_1",
+      "index": 5,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "orientation_2",
+      "index": 6,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            40,
+            50,
+            93,
+            110
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_2",
+      "index": 7,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "orientation_3",
+      "index": 8,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            40,
+            50,
+            100,
+            103
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_3",
+      "index": 9,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "unsupported_0_7_8_9",
+      "index": 10,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "red_rejected_3_4_5_6",
+      "index": 11,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "blank_delete_missing_anchor",
+      "index": 12,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "blur_shape_and_undersize",
+      "index": 13,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "empty_frame",
+      "index": 14,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "front_1",
+      "index": 15,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "front_2",
+      "index": 16,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "front_3",
+      "index": 17,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "front_4",
+      "index": 18,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "front_5",
+      "index": 19,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "front_6",
+      "index": 20,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            30,
+            30,
+            83,
+            90
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_1",
+      "index": 21,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_2",
+      "index": 22,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_3",
+      "index": 23,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_4",
+      "index": 24,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_5",
+      "index": 25,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "horizontal_perspective_6",
+      "index": 26,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            116,
+            31,
+            156,
+            114
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_1",
+      "index": 27,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_2",
+      "index": 28,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_3",
+      "index": 29,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_4",
+      "index": 30,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_5",
+      "index": 31,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "opposite_perspective_6",
+      "index": 32,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            60,
+            40,
+            111,
+            119
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_1",
+      "index": 33,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_2",
+      "index": 34,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_3",
+      "index": 35,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_4",
+      "index": 36,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_5",
+      "index": 37,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "vertical_perspective_6",
+      "index": 38,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            170,
+            30,
+            228,
+            82
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_1",
+      "index": 39,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_2",
+      "index": 40,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_3",
+      "index": 41,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_4",
+      "index": 42,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_5",
+      "index": 43,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "roll_and_perspective_6",
+      "index": 44,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 255,
+          "bbox": [
+            82,
+            26,
+            150,
+            101
+          ]
+        }
+      ]
+    },
+    {
+      "case": "unknown_perspective_0",
+      "index": 45,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "unknown_perspective_7",
+      "index": 46,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "unknown_perspective_8",
+      "index": 47,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "unknown_perspective_9",
+      "index": 48,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "no_anchor_perspective",
+      "index": 49,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "blank_perspective",
+      "index": 50,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "deleted_stroke_perspective",
+      "index": 51,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "orientation_0",
+      "index": 52,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            80,
+            80,
+            133,
+            140
+          ]
+        }
+      ]
+    },
+    {
+      "case": "orientation_1",
+      "index": 53,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            80,
+            80,
+            140,
+            133
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_1",
+      "index": 54,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "orientation_2",
+      "index": 55,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            80,
+            80,
+            133,
+            140
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_2",
+      "index": 56,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "orientation_3",
+      "index": 57,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": [
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            80,
+            80,
+            140,
+            133
+          ]
+        }
+      ]
+    },
+    {
+      "case": "wrong_orientation_3",
+      "index": 58,
+      "inputSource": "SYNTHETIC_PIXELS",
+      "accepted": []
+    },
+    {
+      "case": "recorded_camera_13139",
+      "index": 59,
+      "inputSource": "RECORDED_OV7670_PART_A",
+      "accepted": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            45,
+            0,
+            107,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            165,
+            18,
+            204,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            213,
+            30,
+            243,
+            90
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            163,
+            92,
+            203,
+            161
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            211,
+            96,
+            242,
+            157
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            210,
+            162,
+            240,
+            223
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 192,
+          "bbox": [
+            161,
+            166,
+            201,
+            235
+          ]
+        }
+      ]
+    },
+    {
+      "case": "recorded_camera_13511",
+      "index": 60,
+      "inputSource": "RECORDED_OV7670_PART_A",
+      "accepted": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            45,
+            1,
+            106,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            165,
+            18,
+            204,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            213,
+            30,
+            243,
+            90
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            162,
+            92,
+            203,
+            161
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            211,
+            96,
+            242,
+            156
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            210,
+            162,
+            240,
+            223
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 192,
+          "bbox": [
+            161,
+            166,
+            201,
+            235
+          ]
+        }
+      ]
+    },
+    {
+      "case": "recorded_camera_13675",
+      "index": 61,
+      "inputSource": "RECORDED_OV7670_PART_A",
+      "accepted": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            45,
+            0,
+            107,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            165,
+            18,
+            204,
+            87
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            213,
+            30,
+            243,
+            90
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            163,
+            92,
+            203,
+            161
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            211,
+            96,
+            242,
+            157
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            209,
+            162,
+            240,
+            223
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 192,
+          "bbox": [
+            161,
+            166,
+            201,
+            235
+          ]
+        }
+      ]
+    },
+    {
+      "case": "recorded_camera_25046",
+      "index": 62,
+      "inputSource": "RECORDED_OV7670_PART_A",
+      "accepted": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "quality": 255,
+          "bbox": [
+            41,
+            3,
+            103,
+            90
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "quality": 192,
+          "bbox": [
+            164,
+            19,
+            203,
+            88
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "quality": 192,
+          "bbox": [
+            213,
+            31,
+            242,
+            91
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "quality": 192,
+          "bbox": [
+            162,
+            95,
+            202,
+            164
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "quality": 192,
+          "bbox": [
+            211,
+            99,
+            241,
+            159
+          ]
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "quality": 255,
+          "bbox": [
+            40,
+            152,
+            100,
+            239
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "quality": 192,
+          "bbox": [
+            210,
+            165,
+            240,
+            227
+          ]
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "quality": 255,
+          "bbox": [
+            161,
+            169,
+            201,
+            239
+          ]
+        }
+      ]
+    }
+  ],
+  "boundary": "Not RTL_SIM or board acceptance; next reader bench consumes exported63cases."
+}

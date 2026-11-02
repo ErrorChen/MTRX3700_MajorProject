@@ -1,0 +1,11 @@
+{
+  "schema": "ECHO7_MIGRATION_CHECKS_1",
+  "modelRun": "build/member_b/20261102T104001_122301Z_test/result.json",
+  "modelStatus": "PASS",
+  "unittestCount": 37,
+  "visionScenarioGroups": 11,
+  "assetRecovery": "PASS executed assets/markers/recover_from_pdf.py after relocation",
+  "formalPdfSha256": "0162b5a7ada3c7d03dcf96baf5a8a5ce077ff8d165aaad8cc228947ff70436a0",
+  "readerPreRelocationLog": "hsv_reader_rtl.log",
+  "readerScope": "63 HSV pixel vectors before source relocation; current full RTL/fit remain independent checks"
+}

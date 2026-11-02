@@ -1,12 +1,33 @@
-# Simulation waveforms
+# Generated execution evidence, simulation libraries and local tool state.
+/build/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
 *.vcd
 *.fst
 *.wlf
+**/transcript
+**/vsim_stacktrace.vstf
+**/modelsim.ini
 
-# Quartus generated databases
-**/db/
-**/incremental_db/
+# Quartus databases and generated University Program IP. Editable QSYS,
+# explicit QSF/SDC source lists and reproducible scripts remain versioned.
+/quartus/db/
+/quartus/incremental_db/
+/quartus/output_files/
+/quartus/.qsys_edit/
+/quartus/greybox_tmp/
+/quartus/hc_output/
+/quartus/vga_sink/
+*.qws
+*.sopcinfo
+*.qdf
+*_pin_model_dump.txt
 
-# Generated Part A vectors, Quartus scratch projects and local verification logs
-ECHOPHACE1/work/part_a_*/
-**/__pycache__/
+# OS/editor scratch; do not ignore formal artwork or memory data by type.
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*~

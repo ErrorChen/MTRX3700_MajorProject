@@ -1,0 +1,2038 @@
+{
+  "schema": "ECHO7_MEMBER_B_EVIDENCE_INDEX_1",
+  "recordDateSydney": "2026-11-02",
+  "baselineCommit": "1a46e9a49e8ec676cf14e998c04888c4705729bf",
+  "baselineBranch": "main",
+  "initialWorktree": "CLEAN",
+  "originalRequestedRepository": "https://github.com/paekinator/MTRX3700-Major-Project",
+  "localOrigin": "https://github.com/ErrorChen/MTRX3700_MajorProject_V2.git",
+  "archive": {
+    "path": "MTRX3700-Major-Project-codex-echo7-part-a.zip",
+    "sha256": "37302da750c8cd5dd3fbbafed2addc5c4c166f5302eab0df0ad0030479d97c6a",
+    "sourceComparison": {
+      "EXACT": 274,
+      "LINE_ENDINGS_ONLY": 0,
+      "DIFFERENT": 0,
+      "ABSENT_FROM_BASELINE": 0
+    },
+    "scope": "Source/tool/project/doc suffixes, excluding generated db/output/simulation directories",
+    "limitation": "Byte comparison proves preserved file correspondence, not Git ancestry or remote commit authenticity."
+  },
+  "sourceFiles": [
+    {
+      "path": "Chassis + Robot Adaptor Board/README.md",
+      "archiveSha256": "5ae1b42ca2bef19a17d61dec795ee5621830f3775f20573e1b3ee6d68e4fcfd2",
+      "baselineSha256": "5ae1b42ca2bef19a17d61dec795ee5621830f3775f20573e1b3ee6d68e4fcfd2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/quartus/chassis.qpf",
+      "archiveSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "baselineSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/quartus/chassis.qsf",
+      "archiveSha256": "d79e5d53510b653f53ff6055fc5f14460eaabe6ef2341fe133035d627f7b4687",
+      "baselineSha256": "d79e5d53510b653f53ff6055fc5f14460eaabe6ef2341fe133035d627f7b4687",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/quartus/chassis.sdc",
+      "archiveSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "baselineSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/rtl/chassis_drive.sv",
+      "archiveSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "baselineSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/rtl/display.sv",
+      "archiveSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "baselineSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/rtl/top_level.sv",
+      "archiveSha256": "b799b0ef01ac52c5c23dbd8a3ca3100d2bf7028a0db833fd8496a078919a8507",
+      "baselineSha256": "b799b0ef01ac52c5c23dbd8a3ca3100d2bf7028a0db833fd8496a078919a8507",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/rtl/uart_tx.sv",
+      "archiveSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "baselineSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/simulate.sh",
+      "archiveSha256": "2fe3bc06e7965e3075458d3b240d6ac1359c9615d9cc49ce4d7cd6db5b6d9e99",
+      "baselineSha256": "2fe3bc06e7965e3075458d3b240d6ac1359c9615d9cc49ce4d7cd6db5b6d9e99",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/tb/chassis_drive_tb.sv",
+      "archiveSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "baselineSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + Robot Adaptor Board/tb/ugv02_model.sv",
+      "archiveSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "baselineSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/README.md",
+      "archiveSha256": "5ae1b42ca2bef19a17d61dec795ee5621830f3775f20573e1b3ee6d68e4fcfd2",
+      "baselineSha256": "5ae1b42ca2bef19a17d61dec795ee5621830f3775f20573e1b3ee6d68e4fcfd2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/camera_display.sv",
+      "archiveSha256": "86bcecfba5859d8cf6925a3836c4fc01ecea1be73b19b724bc32de38e8bbf6de",
+      "baselineSha256": "86bcecfba5859d8cf6925a3836c4fc01ecea1be73b19b724bc32de38e8bbf6de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/camera_pkg.sv",
+      "archiveSha256": "44b0779116d1f390932da085b924377e47bf4bdf94f89b21e278988d430ff2f7",
+      "baselineSha256": "44b0779116d1f390932da085b924377e47bf4bdf94f89b21e278988d430ff2f7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/clock_divider.sv",
+      "archiveSha256": "a434bcd41223cf55caeeee24338e5c9014ec8f3466f2a09914b8bab19aa1c2c9",
+      "baselineSha256": "a434bcd41223cf55caeeee24338e5c9014ec8f3466f2a09914b8bab19aa1c2c9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/frame_buffer.sv",
+      "archiveSha256": "e02d22d07c0a40d6dca368fcf83d1100fd230efe14664f083659ce705a630507",
+      "baselineSha256": "e02d22d07c0a40d6dca368fcf83d1100fd230efe14664f083659ce705a630507",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/i2c_master.sv",
+      "archiveSha256": "708b4c75824f7e5177d3df9a4982ff60791d8a190ba898fa0d52e7db33d4982b",
+      "baselineSha256": "708b4c75824f7e5177d3df9a4982ff60791d8a190ba898fa0d52e7db33d4982b",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/ov7670_capture.sv",
+      "archiveSha256": "c2483c3812d58d31e72bfe015627fc17d8e6094e041b14dab76e1740bb7709c7",
+      "baselineSha256": "c2483c3812d58d31e72bfe015627fc17d8e6094e041b14dab76e1740bb7709c7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/ov7670_config.sv",
+      "archiveSha256": "393e44dcdccd0c46f8c582e579686d7a4964181a075b83431b8443713419a1f9",
+      "baselineSha256": "393e44dcdccd0c46f8c582e579686d7a4964181a075b83431b8443713419a1f9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/camera/rtl/video_pll.sv",
+      "archiveSha256": "3f8beef2d52837d2a516e6dbc38b74215c7091a587964f357daef8361aa77d01",
+      "baselineSha256": "3f8beef2d52837d2a516e6dbc38b74215c7091a587964f357daef8361aa77d01",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/hwtest.qpf",
+      "archiveSha256": "6cb708bf1c88cf8a95722a43a06d2a7b43cb97ed70a90316f042ba81d3986f58",
+      "baselineSha256": "6cb708bf1c88cf8a95722a43a06d2a7b43cb97ed70a90316f042ba81d3986f58",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/hwtest.qsf",
+      "archiveSha256": "fdab21b3142d155327ae659baa1a0af1a0fd9fbc95d60805d1e2ec01a24beb9a",
+      "baselineSha256": "fdab21b3142d155327ae659baa1a0af1a0fd9fbc95d60805d1e2ec01a24beb9a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/hwtest.sdc",
+      "archiveSha256": "a085d70a26cd9ee57c3ee0e24a9f9ce68c87f713b6c99b063bb826757711644f",
+      "baselineSha256": "a085d70a26cd9ee57c3ee0e24a9f9ce68c87f713b6c99b063bb826757711644f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/vga_sink.qsys",
+      "archiveSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "baselineSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/submodules/altera_up_avalon_video_vga_timing.v",
+      "archiveSha256": "0dc5fec427d8e9c3980a417abcbaa1d1b256c9f63260e0249daf4c15bb53ad5f",
+      "baselineSha256": "0dc5fec427d8e9c3980a417abcbaa1d1b256c9f63260e0249daf4c15bb53ad5f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/submodules/vga_sink_video_vga_controller_0.v",
+      "archiveSha256": "46220006b28e0d36f63e2e0271d5b3be06d4a150bacf8a175a9fe88791af4552",
+      "baselineSha256": "46220006b28e0d36f63e2e0271d5b3be06d4a150bacf8a175a9fe88791af4552",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/vga_sink.qip",
+      "archiveSha256": "2a117613f0394c989cc0c1d1742bcee48a6c4e41a0d788ec8ca5abc2c1309932",
+      "baselineSha256": "2a117613f0394c989cc0c1d1742bcee48a6c4e41a0d788ec8ca5abc2c1309932",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/vga_sink.v",
+      "archiveSha256": "3160fa52b111b349fde28ecb4d7282bab3577528e66d40f2d7453fadd03d0dbb",
+      "baselineSha256": "3160fa52b111b349fde28ecb4d7282bab3577528e66d40f2d7453fadd03d0dbb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/blink.sv",
+      "archiveSha256": "388c830082fe7f2660dffc8fec92e2f5a5799984155a963f1303e48bc26d4a5e",
+      "baselineSha256": "388c830082fe7f2660dffc8fec92e2f5a5799984155a963f1303e48bc26d4a5e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/chassis_command.sv",
+      "archiveSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "baselineSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/hex_digit.sv",
+      "archiveSha256": "2a7993f078fc60225a81f69e37ba623e31f45c1fb275d6d4c783aff4b0c60fe5",
+      "baselineSha256": "2a7993f078fc60225a81f69e37ba623e31f45c1fb275d6d4c783aff4b0c60fe5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/ir_drive.sv",
+      "archiveSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "baselineSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/mic/adc_pll.sv",
+      "archiveSha256": "aed299a9908b06876396b550a63d8521f6848b40107faf99bd75f4d96af5f86e",
+      "baselineSha256": "aed299a9908b06876396b550a63d8521f6848b40107faf99bd75f4d96af5f86e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/mic/gate.sv",
+      "archiveSha256": "5029f28a813997902daebb62943f02b73e0366cb0a9eb4de5546d0122b3f24d0",
+      "baselineSha256": "5029f28a813997902daebb62943f02b73e0366cb0a9eb4de5546d0122b3f24d0",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/mic/mic_load.sv",
+      "archiveSha256": "de668fe0dda897374ee19a4de7883fed6c0dd1646ba19aa0b53843cdaa70cb34",
+      "baselineSha256": "de668fe0dda897374ee19a4de7883fed6c0dd1646ba19aa0b53843cdaa70cb34",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/mic/set_audio_encoder.sv",
+      "archiveSha256": "3458a5a59f18e9000b0e851e02c42e2215ed77996758472a60271e4c08ef64d7",
+      "baselineSha256": "3458a5a59f18e9000b0e851e02c42e2215ed77996758472a60271e4c08ef64d7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/nano_probe.sv",
+      "archiveSha256": "cf6007178cd1a8790f94d22c59aedaf11ded7c89dcac5aa648e74fc3fe8ae8ed",
+      "baselineSha256": "cf6007178cd1a8790f94d22c59aedaf11ded7c89dcac5aa648e74fc3fe8ae8ed",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/nano_report.sv",
+      "archiveSha256": "f29f6902f29308c7b8112c2f250fe4b5b610d285ff9cc4990fd320e87cf8eead",
+      "baselineSha256": "f29f6902f29308c7b8112c2f250fe4b5b610d285ff9cc4990fd320e87cf8eead",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/top_level.sv",
+      "archiveSha256": "b1b87b3fd9f924efec5b8f81bc7b37382f1fd24a99ea76c58bb2fbed45a18a71",
+      "baselineSha256": "b1b87b3fd9f924efec5b8f81bc7b37382f1fd24a99ea76c58bb2fbed45a18a71",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/uart_rx.sv",
+      "archiveSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "baselineSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/hwtest/rtl/uart_tx.sv",
+      "archiveSha256": "d142568a145c1acde7dd9d9183cbb88742ddddd170e615ca4d41141dfcc27ec6",
+      "baselineSha256": "d142568a145c1acde7dd9d9183cbb88742ddddd170e615ca4d41141dfcc27ec6",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/ir/rtl/IR_RECEIVE_Terasic.v",
+      "archiveSha256": "6dacec04c1240ed8783436c6af7b4ed8e5fde28eb0ec4148da390ecf8ba72454",
+      "baselineSha256": "6dacec04c1240ed8783436c6af7b4ed8e5fde28eb0ec4148da390ecf8ba72454",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/ir/rtl/nec_decoder.sv",
+      "archiveSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "baselineSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/sonar/rtl/display.sv",
+      "archiveSha256": "d1bcd01f4d1fdbdc48b9d206545763ce4f5b2143e36895401f79688d5f4009fe",
+      "baselineSha256": "d1bcd01f4d1fdbdc48b9d206545763ce4f5b2143e36895401f79688d5f4009fe",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/sonar/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/sonar/rtl/sonar_pll.sv",
+      "archiveSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "baselineSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/mtrx3700-hwtest-src/sonar/rtl/sonar_range.sv",
+      "archiveSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "baselineSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/quartus/chassis.qpf",
+      "archiveSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "baselineSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/quartus/chassis.qsf",
+      "archiveSha256": "d79e5d53510b653f53ff6055fc5f14460eaabe6ef2341fe133035d627f7b4687",
+      "baselineSha256": "d79e5d53510b653f53ff6055fc5f14460eaabe6ef2341fe133035d627f7b4687",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/quartus/chassis.sdc",
+      "archiveSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "baselineSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/rtl/chassis_drive.sv",
+      "archiveSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "baselineSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/rtl/display.sv",
+      "archiveSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "baselineSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/rtl/top_level.sv",
+      "archiveSha256": "b799b0ef01ac52c5c23dbd8a3ca3100d2bf7028a0db833fd8496a078919a8507",
+      "baselineSha256": "b799b0ef01ac52c5c23dbd8a3ca3100d2bf7028a0db833fd8496a078919a8507",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/rtl/uart_tx.sv",
+      "archiveSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "baselineSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/simulate.sh",
+      "archiveSha256": "2fe3bc06e7965e3075458d3b240d6ac1359c9615d9cc49ce4d7cd6db5b6d9e99",
+      "baselineSha256": "2fe3bc06e7965e3075458d3b240d6ac1359c9615d9cc49ce4d7cd6db5b6d9e99",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/tb/chassis_drive_tb.sv",
+      "archiveSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "baselineSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "Chassis + emergencystop/tb/ugv02_model.sv",
+      "archiveSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "baselineSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/AI_STATEMENT.md",
+      "archiveSha256": "61a7e7bb274cf6b44def5c8b45cfc949a060230a4d15afb7ef1c154d21734642",
+      "baselineSha256": "61a7e7bb274cf6b44def5c8b45cfc949a060230a4d15afb7ef1c154d21734642",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/ECHO7_PHASE1.md",
+      "archiveSha256": "937ecaf88b973397577f8c0f2f9efbdb1ff00a2e127a4a7c05c094db3a958ae1",
+      "baselineSha256": "937ecaf88b973397577f8c0f2f9efbdb1ff00a2e127a4a7c05c094db3a958ae1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/ECHO7_PHASE15.md",
+      "archiveSha256": "b192478be427470a490575267f5108c944b043695df06322cbe82019eb007e40",
+      "baselineSha256": "b192478be427470a490575267f5108c944b043695df06322cbe82019eb007e40",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/OWNERS.md",
+      "archiveSha256": "53e41f9d9ad6a25c4308fd5ee867824bb3772daab0f417fae2b6ba41d5ecdfd9",
+      "baselineSha256": "53e41f9d9ad6a25c4308fd5ee867824bb3772daab0f417fae2b6ba41d5ecdfd9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/PART_A_README.md",
+      "archiveSha256": "2c04fad40a66abd56c02d99a3f0fbf2012bf05936379393d75000bd7d2608b22",
+      "baselineSha256": "2c04fad40a66abd56c02d99a3f0fbf2012bf05936379393d75000bd7d2608b22",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/README.md",
+      "archiveSha256": "af68d5ad25f85283f4b04363ee6c4274be886183741e1e2f03de0146e584e2ec",
+      "baselineSha256": "af68d5ad25f85283f4b04363ee6c4274be886183741e1e2f03de0146e584e2ec",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/handoff/README.md",
+      "archiveSha256": "c9bcf28b63f7badf352d825a1ec438074fc2fd3c978149223aa7a2263c062d04",
+      "baselineSha256": "c9bcf28b63f7badf352d825a1ec438074fc2fd3c978149223aa7a2263c062d04",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/Camera.qpf",
+      "archiveSha256": "f14ce70b7011472812a6b31adcb9a68a49bc7d34c1aa06ba475294c6390678de",
+      "baselineSha256": "f14ce70b7011472812a6b31adcb9a68a49bc7d34c1aa06ba475294c6390678de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/Camera.qsf",
+      "archiveSha256": "4f03be2b221c2506463540593e4bbe475fd463f9e872755a3ed891b959ecdb69",
+      "baselineSha256": "4f03be2b221c2506463540593e4bbe475fd463f9e872755a3ed891b959ecdb69",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/Camera.sdc",
+      "archiveSha256": "b7e0f15368550e32a5bb7356be6b1be9fa80894d2d37f73767d2951e371cd3d4",
+      "baselineSha256": "b7e0f15368550e32a5bb7356be6b1be9fa80894d2d37f73767d2951e371cd3d4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/PartAPipeline.qpf",
+      "archiveSha256": "1151f0abd0dbfcaa2e7033e6d912b82f3ee9ba02e2cc1aba903d583ba226f166",
+      "baselineSha256": "1151f0abd0dbfcaa2e7033e6d912b82f3ee9ba02e2cc1aba903d583ba226f166",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/PartAPipeline.qsf",
+      "archiveSha256": "4960fe48ef2bd909693f1666f14455b1e94b4492da164dd6f1994829f5ec32f2",
+      "baselineSha256": "4960fe48ef2bd909693f1666f14455b1e94b4492da164dd6f1994829f5ec32f2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/PartAPipeline.sdc",
+      "archiveSha256": "50d1608c9d0ca97bd7642acc0b81e97d155956372bbd49340e0bcff884e439f8",
+      "baselineSha256": "50d1608c9d0ca97bd7642acc0b81e97d155956372bbd49340e0bcff884e439f8",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/build.sh",
+      "archiveSha256": "f4349614435f2b08d8ea1a1d72c3ccf26ea7c48737ca423e7eabecb3d2ed3923",
+      "baselineSha256": "f4349614435f2b08d8ea1a1d72c3ccf26ea7c48737ca423e7eabecb3d2ed3923",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/make_vga_sink_qsys.tcl",
+      "archiveSha256": "23647e15931dfff340411ba813732b3a793b9172efeae861025998ec8828a717",
+      "baselineSha256": "23647e15931dfff340411ba813732b3a793b9172efeae861025998ec8828a717",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/quartus/vga_sink.qsys",
+      "archiveSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "baselineSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/camera_display.sv",
+      "archiveSha256": "4774f7d496b598a000dee1fa70cc4f1b2c8b1c4bd69313989fb3cf4011373d6a",
+      "baselineSha256": "4774f7d496b598a000dee1fa70cc4f1b2c8b1c4bd69313989fb3cf4011373d6a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/camera_pkg.sv",
+      "archiveSha256": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+      "baselineSha256": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/clock_divider.sv",
+      "archiveSha256": "2eea9e58a6c64c40bbc701012f596e6076e70867b50151513630378278070c42",
+      "baselineSha256": "2eea9e58a6c64c40bbc701012f596e6076e70867b50151513630378278070c42",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/display.sv",
+      "archiveSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "baselineSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/colourDiagnostics.sv",
+      "archiveSha256": "5a12724a0aca77082752f3029d768b38cbab438992f7b8760f404e07d35ff7eb",
+      "baselineSha256": "5a12724a0aca77082752f3029d768b38cbab438992f7b8760f404e07d35ff7eb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/colourMeanHsv.sv",
+      "archiveSha256": "935976d8922b6be5637420f189cce07dca87556005ff932d258c63aba30c857d",
+      "baselineSha256": "935976d8922b6be5637420f189cce07dca87556005ff932d258c63aba30c857d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/colourRegionStats.sv",
+      "archiveSha256": "46619838f8facfeeb6fa012661c0798930e924d1a5cc55b586a08a8be3174cb3",
+      "baselineSha256": "46619838f8facfeeb6fa012661c0798930e924d1a5cc55b586a08a8be3174cb3",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/diagnosticFont.sv",
+      "archiveSha256": "795c648d8fc6e018352f34d547a8892b27891a7e440b572d65ad186a2ca2cf0a",
+      "baselineSha256": "795c648d8fc6e018352f34d547a8892b27891a7e440b572d65ad186a2ca2cf0a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/diagnosticRenderer.sv",
+      "archiveSha256": "c946aeeb97588959703385c1b0c98d6fc2d4ed428ac2f3b02ae8b7be4af64fa5",
+      "baselineSha256": "c946aeeb97588959703385c1b0c98d6fc2d4ed428ac2f3b02ae8b7be4af64fa5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/echo7_diag_pkg.sv",
+      "archiveSha256": "4d199fe96d5a3e40d2253dcc51e4860a8028963ed7304a34bec169e41ae5ef8d",
+      "baselineSha256": "4d199fe96d5a3e40d2253dcc51e4860a8028963ed7304a34bec169e41ae5ef8d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/hsvSeg.sv",
+      "archiveSha256": "b46678dd912fda853afbebb113bd00c0b44583db459174856f868d0cd42195cc",
+      "baselineSha256": "b46678dd912fda853afbebb113bd00c0b44583db459174856f868d0cd42195cc",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/rgbFixedSeg.sv",
+      "archiveSha256": "3996f2d630a975efeb177f23a110076fc6f44401884eaf67d72af89c63374f00",
+      "baselineSha256": "3996f2d630a975efeb177f23a110076fc6f44401884eaf67d72af89c63374f00",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/rgbRatioSeg.sv",
+      "archiveSha256": "99a4a0ec812ad3845f7f22b02865e463acc8a75ee1e73c2a38d1fbe41bc339e3",
+      "baselineSha256": "99a4a0ec812ad3845f7f22b02865e463acc8a75ee1e73c2a38d1fbe41bc339e3",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/roiCalibration.sv",
+      "archiveSha256": "06b456e4058a6147cf32bddebe4f177dd1079d3d4a78557b1a543138be6c94f0",
+      "baselineSha256": "06b456e4058a6147cf32bddebe4f177dd1079d3d4a78557b1a543138be6c94f0",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/roiCalibrationRenderer.sv",
+      "archiveSha256": "2014fd39b82b9c5e0e1308444d9c8881f8626a79974ea2ba7025916750b9f1c4",
+      "baselineSha256": "2014fd39b82b9c5e0e1308444d9c8881f8626a79974ea2ba7025916750b9f1c4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/segmentationSelector.sv",
+      "archiveSha256": "d4dd510734c3abe6773fc4808d6be123dc516b46599ff057cafa1b5b93bed47f",
+      "baselineSha256": "d4dd510734c3abe6773fc4808d6be123dc516b46599ff057cafa1b5b93bed47f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/unsignedDivider.sv",
+      "archiveSha256": "563698df2332cb949e92fc0e6a46b2b954951f1179e7c0859c8e946cfde99fa7",
+      "baselineSha256": "563698df2332cb949e92fc0e6a46b2b954951f1179e7c0859c8e946cfde99fa7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/vgaMaskOverlay.sv",
+      "archiveSha256": "ff312f235e5e3bf3eff7d38317a75259e6d72306127f2f1e56d071ddd03a22fd",
+      "baselineSha256": "ff312f235e5e3bf3eff7d38317a75259e6d72306127f2f1e56d071ddd03a22fd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/echo7/videoDiagnostics.sv",
+      "archiveSha256": "3d77af39c635334e37e18f218f34db751aeb643701f1f24e11c0e855d3ea4b0a",
+      "baselineSha256": "3d77af39c635334e37e18f218f34db751aeb643701f1f24e11c0e855d3ea4b0a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/frame_buffer.sv",
+      "archiveSha256": "0e54b911566ea57982deda9de31cf4372ccb39645ff8835a8a465fdf51086993",
+      "baselineSha256": "0e54b911566ea57982deda9de31cf4372ccb39645ff8835a8a465fdf51086993",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/frame_snap.sv",
+      "archiveSha256": "0bd2e47ff70abc3775c49773b4f32f6a123d30c74b650fef0aacd32c9f2ac8e3",
+      "baselineSha256": "0bd2e47ff70abc3775c49773b4f32f6a123d30c74b650fef0aacd32c9f2ac8e3",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/i2c_master.sv",
+      "archiveSha256": "466847848a5f17e8af0b954b0418fe0ece0dfcb743d72ce19f1eda7483d7824a",
+      "baselineSha256": "466847848a5f17e8af0b954b0418fe0ece0dfcb743d72ce19f1eda7483d7824a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/bar_decode.sv",
+      "archiveSha256": "18dfd1303ac15a60007a2d1b084351ef4aa67bda06befba6a121322061650404",
+      "baselineSha256": "18dfd1303ac15a60007a2d1b084351ef4aa67bda06befba6a121322061650404",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/camera_barcode_display.sv",
+      "archiveSha256": "d84e2e4cc9a7eb362f26b2ba96143c322c1c05f299697f365432b188f8717c82",
+      "baselineSha256": "d84e2e4cc9a7eb362f26b2ba96143c322c1c05f299697f365432b188f8717c82",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/cdc_latch.sv",
+      "archiveSha256": "b4bd8ea64c671e8ced97a3365b86e5af2e43a0ed26436d6bf7f18b1e2f358dc4",
+      "baselineSha256": "b4bd8ea64c671e8ced97a3365b86e5af2e43a0ed26436d6bf7f18b1e2f358dc4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/col_profile.sv",
+      "archiveSha256": "0e538f3695fbf05df75a8eabe6ae889a37c9254d96b49a51a098e41b1b7f39e2",
+      "baselineSha256": "0e538f3695fbf05df75a8eabe6ae889a37c9254d96b49a51a098e41b1b7f39e2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/hdiff.sv",
+      "archiveSha256": "67135bca7b86f698c5b05503a63eb5e024214fa0c7ac8436ea20345952e1cad4",
+      "baselineSha256": "67135bca7b86f698c5b05503a63eb5e024214fa0c7ac8436ea20345952e1cad4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/hex_glyph.sv",
+      "archiveSha256": "be16e915b39245947c2559b235a77a2cc5923c21da642066367e18c2be4082fa",
+      "baselineSha256": "be16e915b39245947c2559b235a77a2cc5923c21da642066367e18c2be4082fa",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/live_reader.sv",
+      "archiveSha256": "442add656179b2cc56bb512286f6265328aa57ac1a0784d6ad709a4df0034136",
+      "baselineSha256": "442add656179b2cc56bb512286f6265328aa57ac1a0784d6ad709a4df0034136",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/live/pick_runs.sv",
+      "archiveSha256": "8b37b04b33d560af4f48035328d798a5f16eecf7cb939f0a7733f7f5225663bd",
+      "baselineSha256": "8b37b04b33d560af4f48035328d798a5f16eecf7cb939f0a7733f7f5225663bd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/ov7670_capture.sv",
+      "archiveSha256": "883a8f8ce6d65524b41d96b66fe1642227e8d6fd90983484174ddf6e29cd60d1",
+      "baselineSha256": "883a8f8ce6d65524b41d96b66fe1642227e8d6fd90983484174ddf6e29cd60d1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/ov7670_config.sv",
+      "archiveSha256": "5c679f7a5f638cdeb9e38a5147e5edc8fff75490200506629ac1b121cd78c9ae",
+      "baselineSha256": "5c679f7a5f638cdeb9e38a5147e5edc8fff75490200506629ac1b121cd78c9ae",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/boundedCandidates.sv",
+      "archiveSha256": "c7e9ff69bfa9cd4537cac40770846028043b56124168397cbe1444e3888db252",
+      "baselineSha256": "c7e9ff69bfa9cd4537cac40770846028043b56124168397cbe1444e3888db252",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/causalMaskCleanup.sv",
+      "archiveSha256": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+      "baselineSha256": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/partACapturePipeline.sv",
+      "archiveSha256": "5928bceae3e30481e0b7f4881da3aa1ec98fe8385471c982cb736dc1660f970d",
+      "baselineSha256": "5928bceae3e30481e0b7f4881da3aa1ec98fe8385471c982cb736dc1660f970d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/part_a_pkg.sv",
+      "archiveSha256": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+      "baselineSha256": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/rawColourCentroid.sv",
+      "archiveSha256": "2760d526f0e510048730b4d1fd5b5840b96c8f00588d163170b183288b249c6c",
+      "baselineSha256": "2760d526f0e510048730b4d1fd5b5840b96c8f00588d163170b183288b249c6c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/part_a/top_level_part_a.sv",
+      "archiveSha256": "95acde52147b4a8239f9492bf9cd2af54dcd4646932d505764e09fc02be4da1c",
+      "baselineSha256": "95acde52147b4a8239f9492bf9cd2af54dcd4646932d505764e09fc02be4da1c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/controlWatchdog.sv",
+      "archiveSha256": "329a5bbf3af8c3281378b509121c2d81e1536aab73cdc3de8082dcb9903be12a",
+      "baselineSha256": "329a5bbf3af8c3281378b509121c2d81e1536aab73cdc3de8082dcb9903be12a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/dualSonar.sv",
+      "archiveSha256": "fc61fa49e65e37dcc46f69f7be4a93f5e2c7d8e820ecad384b886b66eaa21bed",
+      "baselineSha256": "fc61fa49e65e37dcc46f69f7be4a93f5e2c7d8e820ecad384b886b66eaa21bed",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/irEmergencyStop.sv",
+      "archiveSha256": "64a8c97a065c1b63851bdad08996b9a4221a63fc5e68847aec1c18af5f1f8e42",
+      "baselineSha256": "64a8c97a065c1b63851bdad08996b9a4221a63fc5e68847aec1c18af5f1f8e42",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/irMotionControl.sv",
+      "archiveSha256": "281c3b024a0dfbf4ddf013f6fcf48f29e18396d9fa9bfda6fd5a9610410598a7",
+      "baselineSha256": "281c3b024a0dfbf4ddf013f6fcf48f29e18396d9fa9bfda6fd5a9610410598a7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/motorSafetyArbiter.sv",
+      "archiveSha256": "1babb273d28ad5808a5e0778ae029f996189469281d34e2b4d323b4ffc343ff5",
+      "baselineSha256": "1babb273d28ad5808a5e0778ae029f996189469281d34e2b4d323b4ffc343ff5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/motorSafetyController.sv",
+      "archiveSha256": "7fc29179dd0adc7e1e6750cb1cc08c41d35a71ac77c3f79fbfe88f219bde9a83",
+      "baselineSha256": "7fc29179dd0adc7e1e6750cb1cc08c41d35a71ac77c3f79fbfe88f219bde9a83",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/necDecoderSafe.sv",
+      "archiveSha256": "66a84adb20c8523220c1ef743c65383eff9da67525dcc486d407f8c912c40a84",
+      "baselineSha256": "66a84adb20c8523220c1ef743c65383eff9da67525dcc486d407f8c912c40a84",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/chassis_command.sv",
+      "archiveSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "baselineSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/ir_drive.sv",
+      "archiveSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "baselineSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/nec_decoder.sv",
+      "archiveSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "baselineSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/sonar_pll.sv",
+      "archiveSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "baselineSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/sonar_range.sv",
+      "archiveSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "baselineSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/reference/uart_rx.sv",
+      "archiveSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "baselineSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/safeChassisCommand.sv",
+      "archiveSha256": "c1ec9bb3f1c8de7601db13487ef0ef55e9e32a392b13d653c437117d7adf62e3",
+      "baselineSha256": "c1ec9bb3f1c8de7601db13487ef0ef55e9e32a392b13d653c437117d7adf62e3",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/safetyHex.sv",
+      "archiveSha256": "e2167755326f4b02f3241fe97f3d193910c901b696c53184abc5b9fbef153afa",
+      "baselineSha256": "e2167755326f4b02f3241fe97f3d193910c901b696c53184abc5b9fbef153afa",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/safetySystem.sv",
+      "archiveSha256": "127e4f306010f5b3414a9f5e2dae14aafe0eb3902764482f46ae268c9646e300",
+      "baselineSha256": "127e4f306010f5b3414a9f5e2dae14aafe0eb3902764482f46ae268c9646e300",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/sonarSampleCdc.sv",
+      "archiveSha256": "89315dd87237e8559912012cfd9742993eb6c5c9dde10f8b5dda40be2ee88067",
+      "baselineSha256": "89315dd87237e8559912012cfd9742993eb6c5c9dde10f8b5dda40be2ee88067",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/safety/ultrasonicSafety.sv",
+      "archiveSha256": "3cd41b5feacc5fa135bc4085ecb70755257da4d7864fd99956ad87f1102a2f48",
+      "baselineSha256": "3cd41b5feacc5fa135bc4085ecb70755257da4d7864fd99956ad87f1102a2f48",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/snapshot_probes.sv",
+      "archiveSha256": "f9870fd4f20f1a85eedf41aaf4c7f479f93a1778a9191f56e509ded3b9201581",
+      "baselineSha256": "f9870fd4f20f1a85eedf41aaf4c7f479f93a1778a9191f56e509ded3b9201581",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/snapshot_ram.sv",
+      "archiveSha256": "8e91a032ae0920a08b1d0c91a7fe7c976911c6488999e77bd40c091129886e9f",
+      "baselineSha256": "8e91a032ae0920a08b1d0c91a7fe7c976911c6488999e77bd40c091129886e9f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/top_level.sv",
+      "archiveSha256": "137bba055c882f2c492e98c81d88952555764ba0f3c856ad3c3bcd738ffed31e",
+      "baselineSha256": "137bba055c882f2c492e98c81d88952555764ba0f3c856ad3c3bcd738ffed31e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/uart_tx.sv",
+      "archiveSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "baselineSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/rtl/video_pll.sv",
+      "archiveSha256": "65bfdd798c15f8677c338eacb6dca28b04fd8ea29aac2d0b6e5010829b13a8bd",
+      "baselineSha256": "65bfdd798c15f8677c338eacb6dca28b04fd8ea29aac2d0b6e5010829b13a8bd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/run_part_a_tests.sh",
+      "archiveSha256": "acca4bb56aa643826cb6d9362b718c88316612f726174a44b351b69007254884",
+      "baselineSha256": "acca4bb56aa643826cb6d9362b718c88316612f726174a44b351b69007254884",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/simulate.sh",
+      "archiveSha256": "f33669d28c9cc721193eba09e2e32b56a35dbe26edcdaf6699bd525cdd3fb2bf",
+      "baselineSha256": "f33669d28c9cc721193eba09e2e32b56a35dbe26edcdaf6699bd525cdd3fb2bf",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/camera_barcode_tb.sv",
+      "archiveSha256": "c39d79b2c7e88aee38c9331433653bea0bfcff58cfa869c9def51b123278e3fb",
+      "baselineSha256": "c39d79b2c7e88aee38c9331433653bea0bfcff58cfa869c9def51b123278e3fb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/camera_display_tb.sv",
+      "archiveSha256": "941387cb927929ee9d278d5a3e7ec7f25af1fc6f2d19ff6f805c777fc75d0b41",
+      "baselineSha256": "941387cb927929ee9d278d5a3e7ec7f25af1fc6f2d19ff6f805c777fc75d0b41",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/camera_system_tb.sv",
+      "archiveSha256": "68198c2933f4d1e870ae67c7afd829d12eb2f6d7338df0145b664008bd927184",
+      "baselineSha256": "68198c2933f4d1e870ae67c7afd829d12eb2f6d7338df0145b664008bd927184",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/colourDiagnostics_protocol_tb.sv",
+      "archiveSha256": "0892e7ca8206c8821a079d7cee4a1a7f443b307af7d5b0dd4f9392d2799c317f",
+      "baselineSha256": "0892e7ca8206c8821a079d7cee4a1a7f443b307af7d5b0dd4f9392d2799c317f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/colourMeanHsv_tb.sv",
+      "archiveSha256": "d3ebe9d0a65345ac79a9cb3e894c3c22fbd89f116c623b49fd1fb053a22e14a0",
+      "baselineSha256": "d3ebe9d0a65345ac79a9cb3e894c3c22fbd89f116c623b49fd1fb053a22e14a0",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/colourRegionStats_tb.sv",
+      "archiveSha256": "5b08d5a9eaf8a8cb5f9432a7938f9ef9ae8898d823e35b5db86711e923c97bbd",
+      "baselineSha256": "5b08d5a9eaf8a8cb5f9432a7938f9ef9ae8898d823e35b5db86711e923c97bbd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/diagnosticRenderer_tb.sv",
+      "archiveSha256": "751ed42b146398a855bd673ce39cc91ce32eef6d1e70e6953b3330b7b0b0179c",
+      "baselineSha256": "751ed42b146398a855bd673ce39cc91ce32eef6d1e70e6953b3330b7b0b0179c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_algorithms_tb.sv",
+      "archiveSha256": "1dd0c376a04016411501e7f3d8f1096f59c0c208fb0e45af78000f345211c5f4",
+      "baselineSha256": "1dd0c376a04016411501e7f3d8f1096f59c0c208fb0e45af78000f345211c5f4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_diag_ref_pkg.sv",
+      "archiveSha256": "ec7f07043f7eca399e510025664e8be6ddd85b8885af0d6027f33584a0826059",
+      "baselineSha256": "ec7f07043f7eca399e510025664e8be6ddd85b8885af0d6027f33584a0826059",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_diagnostics_tb.sv",
+      "archiveSha256": "bbc911afc6624b7cbed930e26c516b53a6c791d9892ac13d43c18bf51e69b0f2",
+      "baselineSha256": "bbc911afc6624b7cbed930e26c516b53a6c791d9892ac13d43c18bf51e69b0f2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_integration_tb.sv",
+      "archiveSha256": "cf0e7f0c7d46fe8c111a8434821f98626c9793066b51223ba5d9f899b4a2a499",
+      "baselineSha256": "cf0e7f0c7d46fe8c111a8434821f98626c9793066b51223ba5d9f899b4a2a499",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_ref_pkg.sv",
+      "archiveSha256": "f8fa9df101f8957f1355dedef56b200fc8d2e89f9a47e9e61f2b8b0280c6979e",
+      "baselineSha256": "f8fa9df101f8957f1355dedef56b200fc8d2e89f9a47e9e61f2b8b0280c6979e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/echo7_stream_tb.sv",
+      "archiveSha256": "ee231c5cc8e977ef73ab4b492bfa9b67e4c5f363e7a86354a411c3165107d554",
+      "baselineSha256": "ee231c5cc8e977ef73ab4b492bfa9b67e4c5f363e7a86354a411c3165107d554",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/roiCalibration_protocol_tb.sv",
+      "archiveSha256": "e9b6d1af6fa498d4125f15c41b1548f1b02a33f1eff6f0a4848baf214c8f8164",
+      "baselineSha256": "e9b6d1af6fa498d4125f15c41b1548f1b02a33f1eff6f0a4848baf214c8f8164",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/roiCalibration_tb.sv",
+      "archiveSha256": "cae40138202f57eaf829c91547ad9b45b7e68bcf30b211c514a9f69f089bec94",
+      "baselineSha256": "cae40138202f57eaf829c91547ad9b45b7e68bcf30b211c514a9f69f089bec94",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/rotation_tb.sv",
+      "archiveSha256": "d6adc622d5bf9f046c5e93d69227695fd10c19a5a2172b9cdbb31982b095a510",
+      "baselineSha256": "d6adc622d5bf9f046c5e93d69227695fd10c19a5a2172b9cdbb31982b095a510",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/unsignedDivider_tb.sv",
+      "archiveSha256": "07922f185ec71c2ed6f0cec519459b2023830c55f13103583d34eed5a97847b8",
+      "baselineSha256": "07922f185ec71c2ed6f0cec519459b2023830c55f13103583d34eed5a97847b8",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/echo7/vgaMaskOverlay_tb.sv",
+      "archiveSha256": "f3c2f83f6388f950c085cc30812499d04a47538a4cfa71eb3f7fc2d6cdc17cd3",
+      "baselineSha256": "f3c2f83f6388f950c085cc30812499d04a47538a4cfa71eb3f7fc2d6cdc17cd3",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/frame_buffer_handover_tb.sv",
+      "archiveSha256": "831464cd64c36d54c3a229a7a9b04d9a075864559e6007e7d1c5cb7e6fd05050",
+      "baselineSha256": "831464cd64c36d54c3a229a7a9b04d9a075864559e6007e7d1c5cb7e6fd05050",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/frame_buffer_tb.sv",
+      "archiveSha256": "3732bd35850369960f0a2b1c0fb9c55bb2eb8c2c0f643e13f904908c386b8d54",
+      "baselineSha256": "3732bd35850369960f0a2b1c0fb9c55bb2eb8c2c0f643e13f904908c386b8d54",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/ov7670_capture_tb.sv",
+      "archiveSha256": "4bd978af48b16807e434df800b96dca7d712ebdcce937483281db4714fc67275",
+      "baselineSha256": "4bd978af48b16807e434df800b96dca7d712ebdcce937483281db4714fc67275",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/ov7670_config_tb.sv",
+      "archiveSha256": "ce096ef73bbe09905c04a992744c695be71577d6e2c63241e4a16ee48ee56dc5",
+      "baselineSha256": "ce096ef73bbe09905c04a992744c695be71577d6e2c63241e4a16ee48ee56dc5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/ov7670_model.sv",
+      "archiveSha256": "99df5439d3ecd2b09b65cd2e276a9c274d5fe3957c73798801f12096de136f83",
+      "baselineSha256": "99df5439d3ecd2b09b65cd2e276a9c274d5fe3957c73798801f12096de136f83",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/part_a/boundedCandidates_tb.sv",
+      "archiveSha256": "fc8b97d88c2618ad9bb6069678b484e8020a595273a32f9a83dde17727aa5912",
+      "baselineSha256": "fc8b97d88c2618ad9bb6069678b484e8020a595273a32f9a83dde17727aa5912",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/part_a/cleanup_centroid_tb.sv",
+      "archiveSha256": "8aa96d8ccb7507ec3a29dae02bbb0a5b25b881d7709304f13787b1f50b4ecac0",
+      "baselineSha256": "8aa96d8ccb7507ec3a29dae02bbb0a5b25b881d7709304f13787b1f50b4ecac0",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/part_a/partACapturePipeline_tb.sv",
+      "archiveSha256": "7c0e9e955337e870cfea64119672aeb84db6dc3bdd4fc9d9bea34a2055df1a24",
+      "baselineSha256": "7c0e9e955337e870cfea64119672aeb84db6dc3bdd4fc9d9bea34a2055df1a24",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/part_a/partARecordedReplay_tb.sv",
+      "archiveSha256": "650aa0346dc3f4b6e706be17410de2536b74e91c93ce275637d14abedb78e648",
+      "baselineSha256": "650aa0346dc3f4b6e706be17410de2536b74e91c93ce275637d14abedb78e648",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/safety/irSafety_tb.sv",
+      "archiveSha256": "47b7d9a3e2dac400d35536e7276951614a5379ffc33b0f5dab7ed79fe2647837",
+      "baselineSha256": "47b7d9a3e2dac400d35536e7276951614a5379ffc33b0f5dab7ed79fe2647837",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/safety/safety_unit_tb.sv",
+      "archiveSha256": "06e7503cd2ff3762abfaf3a07a70ca9a030826ded3504882689597c8ff932e8f",
+      "baselineSha256": "06e7503cd2ff3762abfaf3a07a70ca9a030826ded3504882689597c8ff932e8f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/safety/sonarSafety_tb.sv",
+      "archiveSha256": "298242987a519ce62f35a9a118a2376a3c25b3de6d1036b19db8b0310efb4e08",
+      "baselineSha256": "298242987a519ce62f35a9a118a2376a3c25b3de6d1036b19db8b0310efb4e08",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/safety/uartSafety_tb.sv",
+      "archiveSha256": "ed03e38c1d5f474fd7c75debce315b165af88c4ed5fafc3766f5530354198158",
+      "baselineSha256": "ed03e38c1d5f474fd7c75debce315b165af88c4ed5fafc3766f5530354198158",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/vga_monitor_model.sv",
+      "archiveSha256": "c021921cd7fdbb3433fc36889a46b6d6fa9b7db356c4d806a4950f69c6870763",
+      "baselineSha256": "c021921cd7fdbb3433fc36889a46b6d6fa9b7db356c4d806a4950f69c6870763",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tb/vga_sink_sim.sv",
+      "archiveSha256": "a388d5bfd62aefb03bf8c8a49f11ced8c3d26c951fc5573e7019442f18e8484a",
+      "baselineSha256": "a388d5bfd62aefb03bf8c8a49f11ced8c3d26c951fc5573e7019442f18e8484a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tcl/grab_jtag.tcl",
+      "archiveSha256": "b74890473da4f0619f2b966d4b2cfd4e44e1841ebe1223eb6922f592630c51c8",
+      "baselineSha256": "b74890473da4f0619f2b966d4b2cfd4e44e1841ebe1223eb6922f592630c51c8",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/echo7/check_math.py",
+      "archiveSha256": "9c38f37f1ec304d1fa446408cd0a0878486538b9e2a28b5dae93ed980025d9ea",
+      "baselineSha256": "9c38f37f1ec304d1fa446408cd0a0878486538b9e2a28b5dae93ed980025d9ea",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/echo7/run_tests.py",
+      "archiveSha256": "1f8d1a81936cb036fa697471113665402fcbcbd3b990d26acc2e1058394a308b",
+      "baselineSha256": "1f8d1a81936cb036fa697471113665402fcbcbd3b990d26acc2e1058394a308b",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/grab.py",
+      "archiveSha256": "79b21c09ce856ff07ab38782d58aadd9f66325b5a53322965d041a33ed82dd93",
+      "baselineSha256": "79b21c09ce856ff07ab38782d58aadd9f66325b5a53322965d041a33ed82dd93",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/jtag_export.py",
+      "archiveSha256": "ef00bb84f4de29541ca5ad90d25b6f98ff1f560b7af75d6f2ede613d22b95803",
+      "baselineSha256": "ef00bb84f4de29541ca5ad90d25b6f98ff1f560b7af75d6f2ede613d22b95803",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/make_gif.py",
+      "archiveSha256": "f6978b1638b3b01aacd5fe7344caf903cdc9b84f4f6daca187ba3d46eeab90c1",
+      "baselineSha256": "f6978b1638b3b01aacd5fe7344caf903cdc9b84f4f6daca187ba3d46eeab90c1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/make_scene.py",
+      "archiveSha256": "e92e690304bf3a3c6d631954a3582d6ba0346aed4067a174d75e61ea46fcd04c",
+      "baselineSha256": "e92e690304bf3a3c6d631954a3582d6ba0346aed4067a174d75e61ea46fcd04c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/RECORDED_REPLAY.md",
+      "archiveSha256": "5b5bf1752990e134cd54741e5b8f4b5b7b49e72ff5ead8a6c4cc66086a801e77",
+      "baselineSha256": "5b5bf1752990e134cd54741e5b8f4b5b7b49e72ff5ead8a6c4cc66086a801e77",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/analyse_capture.py",
+      "archiveSha256": "6e2f76d9703f323120e97c8a29c5498eb929824a56aa456f521d4287c7c05231",
+      "baselineSha256": "6e2f76d9703f323120e97c8a29c5498eb929824a56aa456f521d4287c7c05231",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/candidates_model.py",
+      "archiveSha256": "c5304398d404da9280c8583f11cbc9129443eccccb9da06f79676bf4170d0bd6",
+      "baselineSha256": "c5304398d404da9280c8583f11cbc9129443eccccb9da06f79676bf4170d0bd6",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/candidates_reclaimed_model.py",
+      "archiveSha256": "fb78803575fffa1ccb2e19fe8125a6fef86f797c0edc5398053594f85c4d7dac",
+      "baselineSha256": "fb78803575fffa1ccb2e19fe8125a6fef86f797c0edc5398053594f85c4d7dac",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/check_hardware_packet.py",
+      "archiveSha256": "b32a8713b27bd49f2847c17319a2dc0a43be9d21b6478db83cd5838b1a8d60b7",
+      "baselineSha256": "b32a8713b27bd49f2847c17319a2dc0a43be9d21b6478db83cd5838b1a8d60b7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/export_recorded_replay.py",
+      "archiveSha256": "203ecff0277d05a6d69effe1b390234d65534e07c5c6213f150148f3ff66a832",
+      "baselineSha256": "203ecff0277d05a6d69effe1b390234d65534e07c5c6213f150148f3ff66a832",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/run_tests.py",
+      "archiveSha256": "29a2162a9aedcfb82b09341c82c95ebe3a2867eb9f75ab09ae78dcf9de9d1deb",
+      "baselineSha256": "29a2162a9aedcfb82b09341c82c95ebe3a2867eb9f75ab09ae78dcf9de9d1deb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/test_candidates_model.py",
+      "archiveSha256": "ccf29a17251be467515c24340b38958afea9da8243a17988dbc4788dcecfae24",
+      "baselineSha256": "ccf29a17251be467515c24340b38958afea9da8243a17988dbc4788dcecfae24",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/test_hardware_checker.py",
+      "archiveSha256": "a11131ec7b2833e3c8a1542028e49df3b9a24bd05709152d80dd019b9682c376",
+      "baselineSha256": "a11131ec7b2833e3c8a1542028e49df3b9a24bd05709152d80dd019b9682c376",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/part_a/test_reclaimed_model.py",
+      "archiveSha256": "2285a672b7028d7b9def934b9f21c1ea0ff498c873b33a34bcb37c12912c980e",
+      "baselineSha256": "2285a672b7028d7b9def934b9f21c1ea0ff498c873b33a34bcb37c12912c980e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/tools/render_frames.py",
+      "archiveSha256": "7e312b3d870bb8ce9da33ea605830716ff8f451d25bfabc4fdbae4bfb3a1f07e",
+      "baselineSha256": "7e312b3d870bb8ce9da33ea605830716ff8f451d25bfabc4fdbae4bfb3a1f07e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/work/safety/active_synthesis/SafetyActive.qpf",
+      "archiveSha256": "8e8fe2b33d890fb62fb93e2115ab7302ad37e1e31cbcd9085361d3266f81b3bd",
+      "baselineSha256": "8e8fe2b33d890fb62fb93e2115ab7302ad37e1e31cbcd9085361d3266f81b3bd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "ECHOPHACE1/work/safety/active_synthesis/SafetyActive.qsf",
+      "archiveSha256": "2b36b31d7435916fe02370ceed7dfef53e6283cdd426dbfb17a421d995a4f8bc",
+      "baselineSha256": "2b36b31d7435916fe02370ceed7dfef53e6283cdd426dbfb17a421d995a4f8bc",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/README.md",
+      "archiveSha256": "ce3a523db7a675aa91603125a4b41082d6d293f9c5183e0e62af698b6d7c62a7",
+      "baselineSha256": "ce3a523db7a675aa91603125a4b41082d6d293f9c5183e0e62af698b6d7c62a7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/Camera.qpf",
+      "archiveSha256": "f14ce70b7011472812a6b31adcb9a68a49bc7d34c1aa06ba475294c6390678de",
+      "baselineSha256": "f14ce70b7011472812a6b31adcb9a68a49bc7d34c1aa06ba475294c6390678de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/Camera.qsf",
+      "archiveSha256": "85408a42b587eadf03cfd9ce4a4ce687d45575824570a8edd3f41fc56279c544",
+      "baselineSha256": "85408a42b587eadf03cfd9ce4a4ce687d45575824570a8edd3f41fc56279c544",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/Camera.sdc",
+      "archiveSha256": "c4e96cff3b3c3e0ec520ff9054694d4c731ddac9669018e07dc37b7cbef93c8b",
+      "baselineSha256": "c4e96cff3b3c3e0ec520ff9054694d4c731ddac9669018e07dc37b7cbef93c8b",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/build.sh",
+      "archiveSha256": "f4349614435f2b08d8ea1a1d72c3ccf26ea7c48737ca423e7eabecb3d2ed3923",
+      "baselineSha256": "f4349614435f2b08d8ea1a1d72c3ccf26ea7c48737ca423e7eabecb3d2ed3923",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/chassis.qpf",
+      "archiveSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "baselineSha256": "8238235a50580b111134499bcedb143e1012f893524d7735a215c1a47825e5b7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/chassis.qsf",
+      "archiveSha256": "ed9128de610c9766bf25f8c69367d6b455351c59c37c7cbf8506b72a9bbdc44b",
+      "baselineSha256": "ed9128de610c9766bf25f8c69367d6b455351c59c37c7cbf8506b72a9bbdc44b",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/chassis.sdc",
+      "archiveSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "baselineSha256": "1b924c363dedc7a12793cdf85b8bc4ac849e959bb9ded9dc34e10115c4b50b15",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/make_vga_sink_qsys.tcl",
+      "archiveSha256": "23647e15931dfff340411ba813732b3a793b9172efeae861025998ec8828a717",
+      "baselineSha256": "23647e15931dfff340411ba813732b3a793b9172efeae861025998ec8828a717",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/quartus/vga_sink.qsys",
+      "archiveSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "baselineSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/camera_display.sv",
+      "archiveSha256": "42d4b57349045fa62d3a913c765df7ea6ccc32d150a2c9f87e5e9f38a3f762bf",
+      "baselineSha256": "42d4b57349045fa62d3a913c765df7ea6ccc32d150a2c9f87e5e9f38a3f762bf",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/camera_pkg.sv",
+      "archiveSha256": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+      "baselineSha256": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/chassis_drive.sv",
+      "archiveSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "baselineSha256": "a593344e5c81f7ef8a3ed7485d7bf9776d82987baca0814bdc5a75cb476f87de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/clock_divider.sv",
+      "archiveSha256": "2eea9e58a6c64c40bbc701012f596e6076e70867b50151513630378278070c42",
+      "baselineSha256": "2eea9e58a6c64c40bbc701012f596e6076e70867b50151513630378278070c42",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/display.sv",
+      "archiveSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "baselineSha256": "559349cd3e5bf425369de427acf773a8a5e27cfb3deb7fb26b51a53465a5b8e4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/frame_buffer.sv",
+      "archiveSha256": "0e54b911566ea57982deda9de31cf4372ccb39645ff8835a8a465fdf51086993",
+      "baselineSha256": "0e54b911566ea57982deda9de31cf4372ccb39645ff8835a8a465fdf51086993",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/i2c_master.sv",
+      "archiveSha256": "466847848a5f17e8af0b954b0418fe0ece0dfcb743d72ce19f1eda7483d7824a",
+      "baselineSha256": "466847848a5f17e8af0b954b0418fe0ece0dfcb743d72ce19f1eda7483d7824a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/bar_decode.sv",
+      "archiveSha256": "18dfd1303ac15a60007a2d1b084351ef4aa67bda06befba6a121322061650404",
+      "baselineSha256": "18dfd1303ac15a60007a2d1b084351ef4aa67bda06befba6a121322061650404",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/camera_barcode_display.sv",
+      "archiveSha256": "d84e2e4cc9a7eb362f26b2ba96143c322c1c05f299697f365432b188f8717c82",
+      "baselineSha256": "d84e2e4cc9a7eb362f26b2ba96143c322c1c05f299697f365432b188f8717c82",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/cdc_latch.sv",
+      "archiveSha256": "b4bd8ea64c671e8ced97a3365b86e5af2e43a0ed26436d6bf7f18b1e2f358dc4",
+      "baselineSha256": "b4bd8ea64c671e8ced97a3365b86e5af2e43a0ed26436d6bf7f18b1e2f358dc4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/col_profile.sv",
+      "archiveSha256": "0e538f3695fbf05df75a8eabe6ae889a37c9254d96b49a51a098e41b1b7f39e2",
+      "baselineSha256": "0e538f3695fbf05df75a8eabe6ae889a37c9254d96b49a51a098e41b1b7f39e2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/hdiff.sv",
+      "archiveSha256": "67135bca7b86f698c5b05503a63eb5e024214fa0c7ac8436ea20345952e1cad4",
+      "baselineSha256": "67135bca7b86f698c5b05503a63eb5e024214fa0c7ac8436ea20345952e1cad4",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/hex_glyph.sv",
+      "archiveSha256": "be16e915b39245947c2559b235a77a2cc5923c21da642066367e18c2be4082fa",
+      "baselineSha256": "be16e915b39245947c2559b235a77a2cc5923c21da642066367e18c2be4082fa",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/live_reader.sv",
+      "archiveSha256": "442add656179b2cc56bb512286f6265328aa57ac1a0784d6ad709a4df0034136",
+      "baselineSha256": "442add656179b2cc56bb512286f6265328aa57ac1a0784d6ad709a4df0034136",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/live/pick_runs.sv",
+      "archiveSha256": "8b37b04b33d560af4f48035328d798a5f16eecf7cb939f0a7733f7f5225663bd",
+      "baselineSha256": "8b37b04b33d560af4f48035328d798a5f16eecf7cb939f0a7733f7f5225663bd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/ov7670_capture.sv",
+      "archiveSha256": "883a8f8ce6d65524b41d96b66fe1642227e8d6fd90983484174ddf6e29cd60d1",
+      "baselineSha256": "883a8f8ce6d65524b41d96b66fe1642227e8d6fd90983484174ddf6e29cd60d1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/ov7670_config.sv",
+      "archiveSha256": "5c679f7a5f638cdeb9e38a5147e5edc8fff75490200506629ac1b121cd78c9ae",
+      "baselineSha256": "5c679f7a5f638cdeb9e38a5147e5edc8fff75490200506629ac1b121cd78c9ae",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/top_level.sv",
+      "archiveSha256": "f05a988ef8f7704a751040d9e37d5f218661d598b4125d2ce0230583db85e0f9",
+      "baselineSha256": "f05a988ef8f7704a751040d9e37d5f218661d598b4125d2ce0230583db85e0f9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/uart_tx.sv",
+      "archiveSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "baselineSha256": "657a31a8d4afcf7c38f21a5597d773eec4222492978d0985854f8906cc4a9f20",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/rtl/video_pll.sv",
+      "archiveSha256": "65bfdd798c15f8677c338eacb6dca28b04fd8ea29aac2d0b6e5010829b13a8bd",
+      "baselineSha256": "65bfdd798c15f8677c338eacb6dca28b04fd8ea29aac2d0b6e5010829b13a8bd",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/simulate.sh",
+      "archiveSha256": "7e3dbab99dd7fed56c681d6737db9c7f1792703522960180d6b3ddc2e4866e3f",
+      "baselineSha256": "7e3dbab99dd7fed56c681d6737db9c7f1792703522960180d6b3ddc2e4866e3f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/camera_barcode_tb.sv",
+      "archiveSha256": "c39d79b2c7e88aee38c9331433653bea0bfcff58cfa869c9def51b123278e3fb",
+      "baselineSha256": "c39d79b2c7e88aee38c9331433653bea0bfcff58cfa869c9def51b123278e3fb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/camera_display_tb.sv",
+      "archiveSha256": "941387cb927929ee9d278d5a3e7ec7f25af1fc6f2d19ff6f805c777fc75d0b41",
+      "baselineSha256": "941387cb927929ee9d278d5a3e7ec7f25af1fc6f2d19ff6f805c777fc75d0b41",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/camera_system_tb.sv",
+      "archiveSha256": "4749608e081834c4b5ccc561c35261728efa3eb68febed93d78201fe9353bfd2",
+      "baselineSha256": "4749608e081834c4b5ccc561c35261728efa3eb68febed93d78201fe9353bfd2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/chassis_drive_tb.sv",
+      "archiveSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "baselineSha256": "f4dac4a19db3b58b9d15d378ac58b947fee6ca605ec647cec60960c3924503a2",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/frame_buffer_handover_tb.sv",
+      "archiveSha256": "831464cd64c36d54c3a229a7a9b04d9a075864559e6007e7d1c5cb7e6fd05050",
+      "baselineSha256": "831464cd64c36d54c3a229a7a9b04d9a075864559e6007e7d1c5cb7e6fd05050",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/frame_buffer_tb.sv",
+      "archiveSha256": "3732bd35850369960f0a2b1c0fb9c55bb2eb8c2c0f643e13f904908c386b8d54",
+      "baselineSha256": "3732bd35850369960f0a2b1c0fb9c55bb2eb8c2c0f643e13f904908c386b8d54",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/ov7670_capture_tb.sv",
+      "archiveSha256": "4bd978af48b16807e434df800b96dca7d712ebdcce937483281db4714fc67275",
+      "baselineSha256": "4bd978af48b16807e434df800b96dca7d712ebdcce937483281db4714fc67275",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/ov7670_config_tb.sv",
+      "archiveSha256": "ce096ef73bbe09905c04a992744c695be71577d6e2c63241e4a16ee48ee56dc5",
+      "baselineSha256": "ce096ef73bbe09905c04a992744c695be71577d6e2c63241e4a16ee48ee56dc5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/ov7670_model.sv",
+      "archiveSha256": "99df5439d3ecd2b09b65cd2e276a9c274d5fe3957c73798801f12096de136f83",
+      "baselineSha256": "99df5439d3ecd2b09b65cd2e276a9c274d5fe3957c73798801f12096de136f83",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/ugv02_model.sv",
+      "archiveSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "baselineSha256": "2001dfa674fbb29f29459350d2f058c368f5acef0d3d4e20bbc0ab060edd93b1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/vga_monitor_model.sv",
+      "archiveSha256": "c021921cd7fdbb3433fc36889a46b6d6fa9b7db356c4d806a4950f69c6870763",
+      "baselineSha256": "c021921cd7fdbb3433fc36889a46b6d6fa9b7db356c4d806a4950f69c6870763",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tb/vga_sink_sim.sv",
+      "archiveSha256": "a388d5bfd62aefb03bf8c8a49f11ced8c3d26c951fc5573e7019442f18e8484a",
+      "baselineSha256": "a388d5bfd62aefb03bf8c8a49f11ced8c3d26c951fc5573e7019442f18e8484a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tools/make_gif.py",
+      "archiveSha256": "f6978b1638b3b01aacd5fe7344caf903cdc9b84f4f6daca187ba3d46eeab90c1",
+      "baselineSha256": "f6978b1638b3b01aacd5fe7344caf903cdc9b84f4f6daca187ba3d46eeab90c1",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tools/make_scene.py",
+      "archiveSha256": "e92e690304bf3a3c6d631954a3582d6ba0346aed4067a174d75e61ea46fcd04c",
+      "baselineSha256": "e92e690304bf3a3c6d631954a3582d6ba0346aed4067a174d75e61ea46fcd04c",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "V2026.3 Camera Code/tools/render_frames.py",
+      "archiveSha256": "7e312b3d870bb8ce9da33ea605830716ff8f451d25bfabc4fdbae4bfb3a1f07e",
+      "baselineSha256": "7e312b3d870bb8ce9da33ea605830716ff8f451d25bfabc4fdbae4bfb3a1f07e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/camera_display.sv",
+      "archiveSha256": "86bcecfba5859d8cf6925a3836c4fc01ecea1be73b19b724bc32de38e8bbf6de",
+      "baselineSha256": "86bcecfba5859d8cf6925a3836c4fc01ecea1be73b19b724bc32de38e8bbf6de",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/camera_pkg.sv",
+      "archiveSha256": "44b0779116d1f390932da085b924377e47bf4bdf94f89b21e278988d430ff2f7",
+      "baselineSha256": "44b0779116d1f390932da085b924377e47bf4bdf94f89b21e278988d430ff2f7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/clock_divider.sv",
+      "archiveSha256": "a434bcd41223cf55caeeee24338e5c9014ec8f3466f2a09914b8bab19aa1c2c9",
+      "baselineSha256": "a434bcd41223cf55caeeee24338e5c9014ec8f3466f2a09914b8bab19aa1c2c9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/frame_buffer.sv",
+      "archiveSha256": "e02d22d07c0a40d6dca368fcf83d1100fd230efe14664f083659ce705a630507",
+      "baselineSha256": "e02d22d07c0a40d6dca368fcf83d1100fd230efe14664f083659ce705a630507",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/i2c_master.sv",
+      "archiveSha256": "708b4c75824f7e5177d3df9a4982ff60791d8a190ba898fa0d52e7db33d4982b",
+      "baselineSha256": "708b4c75824f7e5177d3df9a4982ff60791d8a190ba898fa0d52e7db33d4982b",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/ov7670_capture.sv",
+      "archiveSha256": "c2483c3812d58d31e72bfe015627fc17d8e6094e041b14dab76e1740bb7709c7",
+      "baselineSha256": "c2483c3812d58d31e72bfe015627fc17d8e6094e041b14dab76e1740bb7709c7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/ov7670_config.sv",
+      "archiveSha256": "393e44dcdccd0c46f8c582e579686d7a4964181a075b83431b8443713419a1f9",
+      "baselineSha256": "393e44dcdccd0c46f8c582e579686d7a4964181a075b83431b8443713419a1f9",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/camera/rtl/video_pll.sv",
+      "archiveSha256": "3f8beef2d52837d2a516e6dbc38b74215c7091a587964f357daef8361aa77d01",
+      "baselineSha256": "3f8beef2d52837d2a516e6dbc38b74215c7091a587964f357daef8361aa77d01",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/hwtest.qpf",
+      "archiveSha256": "6cb708bf1c88cf8a95722a43a06d2a7b43cb97ed70a90316f042ba81d3986f58",
+      "baselineSha256": "6cb708bf1c88cf8a95722a43a06d2a7b43cb97ed70a90316f042ba81d3986f58",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/hwtest.qsf",
+      "archiveSha256": "fdab21b3142d155327ae659baa1a0af1a0fd9fbc95d60805d1e2ec01a24beb9a",
+      "baselineSha256": "fdab21b3142d155327ae659baa1a0af1a0fd9fbc95d60805d1e2ec01a24beb9a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/hwtest.sdc",
+      "archiveSha256": "a085d70a26cd9ee57c3ee0e24a9f9ce68c87f713b6c99b063bb826757711644f",
+      "baselineSha256": "a085d70a26cd9ee57c3ee0e24a9f9ce68c87f713b6c99b063bb826757711644f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/vga_sink.qsys",
+      "archiveSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "baselineSha256": "5942928415e94927c7d0521c50e837ca0e6e9fd0f036a0ef103ba8e7cefdf16d",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/submodules/altera_up_avalon_video_vga_timing.v",
+      "archiveSha256": "0dc5fec427d8e9c3980a417abcbaa1d1b256c9f63260e0249daf4c15bb53ad5f",
+      "baselineSha256": "0dc5fec427d8e9c3980a417abcbaa1d1b256c9f63260e0249daf4c15bb53ad5f",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/submodules/vga_sink_video_vga_controller_0.v",
+      "archiveSha256": "46220006b28e0d36f63e2e0271d5b3be06d4a150bacf8a175a9fe88791af4552",
+      "baselineSha256": "46220006b28e0d36f63e2e0271d5b3be06d4a150bacf8a175a9fe88791af4552",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/vga_sink.qip",
+      "archiveSha256": "2a117613f0394c989cc0c1d1742bcee48a6c4e41a0d788ec8ca5abc2c1309932",
+      "baselineSha256": "2a117613f0394c989cc0c1d1742bcee48a6c4e41a0d788ec8ca5abc2c1309932",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/quartus/vga_sink/synthesis/vga_sink.v",
+      "archiveSha256": "3160fa52b111b349fde28ecb4d7282bab3577528e66d40f2d7453fadd03d0dbb",
+      "baselineSha256": "3160fa52b111b349fde28ecb4d7282bab3577528e66d40f2d7453fadd03d0dbb",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/blink.sv",
+      "archiveSha256": "388c830082fe7f2660dffc8fec92e2f5a5799984155a963f1303e48bc26d4a5e",
+      "baselineSha256": "388c830082fe7f2660dffc8fec92e2f5a5799984155a963f1303e48bc26d4a5e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/chassis_command.sv",
+      "archiveSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "baselineSha256": "dc006b50d1a4f8a48b6922492b3ba6a3d1a1313290f26138592ab0037b65155a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/hex_digit.sv",
+      "archiveSha256": "2a7993f078fc60225a81f69e37ba623e31f45c1fb275d6d4c783aff4b0c60fe5",
+      "baselineSha256": "2a7993f078fc60225a81f69e37ba623e31f45c1fb275d6d4c783aff4b0c60fe5",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/ir_drive.sv",
+      "archiveSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "baselineSha256": "6419d71550c41cf0299514576f5240bdc15460be1f2a037e2c14935819f03977",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/adc_pll.sv",
+      "archiveSha256": "aed299a9908b06876396b550a63d8521f6848b40107faf99bd75f4d96af5f86e",
+      "baselineSha256": "aed299a9908b06876396b550a63d8521f6848b40107faf99bd75f4d96af5f86e",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/gate.sv",
+      "archiveSha256": "5029f28a813997902daebb62943f02b73e0366cb0a9eb4de5546d0122b3f24d0",
+      "baselineSha256": "5029f28a813997902daebb62943f02b73e0366cb0a9eb4de5546d0122b3f24d0",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/mic_load.sv",
+      "archiveSha256": "de668fe0dda897374ee19a4de7883fed6c0dd1646ba19aa0b53843cdaa70cb34",
+      "baselineSha256": "de668fe0dda897374ee19a4de7883fed6c0dd1646ba19aa0b53843cdaa70cb34",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/set_audio_encoder.sv",
+      "archiveSha256": "3458a5a59f18e9000b0e851e02c42e2215ed77996758472a60271e4c08ef64d7",
+      "baselineSha256": "3458a5a59f18e9000b0e851e02c42e2215ed77996758472a60271e4c08ef64d7",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/nano_probe.sv",
+      "archiveSha256": "cf6007178cd1a8790f94d22c59aedaf11ded7c89dcac5aa648e74fc3fe8ae8ed",
+      "baselineSha256": "cf6007178cd1a8790f94d22c59aedaf11ded7c89dcac5aa648e74fc3fe8ae8ed",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/nano_report.sv",
+      "archiveSha256": "f29f6902f29308c7b8112c2f250fe4b5b610d285ff9cc4990fd320e87cf8eead",
+      "baselineSha256": "f29f6902f29308c7b8112c2f250fe4b5b610d285ff9cc4990fd320e87cf8eead",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/top_level.sv",
+      "archiveSha256": "b1b87b3fd9f924efec5b8f81bc7b37382f1fd24a99ea76c58bb2fbed45a18a71",
+      "baselineSha256": "b1b87b3fd9f924efec5b8f81bc7b37382f1fd24a99ea76c58bb2fbed45a18a71",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/uart_rx.sv",
+      "archiveSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "baselineSha256": "9f85ec23ea4770e2c6e31c2591bcd9e1a1ff61910b785b270bd4b194c987da6a",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/uart_tx.sv",
+      "archiveSha256": "d142568a145c1acde7dd9d9183cbb88742ddddd170e615ca4d41141dfcc27ec6",
+      "baselineSha256": "d142568a145c1acde7dd9d9183cbb88742ddddd170e615ca4d41141dfcc27ec6",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/ir/rtl/IR_RECEIVE_Terasic.v",
+      "archiveSha256": "6dacec04c1240ed8783436c6af7b4ed8e5fde28eb0ec4148da390ecf8ba72454",
+      "baselineSha256": "6dacec04c1240ed8783436c6af7b4ed8e5fde28eb0ec4148da390ecf8ba72454",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/ir/rtl/nec_decoder.sv",
+      "archiveSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "baselineSha256": "d98e00b37eb011bf03a1d1a80b657037b6a67c4915b187dc813ca146f364e577",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/sonar/rtl/display.sv",
+      "archiveSha256": "d1bcd01f4d1fdbdc48b9d206545763ce4f5b2143e36895401f79688d5f4009fe",
+      "baselineSha256": "d1bcd01f4d1fdbdc48b9d206545763ce4f5b2143e36895401f79688d5f4009fe",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/sonar/rtl/seven_seg.sv",
+      "archiveSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "baselineSha256": "fc5ed19df2c04328809e66f64bb52906db1d95d8b88998db380f2cd180b22926",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/sonar/rtl/sonar_pll.sv",
+      "archiveSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "baselineSha256": "c1cc454af5ee33a00ba3a8e16d963c4cd37b5a0ed9a2e3033b6bf8443c615e73",
+      "comparison": "EXACT"
+    },
+    {
+      "path": "alltest/mtrx3700-hwtest-src/sonar/rtl/sonar_range.sv",
+      "archiveSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "baselineSha256": "8b98255d0740cfd5ebc388f4d2f9f17feb26edd525cccb5cdab25d7ef691122d",
+      "comparison": "EXACT"
+    }
+  ],
+  "courseInputs": {
+    "status": "ORIGINAL_PDFS_MISSING",
+    "availableMap": "COURSE_REQUIREMENTS.md",
+    "unavailable": [
+      "course/01-L1_introduction-1.pdf",
+      "course/02-L1_introduction2digitalProgramming.pdf",
+      "course/03-L2_HDL_coloured-1.pdf",
+      "course/04-L4_FPGA_Design-1.pdf",
+      "course/05-L3_Modular_Testbench_Hardware-2.pdf"
+    ]
+  },
+  "assets": {
+    "originalPdf": "ECHO7_All_Markers_A4_v2.pdf",
+    "sha256": "0162b5a7ada3c7d03dcf96baf5a8a5ce077ff8d165aaad8cc228947ff70436a0",
+    "recoverySpec": "markers/marker_spec.json",
+    "status": "RECOVERED_FROM_SUPPLIED_PDF"
+  },
+  "micReview": {
+    "level": "STATIC_SOURCE_REVIEW_ONLY",
+    "validation": "DEFERRED_BY_USER",
+    "files": [
+      {
+        "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/adc_pll.sv",
+        "sha256": "aed299a9908b06876396b550a63d8521f6848b40107faf99bd75f4d96af5f86e"
+      },
+      {
+        "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/set_audio_encoder.sv",
+        "sha256": "3458a5a59f18e9000b0e851e02c42e2215ed77996758472a60271e4c08ef64d7"
+      },
+      {
+        "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/mic_load.sv",
+        "sha256": "de668fe0dda897374ee19a4de7883fed6c0dd1646ba19aa0b53843cdaa70cb34"
+      },
+      {
+        "path": "alltest/mtrx3700-hwtest-src/hwtest/rtl/mic/gate.sv",
+        "sha256": "5029f28a813997902daebb62943f02b73e0366cb0a9eb4de5546d0122b3f24d0"
+      }
+    ],
+    "findings": [
+      "18.432MHz codec MCLK differs from source-described 3.072MHz AUD_BCLK",
+      "Codec done/error are internal only",
+      "No PCM FIFO in the microphone demo chain",
+      "mic_load has no explicit reset port",
+      "gate magnitude truncates signed -32768 to zero",
+      "Activity gate is not digit classification"
+    ]
+  },
+  "retainedEvidence": [
+    {
+      "path": "vision_model_summary.json",
+      "originalPath": "ECHOPHACE1/work/member_b/vision_tests/results.json",
+      "sha256": "c69c38632aa6b33ae7cb1732a7de3cf4217fe726e58c8109a044e2af222528c1",
+      "layer": "MODEL",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "reader_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/vision_rtl/simulation.log",
+      "sha256": "baee19c22b20661b09a2772e8814b2e08fbc0de82ded83d37434044b286e7af8",
+      "layer": "RTL_SIM",
+      "scope": "HISTORICAL_AXIS_READER: not current projective integration acceptance"
+    },
+    {
+      "path": "debug_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/debug_rtl/debug_simulation.log",
+      "sha256": "7c2aeecc2181d3b56dc119e1c6cb09112d10acfed068a5f5c23e89d9ff933e2d",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "overlay_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/debug_rtl/overlay_simulation.log",
+      "sha256": "6887caf4cd7e4b2ec774e8e9dbe43601f286801eb8055f32682e09bc4e9aa1df",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "core_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/perceptionCoreReplay.log",
+      "sha256": "5f8fb2320f51fb46ce76b7d6e3299ad8623a0c9f0e0e1f9960dcc69ef2441577",
+      "layer": "RTL_SIM",
+      "scope": "HISTORICAL_AXIS_READER: not current projective integration acceptance"
+    },
+    {
+      "path": "projective_reader_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/projectiveMarkerReader.log",
+      "sha256": "1f878b7f34913a69f8591d86d0cd6b39480ddede3e06623b0175b88216bc84a3",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "projective_core_recorded_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/perceptionCoreRecordedReplay_fresh.log",
+      "sha256": "89c35b1440361a68815fb2f45feb9eaf7371f41d1033f5f0a0e6dd2c6d73d18e",
+      "layer": "RTL_SIM",
+      "scope": "Current projective integration: one real recorded image repeated as 33 simulated frames, not new camera observations"
+    },
+    {
+      "path": "tracker_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/targetTracker_sized.log",
+      "sha256": "4f91bbdfe2cd9e8614b9575e4d08eb8c1f0dac7047652538caeef4e3b674fca8",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "consumer_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/memberCSimulator_tombstone_fixed.log",
+      "sha256": "3a240385385f436faf59401e12d59803c486038ea505c30429b46b4201ac6ccf",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "interaction_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/fixedSheetInteraction_sized.log",
+      "sha256": "b9cd77f90ccfd9520c4ec6d3e4a81a21f3c4590754aacbbaa7a96943f6ce7920",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "colour_sampler_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/colourSampler.log",
+      "sha256": "70bf611409c76f215d944da870cb373b5a44cf7e2cbb40727363817517c11ed8",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "cdc_rtl.log",
+      "originalPath": "ECHOPHACE1/work/member_b/contract_sim/cdcTransport_recovery.log",
+      "sha256": "68cd874b60a24fabfadbf582bb2528e2e6d22cfe023eb794d42960a6c6b2ba8d",
+      "layer": "RTL_SIM",
+      "scope": "Specific component log only; not B Quartus/hardware acceptance"
+    },
+    {
+      "path": "real_inputs/index.json",
+      "sha256": "291861b6337c8879ef4bd5d4af101d7dcfcd520592fdf6b42890334a83456be1",
+      "layer": "CAMERA_HW",
+      "scope": "Part A baseline fresh inputs, not B recognition"
+    },
+    {
+      "path": "white_sample_measurements.json",
+      "sha256": "de4c28e7c624553d24c1b38460fbbbc4c8d47dc1b0bdcc861a950fbd6ccae534",
+      "layer": "MODEL",
+      "scope": "Unfiltered manually selected real image ROI measurement"
+    },
+    {
+      "path": "projective_model_results.json",
+      "sha256": "8e5abb862a2a829d86d7065c9683eab6039917daa4bd51de665ee5d26b1f148a",
+      "layer": "MODEL",
+      "scope": "Three real captured inputs evaluated offline with projective reader"
+    },
+    {
+      "path": "projective_warp_results.json",
+      "sha256": "a907cc849425c5113d815231e002211e0e4b8cad0966371f57db96492498cc3d",
+      "layer": "MODEL",
+      "scope": "Independent synthetic warp and rejection cases"
+    },
+    {
+      "path": "calibration/calibration_profile_audit.json",
+      "sha256": "fc49067eb328f61282d1f3cbefff7e9f4eb47c8f8b41ffe769d14b72bc24c022",
+      "layer": "MODEL",
+      "scope": "Three real inputs, exact raw sampling ROI and shadow-profile capacity replay"
+    }
+  ],
+  "cliRunIndexAtCollection": [
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T084405_633677Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T08:44:05.634678+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T084454_816484Z_doctor/result.json",
+      "command": "doctor",
+      "level": "DISCOVERY",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T08:44:54.817484+00:00",
+      "inputSource": "NONE"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T084850_891854Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T08:48:50.892855+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T085021_989503Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T08:50:21.990927+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T085150_647738Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T08:51:50.647738+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T085620_362485Z_test/result.json",
+      "command": "test",
+      "level": "MODEL",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T08:56:20.363490+00:00",
+      "inputSource": "SYNTHETIC_MODEL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T085914_774345Z_test/result.json",
+      "command": "test",
+      "level": "MODEL",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T08:59:14.775359+00:00",
+      "inputSource": "SYNTHETIC_MODEL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T090155_026211Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:01:55.027234+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T090916_686364Z_baseline_program/result.json",
+      "command": "baseline_program",
+      "level": "PROGRAMMED",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:09:16.687377+00:00",
+      "inputSource": "USER_BUILT_CURRENT_BASELINE"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T090929_362490Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:09:29.363429+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T091158_750950Z_test/result.json",
+      "command": "test",
+      "level": "MODEL",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:11:58.751967+00:00",
+      "inputSource": "SYNTHETIC_MODEL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T091309_053864Z_build/result.json",
+      "command": "build",
+      "level": "QUARTUS_FIT_TIMING",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T09:13:09.054862+00:00",
+      "inputSource": "NONE"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T091351_346262Z_baseline_program/result.json",
+      "command": "baseline_program",
+      "level": "PROGRAMMED",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:13:51.347263+00:00",
+      "inputSource": "CURRENT_RUN_ISOLATED_BUILD"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T091356_864328Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:13:56.865318+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T091651_673216Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:16:51.674216+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T092238_925339Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:22:38.925339+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T092253_827993Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:22:53.828993+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T092254_242748Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T09:22:54.245745+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T092300_391109Z_capture/result.json",
+      "command": "capture",
+      "level": "CAMERA_HW",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:23:00.395107+00:00",
+      "inputSource": "LIVE_CAMERA"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T093509_177782Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:35:09.178287+00:00",
+      "inputSource": "SYNTHETIC_RTL_VECTORS"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T094432_968164Z_test/result.json",
+      "command": "test",
+      "level": "MODEL",
+      "status": "PASS",
+      "startedUtc": "2026-11-02T09:44:32.969163+00:00",
+      "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_REPLAY"
+    },
+    {
+      "path": "ECHOPHACE1/work/member_b/20261102T094621_218940Z_test/result.json",
+      "command": "test",
+      "level": "RTL_SIM",
+      "status": "FAIL",
+      "startedUtc": "2026-11-02T09:46:21.219946+00:00",
+      "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY"
+    }
+  ],
+  "currentReader": {
+    "algorithm": 1,
+    "rtl": "ECHOPHACE1/rtl/member_b/vision/projectiveMarkerReader.sv",
+    "testedRtlSha256": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+    "currentRtlSha256": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+    "whiteMinimum": 112,
+    "maximumWhiteChannelSpread": 64,
+    "model": "ECHOPHACE1/tools/member_b/projective_reference.py",
+    "testedModelSha256": "f686159e8ebd575f0a325806ed757d5c79e8e401aebe8f4c95c293359ad4bfaf",
+    "currentModelSha256": "f686159e8ebd575f0a325806ed757d5c79e8e401aebe8f4c95c293359ad4bfaf",
+    "sourceMatchesRecordedRun": true,
+    "rtlVectors": 62,
+    "exactCoordinateComparisons": 145920,
+    "maximumReaderCycles": 223088,
+    "readerClockMHz": 50,
+    "scope": "Isolated reader, not capture/CCL/CDC/queue or JTAG latency"
+  },
+  "releaseBoundary": "Component/model records do not imply final B full build, programming or camera acceptance. Refresh final CLI summaries after the active build and hardware run.",
+  "revision77744a75": {
+    "index": "revision_77744a75/index.json",
+    "fit": "FAIL_ROUTING_188026",
+    "optimisedRevision": "PENDING_NEW_RUN"
+  },
+  "hsvDiagnostic": {
+    "index": "hsv_audit/hsv_audit.json",
+    "matrix": "hsv_audit/hsv_profile_matrix.json",
+    "runSupport": "hsv_audit/horizontal_run_support.json",
+    "scope": "MODEL_DIAGNOSTICS_REAL_CAMERA_INPUTS_AND_LABELLED_SYNTHETIC_GAIN"
+  },
+  "generatedFileAudit": "tracked_generated_audit.json"
+}

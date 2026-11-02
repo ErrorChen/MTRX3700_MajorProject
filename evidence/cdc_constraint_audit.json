@@ -1,0 +1,189 @@
+{
+  "schema": "ECHO7_CDC_CONSTRAINT_AUDIT_1",
+  "level": "POST_MAP_CONSTRAINT_AUDIT",
+  "implementedSourceBuildId": "77744a75",
+  "quartusVersion": "18.1.0 Build625 Lite CycloneV",
+  "problem": "Original asynchronous CLOCK_50/PCLK clock groups suppressed all three Gray maximum-skew constraints in the actual installed analyser.",
+  "original": {
+    "graySourceCounts": [
+      9,
+      9,
+      32
+    ],
+    "grayDestinationCounts": [
+      9,
+      9,
+      32
+    ],
+    "timedCounts": [
+      0,
+      0,
+      0
+    ],
+    "falseCounts": [
+      9,
+      9,
+      32
+    ],
+    "skewReportCount": 0
+  },
+  "candidate": {
+    "clockGroup": "CLOCK_50 and PCLK share a constraint group; asynchronous hardware remains unchanged",
+    "grayMaximumSkewNs": 20,
+    "grayMaximumDelayNs": 20,
+    "grayMinimumDelayNs": 0,
+    "bundledPayloadMaximumDelayNs": 20,
+    "bundledPayloadMinimumDelayNs": 0,
+    "singleBitFalsePathCount": 5,
+    "clock50ToPclkTimedPathCount": 1414,
+    "pclkToClock50TimedPathCount": 9,
+    "grayMappings": [
+      {
+        "corner": "6_slow_1100mv_85c",
+        "name": "writeGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "6_slow_1100mv_85c",
+        "name": "readGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "6_slow_1100mv_85c",
+        "name": "timeGray",
+        "expected": 32,
+        "sourceCount": 32,
+        "destinationCount": 32,
+        "timedPathCount": 32,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "name": "writeGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "name": "readGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "name": "timeGray",
+        "expected": 32,
+        "sourceCount": 32,
+        "destinationCount": 32,
+        "timedPathCount": 32,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_85c",
+        "name": "writeGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_85c",
+        "name": "readGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_85c",
+        "name": "timeGray",
+        "expected": 32,
+        "sourceCount": 32,
+        "destinationCount": 32,
+        "timedPathCount": 32,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_0c",
+        "name": "writeGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_0c",
+        "name": "readGray",
+        "expected": 9,
+        "sourceCount": 9,
+        "destinationCount": 9,
+        "timedPathCount": 9,
+        "falsePathCount": 0
+      },
+      {
+        "corner": "MIN_fast_1100mv_0c",
+        "name": "timeGray",
+        "expected": 32,
+        "sourceCount": 32,
+        "destinationCount": 32,
+        "timedPathCount": 32,
+        "falsePathCount": 0
+      }
+    ],
+    "maxSkew": [
+      {
+        "corner": "6_slow_1100mv_85c",
+        "pathCount": 6,
+        "worstSlackNs": 19.205
+      },
+      {
+        "corner": "6_slow_1100mv_0c",
+        "pathCount": 6,
+        "worstSlackNs": 19.222
+      },
+      {
+        "corner": "MIN_fast_1100mv_85c",
+        "pathCount": 6,
+        "worstSlackNs": 19.432
+      },
+      {
+        "corner": "MIN_fast_1100mv_0c",
+        "pathCount": 6,
+        "worstSlackNs": 19.441
+      }
+    ]
+  },
+  "gateStatus": "FAIL",
+  "analysisStage": "POST_MAP_CONSTRAINT_AUDIT",
+  "limitations": [
+    "This is not post-fit timing acceptance. The netlist is from the failed build and source edits were not resynthesised for this investigation.",
+    "Post-map hold slack included -0.087ns; the final fitter must route and meet all setup/hold/recovery/removal/skew requirements.",
+    "No physical board timing behaviour is inferred from this investigation."
+  ],
+  "logs": [
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\help.log",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\netlist.log",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\compare.log",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\candidate.log",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\candidate_applied_constraints.txt",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\gate_post_map.log",
+    "ECHOPHACE1\\work\\member_b\\cdc_constraint_audit\\gate_post_map.json"
+  ]
+}

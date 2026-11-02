@@ -1,0 +1,336 @@
+`timescale 1ns/1ps
+// Synthetic RGB565 replay at the post-capture pixel interface. The 320x240
+// fixture is expanded to even 640x480 coordinates with sensor-like idle cycles.
+// This is not an OV7670 byte stream, physical photograph or microphone test.
+module perceptionCoreReplay_tb;
+    import perception_pkg::*;
+    logic clk=0,pclk=0,reset=1,resetPclk=1;
+    always #10 clk=~clk;
+    initial begin #7;forever #25 pclk=~pclk;end
+    logic cameraFrameStart=0,cameraPixelValid=0;
+    logic [15:0] cameraPixel=0;
+    logic [9:0] cameraX=0;
+    logic [8:0] cameraY=0;
+    logic [31:0] timeUs=0;
+    logic interactionEnable=1,interactionPermit=1,debugCalArm=0,debugSpeechArm=0;
+    logic [1:0] orientationProfile=0;
+    targetRequest_t targetRequest;
+    logic targetRequestValid=0,targetRequestReady;
+    targetReport_t targetReport,lastReport;
+    logic targetReportValid,targetReportReady=1;
+    userEvent_t userEvent;
+    logic userEventValid,userEventReady=1;
+    perceptionStatus_t status;
+    logic [3071:0] debugWords;
+    logic completedFrame;
+    logic [15:0] completedFrameId;
+    logic [15:0] pixels[0:76799];
+    logic [7:0] normalU[1:6];
+    logic [8:0] normalV[1:6];
+    integer microDivider=0,reportCount=0,frameNumber=0,eventCount=0;
+    integer expectedReportCount,expectedBufferDrops=0;
+    logic continuousMode=0,haveStalledHead=0;
+    targetReport_t stalledHead;
+    candidate_pkg::candidate_t expectedBlueBoxes[0:1],continuousExpectedBox;
+    logic [68:0] continuousCandidateWords[0:15];
+    logic [31:0] continuousExpectedWords[0:15];
+    integer continuousObserved=0,overlapCycles=0,totalCycles=0,continuousStart=0;
+    frameObservation_t collisionGood,collisionDrop;
+    string vectorDir,sceneFile;
+    perceptionCore dut(.*);
+    always @(posedge clk) begin
+        if(reset) begin microDivider<=0;timeUs<=0;end
+        else begin
+            totalCycles++;
+            if(microDivider==49)begin microDivider<=0;timeUs<=timeUs+1;end
+            else microDivider<=microDivider+1;
+            if(targetReportValid&&targetReportReady)begin
+                lastReport=targetReport;reportCount++;
+                $display("CORE_FRAME id=%0d tag=%0d cfg=%0d good=%0d observed=%0d locked=%0d reason=%0d centre=%0d,%0d samples=%0d state=%0d",
+                    targetReport.frameId,targetReport.requestTag,targetReport.configVersion,targetReport.frameGood,
+                    targetReport.observed,targetReport.locked,targetReport.reason,targetReport.centreU,targetReport.centreV,
+                    dut.sampleCount,status.state);
+            end
+            if(userEventValid&&userEventReady)begin
+                eventCount++;
+                if(userEvent.eventType!=EVENT_CALIBRATION_DONE)
+                    $fatal(1,"full sheet calibration failed event=%0d reason=%0d samples=%0d",userEvent.eventType,userEvent.reason,dut.sampleCount);
+            end
+            if(continuousMode)begin
+                if((dut.readerBusy||dut.aggregateState!=0)&&dut.haveWriteBank)begin
+                    overlapCycles++;
+                    if(dut.readBank==dut.writeBank)$fatal(1,"Reading bank overwritten by the next captured frame");
+                end
+                if(targetReportValid&&!targetReportReady)begin
+                    if(!haveStalledHead)begin stalledHead=targetReport;haveStalledHead=1;end
+                    else if(targetReport!==stalledHead)$fatal(1,"Presented report changed during continuous capture stall");
+                end
+                if(dut.observationValid)begin
+                    continuousObserved++;
+                    if(dut.observation.frameId!=continuousObserved||dut.observation.boundRequest.requestTag!=1||
+                       dut.observation.boundRequest.bayId!=1||!dut.observation.frameGood||dut.observation.matchCount!=1)
+                        $fatal(1,"Continuous frame identity/observation mismatch id=%0d",dut.observation.frameId);
+                    continuousExpectedBox=expectedBlueBoxes[dut.observation.frameId[0]?0:1];
+                    if({dut.observation.xMin,dut.observation.xMax,dut.observation.yMin,dut.observation.yMax}!==
+                       {continuousExpectedBox.xmin,continuousExpectedBox.xmax,continuousExpectedBox.ymin,continuousExpectedBox.ymax})
+                        $fatal(1,"Same-frame glyph bank mismatch on alternating image id=%0d",dut.observation.frameId);
+                end
+            end
+        end
+    end
+    task automatic selectBay(input integer bay,input integer tag);
+        @(negedge clk);targetRequest.operation=TARGET_SELECT;targetRequest.bayId=bay;
+        targetRequest.requestTag=tag;targetRequestValid=1;
+        do @(posedge clk);while(!targetRequestReady);
+        @(negedge clk);targetRequestValid=0;
+        // Settle the held-word request CDC before the next actual source SOF.
+        repeat(20)@(negedge pclk);
+    endtask
+    task automatic frame;
+        integer timeoutCount;
+        expectedReportCount=reportCount+1;frameNumber++;
+        @(negedge pclk);cameraFrameStart=1;
+        @(negedge pclk);cameraFrameStart=0;
+        repeat(8)@(negedge pclk);
+        for(int py=0;py<240;py++)begin
+            for(int px=0;px<320;px++)begin
+                cameraX=px*2;cameraY=py*2;cameraPixel=pixels[py*320+px];cameraPixelValid=1;
+                @(negedge pclk);cameraPixelValid=0;
+                repeat(3)@(negedge pclk);
+            end
+            // Explicit horizontal idle budget, larger than CAP8's 328 CLOCK_50
+            // maintenance clocks; continuous zero-gap fake pixels are not used.
+            repeat(150)@(negedge pclk);
+        end
+        timeoutCount=0;
+        while((reportCount<expectedReportCount||lastReport.frameId!=frameNumber)&&timeoutCount<1000000)begin
+            @(negedge clk);timeoutCount++;
+        end
+        if(reportCount<expectedReportCount)$fatal(1,"core completed-frame timeout frame=%0d",frameNumber);
+        if(lastReport.frameId!=frameNumber)$fatal(1,"candidate/glyph frame identity drift");
+        if(!lastReport.frameGood)$fatal(1,"synthetic transport/candidate failure flags=%h",status.faultFlags);
+        if(dut.bufferDropCount!=expectedBufferDrops||dut.candidateOverflow||dut.candidateOverrun||dut.transportFault)
+            $fatal(1,"unexpected full-sheet capacity/transport fault");
+    endtask
+    task automatic truncatedFrame;
+        // Deliberately end after a short first-row prefix. The following SOF must
+        // report its loss and reuse its WRITING bank without touching a reader.
+        frameNumber++;
+        @(negedge pclk);cameraFrameStart=1;
+        @(negedge pclk);cameraFrameStart=0;
+        repeat(8)@(negedge pclk);
+        for(int px=0;px<4;px++)begin
+            cameraX=2*px;cameraY=0;cameraPixel=pixels[px];cameraPixelValid=1;
+            @(negedge pclk);cameraPixelValid=0;repeat(3)@(negedge pclk);
+        end
+        repeat(200)@(negedge clk);
+    endtask
+    task automatic continuousSourceFrame;
+        frameNumber++;
+        @(negedge pclk);cameraFrameStart=1;
+        @(negedge pclk);cameraFrameStart=0;
+        repeat(8)@(negedge pclk);
+        for(int py=0;py<240;py++)begin
+            for(int px=0;px<320;px++)begin
+                cameraX=px*2;cameraY=py*2;cameraPixel=pixels[py*320+px];cameraPixelValid=1;
+                @(negedge pclk);cameraPixelValid=0;repeat(3)@(negedge pclk);
+            end
+            repeat(150)@(negedge pclk);
+        end
+        // No wait for reader, completedFrame or report. Preserve the row budget,
+        // then offer the next source SOF after only eight additional PCLK cycles.
+        repeat(8)@(negedge pclk);
+    endtask
+    // Deliberate protocol fault injection, separate from every pixel replay mode.
+    // It controls the exact completion/drop edge without claiming visual input
+    // recognition. Normal core replay independently validates the pixel path.
+    task automatic prepareInjectedGood(input integer id);
+        collisionGood='0;
+        collisionGood.boundRequest=targetRequest;
+        collisionGood.frameId=16'(id);collisionGood.captureStartUs=timeUs;
+        collisionGood.configVersion=0;collisionGood.frameGood=1;
+        collisionGood.matchCount=1;collisionGood.xMin=100;collisionGood.xMax=130;
+        collisionGood.yMin=40;collisionGood.yMax=90;collisionGood.quality=192;
+    endtask
+    task automatic awaitInjectedReport(input integer wantedCount);
+        integer waitCycles;
+        begin
+            waitCycles=0;
+            while(reportCount<wantedCount&&waitCycles<20)begin @(negedge clk);waitCycles++;end
+            if(reportCount!=wantedCount)$fatal(1,"Protocol injection report missing/duplicated");
+        end
+    endtask
+    task automatic injectGoodCompletion(input integer id,input bit shouldLock);
+        integer wantedCount;
+        begin
+            wantedCount=reportCount+1;
+            @(negedge clk);prepareInjectedGood(id);
+            dut.bankState[0]=dut.READING;
+            force dut.aggregateDone=1'b1;
+            @(negedge clk);force dut.aggregateDone=1'b0;
+            awaitInjectedReport(wantedCount);
+            if(lastReport.frameId!=id||!lastReport.observed||lastReport.locked!=shouldLock)
+                $fatal(1,"Protocol injection confirmation sequence id=%0d expectedLock=%0d",id,shouldLock);
+        end
+    endtask
+    task automatic injectCompletionDropCollision(input integer oldId,input bit truncated,input integer discarded);
+        integer wantedCount;
+        logic [15:0] previouslyCompleted;
+        logic [3071:0] previousDebug;
+        begin
+            wantedCount=reportCount+1;previouslyCompleted=completedFrameId;previousDebug=debugWords;
+            @(negedge clk);prepareInjectedGood(oldId);
+            collisionDrop=collisionGood;collisionDrop.frameId=16'(oldId+1);
+            dut.bankState[0]=dut.READING;
+            if(truncated)begin
+                dut.bankState[1]=dut.WRITING;
+                force dut.haveWriteBank=1'b1;
+                force dut.sof=1'b1;
+            end else begin
+                force dut.haveWriteBank=1'b0;
+                force dut.candidateValid=1'b1;
+            end
+            force dut.aggregateDone=1'b1;
+            @(posedge clk);#1;
+            if(completedFrame||completedFrameId!=previouslyCompleted||dut.bankState[0]!=dut.FREE)
+                $fatal(1,"Discarded completion published or did not release READING bank");
+            if(debugWords[3*32+:32]!==previousDebug[3*32+:32]||
+               debugWords[24*32+:2048]!==previousDebug[24*32+:2048])
+                $fatal(1,"Discarded completion replaced snapshot frame identity/marker words");
+            if(dut.completionDiscardCount!=discarded||debugWords[94*32+16+:16]!=discarded)
+                $fatal(1,"Completion-discard diagnostic missing");
+            @(negedge clk);
+            force dut.aggregateDone=1'b0;force dut.sof=1'b0;
+            force dut.candidateValid=1'b0;force dut.haveWriteBank=1'b0;
+            dut.bankState[1]=dut.FREE;
+            awaitInjectedReport(wantedCount);
+            if(lastReport.frameId!=oldId+1||lastReport.reason!=REPORT_RESOURCE_DROP||
+               lastReport.frameGood||lastReport.observed||lastReport.locked||
+               lastReport.centreU||lastReport.centreV||lastReport.boxWidth||lastReport.boxHeight||lastReport.quality)
+                $fatal(1,"New drop did not immediately replace old good completion with cleared measurement");
+            repeat(3)@(negedge clk);
+            if(reportCount!=wantedCount)$fatal(1,"Old completion escaped after drop arbitration");
+        end
+    endtask
+    task automatic collisionRegression;
+        begin
+            interactionEnable=0;selectBay(3,1);
+            force dut.processedObservation=collisionGood;
+            force dut.captureMeta=collisionDrop;
+            force dut.aggregateDone=1'b0;force dut.sof=1'b0;force dut.candidateValid=1'b0;
+            force dut.readBank=1'b0;force dut.writeBank=1'b1;force dut.haveWriteBank=1'b0;
+            injectGoodCompletion(1,0);injectGoodCompletion(2,0);injectGoodCompletion(3,1);
+            injectCompletionDropCollision(4,1,1);
+            injectGoodCompletion(6,0);injectGoodCompletion(7,0);injectGoodCompletion(8,1);
+            injectCompletionDropCollision(9,0,2);
+            injectGoodCompletion(11,0);injectGoodCompletion(12,0);injectGoodCompletion(13,1);
+            if(reportCount!=11||dut.completionDiscardCount!=2||dut.bufferDropCount!=1)
+                $fatal(1,"Collision regression accounting mismatch");
+            $display("PASS perceptionCoreCollision_tb collisions=2 reports=11 source=PROTOCOL_FAULT_INJECTION");
+        end
+    endtask
+    initial begin
+        targetRequest='0;lastReport='0;
+        if(!$value$plusargs("VECTOR_DIR=%s",vectorDir))vectorDir="vectors";
+        if(!$test$plusargs("COLLISION_ONLY"))begin
+            $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
+            if($value$plusargs("SCENE_FILE=%s",sceneFile))$readmemh(sceneFile,pixels);
+        end
+        repeat(10)@(negedge pclk);reset=0;resetPclk=0;
+        if($test$plusargs("COLLISION_ONLY"))begin collisionRegression();$finish;end
+        if($test$plusargs("CONTINUOUS"))begin
+            interactionEnable=0;targetReportReady=0;
+            $readmemh({vectorDir,"/vision_0_candidates.hex"},continuousCandidateWords);
+            $readmemh({vectorDir,"/vision_0_expected.hex"},continuousExpectedWords);
+            expectedBlueBoxes[0]='0;expectedBlueBoxes[1]='0;
+            for(int slot=8;slot<16;slot++)if(continuousExpectedWords[slot][24])begin
+                if(continuousExpectedWords[slot][19:16]==1)expectedBlueBoxes[0]=continuousCandidateWords[slot];
+                if(continuousExpectedWords[slot][19:16]==2)expectedBlueBoxes[1]=continuousCandidateWords[slot];
+            end
+            if(!expectedBlueBoxes[0].valid||!expectedBlueBoxes[1].valid)$fatal(1,"Missing independent counterfactual fixture boxes");
+            selectBay(1,1);continuousMode=1;continuousStart=totalCycles;
+            for(int n=1;n<=6;n++)begin
+                if(n%2)$readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
+                else $readmemh({vectorDir,"/vision_1_rgb565.hex"},pixels);
+                continuousSourceFrame();
+            end
+            cyclesWait:for(int n=0;n<1000000;n++)begin
+                if(continuousObserved==6)break;
+                @(negedge clk);
+            end
+            repeat(5)@(negedge clk);
+            if(continuousObserved!=6||overlapCycles==0||dut.bufferDropCount||dut.transportFault)
+                $fatal(1,"Continuous capture failed or did not overlap reader/writer observed=%0d overlap=%0d",continuousObserved,overlapCycles);
+            if(!haveStalledHead||!targetReportValid||targetReport.frameId!=1||dut.reportDropCount!=4||reportCount!=0)
+                $fatal(1,"Continuous report queue expected held1/latest6/drop4 got drop=%0d",dut.reportDropCount);
+            targetReportReady=1;
+            repeat(4)@(negedge clk);
+            if(reportCount!=2||lastReport.frameId!=6||!lastReport.locked||!lastReport.observed||targetReportValid)
+                $fatal(1,"Continuous report drain must deliver frame1 then locked frame6 once each");
+            $display("PASS perceptionCoreContinuous_tb frames=6 overlapCycles=%0d elapsedCycles=%0d reportDropCount=4 source=ALTERNATING_SYNTHETIC_RGB565",overlapCycles,totalCycles-continuousStart);
+            $finish;
+        end
+        selectBay(3,1);
+        if($test$plusargs("RECOVERY_ONLY"))begin
+            interactionEnable=0;
+            frame();frame();frame();
+            if(!lastReport.locked)$fatal(1,"initial lock before truncation");
+            normalU[3]=lastReport.centreU;normalV[3]=lastReport.centreV;
+            truncatedFrame();truncatedFrame();truncatedFrame();
+            expectedBufferDrops=3;
+            for(int n=1;n<=3;n++)begin
+                frame();
+                if(!lastReport.observed||lastReport.locked!=(n==3)||lastReport.centreU!=normalU[3]||lastReport.centreV!=normalV[3])
+                    $fatal(1,"truncated-frame bank recovery/relock n=%0d",n);
+            end
+            $display("PASS perceptionCoreRecovery_tb frames=%0d source=SYNTHETIC_RGB565_POST_CAPTURE",frameNumber);
+            $finish;
+        end
+        // Three recognition frames, eight sample frames, next SOF commit, then
+        // three new-configuration red-2 recognition frames arm the idle entry.
+        for(int n=1;n<=15;n++)begin
+            frame();
+            if(!lastReport.observed)$fatal(1,"printed blue3 not read from pixels frame=%0d accepted=%0d",n,dut.acceptedCount);
+        end
+        if(!status.calibrated||!status.speechArmed||status.interactionBusy||eventCount!=1||status.activeCfgVersion!=1)
+            $fatal(1,"fixed unfolded sheet did not calibrate once then arm: cfg=%0d calibrated=%0d armed=%0d events=%0d",
+                status.activeCfgVersion,status.calibrated,status.speechArmed,eventCount);
+        for(int bay=1;bay<=6;bay++)begin
+            selectBay(bay,10+bay);
+            for(int n=1;n<=3;n++)begin
+                frame();
+                if(!lastReport.observed||lastReport.bayId!=bay||lastReport.requestTag!=10+bay||lastReport.locked!=(n==3))
+                    $fatal(1,"pixel-to-report select bay=%0d n=%0d",bay,n);
+            end
+            normalU[bay]=lastReport.centreU;normalV[bay]=lastReport.centreV;
+        end
+        if($test$plusargs("REAL_FRAME_REPEAT"))begin
+            $display("PASS perceptionCoreRecordedReplay_tb frames=%0d source=ONE_RECORDED_FRAME_REPEATED_IN_RTL",frameNumber);
+            $finish;
+        end
+        // Swap only the digits between blue1 and blue2: output must follow the
+        // glyph pixels to the other location, never the known sheet-cell answer.
+        $readmemh({vectorDir,"/vision_1_rgb565.hex"},pixels);
+        selectBay(1,30);
+        frame();frame();frame();
+        if(!lastReport.locked||lastReport.centreU!=normalU[2]||lastReport.centreV!=normalV[2])
+            $fatal(1,"counterfactual glyph swap did not move target1 to target2 location");
+        $readmemh({vectorDir,"/vision_14_rgb565.hex"},pixels);
+        frame();
+        if(lastReport.observed||lastReport.locked||lastReport.centreU||lastReport.centreV||lastReport.quality)
+            $fatal(1,"blank current image reused historical measurement");
+        if(!status.calibrated||!status.speechArmed||eventCount!=1)$fatal(1,"red absence reset persistent interaction state");
+        $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
+        truncatedFrame();truncatedFrame();truncatedFrame();
+        expectedBufferDrops=3;
+        for(int n=1;n<=3;n++)begin
+            frame();
+            if(!lastReport.observed||lastReport.locked!=(n==3)||lastReport.centreU!=normalU[1]||lastReport.centreV!=normalV[1])
+                $fatal(1,"truncated-frame bank recovery/relock n=%0d",n);
+        end
+        if(!status.faultFlags[FAULT_CAMERA_TRANSPORT])$fatal(1,"truncated frame missing sticky diagnostic");
+        $display("PASS perceptionCoreReplay_tb frames=%0d source=SYNTHETIC_RGB565_POST_CAPTURE",frameNumber);
+        $finish;
+    end
+    initial begin #2000000000;$fatal(1,"timeout perceptionCoreReplay_tb");end
+endmodule

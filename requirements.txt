@@ -1,0 +1,4 @@
+# Versions actually used for the recorded Python 3.12 model/capture checks.
+numpy==2.3.5
+Pillow==12.2.0
+pypdf==6.10.0

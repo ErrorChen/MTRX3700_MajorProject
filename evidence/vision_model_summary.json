@@ -1,0 +1,319 @@
+{
+  "schema": "ECHO7_VISION_TESTS_1",
+  "layer": "MODEL",
+  "inputSource": "SYNTHETIC_ARTWORK_AND_COUNTERFACTUALS",
+  "status": "PASS",
+  "cases": [
+    {
+      "name": "full_page_8_markers_and_reference",
+      "status": "PASS",
+      "detail": {
+        "identities": [
+          [
+            "BAY",
+            1
+          ],
+          [
+            "BAY",
+            2
+          ],
+          [
+            "BAY",
+            3
+          ],
+          [
+            "BAY",
+            4
+          ],
+          [
+            "BAY",
+            5
+          ],
+          [
+            "BAY",
+            6
+          ],
+          [
+            "FUNCTION",
+            1
+          ],
+          [
+            "FUNCTION",
+            2
+          ]
+        ],
+        "counts": {
+          "red": 2,
+          "blue": 7
+        },
+        "rejectedReference": [
+          58,
+          93,
+          111,
+          104
+        ]
+      }
+    },
+    {
+      "name": "counterfactual_swap_1_2",
+      "status": "PASS",
+      "detail": {
+        "firstDigit": 2,
+        "secondDigit": 1
+      }
+    },
+    {
+      "name": "counterfactual_delete_stroke",
+      "status": "PASS",
+      "detail": "UNKNOWN_PATTERN"
+    },
+    {
+      "name": "all_digits_colour_type",
+      "status": "PASS",
+      "detail": [
+        [
+          "red",
+          1,
+          true
+        ],
+        [
+          "red",
+          2,
+          true
+        ],
+        [
+          "red",
+          3,
+          false
+        ],
+        [
+          "red",
+          4,
+          false
+        ],
+        [
+          "red",
+          5,
+          false
+        ],
+        [
+          "red",
+          6,
+          false
+        ],
+        [
+          "blue",
+          1,
+          true
+        ],
+        [
+          "blue",
+          2,
+          true
+        ],
+        [
+          "blue",
+          3,
+          true
+        ],
+        [
+          "blue",
+          4,
+          true
+        ],
+        [
+          "blue",
+          5,
+          true
+        ],
+        [
+          "blue",
+          6,
+          true
+        ]
+      ]
+    },
+    {
+      "name": "unknown_0_7_8_9",
+      "status": "PASS",
+      "detail": [
+        0,
+        7,
+        8,
+        9
+      ]
+    },
+    {
+      "name": "orientation_profiles",
+      "status": "PASS",
+      "detail": "Four native orientations with matching profile; wrong profiles rejected"
+    },
+    {
+      "name": "shape_and_blur_rejection",
+      "status": "PASS",
+      "detail": {
+        "blank": "UNKNOWN_PATTERN",
+        "missing_anchor": "DIRECTION_ANCHOR",
+        "blurred": "DIRECTION_ANCHOR",
+        "undersized": "GEOMETRY",
+        "filled_hole": "FILLED_HOLE"
+      }
+    },
+    {
+      "name": "capacity_overflow",
+      "status": "PASS",
+      "detail": {
+        "red": 0,
+        "blue": 9
+      }
+    },
+    {
+      "name": "noise_components",
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "red": 2,
+          "blue": 7
+        },
+        "all": {
+          "red": 2,
+          "blue": 23
+        },
+        "limit": "This BFS area test does not prove streaming active-label capacity under noise"
+      }
+    },
+    {
+      "name": "runtime_colour_profile",
+      "status": "PASS",
+      "detail": {
+        "redMin": 255,
+        "blueMin": 255,
+        "ratioNumerator": 3,
+        "ratioDenominator": 2
+      }
+    },
+    {
+      "name": "actual_part_a_cleanup",
+      "status": "PASS",
+      "detail": {
+        "counts": {
+          "red": 2,
+          "blue": 7
+        },
+        "cleanup": "PART_A_CAUSAL_RAW_LEFT_OR_UPPER",
+        "boundedOracle": {
+          "frame_valid": true,
+          "overflow": false,
+          "red_overflow": false,
+          "blue_overflow": false,
+          "red": [
+            {
+              "valid": 1,
+              "xmin": 58,
+              "xmax": 111,
+              "ymin": 29,
+              "ymax": 90,
+              "area": 3218,
+              "cx": 84,
+              "cy": 59
+            },
+            {
+              "valid": 1,
+              "xmin": 58,
+              "xmax": 111,
+              "ymin": 136,
+              "ymax": 196,
+              "area": 2958,
+              "cx": 84,
+              "cy": 166
+            }
+          ],
+          "blue": [
+            {
+              "valid": 1,
+              "xmin": 176,
+              "xmax": 229,
+              "ymin": 22,
+              "ymax": 82,
+              "area": 3128,
+              "cx": 202,
+              "cy": 52
+            },
+            {
+              "valid": 1,
+              "xmin": 240,
+              "xmax": 293,
+              "ymin": 22,
+              "ymax": 82,
+              "area": 2887,
+              "cx": 266,
+              "cy": 52
+            },
+            {
+              "valid": 1,
+              "xmin": 176,
+              "xmax": 229,
+              "ymin": 90,
+              "ymax": 150,
+              "area": 2850,
+              "cx": 202,
+              "cy": 120
+            },
+            {
+              "valid": 1,
+              "xmin": 240,
+              "xmax": 294,
+              "ymin": 90,
+              "ymax": 150,
+              "area": 2970,
+              "cx": 267,
+              "cy": 120
+            },
+            {
+              "valid": 1,
+              "xmin": 58,
+              "xmax": 111,
+              "ymin": 93,
+              "ymax": 104,
+              "area": 647,
+              "cx": 84,
+              "cy": 98
+            },
+            {
+              "valid": 1,
+              "xmin": 176,
+              "xmax": 229,
+              "ymin": 157,
+              "ymax": 217,
+              "area": 2911,
+              "cx": 202,
+              "cy": 187
+            },
+            {
+              "valid": 1,
+              "xmin": 240,
+              "xmax": 293,
+              "ymin": 157,
+              "ymax": 217,
+              "area": 2836,
+              "cx": 266,
+              "cy": 187
+            }
+          ],
+          "red_active_overflow": false,
+          "red_output_overflow": false,
+          "red_max_row_handles": 2,
+          "red_lifetime_seeds": 7,
+          "red_qualifying_completed": 2,
+          "red_total_retired": 2,
+          "blue_active_overflow": false,
+          "blue_output_overflow": false,
+          "blue_max_row_handles": 5,
+          "blue_lifetime_seeds": 27,
+          "blue_qualifying_completed": 7,
+          "blue_total_retired": 7
+        }
+      }
+    }
+  ]
+}

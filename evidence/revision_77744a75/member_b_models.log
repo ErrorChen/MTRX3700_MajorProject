@@ -1,0 +1,25 @@
+COMMAND ["C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe", "-m", "unittest", "discover", "-s", "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b", "-p", "test_*.py", "-v"]
+test_bbox_vectors (test_contract.ContractModelTests.test_bbox_vectors) ... ok
+test_consumer_current_real_observations_only (test_contract.ContractModelTests.test_consumer_current_real_observations_only) ... ok
+test_no_silent_truncation (test_contract.ContractModelTests.test_no_silent_truncation) ... ok
+test_public_layout (test_contract.ContractModelTests.test_public_layout) ... ok
+test_sequence_and_time_wrap (test_contract.ContractModelTests.test_sequence_and_time_wrap) ... ok
+testMatchingFrameAndBuild (test_debug_decode.DebugDecodeTests.testMatchingFrameAndBuild) ... ok
+testSchemaAndReservedRejected (test_debug_decode.DebugDecodeTests.testSchemaAndReservedRejected) ... ok
+testUnsupportedPixelDigitRejected (test_debug_decode.DebugDecodeTests.testUnsupportedPixelDigitRejected) ... ok
+testWrongFrameAndBuildRejected (test_debug_decode.DebugDecodeTests.testWrongFrameAndBuildRejected) ... ok
+test_original_full_page_and_counterfactual (test_projective.ProjectiveTests.test_original_full_page_and_counterfactual) ... ok
+test_recorded_camera_frames (test_projective.ProjectiveTests.test_recorded_camera_frames) ... ok
+test_warped_digits_rejection_and_orientation (test_projective.ProjectiveTests.test_warped_digits_rejection_and_orientation) ... ok
+testArmIsOnlyVisualOpcodeAndNeverANumberProposal (test_tools.DeferredAudioControlTests.testArmIsOnlyVisualOpcodeAndNeverANumberProposal) ... ok
+testRecordIsExplicitlyDeferred (test_tools.DeferredAudioControlTests.testRecordIsExplicitlyDeferred) ... ok
+testOwnedProcessTimeoutIsNonzeroAndRecorded (test_tools.ProcessTimeoutTests.testOwnedProcessTimeoutIsNonzeroAndRecorded) ... ok
+testDecoderBadCrcIsNonzero (test_tools.TclFailurePropagationTests.testDecoderBadCrcIsNonzero) ... ok
+testTwoTargetsAreRejected (test_tools.TclFailurePropagationTests.testTwoTargetsAreRejected) ... ok
+testRejectNegativeAndMissingTiming (test_tools.TimingGateTests.testRejectNegativeAndMissingTiming) ... ok
+testRejectUnconstrained (test_tools.TimingGateTests.testRejectUnconstrained) ... ok
+
+----------------------------------------------------------------------
+Ran 19 tests in 11.571s
+
+OK

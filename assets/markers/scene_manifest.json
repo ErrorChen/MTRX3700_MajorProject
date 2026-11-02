@@ -1,0 +1,126 @@
+{
+  "schema": "ECHO7_SCENE_RECOVERED_1",
+  "provenance": {
+    "status": "RECOVERED_FROM_SUPPLIED_PDF",
+    "source": "ECHO7_All_Markers_A4_v2.pdf",
+    "sourceSha256": "0162b5a7ada3c7d03dcf96baf5a8a5ce077ff8d165aaad8cc228947ff70436a0",
+    "missingOriginal": "The taskpack marker_spec.json and scene_manifest.json were not supplied in this checkout.",
+    "method": "Exact PDF drawing paths converted from points to millimetres; rounded to five decimal places.",
+    "classification": "DESIGN recovery, not the missing original taskpack specification"
+  },
+  "use": "TEST_EXPECTATIONS_ONLY_NEVER_RUNTIME_ID_LOOKUP",
+  "inputSource": "PDF_VECTOR_ARTWORK_NOT_CAMERA_CAPTURE",
+  "markers": [
+    {
+      "kind": "FUNCTION",
+      "digit": 1,
+      "colour": "red",
+      "mainBoxMm": [
+        47.25,
+        15.0,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "REFERENCE",
+      "digit": null,
+      "colour": "blue",
+      "mainBoxMm": [
+        47.25,
+        78.45,
+        54.00001,
+        12.15
+      ]
+    },
+    {
+      "kind": "FUNCTION",
+      "digit": 2,
+      "colour": "red",
+      "mainBoxMm": [
+        47.25,
+        121.00001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 1,
+      "colour": "blue",
+      "mainBoxMm": [
+        163.74999,
+        8.00001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 2,
+      "colour": "blue",
+      "mainBoxMm": [
+        227.75002,
+        8.00001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 3,
+      "colour": "blue",
+      "mainBoxMm": [
+        163.74999,
+        74.75001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 4,
+      "colour": "blue",
+      "mainBoxMm": [
+        227.75002,
+        74.75001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 5,
+      "colour": "blue",
+      "mainBoxMm": [
+        163.74999,
+        141.50001,
+        54.00001,
+        60.74999
+      ]
+    },
+    {
+      "kind": "BAY",
+      "digit": 6,
+      "colour": "blue",
+      "mainBoxMm": [
+        227.75002,
+        141.50001,
+        54.00001,
+        60.74999
+      ]
+    }
+  ],
+  "expectedFormalMarkers": 8,
+  "expectedMainBlueRegions": 7,
+  "replay": {
+    "file": "sheet_320x240.png",
+    "format": "RGB_IMAGE_NOT_OV7670_SENSOR_SCENE_OR_GRAB",
+    "paperBoxPixels": [
+      10,
+      14,
+      300,
+      212
+    ]
+  }
+}

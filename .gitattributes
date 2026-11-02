@@ -1,0 +1,21 @@
+* text=auto
+*.sv text eol=lf
+*.svh text eol=lf
+*.py text eol=lf
+*.tcl text eol=lf
+*.qsf text eol=lf
+*.qpf text eol=lf
+*.qsys text eol=lf
+*.sdc text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.hex text eol=lf
+*.svg text eol=lf
+*.png binary
+*.pdf binary
+*.bin binary
+*.sof binary
+# Captured evidence and supplied input documents retain their exact recorded
+# bytes; do not normalise logs whose SHA256 is part of the provenance chain.
+evidence/** -text -whitespace
+docs/inputs/** -text -whitespace

@@ -1,0 +1,12 @@
+# vsim -c -quiet -l C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/cdcTransport_recovery.log -wlf C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/cdcTransport_recovery.wlf -onfinish exit -lib C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/work cdcTransport_tb -do "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0" 
+# Start time: 20:10:55 on Nov 02,2026
+# onerror {quit -code 1}
+#  Warning: onerror command for use within macro
+#  onbreak {quit -code 1}
+#  Warning: onbreak command for use within macro
+#  run -all
+# PASS cdcTransport_tb
+# ** Note: $finish    : C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/tb/member_b/cdcTransport_tb.sv(142)
+#    Time: 40040 ns  Iteration: 1  Instance: /cdcTransport_tb
+# End time: 20:10:56 on Nov 02,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0

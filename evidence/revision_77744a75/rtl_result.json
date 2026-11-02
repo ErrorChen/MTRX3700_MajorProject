@@ -1,0 +1,405 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "test",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T10:01:49.340313+00:00",
+  "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "560ea266088ee63a5620bba92d12ef8d0d38fb02f7d2454d9c526a583fb39e6d",
+  "steps": [
+    {
+      "name": "simulator_version",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-version"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.141,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\simulator_version.log"
+    },
+    {
+      "name": "part_a_vectors",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\part_a\\candidates_reclaimed_model.py",
+        "--write-vectors",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\vectors"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\part_a\\candidates_reclaimed_model.py": "fb78803575fffa1ccb2e19fe8125a6fef86f797c0edc5398053594f85c4d7dac"
+      },
+      "elapsedSeconds": 0.859,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\part_a_vectors.log"
+    },
+    {
+      "name": "vision_vectors",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\export_vision_vectors.py",
+        "--out",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\vectors"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\export_vision_vectors.py": "c70d5a127d223a7a300da8a751484ed726d6d4e4f3bf7960abde9075254eaa71"
+      },
+      "elapsedSeconds": 2.328,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\vision_vectors.log"
+    },
+    {
+      "name": "projective_vectors",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\export_projective_vectors.py",
+        "--out",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\vectors"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tools\\member_b\\export_projective_vectors.py": "d3391b7450471e824b6952e1c999fd1b7a17e6f7a50d6b83abf1c070e1f6c6b2"
+      },
+      "elapsedSeconds": 23.5,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projective_vectors.log"
+    },
+    {
+      "name": "perceptionCoreReplay_tb_vlib",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlib.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb\\simlib"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.172,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb_vlib.log"
+    },
+    {
+      "name": "perceptionCoreReplay_tb_compile",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlog.exe",
+        "-sv",
+        "-work",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb\\simlib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\camera_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\part_a_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\perception_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\vision_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\heldBusCdc.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\asyncPixelFifo.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\capture\\cameraStreamBridge.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\causalMaskCleanup.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\boundedCandidates.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\vision\\glyphBanks.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\vision\\projectiveMarkerReader.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\tracking\\targetTracker.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\interaction\\colourSampler.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\interaction\\fixedSheetInteraction.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\top\\perceptionCore.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tb\\member_b\\perceptionCoreReplay_tb.sv"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.453,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb_compile.log"
+    },
+    {
+      "name": "perceptionCoreReplay_tb_simulation",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-c",
+        "-onfinish",
+        "exit",
+        "-lib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb\\simlib",
+        "perceptionCoreReplay_tb",
+        "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "-do",
+        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 294.047,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreReplay_tb_simulation.log"
+    },
+    {
+      "name": "lateSnapshot_tb_vlib",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlib.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb\\simlib"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.047,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb_vlib.log"
+    },
+    {
+      "name": "lateSnapshot_tb_compile",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlog.exe",
+        "-sv",
+        "+define+VERILATOR",
+        "-work",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb\\simlib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\camera_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\snapshot_ram.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\snapshot_probes.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\frame_snap.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tb\\member_b\\lateSnapshot_tb.sv"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.109,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb_compile.log"
+    },
+    {
+      "name": "lateSnapshot_tb_simulation",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-c",
+        "-onfinish",
+        "exit",
+        "-lib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb\\simlib",
+        "lateSnapshot_tb",
+        "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "-do",
+        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 1.172,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\lateSnapshot_tb_simulation.log"
+    },
+    {
+      "name": "projectiveMarkerReader_tb_vlib",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlib.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb\\simlib"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.047,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb_vlib.log"
+    },
+    {
+      "name": "projectiveMarkerReader_tb_compile",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlog.exe",
+        "-sv",
+        "-work",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb\\simlib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\part_a_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\vision_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\vision\\projectiveMarkerReader.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tb\\member_b\\projectiveMarkerReader_tb.sv"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.109,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb_compile.log"
+    },
+    {
+      "name": "projectiveMarkerReader_tb_simulation",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-c",
+        "-onfinish",
+        "exit",
+        "-lib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb\\simlib",
+        "projectiveMarkerReader_tb",
+        "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "-do",
+        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 12.781,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\projectiveMarkerReader_tb_simulation.log"
+    },
+    {
+      "name": "perceptionCoreContinuous_tb_vlib",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlib.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb\\simlib"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.047,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb_vlib.log"
+    },
+    {
+      "name": "perceptionCoreContinuous_tb_compile",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlog.exe",
+        "-sv",
+        "-work",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb\\simlib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\camera_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\part_a_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\perception_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\vision_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\heldBusCdc.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\common\\asyncPixelFifo.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\capture\\cameraStreamBridge.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\causalMaskCleanup.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\part_a\\boundedCandidates.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\vision\\glyphBanks.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\vision\\projectiveMarkerReader.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\tracking\\targetTracker.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\interaction\\colourSampler.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\interaction\\fixedSheetInteraction.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\rtl\\member_b\\top\\perceptionCore.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\tb\\member_b\\perceptionCoreReplay_tb.sv"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 0.187,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb_compile.log"
+    },
+    {
+      "name": "perceptionCoreContinuous_tb_simulation",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-c",
+        "-onfinish",
+        "exit",
+        "-lib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb\\simlib",
+        "perceptionCoreReplay_tb",
+        "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "+VECTOR_DIR=C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/20261102T100149_339329Z_test/vectors",
+        "+CONTINUOUS",
+        "-do",
+        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "elapsedSeconds": 36.969,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\work\\member_b\\20261102T100149_339329Z_test\\perceptionCoreContinuous_tb_simulation.log"
+    }
+  ],
+  "level": "RTL_SIM",
+  "rtlTests": [
+    {
+      "name": "perceptionCoreReplay_tb",
+      "status": "PASS",
+      "sourceSha256": {
+        "rtl\\camera_pkg.sv": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+        "rtl\\part_a\\part_a_pkg.sv": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+        "rtl\\member_b\\common\\perception_pkg.sv": "a941a5dc4d60d15add087e016875c44050db85c10460ec77632bdee850cb80cc",
+        "rtl\\member_b\\common\\vision_pkg.sv": "7fbbdc413163e18b62abd59e215ca61b331b28fe5faab0e4bc241accaa9fcecb",
+        "rtl\\member_b\\common\\heldBusCdc.sv": "385a3ed270b193b99c3174252041f55974c6efaddfcae8919d28e8ba23af20f8",
+        "rtl\\member_b\\common\\asyncPixelFifo.sv": "cb49725ee50ee70043b87610d83306fdeacec13f73361439d16573030fc73f9d",
+        "rtl\\member_b\\capture\\cameraStreamBridge.sv": "94a3fe5fc80491ec00621c6759695c05ad3542c4c6bb13f85e267bc554c35ce6",
+        "rtl\\part_a\\causalMaskCleanup.sv": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+        "rtl\\part_a\\boundedCandidates.sv": "d316ef2401002f8e73e5bed1acf9fa143fde2b73be1ac908793a57b406922ed6",
+        "rtl\\member_b\\vision\\glyphBanks.sv": "ea36e726412f036a4d6695d392e59b67de745ee8f39beb07cca6155d6ad411c1",
+        "rtl\\member_b\\vision\\projectiveMarkerReader.sv": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+        "rtl\\member_b\\tracking\\targetTracker.sv": "f44682ebbb474bd1a4497f658bd8265c6ece2646b95161238a57a69de83cae6c",
+        "rtl\\member_b\\interaction\\colourSampler.sv": "eaa210cb566638f405cd7a9a50e7f67b2be7fd18554b8b985a4acb80ae1ae212",
+        "rtl\\member_b\\interaction\\fixedSheetInteraction.sv": "0416dcdc5e78c523ab2b40537804e812f67c4abdb8e04f6ef21d95ab0f661686",
+        "rtl\\member_b\\top\\perceptionCore.sv": "0e24d9c203279900be5499b46568483cc05b0d769d5359a257480623750435eb",
+        "tb\\member_b\\perceptionCoreReplay_tb.sv": "edfc6c2c36940adc04aea5e8453ddcb52cb5ec6fa321d53bd64cc7897b5ad785"
+      },
+      "inputSource": "SYNTHETIC_RGB565_POST_CAPTURE",
+      "simulationModelDefines": []
+    },
+    {
+      "name": "lateSnapshot_tb",
+      "status": "PASS",
+      "sourceSha256": {
+        "rtl\\camera_pkg.sv": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+        "rtl\\snapshot_ram.sv": "09c2511a1867b20c523b3db5233ba49c0ee9f8dc9034a670cc6ab960b20d4369",
+        "rtl\\snapshot_probes.sv": "f9870fd4f20f1a85eedf41aaf4c7f479f93a1778a9191f56e509ded3b9201581",
+        "rtl\\frame_snap.sv": "0f075d6b92263c864fdbe8e957aace2d413d3abd620998b4b6f23564041b1481",
+        "tb\\member_b\\lateSnapshot_tb.sv": "e3df81ade28349a3dcce5696894eb05388f532281d2b1d0de34d00e43633870a"
+      },
+      "inputSource": "SYNTHETIC_RTL_VECTORS",
+      "simulationModelDefines": [
+        "VERILATOR"
+      ]
+    },
+    {
+      "name": "projectiveMarkerReader_tb",
+      "status": "PASS",
+      "sourceSha256": {
+        "rtl\\part_a\\part_a_pkg.sv": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+        "rtl\\member_b\\common\\vision_pkg.sv": "7fbbdc413163e18b62abd59e215ca61b331b28fe5faab0e4bc241accaa9fcecb",
+        "rtl\\member_b\\vision\\projectiveMarkerReader.sv": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+        "tb\\member_b\\projectiveMarkerReader_tb.sv": "1f905b541565e2b436240e5a95299d7b782af47d5154af45d5909fe66ce9d08c"
+      },
+      "inputSource": "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_PIXEL_VECTORS",
+      "simulationModelDefines": []
+    },
+    {
+      "name": "perceptionCoreContinuous_tb",
+      "status": "PASS",
+      "sourceSha256": {
+        "rtl\\camera_pkg.sv": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+        "rtl\\part_a\\part_a_pkg.sv": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+        "rtl\\member_b\\common\\perception_pkg.sv": "a941a5dc4d60d15add087e016875c44050db85c10460ec77632bdee850cb80cc",
+        "rtl\\member_b\\common\\vision_pkg.sv": "7fbbdc413163e18b62abd59e215ca61b331b28fe5faab0e4bc241accaa9fcecb",
+        "rtl\\member_b\\common\\heldBusCdc.sv": "385a3ed270b193b99c3174252041f55974c6efaddfcae8919d28e8ba23af20f8",
+        "rtl\\member_b\\common\\asyncPixelFifo.sv": "cb49725ee50ee70043b87610d83306fdeacec13f73361439d16573030fc73f9d",
+        "rtl\\member_b\\capture\\cameraStreamBridge.sv": "94a3fe5fc80491ec00621c6759695c05ad3542c4c6bb13f85e267bc554c35ce6",
+        "rtl\\part_a\\causalMaskCleanup.sv": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+        "rtl\\part_a\\boundedCandidates.sv": "d316ef2401002f8e73e5bed1acf9fa143fde2b73be1ac908793a57b406922ed6",
+        "rtl\\member_b\\vision\\glyphBanks.sv": "ea36e726412f036a4d6695d392e59b67de745ee8f39beb07cca6155d6ad411c1",
+        "rtl\\member_b\\vision\\projectiveMarkerReader.sv": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+        "rtl\\member_b\\tracking\\targetTracker.sv": "f44682ebbb474bd1a4497f658bd8265c6ece2646b95161238a57a69de83cae6c",
+        "rtl\\member_b\\interaction\\colourSampler.sv": "eaa210cb566638f405cd7a9a50e7f67b2be7fd18554b8b985a4acb80ae1ae212",
+        "rtl\\member_b\\interaction\\fixedSheetInteraction.sv": "0416dcdc5e78c523ab2b40537804e812f67c4abdb8e04f6ef21d95ab0f661686",
+        "rtl\\member_b\\top\\perceptionCore.sv": "0e24d9c203279900be5499b46568483cc05b0d769d5359a257480623750435eb",
+        "tb\\member_b\\perceptionCoreReplay_tb.sv": "edfc6c2c36940adc04aea5e8453ddcb52cb5ec6fa321d53bd64cc7897b5ad785"
+      },
+      "inputSource": "SYNTHETIC_CONTINUOUS_FRAME_AND_BACKPRESSURE",
+      "simulationModelDefines": []
+    }
+  ],
+  "rtlSuiteSourceSha256": {
+    "rtl/camera_pkg.sv": "45c8a5661399a2d532a64b38ccbebf0fa90f7667ca4bb5b6bf1dc9aa10227b8d",
+    "rtl/part_a/part_a_pkg.sv": "8efeeccbe45602989d3d7116aea94327876cc95bdc07e3537a0ad78154b1b85c",
+    "rtl/member_b/common/perception_pkg.sv": "a941a5dc4d60d15add087e016875c44050db85c10460ec77632bdee850cb80cc",
+    "rtl/member_b/common/vision_pkg.sv": "7fbbdc413163e18b62abd59e215ca61b331b28fe5faab0e4bc241accaa9fcecb",
+    "rtl/member_b/common/heldBusCdc.sv": "385a3ed270b193b99c3174252041f55974c6efaddfcae8919d28e8ba23af20f8",
+    "rtl/member_b/common/asyncPixelFifo.sv": "cb49725ee50ee70043b87610d83306fdeacec13f73361439d16573030fc73f9d",
+    "rtl/member_b/capture/cameraStreamBridge.sv": "94a3fe5fc80491ec00621c6759695c05ad3542c4c6bb13f85e267bc554c35ce6",
+    "rtl/part_a/causalMaskCleanup.sv": "8e419dc6f1eba9e18fc7f75a7761d2d11fdf8dfbc382014e0c32a529d8242012",
+    "rtl/part_a/boundedCandidates.sv": "d316ef2401002f8e73e5bed1acf9fa143fde2b73be1ac908793a57b406922ed6",
+    "rtl/member_b/vision/glyphBanks.sv": "ea36e726412f036a4d6695d392e59b67de745ee8f39beb07cca6155d6ad411c1",
+    "rtl/member_b/vision/projectiveMarkerReader.sv": "1355cfee207b84ce441b4fe581cd264212616e4c5d7988290ab6b8ca72d4d5da",
+    "rtl/member_b/tracking/targetTracker.sv": "f44682ebbb474bd1a4497f658bd8265c6ece2646b95161238a57a69de83cae6c",
+    "rtl/member_b/interaction/colourSampler.sv": "eaa210cb566638f405cd7a9a50e7f67b2be7fd18554b8b985a4acb80ae1ae212",
+    "rtl/member_b/interaction/fixedSheetInteraction.sv": "0416dcdc5e78c523ab2b40537804e812f67c4abdb8e04f6ef21d95ab0f661686",
+    "rtl/member_b/top/perceptionCore.sv": "0e24d9c203279900be5499b46568483cc05b0d769d5359a257480623750435eb",
+    "tb/member_b/perceptionCoreReplay_tb.sv": "edfc6c2c36940adc04aea5e8453ddcb52cb5ec6fa321d53bd64cc7897b5ad785",
+    "rtl/snapshot_ram.sv": "09c2511a1867b20c523b3db5233ba49c0ee9f8dc9034a670cc6ab960b20d4369",
+    "rtl/snapshot_probes.sv": "f9870fd4f20f1a85eedf41aaf4c7f479f93a1778a9191f56e509ded3b9201581",
+    "rtl/frame_snap.sv": "0f075d6b92263c864fdbe8e957aace2d413d3abd620998b4b6f23564041b1481",
+    "tb/member_b/lateSnapshot_tb.sv": "e3df81ade28349a3dcce5696894eb05388f532281d2b1d0de34d00e43633870a",
+    "tb/member_b/projectiveMarkerReader_tb.sv": "1f905b541565e2b436240e5a95299d7b782af47d5154af45d5909fe66ce9d08c"
+  },
+  "finishedUtc": "2026-11-02T10:08:02.359189+00:00"
+}

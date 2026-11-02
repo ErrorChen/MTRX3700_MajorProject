@@ -1,0 +1,12 @@
+# vsim -c -quiet -l C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/fixedSheetInteraction_sized.log -wlf C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/fixedSheetInteraction_sized.wlf -onfinish exit -lib C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/work/member_b/contract_sim/work fixedSheetInteraction_tb -do "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0" 
+# Start time: 20:15:20 on Nov 02,2026
+# onerror {quit -code 1}
+#  Warning: onerror command for use within macro
+#  onbreak {quit -code 1}
+#  Warning: onbreak command for use within macro
+#  run -all
+# PASS fixedSheetInteraction_tb
+# ** Note: $finish    : C:/intelFPGA_lite/MTRX3700/major/ECHOPHACE1/tb/member_b/fixedSheetInteraction_tb.sv(141)
+#    Time: 4991 ns  Iteration: 0  Instance: /fixedSheetInteraction_tb
+# End time: 20:15:20 on Nov 02,2026, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0

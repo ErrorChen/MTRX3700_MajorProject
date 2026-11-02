@@ -1,0 +1,2549 @@
+{
+  "schema": "ECHO7_COLOUR_SAMPLE_AUDIT_1",
+  "layer": "MODEL",
+  "inputSource": "RECORDED_OV7670_PART_A",
+  "orientationProfile": 0,
+  "rtlFormula": "(rawChannelMinimum + rawChannelMaximum) >> 2",
+  "rawSamplingBeforeSegmentation": true,
+  "frames": [
+    {
+      "frameId": 13139,
+      "pairedRedBox": [
+        45,
+        0,
+        107,
+        87
+      ],
+      "pairedBlueBox": [
+        44,
+        89,
+        103,
+        106
+      ],
+      "sameFrameRoiSamples": {
+        "red": {
+          "sampleCount": 210,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 16,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            56,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            8,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            16
+          ],
+          "meanRgb": [
+            73.16190476190476,
+            8.666666666666666,
+            16.0
+          ]
+        },
+        "blue": {
+          "sampleCount": 396,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            93,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.191919191919192,
+            24.282828282828284,
+            64.9090909090909
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousFrameRoiSamples": {
+        "red": {
+          "sampleCount": 210,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 16,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            56,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            8,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            16
+          ],
+          "meanRgb": [
+            73.16190476190476,
+            8.666666666666666,
+            16.0
+          ]
+        },
+        "blue": {
+          "sampleCount": 396,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            93,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.191919191919192,
+            24.282828282828284,
+            64.9090909090909
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousRoiStationary": true,
+      "profileTrials": [
+        {
+          "colourProfile": {
+            "redMin": 64,
+            "blueMin": 32,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 5,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 13,
+            "blue": 7
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 45,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4451,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 255,
+                "xmax": 293,
+                "ymin": 73,
+                "ymax": 212,
+                "area": 3419,
+                "cx": 274,
+                "cy": 142
+              },
+              {
+                "valid": 1,
+                "xmin": 296,
+                "xmax": 310,
+                "ymin": 137,
+                "ymax": 142,
+                "area": 39,
+                "cx": 303,
+                "cy": 139
+              },
+              {
+                "valid": 1,
+                "xmin": 42,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 233,
+                "area": 4130,
+                "cx": 72,
+                "cy": 190
+              },
+              {
+                "valid": 1,
+                "xmin": 203,
+                "xmax": 250,
+                "ymin": 226,
+                "ymax": 239,
+                "area": 306,
+                "cx": 226,
+                "cy": 232
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 17,
+                "ymax": 87,
+                "area": 2324,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 244,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1365,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 89,
+                "ymax": 106,
+                "area": 948,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 161,
+                "area": 2210,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 242,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1511,
+                "cx": 226,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 210,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1292,
+                "cx": 225,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2097,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 8,
+            "red_lifetime_seeds": 65,
+            "red_qualifying_completed": 5,
+            "red_total_retired": 13,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 89,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 7
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                45,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                17,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                244,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                161
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                242,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                42,
+                147,
+                102,
+                233
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                210,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        },
+        {
+          "colourProfile": {
+            "redMin": 37,
+            "blueMin": 30,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 3,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 36,
+            "blue": 7
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 45,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4513,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 203,
+                "xmax": 319,
+                "ymin": 73,
+                "ymax": 239,
+                "area": 5623,
+                "cx": 261,
+                "cy": 156
+              },
+              {
+                "valid": 1,
+                "xmin": 42,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 233,
+                "area": 4269,
+                "cx": 72,
+                "cy": 190
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 17,
+                "ymax": 87,
+                "area": 2324,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 244,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1365,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 89,
+                "ymax": 106,
+                "area": 948,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 161,
+                "area": 2210,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 242,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1511,
+                "cx": 226,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 210,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1292,
+                "cx": 225,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2097,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 8,
+            "red_lifetime_seeds": 125,
+            "red_qualifying_completed": 3,
+            "red_total_retired": 36,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 89,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 7
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                45,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                17,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                244,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                161
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                242,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                42,
+                147,
+                102,
+                233
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                210,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameId": 13511,
+      "pairedRedBox": [
+        45,
+        0,
+        107,
+        87
+      ],
+      "pairedBlueBox": [
+        44,
+        89,
+        103,
+        106
+      ],
+      "sameFrameRoiSamples": {
+        "red": {
+          "sampleCount": 210,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 16,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            56,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            4,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            16
+          ],
+          "meanRgb": [
+            73.08571428571429,
+            8.628571428571428,
+            16.0
+          ]
+        },
+        "blue": {
+          "sampleCount": 396,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            93,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.272727272727273,
+            24.2020202020202,
+            64.8409090909091
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousFrameRoiSamples": {
+        "red": {
+          "sampleCount": 210,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 16,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            56,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            4,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            16
+          ],
+          "meanRgb": [
+            73.08571428571429,
+            8.628571428571428,
+            16.0
+          ]
+        },
+        "blue": {
+          "sampleCount": 396,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            93,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.272727272727273,
+            24.2020202020202,
+            64.8409090909091
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousRoiStationary": true,
+      "profileTrials": [
+        {
+          "colourProfile": {
+            "redMin": 64,
+            "blueMin": 32,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 5,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 17,
+            "blue": 7
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 45,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4449,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 255,
+                "xmax": 289,
+                "ymin": 73,
+                "ymax": 213,
+                "area": 3436,
+                "cx": 272,
+                "cy": 143
+              },
+              {
+                "valid": 1,
+                "xmin": 298,
+                "xmax": 319,
+                "ymin": 136,
+                "ymax": 142,
+                "area": 61,
+                "cx": 308,
+                "cy": 139
+              },
+              {
+                "valid": 1,
+                "xmin": 42,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 233,
+                "area": 4134,
+                "cx": 72,
+                "cy": 190
+              },
+              {
+                "valid": 1,
+                "xmin": 202,
+                "xmax": 250,
+                "ymin": 226,
+                "ymax": 239,
+                "area": 305,
+                "cx": 226,
+                "cy": 232
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 18,
+                "ymax": 87,
+                "area": 2319,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 243,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1363,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 89,
+                "ymax": 106,
+                "area": 950,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 161,
+                "area": 2204,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 242,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1501,
+                "cx": 226,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 210,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1292,
+                "cx": 225,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2094,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 7,
+            "red_lifetime_seeds": 69,
+            "red_qualifying_completed": 5,
+            "red_total_retired": 17,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 94,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 7
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                45,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                18,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                243,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                161
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                242,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                42,
+                147,
+                102,
+                233
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                210,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        },
+        {
+          "colourProfile": {
+            "redMin": 37,
+            "blueMin": 30,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 3,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 46,
+            "blue": 7
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 45,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4506,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 202,
+                "xmax": 319,
+                "ymin": 73,
+                "ymax": 239,
+                "area": 5530,
+                "cx": 260,
+                "cy": 156
+              },
+              {
+                "valid": 1,
+                "xmin": 42,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 233,
+                "area": 4271,
+                "cx": 72,
+                "cy": 190
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 18,
+                "ymax": 87,
+                "area": 2319,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 243,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1363,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 89,
+                "ymax": 106,
+                "area": 950,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 161,
+                "area": 2204,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 242,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1501,
+                "cx": 226,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 210,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1292,
+                "cx": 225,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2094,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 8,
+            "red_lifetime_seeds": 135,
+            "red_qualifying_completed": 3,
+            "red_total_retired": 46,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 94,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 7
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                45,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                18,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                243,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                161
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                242,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                42,
+                147,
+                102,
+                233
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                210,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "frameId": 13675,
+      "pairedRedBox": [
+        46,
+        0,
+        107,
+        87
+      ],
+      "pairedBlueBox": [
+        44,
+        88,
+        103,
+        106
+      ],
+      "sameFrameRoiSamples": {
+        "red": {
+          "sampleCount": 245,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 24,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            57,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            4,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            24
+          ],
+          "meanRgb": [
+            73.60816326530612,
+            8.587755102040816,
+            16.03265306122449
+          ]
+        },
+        "blue": {
+          "sampleCount": 432,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            92,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.25925925925926,
+            24.40740740740741,
+            65.4375
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousFrameRoiSamples": {
+        "red": {
+          "sampleCount": 210,
+          "channelMinimum": 66,
+          "channelMaximum": 82,
+          "otherChannelMaximum": 24,
+          "shadowMinimum": 37,
+          "sampleBounds": [
+            51,
+            27,
+            56,
+            61
+          ],
+          "allRgbMinimum": [
+            66,
+            4,
+            16
+          ],
+          "allRgbMaximum": [
+            82,
+            12,
+            24
+          ],
+          "meanRgb": [
+            73.61904761904762,
+            8.59047619047619,
+            16.038095238095238
+          ]
+        },
+        "blue": {
+          "sampleCount": 396,
+          "channelMinimum": 57,
+          "channelMaximum": 66,
+          "otherChannelMaximum": 28,
+          "shadowMinimum": 30,
+          "sampleBounds": [
+            56,
+            93,
+            91,
+            103
+          ],
+          "allRgbMinimum": [
+            8,
+            20,
+            57
+          ],
+          "allRgbMaximum": [
+            16,
+            28,
+            66
+          ],
+          "meanRgb": [
+            15.191919191919192,
+            24.343434343434343,
+            65.5
+          ]
+        },
+        "frameSampleGood": true
+      },
+      "previousRoiStationary": true,
+      "profileTrials": [
+        {
+          "colourProfile": {
+            "redMin": 64,
+            "blueMin": 32,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 5,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 12,
+            "blue": 9
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 46,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4458,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 255,
+                "xmax": 310,
+                "ymin": 73,
+                "ymax": 214,
+                "area": 3506,
+                "cx": 282,
+                "cy": 143
+              },
+              {
+                "valid": 1,
+                "xmin": 311,
+                "xmax": 319,
+                "ymin": 135,
+                "ymax": 143,
+                "area": 47,
+                "cx": 315,
+                "cy": 139
+              },
+              {
+                "valid": 1,
+                "xmin": 43,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 232,
+                "area": 4104,
+                "cx": 72,
+                "cy": 189
+              },
+              {
+                "valid": 1,
+                "xmin": 202,
+                "xmax": 250,
+                "ymin": 226,
+                "ymax": 239,
+                "area": 311,
+                "cx": 226,
+                "cy": 232
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 17,
+                "ymax": 87,
+                "area": 2318,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 244,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1357,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 88,
+                "ymax": 106,
+                "area": 947,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 160,
+                "area": 2204,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 243,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1502,
+                "cx": 227,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 209,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1290,
+                "cx": 224,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2088,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 8,
+            "red_lifetime_seeds": 60,
+            "red_qualifying_completed": 5,
+            "red_total_retired": 12,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 92,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 9
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                46,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                17,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                244,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                160
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                243,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                43,
+                147,
+                102,
+                232
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                209,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        },
+        {
+          "colourProfile": {
+            "redMin": 37,
+            "blueMin": 30,
+            "ratioNumerator": 3,
+            "ratioDenominator": 2
+          },
+          "candidateCounts": {
+            "red": 3,
+            "blue": 7
+          },
+          "allComponentsBeforeAreaGate": {
+            "red": 35,
+            "blue": 9
+          },
+          "boundedCandidateOracle": {
+            "frame_valid": true,
+            "overflow": false,
+            "red_overflow": false,
+            "blue_overflow": false,
+            "red": [
+              {
+                "valid": 1,
+                "xmin": 45,
+                "xmax": 107,
+                "ymin": 0,
+                "ymax": 87,
+                "area": 4509,
+                "cx": 76,
+                "cy": 43
+              },
+              {
+                "valid": 1,
+                "xmin": 202,
+                "xmax": 319,
+                "ymin": 73,
+                "ymax": 239,
+                "area": 5668,
+                "cx": 260,
+                "cy": 156
+              },
+              {
+                "valid": 1,
+                "xmin": 42,
+                "xmax": 102,
+                "ymin": 147,
+                "ymax": 233,
+                "area": 4268,
+                "cx": 72,
+                "cy": 190
+              }
+            ],
+            "blue": [
+              {
+                "valid": 1,
+                "xmin": 165,
+                "xmax": 205,
+                "ymin": 17,
+                "ymax": 87,
+                "area": 2318,
+                "cx": 185,
+                "cy": 52
+              },
+              {
+                "valid": 1,
+                "xmin": 213,
+                "xmax": 244,
+                "ymin": 29,
+                "ymax": 91,
+                "area": 1357,
+                "cx": 228,
+                "cy": 60
+              },
+              {
+                "valid": 1,
+                "xmin": 44,
+                "xmax": 103,
+                "ymin": 88,
+                "ymax": 106,
+                "area": 947,
+                "cx": 73,
+                "cy": 97
+              },
+              {
+                "valid": 1,
+                "xmin": 163,
+                "xmax": 203,
+                "ymin": 92,
+                "ymax": 160,
+                "area": 2204,
+                "cx": 183,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 211,
+                "xmax": 243,
+                "ymin": 96,
+                "ymax": 157,
+                "area": 1502,
+                "cx": 227,
+                "cy": 126
+              },
+              {
+                "valid": 1,
+                "xmin": 209,
+                "xmax": 240,
+                "ymin": 162,
+                "ymax": 224,
+                "area": 1290,
+                "cx": 224,
+                "cy": 193
+              },
+              {
+                "valid": 1,
+                "xmin": 162,
+                "xmax": 201,
+                "ymin": 166,
+                "ymax": 235,
+                "area": 2088,
+                "cx": 181,
+                "cy": 200
+              }
+            ],
+            "red_active_overflow": false,
+            "red_output_overflow": false,
+            "red_max_row_handles": 8,
+            "red_lifetime_seeds": 136,
+            "red_qualifying_completed": 3,
+            "red_total_retired": 35,
+            "blue_active_overflow": false,
+            "blue_output_overflow": false,
+            "blue_max_row_handles": 5,
+            "blue_lifetime_seeds": 92,
+            "blue_qualifying_completed": 7,
+            "blue_total_retired": 9
+          },
+          "overflow": false,
+          "acceptedMarkers": [
+            {
+              "colour": "red",
+              "digit": 1,
+              "bbox": [
+                45,
+                0,
+                107,
+                87
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 1,
+              "bbox": [
+                165,
+                17,
+                205,
+                87
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 2,
+              "bbox": [
+                213,
+                29,
+                244,
+                91
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 3,
+              "bbox": [
+                163,
+                92,
+                203,
+                160
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 4,
+              "bbox": [
+                211,
+                96,
+                243,
+                157
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "red",
+              "digit": 2,
+              "bbox": [
+                42,
+                147,
+                102,
+                233
+              ],
+              "quality": 255
+            },
+            {
+              "colour": "blue",
+              "digit": 6,
+              "bbox": [
+                209,
+                162,
+                240,
+                224
+              ],
+              "quality": 192
+            },
+            {
+              "colour": "blue",
+              "digit": 5,
+              "bbox": [
+                162,
+                166,
+                201,
+                235
+              ],
+              "quality": 192
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "combinedShadowProfile": {
+    "redMin": 37,
+    "blueMin": 30
+  },
+  "combinedProfileTrials": [
+    {
+      "frameId": 13139,
+      "colourProfile": {
+        "redMin": 37,
+        "blueMin": 30,
+        "ratioNumerator": 3,
+        "ratioDenominator": 2
+      },
+      "candidateCounts": {
+        "red": 3,
+        "blue": 7
+      },
+      "allComponentsBeforeAreaGate": {
+        "red": 36,
+        "blue": 7
+      },
+      "boundedCandidateOracle": {
+        "frame_valid": true,
+        "overflow": false,
+        "red_overflow": false,
+        "blue_overflow": false,
+        "red": [
+          {
+            "valid": 1,
+            "xmin": 45,
+            "xmax": 107,
+            "ymin": 0,
+            "ymax": 87,
+            "area": 4513,
+            "cx": 76,
+            "cy": 43
+          },
+          {
+            "valid": 1,
+            "xmin": 203,
+            "xmax": 319,
+            "ymin": 73,
+            "ymax": 239,
+            "area": 5623,
+            "cx": 261,
+            "cy": 156
+          },
+          {
+            "valid": 1,
+            "xmin": 42,
+            "xmax": 102,
+            "ymin": 147,
+            "ymax": 233,
+            "area": 4269,
+            "cx": 72,
+            "cy": 190
+          }
+        ],
+        "blue": [
+          {
+            "valid": 1,
+            "xmin": 165,
+            "xmax": 205,
+            "ymin": 17,
+            "ymax": 87,
+            "area": 2324,
+            "cx": 185,
+            "cy": 52
+          },
+          {
+            "valid": 1,
+            "xmin": 213,
+            "xmax": 244,
+            "ymin": 29,
+            "ymax": 91,
+            "area": 1365,
+            "cx": 228,
+            "cy": 60
+          },
+          {
+            "valid": 1,
+            "xmin": 44,
+            "xmax": 103,
+            "ymin": 89,
+            "ymax": 106,
+            "area": 948,
+            "cx": 73,
+            "cy": 97
+          },
+          {
+            "valid": 1,
+            "xmin": 163,
+            "xmax": 203,
+            "ymin": 92,
+            "ymax": 161,
+            "area": 2210,
+            "cx": 183,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 211,
+            "xmax": 242,
+            "ymin": 96,
+            "ymax": 157,
+            "area": 1511,
+            "cx": 226,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 210,
+            "xmax": 240,
+            "ymin": 162,
+            "ymax": 224,
+            "area": 1292,
+            "cx": 225,
+            "cy": 193
+          },
+          {
+            "valid": 1,
+            "xmin": 162,
+            "xmax": 201,
+            "ymin": 166,
+            "ymax": 235,
+            "area": 2097,
+            "cx": 181,
+            "cy": 200
+          }
+        ],
+        "red_active_overflow": false,
+        "red_output_overflow": false,
+        "red_max_row_handles": 8,
+        "red_lifetime_seeds": 125,
+        "red_qualifying_completed": 3,
+        "red_total_retired": 36,
+        "blue_active_overflow": false,
+        "blue_output_overflow": false,
+        "blue_max_row_handles": 5,
+        "blue_lifetime_seeds": 89,
+        "blue_qualifying_completed": 7,
+        "blue_total_retired": 7
+      },
+      "overflow": false,
+      "acceptedMarkers": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "bbox": [
+            45,
+            0,
+            107,
+            87
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "bbox": [
+            165,
+            17,
+            205,
+            87
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "bbox": [
+            213,
+            29,
+            244,
+            91
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "bbox": [
+            163,
+            92,
+            203,
+            161
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "bbox": [
+            211,
+            96,
+            242,
+            157
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "bbox": [
+            210,
+            162,
+            240,
+            224
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "bbox": [
+            162,
+            166,
+            201,
+            235
+          ],
+          "quality": 192
+        }
+      ]
+    },
+    {
+      "frameId": 13511,
+      "colourProfile": {
+        "redMin": 37,
+        "blueMin": 30,
+        "ratioNumerator": 3,
+        "ratioDenominator": 2
+      },
+      "candidateCounts": {
+        "red": 3,
+        "blue": 7
+      },
+      "allComponentsBeforeAreaGate": {
+        "red": 46,
+        "blue": 7
+      },
+      "boundedCandidateOracle": {
+        "frame_valid": true,
+        "overflow": false,
+        "red_overflow": false,
+        "blue_overflow": false,
+        "red": [
+          {
+            "valid": 1,
+            "xmin": 45,
+            "xmax": 107,
+            "ymin": 0,
+            "ymax": 87,
+            "area": 4506,
+            "cx": 76,
+            "cy": 43
+          },
+          {
+            "valid": 1,
+            "xmin": 202,
+            "xmax": 319,
+            "ymin": 73,
+            "ymax": 239,
+            "area": 5530,
+            "cx": 260,
+            "cy": 156
+          },
+          {
+            "valid": 1,
+            "xmin": 42,
+            "xmax": 102,
+            "ymin": 147,
+            "ymax": 233,
+            "area": 4271,
+            "cx": 72,
+            "cy": 190
+          }
+        ],
+        "blue": [
+          {
+            "valid": 1,
+            "xmin": 165,
+            "xmax": 205,
+            "ymin": 18,
+            "ymax": 87,
+            "area": 2319,
+            "cx": 185,
+            "cy": 52
+          },
+          {
+            "valid": 1,
+            "xmin": 213,
+            "xmax": 243,
+            "ymin": 29,
+            "ymax": 91,
+            "area": 1363,
+            "cx": 228,
+            "cy": 60
+          },
+          {
+            "valid": 1,
+            "xmin": 44,
+            "xmax": 103,
+            "ymin": 89,
+            "ymax": 106,
+            "area": 950,
+            "cx": 73,
+            "cy": 97
+          },
+          {
+            "valid": 1,
+            "xmin": 163,
+            "xmax": 203,
+            "ymin": 92,
+            "ymax": 161,
+            "area": 2204,
+            "cx": 183,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 211,
+            "xmax": 242,
+            "ymin": 96,
+            "ymax": 157,
+            "area": 1501,
+            "cx": 226,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 210,
+            "xmax": 240,
+            "ymin": 162,
+            "ymax": 224,
+            "area": 1292,
+            "cx": 225,
+            "cy": 193
+          },
+          {
+            "valid": 1,
+            "xmin": 162,
+            "xmax": 201,
+            "ymin": 166,
+            "ymax": 235,
+            "area": 2094,
+            "cx": 181,
+            "cy": 200
+          }
+        ],
+        "red_active_overflow": false,
+        "red_output_overflow": false,
+        "red_max_row_handles": 8,
+        "red_lifetime_seeds": 135,
+        "red_qualifying_completed": 3,
+        "red_total_retired": 46,
+        "blue_active_overflow": false,
+        "blue_output_overflow": false,
+        "blue_max_row_handles": 5,
+        "blue_lifetime_seeds": 94,
+        "blue_qualifying_completed": 7,
+        "blue_total_retired": 7
+      },
+      "overflow": false,
+      "acceptedMarkers": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "bbox": [
+            45,
+            0,
+            107,
+            87
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "bbox": [
+            165,
+            18,
+            205,
+            87
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "bbox": [
+            213,
+            29,
+            243,
+            91
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "bbox": [
+            163,
+            92,
+            203,
+            161
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "bbox": [
+            211,
+            96,
+            242,
+            157
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "bbox": [
+            210,
+            162,
+            240,
+            224
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "bbox": [
+            162,
+            166,
+            201,
+            235
+          ],
+          "quality": 192
+        }
+      ]
+    },
+    {
+      "frameId": 13675,
+      "colourProfile": {
+        "redMin": 37,
+        "blueMin": 30,
+        "ratioNumerator": 3,
+        "ratioDenominator": 2
+      },
+      "candidateCounts": {
+        "red": 3,
+        "blue": 7
+      },
+      "allComponentsBeforeAreaGate": {
+        "red": 35,
+        "blue": 9
+      },
+      "boundedCandidateOracle": {
+        "frame_valid": true,
+        "overflow": false,
+        "red_overflow": false,
+        "blue_overflow": false,
+        "red": [
+          {
+            "valid": 1,
+            "xmin": 45,
+            "xmax": 107,
+            "ymin": 0,
+            "ymax": 87,
+            "area": 4509,
+            "cx": 76,
+            "cy": 43
+          },
+          {
+            "valid": 1,
+            "xmin": 202,
+            "xmax": 319,
+            "ymin": 73,
+            "ymax": 239,
+            "area": 5668,
+            "cx": 260,
+            "cy": 156
+          },
+          {
+            "valid": 1,
+            "xmin": 42,
+            "xmax": 102,
+            "ymin": 147,
+            "ymax": 233,
+            "area": 4268,
+            "cx": 72,
+            "cy": 190
+          }
+        ],
+        "blue": [
+          {
+            "valid": 1,
+            "xmin": 165,
+            "xmax": 205,
+            "ymin": 17,
+            "ymax": 87,
+            "area": 2318,
+            "cx": 185,
+            "cy": 52
+          },
+          {
+            "valid": 1,
+            "xmin": 213,
+            "xmax": 244,
+            "ymin": 29,
+            "ymax": 91,
+            "area": 1357,
+            "cx": 228,
+            "cy": 60
+          },
+          {
+            "valid": 1,
+            "xmin": 44,
+            "xmax": 103,
+            "ymin": 88,
+            "ymax": 106,
+            "area": 947,
+            "cx": 73,
+            "cy": 97
+          },
+          {
+            "valid": 1,
+            "xmin": 163,
+            "xmax": 203,
+            "ymin": 92,
+            "ymax": 160,
+            "area": 2204,
+            "cx": 183,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 211,
+            "xmax": 243,
+            "ymin": 96,
+            "ymax": 157,
+            "area": 1502,
+            "cx": 227,
+            "cy": 126
+          },
+          {
+            "valid": 1,
+            "xmin": 209,
+            "xmax": 240,
+            "ymin": 162,
+            "ymax": 224,
+            "area": 1290,
+            "cx": 224,
+            "cy": 193
+          },
+          {
+            "valid": 1,
+            "xmin": 162,
+            "xmax": 201,
+            "ymin": 166,
+            "ymax": 235,
+            "area": 2088,
+            "cx": 181,
+            "cy": 200
+          }
+        ],
+        "red_active_overflow": false,
+        "red_output_overflow": false,
+        "red_max_row_handles": 8,
+        "red_lifetime_seeds": 136,
+        "red_qualifying_completed": 3,
+        "red_total_retired": 35,
+        "blue_active_overflow": false,
+        "blue_output_overflow": false,
+        "blue_max_row_handles": 5,
+        "blue_lifetime_seeds": 92,
+        "blue_qualifying_completed": 7,
+        "blue_total_retired": 9
+      },
+      "overflow": false,
+      "acceptedMarkers": [
+        {
+          "colour": "red",
+          "digit": 1,
+          "bbox": [
+            45,
+            0,
+            107,
+            87
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 1,
+          "bbox": [
+            165,
+            17,
+            205,
+            87
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 2,
+          "bbox": [
+            213,
+            29,
+            244,
+            91
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 3,
+          "bbox": [
+            163,
+            92,
+            203,
+            160
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 4,
+          "bbox": [
+            211,
+            96,
+            243,
+            157
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "red",
+          "digit": 2,
+          "bbox": [
+            42,
+            147,
+            102,
+            233
+          ],
+          "quality": 255
+        },
+        {
+          "colour": "blue",
+          "digit": 6,
+          "bbox": [
+            209,
+            162,
+            240,
+            224
+          ],
+          "quality": 192
+        },
+        {
+          "colour": "blue",
+          "digit": 5,
+          "bbox": [
+            162,
+            166,
+            201,
+            235
+          ],
+          "quality": 192
+        }
+      ]
+    }
+  ],
+  "limitation": "Three retained images are diagnostics only, not eight consecutive fresh calibration samples or a board commit."
+}

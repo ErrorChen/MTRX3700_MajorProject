@@ -1,0 +1,139 @@
+{
+  "colour": "blue",
+  "area": 2319,
+  "bbox": [
+    165,
+    18,
+    205,
+    87
+  ],
+  "readerAlgorithm": 1,
+  "accepted": true,
+  "digit": 1,
+  "kind": "BAY",
+  "quality": 192,
+  "orientationProfile": 0,
+  "reasonCode": 0,
+  "reasonName": "OK",
+  "quad": [
+    [
+      167,
+      18
+    ],
+    [
+      204,
+      26
+    ],
+    [
+      203,
+      87
+    ],
+    [
+      165,
+      83
+    ]
+  ],
+  "windowScores": {
+    "A": {
+      "white": 0,
+      "samples": 8,
+      "projectionBits": 0
+    },
+    "G": {
+      "white": 0,
+      "samples": 8,
+      "projectionBits": 0
+    },
+    "D": {
+      "white": 0,
+      "samples": 8,
+      "projectionBits": 0
+    },
+    "B": {
+      "white": 7,
+      "samples": 7,
+      "projectionBits": 127
+    },
+    "C": {
+      "white": 7,
+      "samples": 7,
+      "projectionBits": 127
+    },
+    "F": {
+      "white": 0,
+      "samples": 7,
+      "projectionBits": 0
+    },
+    "E": {
+      "white": 0,
+      "samples": 7,
+      "projectionBits": 0
+    },
+    "anchor": {
+      "white": 5,
+      "samples": 30,
+      "rows": 3,
+      "columns": 2
+    },
+    "upperHole": {
+      "white": 0,
+      "samples": 24
+    },
+    "lowerHole": {
+      "white": 0,
+      "samples": 24
+    }
+  },
+  "inputWhiteProfile": {
+    "minimum": 112,
+    "maximumChannelSpread": 64
+  },
+  "segments": "BC",
+  "foregroundCount": 2328,
+  "quadHalfPixels": [
+    [
+      333,
+      35
+    ],
+    [
+      409,
+      51
+    ],
+    [
+      407,
+      175
+    ],
+    [
+      329,
+      167
+    ]
+  ],
+  "coefficients": [
+    998048,
+    -115080,
+    3226104,
+    187648,
+    1240072,
+    339080,
+    640,
+    -232,
+    9688
+  ],
+  "crossProducts": [
+    9456,
+    9688,
+    10328,
+    10096
+  ],
+  "edgeSquaredHalfPixelUnits": [
+    6032,
+    15380,
+    6148,
+    17440
+  ],
+  "areaPixels": 2473.0,
+  "touchesFrameBoundary": false,
+  "uniqueSourceSamples": 1280,
+  "minimumHorizontalEdgePixels": 38.8329756778952,
+  "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\ECHOPHACE1\\evidence\\member_b\\projective\\frame13511\\candidate_01"
+}

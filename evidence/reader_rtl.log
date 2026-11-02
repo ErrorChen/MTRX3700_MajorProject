@@ -1,0 +1,28 @@
+# vsim -c -onfinish exit -lib ECHOPHACE1/work/member_b/vision_rtl/simlib sevenSegmentReader_tb "+VECTORS=ECHOPHACE1/work/member_b/vision_rtl_vectors" -do "run -all; quit -code 0" -l ECHOPHACE1/work/member_b/vision_rtl/simulation.log 
+# Start time: 20:03:53 on Nov 02,2026
+# Loading sv_std.std
+# Loading ECHOPHACE1/work/member_b/vision_rtl/simlib.vision_pkg
+# Loading ECHOPHACE1/work/member_b/vision_rtl/simlib.part_a_pkg
+# Loading ECHOPHACE1/work/member_b/vision_rtl/simlib.sevenSegmentReader_tb
+# Loading ECHOPHACE1/work/member_b/vision_rtl/simlib.sevenSegmentReader
+# run -all
+# MATCH vector=0 accepted=8 cycles=53120
+# MATCH vector=1 accepted=8 cycles=53120
+# MATCH vector=2 accepted=8 cycles=53120
+# MATCH vector=3 accepted=1 cycles=6652
+# MATCH vector=4 accepted=1 cycles=6652
+# MATCH vector=5 accepted=0 cycles=64
+# MATCH vector=6 accepted=1 cycles=6652
+# MATCH vector=7 accepted=0 cycles=6652
+# MATCH vector=8 accepted=1 cycles=6652
+# MATCH vector=9 accepted=0 cycles=64
+# MATCH vector=10 accepted=0 cycles=26416
+# MATCH vector=11 accepted=0 cycles=26416
+# MATCH vector=12 accepted=0 cycles=19828
+# MATCH vector=13 accepted=0 cycles=13240
+# MATCH vector=14 accepted=0 cycles=64
+# PASS sevenSegmentReader_tb: 15 independent pixel/model vectors and active reset
+# ** Note: $finish    : ECHOPHACE1/tb/member_b/sevenSegmentReader_tb.sv(106)
+#    Time: 5575460 ns  Iteration: 1  Instance: /sevenSegmentReader_tb
+# End time: 20:03:54 on Nov 02,2026, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 0
