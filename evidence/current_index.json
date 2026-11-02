@@ -1416,5 +1416,8 @@
   ],
   "historicalProvenance": "metadata.json",
   "pathRelocation": "relocation_index.json",
-  "boundary": "An index is not validation. Use each run status, source hashes and layer. Old evidence is never promoted to current acceptance."
+  "boundary": "An index is not validation. Use each run status, source hashes and layer. Old evidence is never promoted to current acceptance.",
+  "latestValidationCheckpoint": "validation_checkpoint_63bc383.json",
+  "latestKnownGitHead": "63bc383",
+  "newBuildAndBoardStatus": "PENDING_NEW_SOURCE_MATCHED_BUILD"
 }
