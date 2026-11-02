@@ -73,7 +73,9 @@ module perceptionCoreReplay_tb;
                     continuousExpectedBox=expectedBlueBoxes[dut.observation.frameId[0]?0:1];
                     if({dut.observation.xMin,dut.observation.xMax,dut.observation.yMin,dut.observation.yMax}!==
                        {continuousExpectedBox.xmin,continuousExpectedBox.xmax,continuousExpectedBox.ymin,continuousExpectedBox.ymax})
-                        $fatal(1,"Same-frame glyph bank mismatch on alternating image id=%0d",dut.observation.frameId);
+                        $fatal(1,"Same-frame glyph bank mismatch id=%0d actual=[%0d,%0d,%0d,%0d] expected=[%0d,%0d,%0d,%0d]",
+                            dut.observation.frameId,dut.observation.xMin,dut.observation.yMin,dut.observation.xMax,dut.observation.yMax,
+                            continuousExpectedBox.xmin,continuousExpectedBox.ymin,continuousExpectedBox.xmax,continuousExpectedBox.ymax);
                 end
             end
         end
@@ -233,25 +235,35 @@ module perceptionCoreReplay_tb;
         targetRequest='0;lastReport='0;
         if(!$value$plusargs("VECTOR_DIR=%s",vectorDir))vectorDir="vectors";
         if(!$test$plusargs("COLLISION_ONLY"))begin
-            $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
+            if($test$plusargs("CONTINUOUS"))$readmemh({vectorDir,"/projective_0_rgb565.hex"},pixels);
+            else $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
             if($value$plusargs("SCENE_FILE=%s",sceneFile))$readmemh(sceneFile,pixels);
         end
         repeat(10)@(negedge pclk);reset=0;resetPclk=0;
         if($test$plusargs("COLLISION_ONLY"))begin collisionRegression();$finish;end
         if($test$plusargs("CONTINUOUS"))begin
             interactionEnable=0;targetReportReady=0;
-            $readmemh({vectorDir,"/vision_0_candidates.hex"},continuousCandidateWords);
-            $readmemh({vectorDir,"/vision_0_expected.hex"},continuousExpectedWords);
             expectedBlueBoxes[0]='0;expectedBlueBoxes[1]='0;
-            for(int slot=8;slot<16;slot++)if(continuousExpectedWords[slot][24])begin
-                if(continuousExpectedWords[slot][19:16]==1)expectedBlueBoxes[0]=continuousCandidateWords[slot];
-                if(continuousExpectedWords[slot][19:16]==2)expectedBlueBoxes[1]=continuousCandidateWords[slot];
+            // Each independent projective fixture includes the actual HSV +
+            // horizontal-run + causal-cleanup candidate oracle. The older
+            // vision vectors contain uncleaned, axis-aligned classifier boxes.
+            // Read blue 1 separately from each image's pixel-derived expected
+            // result; do not assume swapping glyphs preserves the other bbox.
+            for(int fixture=0;fixture<2;fixture++)begin
+                integer blueOneCount;
+                blueOneCount=0;
+                $readmemh($sformatf("%s/projective_%0d_candidates.hex",vectorDir,fixture),continuousCandidateWords);
+                $readmemh($sformatf("%s/projective_%0d_expected.hex",vectorDir,fixture),continuousExpectedWords);
+                for(int slot=8;slot<16;slot++)if(continuousExpectedWords[slot][24]&&continuousExpectedWords[slot][19:16]==1)begin
+                    expectedBlueBoxes[fixture]=continuousCandidateWords[slot];blueOneCount++;
+                end
+                if(blueOneCount!=1||!expectedBlueBoxes[fixture].valid)
+                    $fatal(1,"Expected exactly one independent blue1 bbox in projective fixture %0d",fixture);
             end
-            if(!expectedBlueBoxes[0].valid||!expectedBlueBoxes[1].valid)$fatal(1,"Missing independent counterfactual fixture boxes");
             selectBay(1,1);continuousMode=1;continuousStart=totalCycles;
             for(int n=1;n<=6;n++)begin
-                if(n%2)$readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
-                else $readmemh({vectorDir,"/vision_1_rgb565.hex"},pixels);
+                if(n%2)$readmemh({vectorDir,"/projective_0_rgb565.hex"},pixels);
+                else $readmemh({vectorDir,"/projective_1_rgb565.hex"},pixels);
                 continuousSourceFrame();
             end
             cyclesWait:for(int n=0;n<1000000;n++)begin
