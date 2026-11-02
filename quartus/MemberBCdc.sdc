@@ -22,6 +22,13 @@ foreach spec {
 # Bundled payload is held until the destination acknowledges it. Bound its
 # propagation below one destination clock, before the synchronised request can
 # cause capture; do not mark the entire data bus as an unbounded false path.
+# There is no same-edge hold relationship between these asynchronous clocks.
+# heldBusCdc keeps heldData unchanged until the capture acknowledgement has
+# crossed back through two source-clock stages. Only the payload's artificial
+# inter-clock hold check is excluded. Its 20 ns setup bound remains active;
+# synchroniser stage-to-stage setup/hold and the Gray constraints above remain
+# unchanged. A zero set_min_delay would still include unrelated clock insertion
+# delays and made the router add large, unnecessary payload delay chains.
 foreach instance {resultToCamera *cameraBridge*|requestCdc} {
  set payloadFrom [get_registers "${instance}|heldData\[*\]"]
  set payloadTo [get_registers "${instance}|destinationData\[*\]"]
@@ -29,7 +36,10 @@ foreach instance {resultToCamera *cameraBridge*|requestCdc} {
   error "Missing bundled payload for $instance"
  }
  set_max_delay -from $payloadFrom -to $payloadTo 20.000
- set_min_delay -from $payloadFrom -to $payloadTo 0.000
+ # The physical data net bound is independent of either clock's insertion
+ # delay. It is retained even though same-edge asynchronous hold is excluded.
+ set_net_delay -max -from $payloadFrom -to $payloadTo 20.000
+ set_false_path -hold -from $payloadFrom -to $payloadTo
  set_false_path -from [get_registers "${instance}|requestToggle"] -to [get_registers "${instance}|requestSync\[0\]"]
  set_false_path -from [get_registers "${instance}|acknowledgeToggle"] -to [get_registers "${instance}|acknowledgeSync\[0\]"]
 }

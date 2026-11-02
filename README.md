@@ -4,7 +4,9 @@ This repository contains the stationary MTRX3700 Member B perception demonstrati
 
 The maintained entry point is `python tools/echo7.py`. [VERSION_README.md](VERSION_README.md) records actual checks, failed builds, hardware evidence and remaining limits. These are the two maintained README files. The single B/C contract is [docs/MEMBER_C_INTERFACE.md](docs/MEMBER_C_INTERFACE.md).
 
-The current source passed all 20 self-checking RTL benches and the latest MODEL run passed 64 unit tests plus 11 vision groups. [The completed regression record](evidence/validation_e943678b_rtl20/index.json) retains the original PASS lines, logs and 45 tested source hashes. Pipelining ROI preparation reduced its mapped path from 64.749 ns to 11.526 ns. Source `0xe943678b` still has −0.723 ns worst unrouted setup slack; its full build is running, so fitted timing remains unverified. The board still runs the earlier stationary camera baseline; current B download and on-board recognition have not been executed.
+The verified board checkpoint is `0xab41e932`: isolated Quartus 18.1 compilation, four-corner timing, the extra CDC checks and actual FPGA download all passed. [The compiler recovery record](evidence/compiler_recovery/index.json) retains the routing fix, final resources and bitstream identity. The preceding RTL checkpoint passed all [20 self-checking benches](evidence/validation_e943678b_rtl20/index.json); its production RTL was unchanged by the constraint and host-tool recovery.
+
+[Fresh camera frame 225](evidence/board_ab41e932_frame225/index.json) passed CRC, build/schema and same-frame pixel-model comparison for ten candidates. The FPGA accepted red 1/2 and blue 1–5, but rejected blue 6; calibration remained incomplete. The full-sheet hardware test therefore failed after its first sampled status frame. Compilation and download are recovered; complete recognition, calibration and the 30-frame target cycle remain unfinished. Voice input is deferred by the user.
 
 ## Start here
 
@@ -17,7 +19,7 @@ $python = 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependenci
 & $python tools/echo7.py doctor
 & $python tools/echo7.py test --replay
 & $python tools/echo7.py test --rtl
-& $python tools/echo7.py build
+& $python tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' --timeout 3600 build
 & $python tools/echo7.py program
 & $python tools/echo7.py capture --fresh
 & $python tools/echo7.py status
@@ -36,6 +38,8 @@ $python = 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependenci
 Selection is a request to the non-motion C simulator; recognition still reads pixels. Voice-input testing is deferred at the user's request. A selected number, key press or debug command must not be labelled speech recognition. Calibration arming permits another real red-1 interaction and does not inject a successful calibration.
 
 `build` targets only [quartus/PartBDebug.qpf](quartus/PartBDebug.qpf), top `perceptionDemoTop`, device 5CSEMA5F31C6. Programming requires a successful current build, a fresh bitstream hash and an unambiguous discovered FPGA target. Program and capture use the same selected cable/device; the chain index is not hard-coded. The actual OV7670 MVFP value is passed explicitly as 0x07. Configuration, download, camera acquisition and recognition are separate acceptance steps.
+
+Each build copies the exact hashed source closure into its own `build/member_b/<run>/source/` tree. Quartus databases, generated IP, reports and the SOF belong to that private copy. The original project and any GUI database are not reused. The selected Quartus installation also supplies the child-process Quartus/Qsys environment and companion tools; global environment variables are unchanged. RUNNING provenance records the source, project directory and actual tool version before compilation starts. Failed compiles retain their warnings and nonzero exit code. The successful manifest supplies the private SOF path to `program`.
 
 A fresh capture must pass frame, packet schema and CRC checks, and its on-board build ID must agree with the programmed source. A held snapshot is an old observation and cannot count towards another tracking frame. JTAG file transfer duration is not FPGA processing latency. Large temporary outputs belong in ignored `build/`; small retained examples and indices belong in `evidence/`.
 
@@ -107,9 +111,11 @@ Algorithm 2's fixed white predicate is `R + 2*G + B >= 384` and `max(R,G,B)-min(
 
 Historical reader algorithm 1 remains explicit in host replay as `--reader-algorithm 1`, with its original `min(R,G,B) >=112` default. The current model defaults to algorithm 2. Debug reader IDs and white-profile modes prevent old captures from silently acquiring the new meaning.
 
-VGA contours follow raw red/blue HSV transitions, including separate regions of the same colour and the blank blue reference strip. Contours indicate colour segmentation only. Digit labels require accepted pixel-derived markers; a blue outline does not grant a bay ID. A 640 × 2-bit synchronous row memory supports contours without another full-colour frame. The new display logic has simulation and isolated RAM-inference evidence; its current physical VGA output still needs the matching successful build and download. Upstream display-buffer tearing remains a separate limitation.
+VGA contours follow raw red/blue HSV transitions, including separate regions of the same colour and the blank blue reference strip. Contours indicate colour segmentation only. Digit labels require accepted pixel-derived markers; a blue outline does not grant a bay ID. A 640 × 2-bit synchronous row memory supports contours without another full-colour frame. This logic is included in the fitted and programmed `0xab41e932` checkpoint. The appearance of that new output on the physical monitor still needs visual confirmation; a JTAG camera image is not a VGA screenshot. Upstream display-buffer tearing remains a separate limitation.
 
 Bank ownership separates FREE, WRITING, READY and READING. Candidate frame ID, original capture time, configuration version and bank identity remain bound to the pixels. A busy bank causes an explicit full-frame drop, never a read of overwritten data. Multi-bit descriptors and configurations use a handshake or FIFO; independently synchronising each bit is not atomic transfer. Final BRAM/resource mapping and all relevant timing checks require a successful current Fitter run.
+
+The held-payload crossings `resultToCamera` and `cameraBridge|requestCdc` retain their 20 ns maximum-delay bound and an explicit 20 ns physical net-delay bound. Only their artificial same-edge inter-clock hold check is excluded: the handshake keeps data stable until acknowledgement returns through the source synchroniser. Synchroniser stage-to-stage checks and the Gray-bus maximum-delay, minimum-delay and skew constraints remain active. The recovery timing gate checks this exact coverage; the exception is not a blanket clock-domain cut or a fitted timing pass.
 
 ## Interaction and Member C
 
@@ -143,11 +149,13 @@ The public B/C contract remains version 2. The private BCTL/EBP1 debug schema is
 
 `completionDiscardCount` counts older processing completions discarded by newer-drop arbitration. It is distinct from dropped capture frames and overwritten pending reports. Word 94 low bits remain bit3 transport-fault history, bit2 candidate overflow, bit1 candidate error and bit0 candidate overrun. Schema 1 historical packets use the old word-95 interpretation and must not be silently interpreted as HSV.
 
-A configuration may change while an earlier frame is still being processed. Debug words 6/7 therefore describe that frame's bank-held profile; live status can already report a newer version. A negative-control bench exposed the former use of live values. The correction is merged and its production RTL passed 15 profile checks across nine accepted completions, followed by the affected integration regression. Current frame-profile hardware acceptance still requires a matching fitted/programmed build and fresh capture.
+A configuration may change while an earlier frame is still being processed. Debug words 6/7 therefore describe that frame's bank-held profile; live status can already report a newer version. A negative-control bench exposed the former use of live values. The correction is merged and its production RTL passed 15 profile checks across nine accepted completions, followed by the affected integration regression. Fresh board frame 225 verifies the binding at configuration 0; a successful real calibration/version transition remains unverified.
 
 A full image GRAB appends native frame binding and build identity as words 96/97. The host checks those against the 96-word payload, target report, programmed source and packet CRC before comparing the captured pixels with the explicitly selected colour/reader algorithms.
 
 The current QSF uses two parallel processors and `FITTER_EFFORT="AUTO FIT"`, as checked against the installed Quartus 18.1 help. Automatic effort may reduce additional optimisation once timing requirements are satisfied; it does not relax the SDC or make an incomplete fit acceptable. A prior 60-minute timeout under measured memory pressure is recorded separately from routing failure and timing failure.
+
+Build `0xab41e932` completed in 16 minutes 32 seconds, using 17,519 ALMs, 347/397 M10K blocks and 29/87 DSP blocks. Its worst four-corner setup/hold slacks are +3.205/+0.119 ns. [The 96-warning review](evidence/compiler_recovery/warning_review_ab41e932.json) accounts for all messages rather than suppressing them. Inherited PLL loss-of-lock recovery and default drive/slew settings remain explicit limitations.
 
 ## Requirements traceability
 

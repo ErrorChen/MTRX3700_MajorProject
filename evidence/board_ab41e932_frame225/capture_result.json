@@ -1,0 +1,2198 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "capture",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T15:15:10.316808+00:00",
+  "inputSource": "LIVE_CAMERA",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "d5e0ac1d4956a1070b254d8044858d053580ba009e62a7d32c5a894b1959013d",
+  "steps": [
+    {
+      "name": "jtag_targets",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\quartus\\bin64\\quartus_stp.exe",
+        "-t",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\tcl\\jtag_control.tcl",
+        "list"
+      ],
+      "returncode": 0,
+      "level": "CAMERA_HW",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\tcl\\jtag_control.tcl": "c0d8555b6f503c1bae912df27a7fd7178ebe66e62f284cec8f9fb3c91d85a962"
+      },
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 0.797,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\jtag_targets.log"
+    },
+    {
+      "name": "capture",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\quartus\\bin64\\quartus_stp.exe",
+        "-t",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\tcl\\grab_jtag.tcl",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\capture",
+        "--cable",
+        "DE-SoC [USB-1]",
+        "--device",
+        "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)",
+        "--python",
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "--mvfp",
+        "0x07"
+      ],
+      "returncode": 0,
+      "level": "CAMERA_HW",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\tcl\\grab_jtag.tcl": "7ff3afdd5e713704af01ec9db23cb725e87eeaa31c443c2bc6a98f927a741362"
+      },
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 4.125,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\capture.log"
+    },
+    {
+      "name": "pixel_reference",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\lib\\projective_reference.py",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\capture\\frame.png",
+        "--orientation",
+        "0",
+        "--red-min",
+        "48",
+        "--blue-min",
+        "32",
+        "--white-min",
+        "96",
+        "--max-spread",
+        "64",
+        "--colour-algorithm",
+        "1",
+        "--reader-algorithm",
+        "2",
+        "--source",
+        "RECORDED_CAMERA",
+        "--out",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\pixel_reference"
+      ],
+      "returncode": 0,
+      "level": "CAMERA_HW",
+      "scriptSha256": {
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tools\\lib\\projective_reference.py": "2b88236bd4f90d8fed742390dae2d0a6867b1cce9ddc50c6b318b77f15746d0a"
+      },
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 0.859,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\pixel_reference.log"
+    }
+  ],
+  "level": "CAMERA_HW",
+  "target": {
+    "cable": "DE-SoC [USB-1]",
+    "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)",
+    "index": 2
+  },
+  "snapshotTransaction": {
+    "schema": "echo7-snapshot-transaction-v1",
+    "mode": "fresh",
+    "verified": true,
+    "reason": "stable snapshot transaction; CRC and schema are checked separately",
+    "target": {
+      "cable": "DE-SoC [USB-1]",
+      "device": "@2: 5CSE(BA5|MA5)/5CSTFD5D5/.. (0x02D120DD)"
+    },
+    "requestBefore": {
+      "count": 0,
+      "ack": 0,
+      "busy": 0,
+      "ready": 0,
+      "mode": 0,
+      "source": 0
+    },
+    "requestedToggle": 1,
+    "accepted": {
+      "count": 1,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "readBefore": {
+      "count": 1,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "readAfter": {
+      "count": 1,
+      "ack": 1,
+      "busy": 0,
+      "ready": 1,
+      "mode": 0,
+      "source": 1
+    },
+    "startedHostMs": 1793632511571,
+    "acceptedHostMs": 1793632512772,
+    "readStartedHostMs": 1793632512967,
+    "readFinishedHostMs": 1793632514834,
+    "memoryWords": 77004
+  },
+  "snapshotTransactionValidation": {
+    "status": "PASS",
+    "fresh": true,
+    "countDelta": 1,
+    "snapshotCount": 1,
+    "hostObservedMs": 1793632512772,
+    "proof": "request toggle, changed GCTL count, matching ack and stable pre/post memory state",
+    "hostTimeMeaning": "Host transaction chronology only; not the FPGA capture timestamp"
+  },
+  "snapshot": {
+    "width": 320,
+    "height": 240,
+    "n_results": 98,
+    "crc": 28965,
+    "results": [
+      1161973809,
+      131074,
+      8945749,
+      225,
+      8902609,
+      8945749,
+      0,
+      12320,
+      2,
+      130,
+      393218,
+      0,
+      4,
+      1,
+      130023424,
+      1052674048,
+      460804,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      0,
+      2180972550,
+      4259969,
+      82,
+      0,
+      2197749851,
+      4718730,
+      9568494,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      251658496,
+      0,
+      0,
+      0,
+      3250585606,
+      12452072,
+      327753,
+      0,
+      3267362907,
+      15728914,
+      917578,
+      0,
+      1325400320,
+      4522113,
+      5767272,
+      0,
+      3300917350,
+      16056597,
+      5439632,
+      0,
+      3284140111,
+      12779757,
+      5439640,
+      0,
+      1325400320,
+      17236240,
+      12583110,
+      0,
+      1325401465,
+      16318745,
+      9830616,
+      0,
+      3317694573,
+      13107441,
+      10289382,
+      0,
+      15,
+      4,
+      0,
+      1,
+      2873223474,
+      118,
+      0,
+      16932928,
+      225,
+      2873223474
+    ]
+  },
+  "dumpSha256": "738bfe0710ba108e359b7ece8f75251efb702d8c756fb8517ab5e26db32c386f",
+  "packetType": "MEMBER_B",
+  "recognition": {
+    "schema": "EBP1",
+    "debugSchemaVersion": 2,
+    "contractVersion": 2,
+    "timeUs": 8945749,
+    "frameId": 225,
+    "captureStartUs": 8902609,
+    "completionUs": 8945749,
+    "configVersion": 0,
+    "orientationProfile": 0,
+    "redMinimum": 48,
+    "blueMinimum": 32,
+    "bufferDropCount": 2,
+    "redCandidateCount": 2,
+    "blueCandidateCount": 8,
+    "status": {
+      "speechArmed": 0,
+      "interactionId": 1,
+      "faultFlags": 3,
+      "eventOverflow": 0,
+      "reportDropCount": 0,
+      "activeCfgVersion": 0,
+      "perceptionReady": 1,
+      "audioReady": 0,
+      "calibrated": 0,
+      "state": 0,
+      "kind": 0,
+      "interactionBusy": 0
+    },
+    "targetReport": {
+      "reason": 1,
+      "quality": 0,
+      "boxHeight": 0,
+      "boxWidth": 0,
+      "centreV": 0,
+      "centreU": 0,
+      "targetSelected": 0,
+      "ambiguous": 0,
+      "locked": 0,
+      "observed": 0,
+      "frameGood": 1,
+      "bayId": 15,
+      "configVersion": 0,
+      "captureStartUs": 8902609,
+      "frameId": 225,
+      "requestTag": 0
+    },
+    "userEvent": {
+      "interactionId": 0,
+      "reason": 0,
+      "configVersion": 0,
+      "issuedAtUs": 0,
+      "quality": 0,
+      "bayId": 0,
+      "eventType": 0,
+      "eventId": 0
+    },
+    "activeRequest": {
+      "bayId": 15,
+      "requestTag": 0,
+      "operation": 0
+    },
+    "redSamples": 0,
+    "blueSamples": 0,
+    "markers": [
+      {
+        "index": 0,
+        "accepted": true,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 1,
+        "quality": 255,
+        "reason": 0,
+        "segments": 6,
+        "xMin": 65,
+        "xMax": 129,
+        "yMin": 0,
+        "yMax": 82
+      },
+      {
+        "index": 1,
+        "accepted": true,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 2,
+        "quality": 255,
+        "reason": 0,
+        "segments": 91,
+        "xMin": 72,
+        "xMax": 138,
+        "yMin": 146,
+        "yMax": 238
+      },
+      {
+        "index": 2,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 3,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 4,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 5,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 6,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 7,
+        "accepted": false,
+        "isBlue": false,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 0,
+        "xMax": 0,
+        "yMin": 0,
+        "yMax": 0
+      },
+      {
+        "index": 8,
+        "accepted": true,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 1,
+        "quality": 192,
+        "reason": 0,
+        "segments": 6,
+        "xMin": 190,
+        "xMax": 232,
+        "yMin": 5,
+        "yMax": 73
+      },
+      {
+        "index": 9,
+        "accepted": true,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 2,
+        "quality": 192,
+        "reason": 0,
+        "segments": 91,
+        "xMin": 240,
+        "xMax": 274,
+        "yMin": 14,
+        "yMax": 74
+      },
+      {
+        "index": 10,
+        "accepted": false,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 69,
+        "xMax": 129,
+        "yMin": 88,
+        "yMax": 104
+      },
+      {
+        "index": 11,
+        "accepted": true,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 4,
+        "quality": 192,
+        "reason": 0,
+        "segments": 102,
+        "xMin": 245,
+        "xMax": 277,
+        "yMin": 83,
+        "yMax": 144
+      },
+      {
+        "index": 12,
+        "accepted": true,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 3,
+        "quality": 192,
+        "reason": 0,
+        "segments": 79,
+        "xMin": 195,
+        "xMax": 237,
+        "yMin": 83,
+        "yMax": 152
+      },
+      {
+        "index": 13,
+        "accepted": false,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 1,
+        "segments": 0,
+        "xMin": 263,
+        "xMax": 272,
+        "yMin": 192,
+        "yMax": 198
+      },
+      {
+        "index": 14,
+        "accepted": false,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 15,
+        "quality": 0,
+        "reason": 5,
+        "segments": 121,
+        "xMin": 249,
+        "xMax": 281,
+        "yMin": 150,
+        "yMax": 216
+      },
+      {
+        "index": 15,
+        "accepted": true,
+        "isBlue": true,
+        "orientation": 0,
+        "digit": 5,
+        "quality": 192,
+        "reason": 0,
+        "segments": 109,
+        "xMin": 200,
+        "xMax": 241,
+        "yMin": 157,
+        "yMax": 230
+      }
+    ],
+    "calibrationSampleFrames": 4,
+    "reportValid": false,
+    "frameGood": true,
+    "allocationPeakRed": 6,
+    "allocationPeakBlue": 7,
+    "candidateOverflow": false,
+    "candidateError": false,
+    "candidateOverrun": false,
+    "transportFaultSticky": false,
+    "completionDiscardCount": 0,
+    "buildId": 2873223474,
+    "readerAlgorithm": 2,
+    "colourAlgorithm": 1,
+    "whiteMinimum": 96,
+    "whiteMaxSpread": 64,
+    "whiteMode": "QUARTER_WEIGHTED_LUMA",
+    "whiteThresholdExpression": "R+2*G+B >= 4*whiteMinimum",
+    "userEventValid": false,
+    "captureAgeAtSnapshotUs": 43140,
+    "processingLatencyUs": 43140,
+    "freshAtSnapshot": true,
+    "sameFrameVerified": true
+  },
+  "frameId": 225,
+  "fresh": true,
+  "glyphAgreement": {
+    "schema": "echo7-captured-glyph-check-v1",
+    "level": "CAMERA_HW_WITH_MODEL_COMPARISON",
+    "source": "RECORDED_CAMERA_SAME_FRAME",
+    "frameId": 225,
+    "readerAlgorithm": 2,
+    "comparedCandidateCount": 10,
+    "whiteMode": "QUARTER_WEIGHTED_LUMA",
+    "whiteMinimum": 96,
+    "whiteMaxSpread": 64,
+    "debugSchemaVersion": 2,
+    "colourAlgorithm": 1,
+    "status": "PASS",
+    "comparisons": [
+      {
+        "index": 0,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 0,
+          "accepted": true,
+          "isBlue": false,
+          "orientation": 0,
+          "digit": 1,
+          "quality": 255,
+          "reason": 0,
+          "segments": 6,
+          "xMin": 65,
+          "xMax": 129,
+          "yMin": 0,
+          "yMax": 82
+        },
+        "pixelReference": {
+          "colour": "red",
+          "bbox": [
+            65,
+            0,
+            129,
+            82
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 1,
+          "kind": "FUNCTION",
+          "quality": 255,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              65,
+              0
+            ],
+            [
+              124,
+              4
+            ],
+            [
+              129,
+              81
+            ],
+            [
+              68,
+              81
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "G": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "D": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "F": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "E": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "anchor": {
+              "white": 23,
+              "samples": 551,
+              "rows": 6,
+              "columns": 5,
+              "roi": [
+                54,
+                0,
+                82,
+                18
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 3,
+              "completedComponents": 2,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                68,
+                1,
+                72,
+                6
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "BC",
+          "foregroundCount": 4709,
+          "quadHalfPixels": [
+            [
+              129,
+              -1
+            ],
+            [
+              249,
+              7
+            ],
+            [
+              259,
+              163
+            ],
+            [
+              135,
+              163
+            ]
+          ],
+          "coefficients": [
+            2568288,
+            21024,
+            2495376,
+            161696,
+            3057664,
+            -19344,
+            992,
+            -704,
+            19344
+          ],
+          "crossProducts": [
+            18640,
+            19344,
+            20336,
+            19632
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            14464,
+            24436,
+            15376,
+            26932
+          ],
+          "areaPixels": 4872.0,
+          "touchesFrameBoundary": true,
+          "uniqueSourceSamples": 1280,
+          "minimumHorizontalEdgePixels": 60.13318551349163,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_00_projective"
+        }
+      },
+      {
+        "index": 1,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 1,
+          "accepted": true,
+          "isBlue": false,
+          "orientation": 0,
+          "digit": 2,
+          "quality": 255,
+          "reason": 0,
+          "segments": 91,
+          "xMin": 72,
+          "xMax": 138,
+          "yMin": 146,
+          "yMax": 238
+        },
+        "pixelReference": {
+          "colour": "red",
+          "bbox": [
+            72,
+            146,
+            138,
+            238
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 2,
+          "kind": "FUNCTION",
+          "quality": 255,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              72,
+              152
+            ],
+            [
+              133,
+              146
+            ],
+            [
+              138,
+              224
+            ],
+            [
+              78,
+              238
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "F": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "E": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "anchor": {
+              "white": 28,
+              "samples": 868,
+              "rows": 7,
+              "columns": 5,
+              "roi": [
+                60,
+                144,
+                90,
+                171
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 2,
+              "completedComponents": 2,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                76,
+                155,
+                80,
+                161
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "ABDEG",
+          "foregroundCount": 4468,
+          "quadHalfPixels": [
+            [
+              143,
+              303
+            ],
+            [
+              267,
+              291
+            ],
+            [
+              277,
+              449
+            ],
+            [
+              155,
+              477
+            ]
+          ],
+          "coefficients": [
+            2961080,
+            258852,
+            2796508,
+            349656,
+            3477156,
+            5925468,
+            2008,
+            156,
+            19556
+          ],
+          "crossProducts": [
+            19712,
+            19556,
+            21564,
+            21720
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            15520,
+            25064,
+            15668,
+            30420
+          ],
+          "areaPixels": 5159.5,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1280,
+          "minimumHorizontalEdgePixels": 62.289646009589745,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_01_projective"
+        }
+      },
+      {
+        "index": 8,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 8,
+          "accepted": true,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 1,
+          "quality": 192,
+          "reason": 0,
+          "segments": 6,
+          "xMin": 190,
+          "xMax": 232,
+          "yMin": 5,
+          "yMax": 73
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            190,
+            5,
+            232,
+            73
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 1,
+          "kind": "BAY",
+          "quality": 192,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              190,
+              5
+            ],
+            [
+              228,
+              12
+            ],
+            [
+              232,
+              73
+            ],
+            [
+              194,
+              72
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "G": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "D": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "F": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "E": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "anchor": {
+              "white": 11,
+              "samples": 462,
+              "rows": 4,
+              "columns": 3,
+              "roi": [
+                182,
+                0,
+                202,
+                21
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 2,
+              "completedComponents": 2,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                190,
+                9,
+                192,
+                12
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "BC",
+          "foregroundCount": 2375,
+          "quadHalfPixels": [
+            [
+              379,
+              9
+            ],
+            [
+              457,
+              23
+            ],
+            [
+              465,
+              147
+            ],
+            [
+              387,
+              145
+            ]
+          ],
+          "coefficients": [
+            1180920,
+            40096,
+            3659624,
+            156712,
+            1299296,
+            86904,
+            936,
+            -96,
+            9656
+          ],
+          "crossProducts": [
+            9560,
+            9656,
+            10592,
+            10496
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            6280,
+            15440,
+            6088,
+            18560
+          ],
+          "areaPixels": 2519.0,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1280,
+          "minimumHorizontalEdgePixels": 39.01281840626232,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_08_projective"
+        }
+      },
+      {
+        "index": 9,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 9,
+          "accepted": true,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 2,
+          "quality": 192,
+          "reason": 0,
+          "segments": 91,
+          "xMin": 240,
+          "xMax": 274,
+          "yMin": 14,
+          "yMax": 74
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            240,
+            14,
+            274,
+            74
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 2,
+          "kind": "BAY",
+          "quality": 192,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              240,
+              14
+            ],
+            [
+              268,
+              19
+            ],
+            [
+              274,
+              73
+            ],
+            [
+              244,
+              73
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "F": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "E": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "anchor": {
+              "white": 5,
+              "samples": 357,
+              "rows": 3,
+              "columns": 2,
+              "roi": [
+                233,
+                8,
+                249,
+                28
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 2,
+              "completedComponents": 2,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                239,
+                17,
+                240,
+                19
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "ABDEG",
+          "foregroundCount": 1373,
+          "quadHalfPixels": [
+            [
+              479,
+              27
+            ],
+            [
+              537,
+              37
+            ],
+            [
+              549,
+              147
+            ],
+            [
+              487,
+              147
+            ]
+          ],
+          "coefficients": [
+            728500,
+            -218160,
+            3266780,
+            91140,
+            736080,
+            184140,
+            620,
+            -560,
+            6820
+          ],
+          "crossProducts": [
+            6260,
+            6820,
+            7440,
+            6880
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            3464,
+            12244,
+            3844,
+            14464
+          ],
+          "areaPixels": 1712.5,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1204,
+          "minimumHorizontalEdgePixels": 29.427877939124322,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_09_projective"
+        }
+      },
+      {
+        "index": 10,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 10,
+          "accepted": false,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 15,
+          "quality": 0,
+          "reason": 1,
+          "segments": 0,
+          "xMin": 69,
+          "xMax": 129,
+          "yMin": 88,
+          "yMax": 104
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            69,
+            88,
+            129,
+            104
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": false,
+          "digit": null,
+          "kind": "UNKNOWN",
+          "quality": 0,
+          "orientationProfile": 0,
+          "reasonCode": 1,
+          "reasonName": "GEOMETRY",
+          "quad": null,
+          "windowScores": {},
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": ""
+        }
+      },
+      {
+        "index": 11,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 11,
+          "accepted": true,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 4,
+          "quality": 192,
+          "reason": 0,
+          "segments": 102,
+          "xMin": 245,
+          "xMax": 277,
+          "yMin": 83,
+          "yMax": 144
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            245,
+            83,
+            277,
+            144
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 4,
+          "kind": "BAY",
+          "quality": 192,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              245,
+              83
+            ],
+            [
+              274,
+              83
+            ],
+            [
+              277,
+              141
+            ],
+            [
+              248,
+              143
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 0,
+              "samples": 8,
+              "projectionBits": 0
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "F": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "E": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "anchor": {
+              "white": 11,
+              "samples": 323,
+              "rows": 4,
+              "columns": 3,
+              "roi": [
+                238,
+                78,
+                254,
+                96
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 2,
+              "completedComponents": 3,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                244,
+                86,
+                246,
+                89
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "BCFG",
+          "foregroundCount": 1485,
+          "quadHalfPixels": [
+            [
+              489,
+              165
+            ],
+            [
+              549,
+              165
+            ],
+            [
+              555,
+              283
+            ],
+            [
+              495,
+              287
+            ]
+          ],
+          "coefficients": [
+            558000,
+            30744,
+            3473856,
+            39600,
+            859800,
+            1172160,
+            240,
+            -24,
+            7104
+          ],
+          "crossProducts": [
+            7080,
+            7104,
+            7344,
+            7320
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            3600,
+            13960,
+            3616,
+            14920
+          ],
+          "areaPixels": 1803.0,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1205,
+          "minimumHorizontalEdgePixels": 30.0,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_11_projective"
+        }
+      },
+      {
+        "index": 12,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 12,
+          "accepted": true,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 3,
+          "quality": 192,
+          "reason": 0,
+          "segments": 79,
+          "xMin": 195,
+          "xMax": 237,
+          "yMin": 83,
+          "yMax": 152
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            195,
+            83,
+            237,
+            152
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 3,
+          "kind": "BAY",
+          "quality": 192,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              195,
+              83
+            ],
+            [
+              233,
+              83
+            ],
+            [
+              237,
+              147
+            ],
+            [
+              198,
+              151
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "B": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "C": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "F": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "E": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "anchor": {
+              "white": 16,
+              "samples": 420,
+              "rows": 5,
+              "columns": 4,
+              "roi": [
+                187,
+                78,
+                206,
+                98
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 3,
+              "completedComponents": 2,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                195,
+                86,
+                198,
+                90
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "ABCDG",
+          "foregroundCount": 2157,
+          "quadHalfPixels": [
+            [
+              389,
+              165
+            ],
+            [
+              467,
+              165
+            ],
+            [
+              475,
+              295
+            ],
+            [
+              395,
+              303
+            ]
+          ],
+          "coefficients": [
+            1107600,
+            -65196,
+            4070496,
+            102960,
+            1345860,
+            1726560,
+            624,
+            -324,
+            10464
+          ],
+          "crossProducts": [
+            10140,
+            10464,
+            11088,
+            10764
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            6084,
+            16964,
+            6464,
+            19080
+          ],
+          "areaPixels": 2653.5,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1280,
+          "minimumHorizontalEdgePixels": 39.0,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_12_projective"
+        }
+      },
+      {
+        "index": 13,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 13,
+          "accepted": false,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 15,
+          "quality": 0,
+          "reason": 1,
+          "segments": 0,
+          "xMin": 263,
+          "xMax": 272,
+          "yMin": 192,
+          "yMax": 198
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            263,
+            192,
+            272,
+            198
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": false,
+          "digit": null,
+          "kind": "UNKNOWN",
+          "quality": 0,
+          "orientationProfile": 0,
+          "reasonCode": 1,
+          "reasonName": "GEOMETRY",
+          "quad": null,
+          "windowScores": {},
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": ""
+        }
+      },
+      {
+        "index": 14,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 14,
+          "accepted": false,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 15,
+          "quality": 0,
+          "reason": 5,
+          "segments": 121,
+          "xMin": 249,
+          "xMax": 281,
+          "yMin": 150,
+          "yMax": 216
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            249,
+            150,
+            281,
+            216
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": false,
+          "digit": null,
+          "kind": "UNKNOWN",
+          "quality": 0,
+          "orientationProfile": 0,
+          "reasonCode": 5,
+          "reasonName": "UNKNOWN_PATTERN",
+          "quad": [
+            [
+              250,
+              154
+            ],
+            [
+              278,
+              150
+            ],
+            [
+              281,
+              205
+            ],
+            [
+              252,
+              216
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "B": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "C": {
+              "white": 1,
+              "samples": 7,
+              "projectionBits": 2
+            },
+            "F": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "E": {
+              "white": 6,
+              "samples": 7,
+              "projectionBits": 126
+            },
+            "anchor": {
+              "white": 8,
+              "samples": 336,
+              "rows": 4,
+              "columns": 2,
+              "roi": [
+                244,
+                148,
+                259,
+                168
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 3,
+              "completedComponents": 4,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                249,
+                157,
+                250,
+                160
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "ADEFG",
+          "foregroundCount": 1182,
+          "quadHalfPixels": [
+            [
+              499,
+              307
+            ],
+            [
+              557,
+              299
+            ],
+            [
+              563,
+              411
+            ],
+            [
+              503,
+              433
+            ]
+          ],
+          "coefficients": [
+            840788,
+            -127516,
+            3419148,
+            183188,
+            729988,
+            2103564,
+            796,
+            -308,
+            6852
+          ],
+          "crossProducts": [
+            6544,
+            6852,
+            7648,
+            7340
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            3428,
+            12580,
+            4084,
+            15892
+          ],
+          "areaPixels": 1774.0,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1207,
+          "minimumHorizontalEdgePixels": 29.274562336608895,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_14_projective"
+        }
+      },
+      {
+        "index": 15,
+        "match": true,
+        "differences": [],
+        "measured": {
+          "index": 15,
+          "accepted": true,
+          "isBlue": true,
+          "orientation": 0,
+          "digit": 5,
+          "quality": 192,
+          "reason": 0,
+          "segments": 109,
+          "xMin": 200,
+          "xMax": 241,
+          "yMin": 157,
+          "yMax": 230
+        },
+        "pixelReference": {
+          "colour": "blue",
+          "bbox": [
+            200,
+            157,
+            241,
+            230
+          ],
+          "readerAlgorithm": 2,
+          "colourAlgorithm": 1,
+          "accepted": true,
+          "digit": 5,
+          "kind": "BAY",
+          "quality": 192,
+          "orientationProfile": 0,
+          "reasonCode": 0,
+          "reasonName": "OK",
+          "quad": [
+            [
+              200,
+              163
+            ],
+            [
+              238,
+              157
+            ],
+            [
+              241,
+              219
+            ],
+            [
+              203,
+              230
+            ]
+          ],
+          "windowScores": {
+            "A": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "G": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "D": {
+              "white": 8,
+              "samples": 8,
+              "projectionBits": 255
+            },
+            "B": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "C": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "F": {
+              "white": 7,
+              "samples": 7,
+              "projectionBits": 127
+            },
+            "E": {
+              "white": 0,
+              "samples": 7,
+              "projectionBits": 0
+            },
+            "anchor": {
+              "white": 16,
+              "samples": 460,
+              "rows": 5,
+              "columns": 4,
+              "roi": [
+                192,
+                156,
+                211,
+                178
+              ],
+              "source": "NATIVE_LOCAL_CLOSED_COMPONENT",
+              "units": "native pixels/rows/columns",
+              "capacity": 8,
+              "peakActiveHandles": 3,
+              "completedComponents": 3,
+              "eligibleCount": 1,
+              "ambiguous": false,
+              "overflow": false,
+              "bbox": [
+                200,
+                165,
+                203,
+                169
+              ]
+            },
+            "upperHole": {
+              "white": 0,
+              "samples": 24
+            },
+            "lowerHole": {
+              "white": 0,
+              "samples": 24
+            }
+          },
+          "inputWhiteProfile": {
+            "mode": "WEIGHTED_LUMA",
+            "minimum": 96,
+            "maximumChannelSpread": 64,
+            "source": "FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION",
+            "sumWeights": [
+              1,
+              2,
+              1
+            ],
+            "sumMinimum": 384
+          },
+          "segments": "ACDFG",
+          "foregroundCount": 2118,
+          "quadHalfPixels": [
+            [
+              399,
+              325
+            ],
+            [
+              477,
+              313
+            ],
+            [
+              483,
+              439
+            ],
+            [
+              405,
+              461
+            ]
+          ],
+          "coefficients": [
+            1148940,
+            35460,
+            3974040,
+            124620,
+            1326900,
+            3237000,
+            780,
+            -60,
+            9960
+          ],
+          "crossProducts": [
+            9900,
+            9960,
+            10740,
+            10680
+          ],
+          "edgeSquaredHalfPixelUnits": [
+            6228,
+            15912,
+            6568,
+            18532
+          ],
+          "areaPixels": 2580.0,
+          "touchesFrameBoundary": false,
+          "uniqueSourceSamples": 1280,
+          "minimumHorizontalEdgePixels": 39.45883931389772,
+          "artifacts": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T151510_316808Z_capture\\glyph_check\\marker_15_projective"
+        }
+      }
+    ]
+  },
+  "programmingContext": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\device.json",
+  "nativeFrameComparison": {
+    "comparison": "NO_COMPARABLE_EPOCH",
+    "hostElapsedMs": null
+  },
+  "exitCode": 0,
+  "finishedUtc": "2026-11-02T15:15:16.816996+00:00"
+}

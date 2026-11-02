@@ -1,0 +1,41 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "build_isolation_regression",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T14:55:26.518305+00:00",
+  "inputSource": "NONE",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T145526_518305Z_build_isolation_regression",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "294558401c7cd31ee57fa299b4ab5157952f82fcf400d36623b0bb8268176361",
+  "steps": [
+    {
+      "name": "test_tools",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/python",
+        "-p",
+        "test_tools.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "level": "MODEL_TOOLING",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 6.532,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T145526_518305Z_build_isolation_regression\\test_tools.log"
+    }
+  ],
+  "level": "MODEL_TOOLING",
+  "exitCode": 0,
+  "sourceHashes": {
+    "tools/echo7.py": "294558401c7cd31ee57fa299b4ab5157952f82fcf400d36623b0bb8268176361",
+    "tests/python/test_tools.py": "8752903d6ed3dfaca14437bc1f182f024bce79233267d06341f0af6cbf6fbcca"
+  }
+}

@@ -1,0 +1,255 @@
+{
+  "schema": "echo7-full-build-warning-review-v1",
+  "buildId": "ab41e932",
+  "reportedCount": 96,
+  "countedMessages": 96,
+  "mapCount": 87,
+  "fitterCount": 8,
+  "staCount": 1,
+  "criticalWarningCount": 0,
+  "mapReview": "../map_warning_audit_e943678b.json",
+  "mapMessagesMatchPreviousReviewIgnoringSourcePath": true,
+  "newOrRepeatedLaterStageCategories": [
+    {
+      "codes": [
+        "UNNUMBERED_PLL_RST"
+      ],
+      "count": 1,
+      "classification": "KNOWN_PLL_RECOVERY_LIMITATION",
+      "finding": "The wrapper still ties video_pll.rst low. KEY0 resets downstream camera/logic but cannot restart a PLL that loses lock. This warning repeats the map-stage finding. Current configured operation and timing pass; arbitrary loss-of-lock recovery remains unverified.",
+      "references": [
+        "rtl/top/perceptionDemoTop.sv:46",
+        "rtl/common/video_pll.sv:59"
+      ]
+    },
+    {
+      "codes": [
+        "292013"
+      ],
+      "count": 1,
+      "classification": "LICENSED_OPTION_NOT_REQUIRED_FOR_THIS_FULL_BUILD",
+      "finding": "Lite emits a LogicLock subscription warning with the inherited top partition preservation settings. This full source build uses no authored LogicLock placement region, reaches successful fit, and does not claim incremental preservation or licensed optimisation.",
+      "references": [
+        "quartus/PartBDebug.qsf:201",
+        "quartus/PartBDebug.qsf:327"
+      ]
+    },
+    {
+      "codes": [
+        "15714"
+      ],
+      "count": 1,
+      "classification": "DEFAULT_IO_DRIVE_AND_SLEW_RECORDED",
+      "finding": "The detailed table lists missing drive-strength/slew assignments, not missing pad locations or I/O standards. Fitted output tables show the inherited defaults (16 mA, slew 1) for ordinary outputs; XCLK alone is explicitly 4 mA/slew 0. Pad locations and 3.3-V LVTTL remain assigned. This is an electrical-characterisation limit; no claim is made that defaults are optimal or that all output loads were measured.",
+      "pinCount": 95,
+      "pins": [
+        "LEDR[0]",
+        "LEDR[1]",
+        "VGA_CLK",
+        "VGA_HS",
+        "VGA_VS",
+        "VGA_BLANK_N",
+        "VGA_R[0]",
+        "VGA_R[1]",
+        "VGA_R[2]",
+        "VGA_R[3]",
+        "VGA_R[4]",
+        "VGA_R[5]",
+        "VGA_R[6]",
+        "VGA_R[7]",
+        "VGA_G[0]",
+        "VGA_G[1]",
+        "VGA_G[2]",
+        "VGA_G[3]",
+        "VGA_G[4]",
+        "VGA_G[5]",
+        "VGA_G[6]",
+        "VGA_G[7]",
+        "VGA_B[0]",
+        "VGA_B[1]",
+        "VGA_B[2]",
+        "VGA_B[3]",
+        "VGA_B[4]",
+        "VGA_B[5]",
+        "VGA_B[6]",
+        "VGA_B[7]",
+        "LEDR[2]",
+        "LEDR[8]",
+        "LEDR[3]",
+        "LEDR[4]",
+        "LEDR[5]",
+        "LEDR[6]",
+        "LEDR[7]",
+        "LEDR[9]",
+        "HEX0[0]",
+        "HEX0[1]",
+        "HEX0[2]",
+        "HEX0[3]",
+        "HEX0[4]",
+        "HEX0[5]",
+        "HEX0[6]",
+        "HEX1[0]",
+        "HEX1[1]",
+        "HEX1[2]",
+        "HEX1[3]",
+        "HEX1[4]",
+        "HEX1[5]",
+        "HEX1[6]",
+        "HEX2[0]",
+        "HEX2[1]",
+        "HEX2[2]",
+        "HEX2[3]",
+        "HEX2[4]",
+        "HEX2[5]",
+        "HEX2[6]",
+        "VGA_SYNC_N",
+        "GPIO_1[12]",
+        "GPIO_1[13]",
+        "GPIO_1[14]",
+        "GPIO_1[15]",
+        "GPIO_1[16]",
+        "GPIO_1[17]",
+        "GPIO_1[18]",
+        "GPIO_1[19]",
+        "GPIO_1[22]",
+        "GPIO_1[23]",
+        "GPIO_1[11]",
+        "GPIO_1[24]",
+        "GPIO_1[25]",
+        "GPIO_1[21]",
+        "GPIO_1[0]",
+        "GPIO_1[1]",
+        "GPIO_1[2]",
+        "GPIO_1[3]",
+        "GPIO_1[4]",
+        "GPIO_1[5]",
+        "GPIO_1[6]",
+        "GPIO_1[7]",
+        "GPIO_1[8]",
+        "GPIO_1[9]",
+        "GPIO_1[26]",
+        "GPIO_1[27]",
+        "GPIO_1[28]",
+        "GPIO_1[29]",
+        "GPIO_1[30]",
+        "GPIO_1[31]",
+        "GPIO_1[32]",
+        "GPIO_1[33]",
+        "GPIO_1[34]",
+        "GPIO_1[35]",
+        "GPIO_1[10]"
+      ],
+      "references": [
+        "quartus/PartBDebug.qsf:191",
+        "PartBDebug.fit.rpt:I/O Assignment Warnings",
+        "PartBDebug.fit.rpt:Output Pins"
+      ]
+    },
+    {
+      "codes": [
+        "177007"
+      ],
+      "count": 1,
+      "classification": "AUTOMATIC_PLL_COMPENSATION_REVIEWED",
+      "finding": "No particular PLL output was nominated for compensation. The fitted PLL uses Normal mode/global feedback with the intended 25 MHz and 10 MHz outputs. Both derived clocks are present and routed timing passes. No external zero-phase requirement between the video and camera outputs is claimed.",
+      "references": [
+        "rtl/common/video_pll.sv:43",
+        "PartBDebug.fit.rpt:PLL Usage Summary",
+        "recovery_timing.json"
+      ]
+    },
+    {
+      "codes": [
+        "16406",
+        "16407"
+      ],
+      "count": 2,
+      "classification": "PHYSICAL_CAMERA_PCLK_ROUTE_REVIEWED",
+      "finding": "The existing camera adapter returns PCLK on GPIO_1[21]/PIN_AJ24, which is not a dedicated global-clock input. Fitter routes it to CLKCTRL_G9. The physical pin cannot be changed without rewiring. Current PCLK input/register setup and hold pass the full routed four-corner gate; the warning is retained and no broad false path was added.",
+      "references": [
+        "quartus/PartBDebug.sdc:15",
+        "rtl/top/perceptionDemoTop.sv:57",
+        "recovery_18_1_PartBDebug.sta.summary"
+      ]
+    },
+    {
+      "codes": [
+        "332043"
+      ],
+      "count": 2,
+      "classification": "MATCHING_JTAG_CLOCK_REDECLARATION",
+      "finding": "Intel SLD embedded SDC creates altera_reserved_tck at 30 MHz; project SDC redeclares it as 33.333 ns in fit and STA. This is the same intended rate to the specified precision. The final netlist has one named JTAG clock, and its internal setup/hold/recovery/removal checks pass. The duplicate definition warning remains visible.",
+      "references": [
+        "quartus/PartBDebug.sdc:58",
+        "recovery_timing.json"
+      ]
+    },
+    {
+      "codes": [
+        "169064"
+      ],
+      "count": 1,
+      "classification": "INTENTIONAL_CAMERA_INOUT_AND_UNDRIVEN_CHASSIS_PINS",
+      "finding": "The shared 36-bit GPIO inout bus has 31 permanently disabled output enables and four permanently enabled camera outputs; SIO_D is the remaining open-drain bidirectional signal. This matches the no-motion wrapper. It is not permission to drive chassis pins.",
+      "disabledPins": [
+        "GPIO_1[12]",
+        "GPIO_1[13]",
+        "GPIO_1[14]",
+        "GPIO_1[15]",
+        "GPIO_1[16]",
+        "GPIO_1[17]",
+        "GPIO_1[18]",
+        "GPIO_1[19]",
+        "GPIO_1[22]",
+        "GPIO_1[23]",
+        "GPIO_1[21]",
+        "GPIO_1[0]",
+        "GPIO_1[1]",
+        "GPIO_1[2]",
+        "GPIO_1[3]",
+        "GPIO_1[4]",
+        "GPIO_1[5]",
+        "GPIO_1[6]",
+        "GPIO_1[7]",
+        "GPIO_1[8]",
+        "GPIO_1[9]",
+        "GPIO_1[26]",
+        "GPIO_1[27]",
+        "GPIO_1[28]",
+        "GPIO_1[29]",
+        "GPIO_1[30]",
+        "GPIO_1[31]",
+        "GPIO_1[32]",
+        "GPIO_1[33]",
+        "GPIO_1[34]",
+        "GPIO_1[35]"
+      ],
+      "enabledPins": [
+        "GPIO_1[11]",
+        "GPIO_1[20]",
+        "GPIO_1[25]",
+        "GPIO_1[10]"
+      ],
+      "references": [
+        "rtl/top/perceptionDemoTop.sv:34",
+        "rtl/top/perceptionDemoTop.sv:63"
+      ]
+    }
+  ],
+  "messages": [
+    "Warning: RST port on the PLL is not properly connected on instance video_pll:video_pll_u|altera_pll:altera_pll_i|general[0].gpll. The reset port on the PLL should be connected. If the PLL loses lock for any reason, you might need to manually reset the PLL in order to re-establish lock to the reference clock. File: c:/intelfpga_lite/18.1/quartus/libraries/megafunctions/altera_pll.v Line: 748",
+    "Warning (292013): Feature LogicLock is only available with a valid subscription license. You can purchase a software subscription to gain full access to this feature.",
+    "Warning (15714): Some pins have incomplete I/O assignments. Refer to the I/O Assignment Warnings report for details",
+    "Warning (177007): PLL(s) placed in location FRACTIONALPLL_X0_Y1_N0 do not have a PLL clock to compensate specified - the Fitter will attempt to compensate all PLL clocks",
+    "Warning (16406): 1 global input pin(s) will use non-dedicated clock routing",
+    "Warning (16407): Source REFCLK I/O is not placed onto a dedicated REFCLK input pin for global clock driver GPIO_1[21]~inputCLKENA0, placed at CLKCTRL_G9",
+    "Warning (332043): Overwriting existing clock: altera_reserved_tck",
+    "Warning (169064): Following 35 pins have no output enable or a GND or VCC output enable - later changes to this connectivity may change fitting results",
+    "Warning (332043): Overwriting existing clock: altera_reserved_tck"
+  ],
+  "routingResult": "PASS, peak interconnect 49%, average 23%; no old Warning16684 congestion message",
+  "limits": [
+    "Warnings were reviewed, not globally suppressed.",
+    "PLL loss-of-lock recovery, optimal I/O drive/slew and physical VGA monitor verification remain separate limits."
+  ]
+}

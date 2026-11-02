@@ -1,0 +1,29 @@
+COMMAND ["C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe", "-m", "unittest", "discover", "-s", "tests/python", "-p", "test_tools.py", "-v"]
+LOG_ENCODING cp936
+testBuildSnapshotCopiesOnlyHashedSourcesAndPreservesOriginalHeader (test_tools.BuildIsolationTests.testBuildSnapshotCopiesOnlyHashedSourcesAndPreservesOriginalHeader) ... ok
+testCompanionToolCannotFallBackToAnotherRelease (test_tools.BuildIsolationTests.testCompanionToolCannotFallBackToAnotherRelease) ... ok
+testFailedBuildRetainsWarningsAndUsesPrivateProject (test_tools.BuildIsolationTests.testFailedBuildRetainsWarningsAndUsesPrivateProject) ... ok
+testMixedInstallEnvironmentIsPinnedWithoutChangingParent (test_tools.BuildIsolationTests.testMixedInstallEnvironmentIsPinnedWithoutChangingParent) ... ok
+testSourceMutationDuringStagingIsRejected (test_tools.BuildIsolationTests.testSourceMutationDuringStagingIsRejected) ... ok
+testArmIsOnlyVisualOpcodeAndNeverANumberProposal (test_tools.DeferredAudioControlTests.testArmIsOnlyVisualOpcodeAndNeverANumberProposal) ... ok
+testRecordIsExplicitlyDeferred (test_tools.DeferredAudioControlTests.testRecordIsExplicitlyDeferred) ... ok
+testDiscardBeforeCurrentTargetReportStillFails (test_tools.HardwareDiagnosticGateTests.testDiscardBeforeCurrentTargetReportStillFails) ... ok
+testSaturatedDiscardCounterCannotProveNoNewDrops (test_tools.HardwareDiagnosticGateTests.testSaturatedDiscardCounterCannotProveNoNewDrops) ... ok
+testEqualWindowsTimestampsKeepEvidenceSeparate (test_tools.ProcessTimeoutTests.testEqualWindowsTimestampsKeepEvidenceSeparate) ... ok
+testNonzeroProcessKeepsCompleteOutputAndDoesNotShareLog (test_tools.ProcessTimeoutTests.testNonzeroProcessKeepsCompleteOutputAndDoesNotShareLog) ... ok
+testOwnedProcessTimeoutIsNonzeroAndRecorded (test_tools.ProcessTimeoutTests.testOwnedProcessTimeoutIsNonzeroAndRecorded) ... ok
+testRecordedBctlResponseParsesThroughRealCrLfSubprocess (test_tools.ProcessTimeoutTests.testRecordedBctlResponseParsesThroughRealCrLfSubprocess) ... ok
+testReturnedTextNormalisesNewlinesAndRawLogPreservesBytes (test_tools.ProcessTimeoutTests.testReturnedTextNormalisesNewlinesAndRawLogPreservesBytes) ... ok
+testSurvivingShortDescendantCannotHoldRunnerStdoutPipe (test_tools.ProcessTimeoutTests.testSurvivingShortDescendantCannotHoldRunnerStdoutPipe) ... ok
+testDecoderBadCrcIsNonzero (test_tools.TclFailurePropagationTests.testDecoderBadCrcIsNonzero) ... ok
+testTwoTargetsAreRejected (test_tools.TclFailurePropagationTests.testTwoTargetsAreRejected) ... ok
+testPostMapCannotQualifyFittedSynchroniserCoverage (test_tools.TimingGateTests.testPostMapCannotQualifyFittedSynchroniserCoverage) ... ok
+testRejectNegativeAndMissingTiming (test_tools.TimingGateTests.testRejectNegativeAndMissingTiming) ... ok
+testRejectUnconstrained (test_tools.TimingGateTests.testRejectUnconstrained) ... ok
+testVendorWarningsWithoutMessageNumbersAreRetained (test_tools.TimingGateTests.testVendorWarningsWithoutMessageNumbersAreRetained) ... ok
+testContourWriterCannotReplaceConnectedComponentVectors (test_tools.VectorNamespaceTests.testContourWriterCannotReplaceConnectedComponentVectors) ... ok
+
+----------------------------------------------------------------------
+Ran 22 tests in 6.230s
+
+OK

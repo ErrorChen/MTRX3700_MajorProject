@@ -1,0 +1,21 @@
+{
+  "queryWindowHours": 6,
+  "observedAtLocal": "2026-11-03T01:53:37.9510475+11:00",
+  "crash": {
+    "timeLocal": "2026-11-03T01:45:43.652+11:00",
+    "application": "C:/intelFPGA_lite/20.1/quartus/bin64/quartus.exe",
+    "module": "C:/intelFPGA_lite/20.1/quartus/bin64/QtCore4.dll",
+    "moduleVersion": "4.8.7.0",
+    "exception": "0xc000041d",
+    "faultOffset": "0x111f6b"
+  },
+  "eventIds": [
+    1001,
+    1001,
+    1000
+  ],
+  "fitterCrashEventsObserved": 0,
+  "resourceExhaustionEventsObserved": 0,
+  "werArchiveRead": "ACCESS_DENIED both ordinary and approved escalation; no ACL/policy changes attempted",
+  "sourceSha256": "9b643196d3e937562252239f2dcc18f7ee64b735a4bfb6c89ee2deaaa37a8ba7"
+}
