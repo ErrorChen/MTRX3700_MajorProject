@@ -1,0 +1,8 @@
+testAllRgb565WordsDecodeThreeIndependentPredicates (test_glyph_encoding.GlyphEncodingTests.testAllRgb565WordsDecodeThreeIndependentPredicates) ... ok
+testInvalidOverlapCannotSilentlyOverwriteColour (test_glyph_encoding.GlyphEncodingTests.testInvalidOverlapCannotSilentlyOverwriteColour) ... ok
+testMeasuredBoundaryAndHistoricalReader2RemainDistinct (test_glyph_encoding.GlyphEncodingTests.testMeasuredBoundaryAndHistoricalReader2RemainDistinct) ... ok
+
+----------------------------------------------------------------------
+Ran 3 tests in 0.147s
+
+OK

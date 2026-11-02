@@ -29,7 +29,8 @@ def paired(card, reference):
             and abs(bx0-x0)<=4 and abs(bx1-x1)<=4)
 
 
-def sample(image, redBox, blueBox):
+def sample(image, redBox, blueBox, samplerAlgorithm=2):
+    if samplerAlgorithm not in (1,2):raise ValueError('unsupported sampler algorithm')
     rgb=np.asarray(quantise565(image),dtype=np.int16)
     yy,xx=np.indices((240,320))
     x0,y0,x1,y1=redBox
@@ -46,7 +47,7 @@ def sample(image, redBox, blueBox):
         other=int(values[:,otherChannels].max())
         sy,sx=np.nonzero(mask)
         results[name]={'sampleCount':len(values),'channelMinimum':low,'channelMaximum':high,
-                       'otherChannelMaximum':other,'shadowMinimum':(low+high)>>2,
+                       'otherChannelMaximum':other,'shadowMinimum':low//2 if samplerAlgorithm==2 else (low+high)>>2,
                        'sampleBounds':[int(sx.min()),int(sy.min()),int(sx.max()),int(sy.max())],
                        'allRgbMinimum':values.min(axis=0).tolist(),'allRgbMaximum':values.max(axis=0).tolist(),
                        'meanRgb':values.mean(axis=0).tolist()}
@@ -55,7 +56,9 @@ def sample(image, redBox, blueBox):
         and red['channelMinimum']>=32 and blue['channelMinimum']>=24
         and all(item['channelMinimum']>item['otherChannelMaximum']+8
                 and item['channelMaximum']-item['channelMinimum']<=80
-                and item['otherChannelMaximum']<224 for item in (red,blue)))
+                and item['otherChannelMaximum']<224
+                and (samplerAlgorithm==1 or item['channelMaximum']<248) for item in (red,blue)))
+    results['samplerAlgorithm']=samplerAlgorithm
     return results
 
 
@@ -77,8 +80,10 @@ def audit(inputDirectory, outputDirectory):
         pairs=[(card['bbox'],blue['bbox']) for card in cards for blue in recognised['markers'] if blue['colour']=='blue' and paired(card['bbox'],blue['bbox'])]
         if len(pairs)!=1:raise AssertionError(f'Expected unique measured red1/reference pair, got {pairs}')
         currentPair=pairs[0]
-        samples=sample(image,*currentPair)
-        previousSamples=sample(image,*(heldPair or currentPair))
+        # This entry point reproduces the retained algorithm1 historical audit.
+        # New callers use sample(..., samplerAlgorithm=2) and new evidence IDs.
+        samples=sample(image,*currentPair,samplerAlgorithm=1)
+        previousSamples=sample(image,*(heldPair or currentPair),samplerAlgorithm=1)
         stationary=heldPair is None or all(abs(a-b)<=3 for current,previous in zip(currentPair,heldPair) for a,b in zip(current,previous))
         trials=[]
         for redMin,blueMin in [(64,32),(samples['red']['shadowMinimum'],samples['blue']['shadowMinimum'])]:

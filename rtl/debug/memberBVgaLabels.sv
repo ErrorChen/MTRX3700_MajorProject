@@ -26,7 +26,7 @@ module memberBVgaLabels #(
     logic [29:0] renderedData;
     logic [31:0] markerHeader,xWord,yWord;
     logic [6:0] digitSegments;
-    logic digitInk,labelRegion;
+    logic digitInk,labelRegion,typeInk;
     integer uMin,uMax,vMin,vMax,labelX,labelY,glyphX,glyphY;
     logic sourceFrameGood;
     logic [31:0] captureAge;
@@ -50,7 +50,7 @@ module memberBVgaLabels #(
         pixelY=inSop?9'd0:rasterY;
         renderedData=inData;
         markerHeader=0;xWord=0;yWord=0;digitSegments=0;
-        digitInk=0;labelRegion=0;
+        digitInk=0;labelRegion=0;typeInk=0;
         uMin=0;uMax=0;vMin=0;vMax=0;
         labelX=0;labelY=0;glyphX=0;glyphY=0;
         if(heldFrameGood && haveFrame && pixelX>=140 && pixelX<500) begin
@@ -65,17 +65,26 @@ module memberBVgaLabels #(
                     uMin<=uMax && vMin<=vMax && uMax<240 && vMax<320 && vMin>=0) begin
                     labelX=140+(uMin*3)/2+3;labelY=(vMin*3)/2+3;
                     glyphX=int'(pixelX)-labelX;glyphY=int'(pixelY)-labelY;
-                    labelRegion=glyphX>=0 && glyphX<8 && glyphY>=0 && glyphY<12;
+                    labelRegion=glyphX>=0 && glyphX<16 && glyphY>=0 && glyphY<12;
                     digitSegments=segmentsForDigit(markerHeader[27:24]);
                     if(labelRegion) begin
-                        digitInk=(digitSegments[0]&&glyphY==0&&glyphX>=1&&glyphX<=6)||
-                            (digitSegments[1]&&glyphX==7&&glyphY>=1&&glyphY<=4)||
-                            (digitSegments[2]&&glyphX==7&&glyphY>=6&&glyphY<=10)||
-                            (digitSegments[3]&&glyphY==11&&glyphX>=1&&glyphX<=6)||
-                            (digitSegments[4]&&glyphX==0&&glyphY>=6&&glyphY<=10)||
-                            (digitSegments[5]&&glyphX==0&&glyphY>=1&&glyphY<=4)||
-                            (digitSegments[6]&&glyphY==5&&glyphX>=1&&glyphX<=6);
-                        renderedData=digitInk?{10'h3ff,10'h3ff,10'h3ff}:30'd0;
+                        // The type letter is independent of the recognised
+                        // numeral. Red/blue backgrounds provide a second cue.
+                        typeInk=(glyphX==0&&glyphY>=1&&glyphY<=10)||
+                            ((glyphY==0||glyphY==5)&&glyphX>=0&&glyphX<=4)||
+                            (glyphX==5&&glyphY>=1&&glyphY<=4);
+                        if(markerHeader[30])typeInk=typeInk||
+                            (glyphY==11&&glyphX<=4&&glyphX>=0)||(glyphX==5&&glyphY>=6&&glyphY<=10);
+                        else typeInk=typeInk||(glyphY>=6&&glyphY<=10&&glyphX==glyphY-5);
+                        digitInk=(digitSegments[0]&&glyphY==0&&glyphX>=9&&glyphX<=14)||
+                            (digitSegments[1]&&glyphX==15&&glyphY>=1&&glyphY<=4)||
+                            (digitSegments[2]&&glyphX==15&&glyphY>=6&&glyphY<=10)||
+                            (digitSegments[3]&&glyphY==11&&glyphX>=9&&glyphX<=14)||
+                            (digitSegments[4]&&glyphX==8&&glyphY>=6&&glyphY<=10)||
+                            (digitSegments[5]&&glyphX==8&&glyphY>=1&&glyphY<=4)||
+                            (digitSegments[6]&&glyphY==5&&glyphX>=9&&glyphX<=14);
+                        renderedData=(digitInk||typeInk)?{10'h3ff,10'h3ff,10'h3ff}:
+                            markerHeader[30]?{10'd0,10'd128,10'd512}:{10'd512,10'd0,10'd0};
                     end
                 end
             end

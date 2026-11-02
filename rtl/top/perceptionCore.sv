@@ -42,17 +42,29 @@ module perceptionCore (
     logic [1:0] activeOrientation;
     logic [15:0] configVersion;
     wire [1:0] colourMask;
-    hsvColourGate colourGate (.rgb(rgb),.redMinimum(activeRedMinimum),
+    hsvColourGate #(.BLUE_HUE_UPPER(260)) colourGate (.rgb(rgb),.redMinimum(activeRedMinimum),
         .blueMinimum(activeBlueMinimum),.colourMask(colourMask));
-    // Reader algorithm 2 has a fixed camera-measured luma/spread white gate.
+    // Reader algorithm 4 preserves strict anchor connectivity, while admitting
+    // dim, unsaturated stroke pixels. Actual frame31285's lower-right stroke
+    // has luma 73..88 although its anchor is brighter. A global white-floor
+    // reduction joined anchor components to paper in earlier counterexamples.
     // This is NOT automatic white calibration: red/blue calibration never
     // changes the fixed threshold. R+2G+B spans 0..1020 and fits ten bits.
-    // Debug word95's white byte is quarter-luma units only for algorithm 2;
+    // Debug word95's white byte is quarter-luma units for algorithms 2/3/4;
     // historical algorithm 1 keeps its minimum-channel interpretation.
-    localparam int WHITE_LUMA_QUARTER=96;
+    localparam int WHITE_LUMA_QUARTER=84;
     wire [9:0] whiteLumaSum=r+(g<<1)+b;
-    wire whitePixel=whiteLumaSum>=10'(4*WHITE_LUMA_QUARTER)&&
-        r<=g+64&&g<=r+64&&r<=b+64&&b<=r+64&&g<=b+64&&b<=g+64;
+    wire [9:0] rgbMaximum=r>g?(r>b?r:b):(g>b?g:b);
+    wire [9:0] rgbMinimum=r<g?(r<b?r:b):(g<b?g:b);
+    wire whiteSpreadGood=rgbMaximum-rgbMinimum<=64;
+    wire strongWhitePixel=whiteSpreadGood&&whiteLumaSum>=10'd384;
+    // The weak branch has S<1/2, disjoint from colour S>=1/2. Retaining the
+    // strict branch as a union guarantees strongWhite is a subset of white.
+    // Exhaustive RGB565 checks also prove strictWhite/colour disjointness for
+    // colour algorithm2. Thus both predicates and raw colour still fit 2 bits.
+    wire whitePixel=strongWhitePixel||(whiteSpreadGood&&
+        whiteLumaSum>=10'(4*WHITE_LUMA_QUARTER-2)&&
+        ((rgbMaximum-rgbMinimum)<<1)<rgbMaximum);
     cameraStreamBridge cameraBridge (
         .pclk(pclk),.resetPclk(resetPclk),.frameStart(cameraFrameStart),
         .pixelValid(cameraPixelValid),.pixel(cameraPixel),.pixelX(cameraX),.pixelY(cameraY),
@@ -79,7 +91,7 @@ module perceptionCore (
     logic [3:0] redCount,blueCount,allocationPeakRed,allocationPeakBlue;
     logic candidateValid,candidateGood,candidateOverflow,candidateError,candidateOverrun;
     logic [15:0] candidateSequence;
-    boundedCandidates candidates (.clk(clk),.reset(reset||abandonAtSof),.in_valid(cleanValid),.in_sop(cleanSop),.in_eop(cleanEop),
+    boundedCandidates #(.PRUNE_UNUSABLE(1)) candidates (.clk(clk),.reset(reset||abandonAtSof),.in_valid(cleanValid),.in_sop(cleanSop),.in_eop(cleanEop),
         .in_mask(cleanMask),.in_x(cleanX),.in_y(cleanY),.red_candidates(redCandidates),.blue_candidates(blueCandidates),
         .red_count(redCount),.blue_count(blueCount),.out_valid(candidateValid),.frame_valid(candidateGood),
         .overflow(candidateOverflow),.red_overflow(),.blue_overflow(),.frame_error(candidateError),
@@ -101,18 +113,21 @@ module perceptionCore (
     // so that old packet cannot be attached to the new frame's metadata.
     assign abandonAtSof=sof&&haveWriteBank&&bankState[writeBank]==WRITING&&!candidateValid;
     logic [16:0] glyphAddress;
-    logic glyphWhite,glyphColour;
+    logic glyphWhite,glyphStrongWhite,glyphColour;
     markerArray_t markers,lastMarkers;
     logic [4:0] acceptedCount;
     logic observationValid;
     logic [15:0] bufferDropCount,reportDropCount;
     logic requestInvalidFault;
     glyphBanks glyphMemory (.clk(clk),.writeEnable(pixelValid&&haveWriteBank&&x<320&&y<240),
-        .writeBank(writeBank),.writeAddress(17'(y)*17'd320+17'(x)),.writeWhite(whitePixel),.writeColour(colourMask!=0),
-        .readBank(readBank),.readAddress(glyphAddress),.readWhite(glyphWhite),.readColour(glyphColour));
+        .writeBank(writeBank),.writeAddress(17'(y)*17'd320+17'(x)),.writeWhite(whitePixel),
+        .writeStrongWhite(strongWhitePixel),.writeColour(colourMask!=0),
+        .readBank(readBank),.readAddress(glyphAddress),.readWhite(glyphWhite),
+        .readStrongWhite(glyphStrongWhite),.readColour(glyphColour));
     projectiveMarkerReader reader (.clk(clk),.reset(reset),.start(readerStart),.redCandidates(bankRed[readBank]),
         .blueCandidates(bankBlue[readBank]),.orientationProfile(bankOrientation[readBank]),.busy(readerBusy),
-        .done(readerDone),.readAddress(glyphAddress),.readWhite(glyphWhite),.readColour(glyphColour),
+        .done(readerDone),.readAddress(glyphAddress),.readWhite(glyphWhite),
+        .readStrongWhite(glyphStrongWhite),.readColour(glyphColour),
         .markers(markers),.acceptedCount(acceptedCount));
     targetTracker tracker (.clk(clk),.reset(reset),.timeUs(timeUs),.activeCfgVersion(configVersion),
         .perceptionReady(status.perceptionReady),.targetRequest(targetRequest),.targetRequestValid(targetRequestValid),
@@ -217,6 +232,8 @@ module perceptionCore (
         endcase
     end
     logic collectEnable,calibrationAttempt,commitRequest,commitAck,calibrated,speechArmed,interactionBusy;
+    logic commitConsumed;
+    wire applyCommit=commitRequest&&!commitConsumed&&interactionEnable&&interactionPermit;
     logic [3:0] sampleCount;
     logic [15:0] interactionId;
     interactionKind_t interactionKind;
@@ -226,12 +243,19 @@ module perceptionCore (
     logic [16:0] redSamples,blueSamples;
     logic bankSampling[0:1],bankSampleGood[0:1];
     logic [7:0] bankSampleRedMin[0:1],bankSampleBlueMin[0:1];
+    logic [15:0] bankInteractionId[0:1];
+    logic [7:0] windowRedMaximum,windowBlueMaximum;
+    // Samples are accepted only by the collection window that requested them.
+    // A reader may finish an older bank after cancellation or another request.
+    wire currentSample=aggregateAccepted&&bankSampling[readBank]&&collectEnable&&
+        bankInteractionId[readBank]==interactionId&&
+        processedObservation.configVersion==configVersion;
     wire sampleGood=bankSampleGood[readBank]&&red1Paired&&processedObservation.frameGood&&
         stationary(pairRed,bankSampleRed[readBank])&&stationary(pairBlue,bankSampleBlue[readBank])&&
         (sampleCount==0||(int'(bankSampleRedMin[readBank])-int'(shadowRedMinimum)<=24&&
-        int'(shadowRedMinimum)-int'(bankSampleRedMin[readBank])<=24&&
+        int'(windowRedMaximum)-int'(bankSampleRedMin[readBank])<=24&&
         int'(bankSampleBlueMin[readBank])-int'(shadowBlueMinimum)<=24&&
-        int'(shadowBlueMinimum)-int'(bankSampleBlueMin[readBank])<=24));
+        int'(windowBlueMaximum)-int'(bankSampleBlueMin[readBank])<=24));
     colourSampler sampler (.clk(clk),.reset(reset),.sof(sof),.pixelValid(pixelValid),.eop(pixelEop),
         .collectEnable(collectEnable),.roiValid(roiValid),.x(x),.y(y),.rgb(rgb),.orientation(activeOrientation),
         .redBox(lastPairRed),.blueBox(lastPairBlue),.frameSampleGood(samplerGood),.redMinimum(sampleRedMinimum),
@@ -241,7 +265,7 @@ module perceptionCore (
         .permit(interactionPermit),.debugCalArm(debugCalArm),.debugSpeechArm(debugSpeechArm),
         .frameValid(aggregateAccepted),.frameGood(processedObservation.frameGood),.frameId(processedObservation.frameId),
         .configVersion(processedObservation.configVersion),.activeCfgVersion(configVersion),.red1Paired(red1Paired),
-        .red2Seen(red2Seen),.sampleResultValid(aggregateAccepted&&bankSampling[readBank]),.sampleGood(sampleGood),
+        .red2Seen(red2Seen),.sampleResultValid(currentSample),.sampleGood(sampleGood),
         .commitAck(commitAck),.commitVersion(configVersion),.collectEnable(collectEnable),.commitRequest(commitRequest),
         .calibrationAttempt(calibrationAttempt),.sampleCount(sampleCount),.calibrated(calibrated),.speechArmed(speechArmed),
         .busy(interactionBusy),.kind(interactionKind),.state(interactionState),.interactionId(interactionId),
@@ -255,43 +279,51 @@ module perceptionCore (
     logic [2:0] lastCandidateFaults;
     always_ff @(posedge clk) begin
         if(reset)begin
-            rowGuard<=0;activeRedMinimum<=48;activeBlueMinimum<=32;shadowRedMinimum<=255;shadowBlueMinimum<=255;
-            activeOrientation<=0;configVersion<=0;commitAck<=0;writeBank<=0;haveWriteBank<=0;readBank<=0;readerStart<=0;
+            rowGuard<=0;activeRedMinimum<=48;activeBlueMinimum<=20;shadowRedMinimum<=255;shadowBlueMinimum<=255;
+            windowRedMaximum<=0;windowBlueMaximum<=0;
+            activeOrientation<=0;configVersion<=0;commitAck<=0;commitConsumed<=0;writeBank<=0;haveWriteBank<=0;readBank<=0;readerStart<=0;
             observationValid<=0;observation<='0;captureMeta<='0;bufferDropCount<=0;faults<=0;haveFrame<=0;lastCompletionUs<=0;
             lastMarkers<='0;lastFrameId<=0;lastCaptureUs<=0;lastRedCount<=0;lastBlueCount<=0;roiValid<=0;
             lastPairRed<='0;lastPairBlue<='0;completedFrame<=0;completedFrameId<=0;lastFrameGood<=0;
             lastPeakRed<=0;lastPeakBlue<=0;lastCandidateFaults<=0;
             lastFrameConfigVersion<=0;lastFrameOrientation<=0;
-            lastFrameRedMinimum<=48;lastFrameBlueMinimum<=32;
+            lastFrameRedMinimum<=48;lastFrameBlueMinimum<=20;
             completionDiscardCount<=0;
             for(int i=0;i<2;i++)begin
                 bankState[i]<=FREE;bankMeta[i]<='0;bankRed[i]<='0;bankBlue[i]<='0;bankOrientation[i]<=0;
-                bankRedMinimum[i]<=48;bankBlueMinimum[i]<=32;
+                bankRedMinimum[i]<=48;bankBlueMinimum[i]<=20;
                 bankRedCount[i]<=0;bankBlueCount[i]<=0;bankPeakRed[i]<=0;bankPeakBlue[i]<=0;bankCandidateFaults[i]<=0;
                 bankSampling[i]<=0;bankSampleGood[i]<=0;bankSampleRedMin[i]<=0;bankSampleBlueMin[i]<=0;
+                bankInteractionId[i]<=0;
                 bankSampleRed[i]<='0;bankSampleBlue[i]<='0;
             end
         end else begin
             readerStart<=0;observationValid<=0;commitAck<=0;completedFrame<=0;
+            if(!commitRequest)commitConsumed<=0;
             if(rowGuard!=0)rowGuard<=rowGuard-9'd1;
             if(pixelValid&&x==319)rowGuard<=9'd334;
             if(transportFault)faults[FAULT_CAMERA_TRANSPORT]<=1;
             if(requestInvalidFault)faults[FAULT_REQUEST_INVALID]<=1;
-            if(calibrationAttempt)begin shadowRedMinimum<=255;shadowBlueMinimum<=255;end
-            if(aggregateAccepted&&bankSampling[readBank]&&sampleGood)begin
+            if(calibrationAttempt)begin
+                shadowRedMinimum<=255;shadowBlueMinimum<=255;
+                windowRedMaximum<=0;windowBlueMaximum<=0;
+            end
+            if(currentSample&&sampleGood&&!calibrationAttempt)begin
                 if(bankSampleRedMin[readBank]<shadowRedMinimum)shadowRedMinimum<=bankSampleRedMin[readBank];
                 if(bankSampleBlueMin[readBank]<shadowBlueMinimum)shadowBlueMinimum<=bankSampleBlueMin[readBank];
+                if(bankSampleRedMin[readBank]>windowRedMaximum)windowRedMaximum<=bankSampleRedMin[readBank];
+                if(bankSampleBlueMin[readBank]>windowBlueMaximum)windowBlueMaximum<=bankSampleBlueMin[readBank];
             end
             if(sof)begin
                 // Revoke already visible in the commit domain wins this edge.
-                if(commitRequest&&interactionEnable&&interactionPermit)begin
+                if(applyCommit)begin
                     activeRedMinimum<=shadowRedMinimum;activeBlueMinimum<=shadowBlueMinimum;
-                    configVersion<=configVersion+16'd1;commitAck<=1;
+                    configVersion<=configVersion+16'd1;commitAck<=1;commitConsumed<=1;
                 end else if(activeOrientation!=orientationProfile)configVersion<=configVersion+16'd1;
                 activeOrientation<=orientationProfile;captureMeta<='0;
                 captureMeta.boundRequest<=targetRequest_t'(streamData[71:50]);captureMeta.frameId<=streamData[49:34];
                 captureMeta.captureStartUs<=streamData[33:2];
-                captureMeta.configVersion<=configVersion+16'((commitRequest&&interactionEnable&&interactionPermit)||activeOrientation!=orientationProfile);
+                captureMeta.configVersion<=configVersion+16'(applyCommit||activeOrientation!=orientationProfile);
                 captureMeta.frameGood<=!streamData[78];
                 if(abandonAtSof)begin
                     // A new SOF without a completed candidate packet abandons
@@ -300,17 +332,19 @@ module perceptionCore (
                     observation<=captureMeta;observation.frameGood<=0;
                     observation.resourceDrop<=1;observationValid<=1;
                     bankOrientation[writeBank]<=orientationProfile;
-                    bankRedMinimum[writeBank]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowRedMinimum:activeRedMinimum;
-                    bankBlueMinimum[writeBank]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowBlueMinimum:activeBlueMinimum;
+                    bankRedMinimum[writeBank]<=applyCommit?shadowRedMinimum:activeRedMinimum;
+                    bankBlueMinimum[writeBank]<=applyCommit?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[writeBank]<=collectEnable;
+                    bankInteractionId[writeBank]<=interactionId;
                     if(bufferDropCount!=16'hffff)bufferDropCount<=bufferDropCount+16'd1;
                     faults[FAULT_CAMERA_TRANSPORT]<=1;
                 end else if(bankState[0]==FREE||bankState[1]==FREE)begin
                     writeBank<=bankState[0]==FREE?1'b0:1'b1;haveWriteBank<=1;
                     bankState[bankState[0]==FREE?0:1]<=WRITING;bankOrientation[bankState[0]==FREE?0:1]<=orientationProfile;
-                    bankRedMinimum[bankState[0]==FREE?0:1]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowRedMinimum:activeRedMinimum;
-                    bankBlueMinimum[bankState[0]==FREE?0:1]<=(commitRequest&&interactionEnable&&interactionPermit)?shadowBlueMinimum:activeBlueMinimum;
+                    bankRedMinimum[bankState[0]==FREE?0:1]<=applyCommit?shadowRedMinimum:activeRedMinimum;
+                    bankBlueMinimum[bankState[0]==FREE?0:1]<=applyCommit?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[bankState[0]==FREE?0:1]<=collectEnable;
+                    bankInteractionId[bankState[0]==FREE?0:1]<=interactionId;
                 end else begin
                     haveWriteBank<=0;captureMeta.resourceDrop<=1;
                     if(bufferDropCount!=16'hffff)bufferDropCount<=bufferDropCount+16'd1;
@@ -385,6 +419,6 @@ module perceptionCore (
         debugWords[91*32+:32]={31'd0,lastFrameGood};
         debugWords[93*32+:32]={24'd0,lastPeakBlue,lastPeakRed};
         debugWords[94*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
-        debugWords[95*32+:32]={8'd1,8'd2,8'(WHITE_LUMA_QUARTER),8'd64};
+        debugWords[95*32+:32]={8'd2,8'd4,8'(WHITE_LUMA_QUARTER),8'd64};
     end
 endmodule

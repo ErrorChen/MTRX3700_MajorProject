@@ -1,0 +1,71 @@
+{
+  "schema": "echo7-reader3-host-validation-v1",
+  "level": "MODEL_AND_VECTOR_GENERATION",
+  "status": "PASS",
+  "unitTests": {
+    "projective": 12,
+    "debugDecode": 11,
+    "glyphEncoding": 3
+  },
+  "pixelCases": 78,
+  "exhaustiveRgb565Values": 65536,
+  "algorithm3NativeAnchorRois": 212,
+  "newCaseIndices": {
+    "real_frame225": 75,
+    "frame225_C_erased": 76,
+    "frame225_wrong_orientation": 77
+  },
+  "algorithm3Vectors": "build/member_b/reader3_implementation/algorithm3_vectors",
+  "historical1": {
+    "readerAlgorithm": 1,
+    "status": "PASS",
+    "historicalCases": 63,
+    "originalHexFilesCompared": 454,
+    "differentFiles": [],
+    "addedStrongWhiteFiles": 63,
+    "strongEqualsHistoricalWhite": true
+  },
+  "historical2": {
+    "readerAlgorithm": 2,
+    "status": "PASS",
+    "retainedOriginalRun": "build\\member_b\\20261102T135055_875419Z_test\\vectors",
+    "currentExport": "build\\member_b\\reader3_implementation\\algorithm2_vectors",
+    "originalHexFilesCompared": 540,
+    "differentFiles": [],
+    "addedStrongWhiteFiles": 75,
+    "strongEqualsHistoricalWhite": true
+  },
+  "sourceSha256": {
+    "tools/lib/projective_reference.py": "9556b955a123df5d9de28a6257bffb22e590833f9d4b4f678e3bec934f8609a2",
+    "tools/lib/debug_decode.py": "0d64d034daede69f91488f904609ac43ea20d696861e53f9d1e3fcbe24733ac1",
+    "tools/lib/export_projective_vectors.py": "d6c67f25b80aad4bbfb4cf2624720fd7199db491e290019416091b7761fc3dfe",
+    "tests/python/test_projective.py": "4315421bb073adc7568139ca3bf0762f13de908985f7af3ea33de7d7b9aa8e38",
+    "tests/python/test_debug_decode.py": "c9c0e370b974d03be5600ec3a0602945a8fc7d22328c0c5a3e3a049775572455",
+    "tests/python/test_glyph_encoding.py": "2e948dc14506e9571579966ba4c59ed723b60011657bdd25591df4e629c99ecf",
+    "tools/lib/vision_reference.py": "77a3435bd91936688a9d1289065f72bb4df8cda5cde362a36c721a45a28c5fde",
+    "tools/lib/candidates_reclaimed_model.py": "8b55aaa6041f6d7c3a1c1378c3cfb9a87e4b80f2cc37c2cc8c977e7873a9d399"
+  },
+  "records": {
+    "model_result.json": "3dcc165f7892505b11a15bc49455cf209230c51deb2e1b3cb62fa8fd866cb3e7",
+    "projective_tests.log": "44dafb02d8b7420750577a640cc0ffec493bb5f3dda02ceddf1182343cb76806",
+    "debug_decode_tests.log": "d06a94d12833ab83af78a939f818b4d8791459026733b35e00853461c3eb0735",
+    "glyph_encoding_tests.log": "ae602b038ff12cc7eafcbd5fc5797df7be4f74e37afe16e111fe98b024d378bb",
+    "algorithm1_byte_compatibility.json": "4ff196dee4903e370f614be852d2d8de163569da1cd044c39979e7a983897c2d",
+    "algorithm2_byte_compatibility.json": "e2e211c7b283b6c25fe2c5a0ee596ba6d3ac115cc5dc75eb4a94972d27117f19"
+  },
+  "unresolvedCounterexample": {
+    "frameId": 10699,
+    "source": "evidence/candidate_pruning_inputs/frame10699.png",
+    "actualColourFloors": {
+      "red": 32,
+      "blue": 28
+    },
+    "result": "No candidate overflow after pruning, but blue6 is still fragmented and rejected. BlueFloor24 joins its bbox but C stroke remains absent under algorithm3. This result is not part of the78pass claim.",
+    "diagnostic": "build/member_b/frame225_white_analysis/actual10699_diagnostic/blue_floor_isolation.json"
+  },
+  "limits": [
+    "No claim of new algorithm3 RTL or hardware acceptance by this host task.",
+    "Historical reader1/2 semantics and original hex contents preserved; additional strong_white files duplicate each historical white file.",
+    "The half-LSB stroke rounding fixes measured frame225, not arbitrary lower illumination."
+  ]
+}

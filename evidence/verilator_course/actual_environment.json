@@ -1,0 +1,14 @@
+{
+  "schema": "echo7-verilator-course-v1",
+  "status": "ENVIRONMENT_BLOCKED",
+  "level": "RTL_SIM",
+  "requiredVersion": "5.050",
+  "maximumSeconds": 300,
+  "cleanBuild": true,
+  "scope": "Member B modules and perceptionCore pixel-to-report system; no chassis",
+  "tests": [],
+  "commands": [],
+  "error": "require Verilator 5.050, make and a C++ compiler in this shell; verilator=None, compiler=None, missing=['make']",
+  "elapsedSeconds": 0.016,
+  "exitCode": 2
+}

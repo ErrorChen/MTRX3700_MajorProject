@@ -29,7 +29,7 @@ module perceptionDemoTop #(
     input  wire        CLOCK_50,
     output wire [6:0] HEX0, HEX1, HEX2,
     input  wire [3:0]  KEY,
-    input  wire [4:0]  SW, // Reserved board inputs; debug control is versioned JTAG.
+    input  wire [4:0]  SW, // SW0: per-candidate samples; SW1: central sample ROI.
     output wire [9:0]  LEDR,
     inout  wire [35:0] GPIO_1,
     output wire        VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_N, VGA_SYNC_N,
@@ -52,6 +52,15 @@ module perceptionDemoTop #(
     always_ff @(posedge clk_25)   rs25    <= {rs25[0],    ~KEY[0] | ~pll_locked};
     always_ff @(posedge sccb_clk) rs_sccb <= {rs_sccb[0], ~KEY[0]};
     wire reset25 = rs25[1], reset_sccb = rs_sccb[1];
+    // Independent physical switch bits control display options only. Each bit
+    // crosses through two registers in the VGA domain; no multi-bit payload or
+    // camera configuration is conveyed by these asynchronous switches.
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
+    logic [1:0] switchMeta=0,switchSync=0;
+    always_ff @(posedge clk_25) begin
+        if(reset25) begin switchMeta<=0;switchSync<=0;end
+        else begin switchMeta<=SW[1:0];switchSync<=switchMeta;end
+    end
 
     // ---- the camera's pins ---------------------------------------------------------------------
     wire       cam_pclk  = GPIO_1[21];
@@ -165,6 +174,7 @@ module perceptionDemoTop #(
     logic overlaySop,overlayEop,overlayValid,overlayReady;
     memberBVgaOverlay overlay (
         .clk(clk_25),.reset(reset25),.debugWords(displayWords),
+        .showCandidates(switchSync[0]),.showCentre(switchSync[1]),
         .inData(st_data),.inSop(st_sop),.inEop(st_eop),.inValid(st_valid),.inReady(st_ready),
         .outData(overlayData),.outSop(overlaySop),.outEop(overlayEop),.outValid(overlayValid),.outReady(overlayReady));
     vga_sink vga_u (

@@ -26,7 +26,7 @@ class SynchroniserReportTests(unittest.TestCase):
     def testMissingChainFailsEvenWithLargeMtbfHeadline(self):
         result = validateSynchronisers(self.report, expectedSynchronisers())
         self.assertEqual(result["coverageStatus"], "FAIL")
-        self.assertEqual(len(result["errors"]), 54)
+        self.assertEqual(len(result["errors"]), len(expectedSynchronisers()) - 3)
 
     def testWrongSecondStageAndAutomaticIdentificationFail(self):
         changed = self.report.replace("readGraySync[0]", "readGraySync[1]")

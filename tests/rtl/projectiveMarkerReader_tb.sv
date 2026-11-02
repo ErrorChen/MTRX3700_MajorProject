@@ -7,13 +7,13 @@ module projectiveMarkerReader_tb;
     import vision_pkg::*;
     logic clk=0;
     always #10 clk=~clk;
-    logic reset=1,start=0,busy,done,readWhite,readColour;
+    logic reset=1,start=0,busy,done,readWhite,readStrongWhite,readColour;
     logic [1:0] orientationProfile;
     logic [16:0] readAddress;
     logic [4:0] acceptedCount;
     candidate_array_t redCandidates,blueCandidates;
     markerArray_t markers;
-    logic whiteBank[0:76799],colourBank[0:76799];
+    logic whiteBank[0:76799],strongWhiteBank[0:76799],colourBank[0:76799];
     logic [68:0] candidateWords[0:15];
     logic [31:0] expectedWords[0:15];
     logic [19:0] mapWords[0:20479];
@@ -35,6 +35,7 @@ module projectiveMarkerReader_tb;
     projectiveMarkerReader dut(.*);
     always_ff @(posedge clk)begin
         readWhite<=whiteBank[readAddress];
+        readStrongWhite<=strongWhiteBank[readAddress];
         readColour<=colourBank[readAddress];
     end
     always @(posedge clk)begin
@@ -79,6 +80,7 @@ module projectiveMarkerReader_tb;
         for(int vectorIndex=0;vectorIndex<countWord[0];vectorIndex++)begin
             currentVector=vectorIndex;
             filename=$sformatf("%s/projective_%0d_white.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,whiteBank);
+            filename=$sformatf("%s/projective_%0d_strong_white.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,strongWhiteBank);
             filename=$sformatf("%s/projective_%0d_colour.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,colourBank);
             filename=$sformatf("%s/projective_%0d_candidates.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,candidateWords);
             filename=$sformatf("%s/projective_%0d_expected.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,expectedWords);

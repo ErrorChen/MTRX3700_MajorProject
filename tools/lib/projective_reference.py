@@ -94,30 +94,64 @@ def projectionScores(white):
     return scores
 
 
-def whiteProfileFor(readerAlgorithm=2,whiteMin=None,maxSpread=64):
+def whiteProfileFor(readerAlgorithm=4,whiteMin=None,maxSpread=64):
     """Resolve explicit historical/new white-bank semantics, never relabel them.
 
-    Algorithm 1 reproduces the original minimum-channel threshold. Algorithm 2
-    is the measured fixed weighted-brightness profile; it is not calibrated by
-    the red/blue interaction. A mismatched hardware profile is a caller error.
+    Algorithms 1 and 2 retain their exact recorded semantics. Algorithm 3 rounds
+    weighted brightness only for strokes/holes; its native anchor still uses
+    the exact algorithm-2 floor, which preserves separation from the paper.
+    These fixed profiles are not calibrated by the red/blue interaction.
     """
-    if readerAlgorithm not in (1,2):raise ValueError('readerAlgorithm must be 1 or 2')
-    if whiteMin is None:whiteMin=112 if readerAlgorithm==1 else 96
+    if readerAlgorithm not in (1,2,3,4):raise ValueError('readerAlgorithm must be 1, 2, 3 or 4')
+    if whiteMin is None:whiteMin=112 if readerAlgorithm==1 else 84 if readerAlgorithm==4 else 96
     if not 0<=whiteMin<=255 or not 0<=maxSpread<=255:raise ValueError('White profile fields must be unsigned 8-bit')
-    if readerAlgorithm==2 and (whiteMin!=96 or maxSpread!=64):
-        raise ValueError('Reader algorithm 2 requires fixed weighted-luma minimum 96 and maximum channel spread 64')
-    profile={'mode':'MINIMUM_RGB_CHANNEL' if readerAlgorithm==1 else 'WEIGHTED_LUMA',
+    if readerAlgorithm in (2,3) and (whiteMin!=96 or maxSpread!=64):
+        raise ValueError(f'Reader algorithm {readerAlgorithm} requires fixed weighted-luma minimum 96 and maximum channel spread 64')
+    if readerAlgorithm==4 and (whiteMin!=84 or maxSpread!=64):
+        raise ValueError('Reader algorithm 4 requires weighted-luma minimum 84 and maximum channel spread 64')
+    profile={'mode':{1:'MINIMUM_RGB_CHANNEL',2:'WEIGHTED_LUMA',3:'ROUNDED_STROKES_STRICT_ANCHOR',4:'UNSATURATED_STROKES_STRICT_ANCHOR'}[readerAlgorithm],
         'minimum':whiteMin,'maximumChannelSpread':maxSpread,'source':'FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION'}
     if readerAlgorithm==2:profile.update(sumWeights=[1,2,1],sumMinimum=384)
+    if readerAlgorithm==3:profile.update(sumWeights=[1,2,1],sumMinimum=382,anchorSumMinimum=384,roundingBias=2)
+    if readerAlgorithm==4:profile.update(sumWeights=[1,2,1],sumMinimum=334,anchorSumMinimum=384,
+        anchorMinimum=96,roundingBias=2,weakSaturationNumerator=1,weakSaturationDenominator=2,
+        strongWhiteIncludedInStrokes=True)
     return profile
 
 
-def whitePixelsFor(array,profile):
-    """Boolean white bank from bit-replicated RGB565 samples; signed 16-bit math."""
+def whitePixelsFor(array,profile,*,anchor=False):
+    """White predicate from bit-replicated RGB565; signed 16-bit arithmetic.
+
+    The caller selects the native-anchor predicate explicitly. Array size and
+    expected digit never select a threshold. Historical profiles ignore this
+    selector because their anchor and stroke predicates were identical.
+    """
     source=np.asarray(array,dtype=np.int16)
+    sumMinimum=profile.get('anchorSumMinimum',profile.get('sumMinimum')) if anchor else profile.get('sumMinimum')
     intensity=(source.min(axis=2)>=profile['minimum']) if profile['mode']=='MINIMUM_RGB_CHANNEL' else (
-        source[:,:,0]+2*source[:,:,1]+source[:,:,2]>=profile['sumMinimum'])
-    return intensity&(np.ptp(source,axis=2)<=profile['maximumChannelSpread'])
+        source[:,:,0]+2*source[:,:,1]+source[:,:,2]>=sumMinimum)
+    spread=np.ptp(source,axis=2)
+    if profile['mode']=='UNSATURATED_STROKES_STRICT_ANCHOR' and not anchor:
+        # Keep strict white a subset of stroke white. The new dim branch is
+        # disjoint from the colour S>=1/2 predicate regardless of calibrated V.
+        strong=source[:,:,0]+2*source[:,:,1]+source[:,:,2]>=profile['anchorSumMinimum']
+        intensity=strong|(intensity&(2*spread<source.max(axis=2)))
+    return intensity&(spread<=profile['maximumChannelSpread'])
+
+
+def packedGlyphClasses(array,colourForeground,profile):
+    """Algorithm-3 two-bit storage oracle: 00 background, 01 colour, 10 weak
+    white, 11 strict white. RGB565/HSV mutual exclusion is exhaustively tested.
+    A future profile violating it fails explicitly instead of losing a bit.
+    """
+    if profile['mode'] not in ('ROUNDED_STROKES_STRICT_ANCHOR','UNSATURATED_STROKES_STRICT_ANCHOR'):
+        raise ValueError('Packed split-white classes require reader algorithm 3 or 4')
+    foreground=np.asarray(colourForeground,dtype=bool)
+    rounded=whitePixelsFor(array,profile)
+    strict=whitePixelsFor(array,profile,anchor=True)
+    if foreground.shape!=rounded.shape:raise ValueError('Colour/white shapes differ')
+    if np.any(foreground&rounded):raise ValueError('Colour and white overlap; two-bit encoding is not lossless')
+    return (rounded.astype(np.uint8)<<1)|strict.astype(np.uint8)|foreground.astype(np.uint8)
 
 
 def nativeAnchorScores(nativeWhite,quadHalfPixels,capacity=8):
@@ -168,11 +202,17 @@ def nativeAnchorScores(nativeWhite,quadHalfPixels,capacity=8):
     return result
 
 
-def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=1,readerAlgorithm=2):
+def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=None,readerAlgorithm=4):
+    if blueMin is None:blueMin=20 if readerAlgorithm==4 else 32
+    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm==4 else 1
     image=quantise565(image)
     if image.size!=(320,240):raise ValueError('Projective native frame must be 320x240')
     if orientation not in range(4):raise ValueError('orientation must be 0..3')
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
+    if readerAlgorithm==3 and colourAlgorithm!=1:
+        raise ValueError('Reader algorithm 3 packed glyph classes require HSV colour algorithm 1')
+    if readerAlgorithm==4 and colourAlgorithm!=2:
+        raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
     if any(not 0<=value<=255 for value in (redMin,blueMin)):raise ValueError('Thresholds must be unsigned 8-bit')
     bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
     result={**candidate,'readerAlgorithm':readerAlgorithm,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,'kind':'UNKNOWN','quality':0,
@@ -207,7 +247,7 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
     rectified=np.array([source[y,x] for x,y in addresses],dtype=np.int16).reshape(40,32,3)
     white=whitePixelsFor(rectified,profile)
     scores=projectionScores(white)
-    if readerAlgorithm==2:scores['anchor']=nativeAnchorScores(whitePixelsFor(source,profile),quad2)
+    if readerAlgorithm>=2:scores['anchor']=nativeAnchorScores(whitePixelsFor(source,profile,anchor=True),quad2)
     result['windowScores']=scores
     result['uniqueSourceSamples']=len(set(map(tuple,addresses)))
     result['minimumHorizontalEdgePixels']=math.sqrt(min(edgeSquared[0],edgeSquared[2]))/2
@@ -230,10 +270,10 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
         image.crop((x0,y0,x1+1,y1+1)).save(out/'native_crop.png')
         Image.fromarray(rectified.astype(np.uint8)).save(out/'rectified_rgb.png')
         Image.fromarray((white*255).astype(np.uint8)).save(out/'rectified_white.png')
-        if readerAlgorithm==2:
+        if readerAlgorithm>=2:
             ax0,ay0,ax1,ay1=scores['anchor']['roi']
             image.crop((ax0,ay0,ax1+1,ay1+1)).save(out/'native_anchor_rgb.png')
-            nativeWhite=whitePixelsFor(source,profile)
+            nativeWhite=whitePixelsFor(source,profile,anchor=True)
             Image.fromarray((nativeWhite[ay0:ay1+1,ax0:ax1+1]*255).astype(np.uint8)).save(out/'native_anchor_white.png')
         overlay=image.copy();draw=ImageDraw.Draw(overlay);draw.line(corners+[corners[0]],fill='yellow',width=1)
         for index,(x,y) in enumerate(corners):draw.text((x,y),str(index),fill='lime')
@@ -243,12 +283,20 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=32,whiteM
     return result
 
 
-def recogniseProjective(image,orientation=0,redMin=48,blueMin=32,whiteMin=None,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=1,readerAlgorithm=2):
+def recogniseProjective(image,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=None,readerAlgorithm=4):
+    if blueMin is None:blueMin=20 if readerAlgorithm==4 else 32
+    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm==4 else 1
     image=quantise565(image)
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
-    base=recognise(image,orientation=orientation,redMin=redMin,blueMin=blueMin,cleanup=cleanup,inputSource=inputSource,colourAlgorithm=colourAlgorithm)
+    if readerAlgorithm==3 and colourAlgorithm!=1:
+        raise ValueError('Reader algorithm 3 packed glyph classes require HSV colour algorithm 1')
+    if readerAlgorithm==4 and colourAlgorithm!=2:
+        raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
+    base=recognise(image,orientation=orientation,redMin=redMin,blueMin=blueMin,cleanup=cleanup,inputSource=inputSource,
+                   colourAlgorithm=colourAlgorithm,pruneUnusable=readerAlgorithm>=3)
     result={key:value for key,value in base.items() if key!='markers'}
-    result.update(schema='ECHO7_PROJECTIVE_MODEL_3',readerAlgorithm=readerAlgorithm,colourAlgorithm=colourAlgorithm,markers=[],whiteProfile=profile)
+    result.update(schema='ECHO7_PROJECTIVE_MODEL_5' if readerAlgorithm==4 else 'ECHO7_PROJECTIVE_MODEL_4' if readerAlgorithm==3 else 'ECHO7_PROJECTIVE_MODEL_3',
+                  readerAlgorithm=readerAlgorithm,colourAlgorithm=colourAlgorithm,markers=[],whiteProfile=profile)
     out=Path(output) if output else None
     if out:out.mkdir(parents=True,exist_ok=True)
     for index,candidate in enumerate(base['markers']):
@@ -265,10 +313,10 @@ def main():
     parser.add_argument('image',type=Path);parser.add_argument('--out',type=Path,required=True)
     parser.add_argument('--source',required=True,choices=('SYNTHETIC_REPLAY','RECORDED_CAMERA','PIXEL_COUNTERFACTUAL'))
     parser.add_argument('--orientation',type=int,choices=range(4),default=0)
-    parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,default=32)
-    parser.add_argument('--colour-algorithm',type=int,choices=(0,1),default=1,help='0=historical ratio; 1=HSV plus run3 candidate support')
-    parser.add_argument('--reader-algorithm',type=int,choices=(1,2),default=2)
-    parser.add_argument('--white-min',type=int,help='Default: algo1 min-RGB112; algo2 fixed weighted-luma96');parser.add_argument('--max-spread',type=int,default=64)
+    parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,help='Default: 20 for reader4; 32 for historical readers')
+    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2),help='Default: HSV2 for reader4; historical HSV1 for readers1-3')
+    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4),default=4)
+    parser.add_argument('--white-min',type=int,help='Fixed profiles: reader1 min-RGB112; reader2/3 luma96; reader4 dim unsaturated84/strict anchor96');parser.add_argument('--max-spread',type=int,default=64)
     args=parser.parse_args()
     result=recogniseProjective(Image.open(args.image),args.orientation,args.red_min,args.blue_min,args.white_min,args.max_spread,output=args.out,inputSource=args.source,colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm)
     print(json.dumps(result))

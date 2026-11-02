@@ -12,7 +12,7 @@ from pathlib import Path
 
 
 def expectedSynchronisers():
-    """Return the 57 actual first-stage -> second-stage register names."""
+    """Return the 59 required first-stage -> second-stage register names."""
     bridge = "perceptionCore:core|cameraStreamBridge:cameraBridge|"
     fifo = bridge + "asyncPixelFifo:fifo|"
     result = {}
@@ -25,6 +25,8 @@ def expectedSynchronisers():
         for stem in ["requestSync", "acknowledgeSync"]:
             result[instance + stem + "[0]"] = instance + stem + "[1]"
     result[bridge + "faultSync[0]"] = bridge + "faultSync[1]"
+    for bit in range(2):
+        result[f"switchMeta[{bit}]"] = f"switchSync[{bit}]"
     return result
 
 

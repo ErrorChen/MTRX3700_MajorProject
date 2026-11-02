@@ -81,7 +81,7 @@ module nativeAnchorReader_tb;
         for(int test=0;test<count[0];test++)begin
             currentCase=test;
             if(metadata[test*20]!=previousSource)begin
-                fileName=$sformatf("%s/projective_%0d_white.hex",inputs,metadata[test*20]);
+                fileName=$sformatf("%s/projective_%0d_strong_white.hex",inputs,metadata[test*20]);
                 $readmemh(fileName,whiteBank);previousSource=metadata[test*20];
             end
             for(int i=0;i<4;i++)begin pointX[i]=11'(metadata[test*20+1+2*i]);pointY[i]=11'(metadata[test*20+2+2*i]);end

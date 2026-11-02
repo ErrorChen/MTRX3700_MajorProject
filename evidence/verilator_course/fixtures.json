@@ -1,0 +1,50 @@
+[
+  {
+    "name": "pdf_full_page",
+    "inputSource": "SYNTHETIC_PIXEL_COUNTERFACTUAL",
+    "blueOneBbox": [
+      175,
+      22,
+      229,
+      82
+    ],
+    "files": {
+      "rgb565": {
+        "file": "continuous_0_rgb565.hex",
+        "sha256": "cabb6bc2ade2de13033e83bce1912ed974e6522ddcbf261122b9dafbd9ebb2cc"
+      },
+      "candidates": {
+        "file": "continuous_0_candidates.hex",
+        "sha256": "5f90905ad0043730019d1c9d64c44c8094fe1e848a835c73a8ae7aec9aaf25d8"
+      },
+      "expected": {
+        "file": "continuous_0_expected.hex",
+        "sha256": "8bc1f38c72f1b6caca640b2ec5502e1645b22ff04cafcafa6bebf9c249ca6215"
+      }
+    }
+  },
+  {
+    "name": "counterfactual_swapped",
+    "inputSource": "SYNTHETIC_PIXEL_COUNTERFACTUAL",
+    "blueOneBbox": [
+      240,
+      22,
+      294,
+      82
+    ],
+    "files": {
+      "rgb565": {
+        "file": "continuous_1_rgb565.hex",
+        "sha256": "2f02fd14e1252f7de70bdd921b09ce1b4a3b760bf5f9ab66d9ed877ed9ea1bb8"
+      },
+      "candidates": {
+        "file": "continuous_1_candidates.hex",
+        "sha256": "e2d1e34d01381d01b3d6b358059317f4c9e351690c5451c339d0a70e473b146a"
+      },
+      "expected": {
+        "file": "continuous_1_expected.hex",
+        "sha256": "0d44efb94a22dd99aa8674f09f39257b211e52766db4c0e9da60fe0857d99c57"
+      }
+    }
+  }
+]

@@ -1,0 +1,30 @@
+{
+  "layer": "MODEL_EXHAUSTIVE_RGB565",
+  "inputCount": 65536,
+  "bitReplication": true,
+  "colourAlgorithm": 1,
+  "redMinimum": 0,
+  "blueMinimum": 0,
+  "maxSpread": 64,
+  "strictWhiteSumMinimum": 384,
+  "roundedWhiteSumMinimum": 382,
+  "overlapWhiteAndColour": 0,
+  "codeCounts": {
+    "0": 48708,
+    "1": 10492,
+    "2": 56,
+    "3": 6280
+  },
+  "encoding": {
+    "0": "background",
+    "1": "raw red or blue foreground",
+    "2": "round-only white (sum382..383)",
+    "3": "strict white (sum>=384)"
+  },
+  "allDecodesExact": true,
+  "limits": [
+    "Only this RGB565 bit-replicated input domain and fixed HSV hue/saturation predicates were exhaustively tested.",
+    "Minima0 gives superset of all active 8bit red/blue floors; increasing floors cannot create white/colour overlap.",
+    "Future colour or white rule changes must rerun this invariant; no production implementation change made."
+  ]
+}

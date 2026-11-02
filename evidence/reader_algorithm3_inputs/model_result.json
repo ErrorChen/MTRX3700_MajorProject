@@ -1,0 +1,42 @@
+{
+  "level": "MODEL",
+  "status": "PASS",
+  "steps": [
+    {
+      "name": "projective",
+      "exitCode": 0,
+      "log": "projective_tests.log"
+    },
+    {
+      "name": "debug_decode",
+      "exitCode": 0,
+      "log": "debug_decode_tests.log"
+    },
+    {
+      "name": "glyph_encoding",
+      "exitCode": 0,
+      "log": "glyph_encoding_tests.log"
+    }
+  ],
+  "sourceSha256Before": {
+    "tools/lib/projective_reference.py": "9556b955a123df5d9de28a6257bffb22e590833f9d4b4f678e3bec934f8609a2",
+    "tools/lib/debug_decode.py": "0d64d034daede69f91488f904609ac43ea20d696861e53f9d1e3fcbe24733ac1",
+    "tools/lib/export_projective_vectors.py": "d6c67f25b80aad4bbfb4cf2624720fd7199db491e290019416091b7761fc3dfe",
+    "tests/python/test_projective.py": "4315421bb073adc7568139ca3bf0762f13de908985f7af3ea33de7d7b9aa8e38",
+    "tests/python/test_debug_decode.py": "c9c0e370b974d03be5600ec3a0602945a8fc7d22328c0c5a3e3a049775572455",
+    "tests/python/test_glyph_encoding.py": "2e948dc14506e9571579966ba4c59ed723b60011657bdd25591df4e629c99ecf",
+    "tools/lib/vision_reference.py": "77a3435bd91936688a9d1289065f72bb4df8cda5cde362a36c721a45a28c5fde",
+    "tools/lib/candidates_reclaimed_model.py": "8b55aaa6041f6d7c3a1c1378c3cfb9a87e4b80f2cc37c2cc8c977e7873a9d399"
+  },
+  "sourceSha256After": {
+    "tools/lib/projective_reference.py": "9556b955a123df5d9de28a6257bffb22e590833f9d4b4f678e3bec934f8609a2",
+    "tools/lib/debug_decode.py": "0d64d034daede69f91488f904609ac43ea20d696861e53f9d1e3fcbe24733ac1",
+    "tools/lib/export_projective_vectors.py": "d6c67f25b80aad4bbfb4cf2624720fd7199db491e290019416091b7761fc3dfe",
+    "tests/python/test_projective.py": "4315421bb073adc7568139ca3bf0762f13de908985f7af3ea33de7d7b9aa8e38",
+    "tests/python/test_debug_decode.py": "c9c0e370b974d03be5600ec3a0602945a8fc7d22328c0c5a3e3a049775572455",
+    "tests/python/test_glyph_encoding.py": "2e948dc14506e9571579966ba4c59ed723b60011657bdd25591df4e629c99ecf",
+    "tools/lib/vision_reference.py": "77a3435bd91936688a9d1289065f72bb4df8cda5cde362a36c721a45a28c5fde",
+    "tools/lib/candidates_reclaimed_model.py": "8b55aaa6041f6d7c3a1c1378c3cfb9a87e4b80f2cc37c2cc8c977e7873a9d399"
+  },
+  "sourceUnchanged": true
+}

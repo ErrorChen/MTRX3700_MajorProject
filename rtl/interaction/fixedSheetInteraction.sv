@@ -6,6 +6,7 @@ module fixedSheetInteraction #(
     parameter logic [31:0] WAIT_TIMEOUT_US=32'd2000000,
     parameter logic [31:0] SAMPLE_TIMEOUT_US=32'd3000000,
     parameter logic [31:0] COMMIT_TIMEOUT_US=32'd1000000,
+    parameter logic [31:0] RETRY_DELAY_US=32'd1000000,
     parameter int SAMPLE_FRAMES=8
 ) (
     input logic clk, reset,
@@ -30,6 +31,14 @@ module fixedSheetInteraction #(
 );
     import perception_pkg::*;
     logic attemptAllowed, haveFrame, haveSample;
+    // Only the initial, reset-started session retries automatically. A debug
+    // command takes ownership of a single explicit attempt; a successful
+    // session never recalibrates just because its red card remains visible.
+    logic automaticInitialisation, initialRetry, retryPending;
+    logic [31:0] retryStartUs;
+    logic haveAutoFailure;
+    eventType_t lastAutoFailureType;
+    eventReason_t lastAutoFailureReason;
     logic [1:0] red1Count, red2Count;
     logic [15:0] lastFrame, lastFrameConfig, lastSampleFrame;
     logic [31:0] stateStartUs;
@@ -64,16 +73,37 @@ module fixedSheetInteraction #(
     task automatic finishInteraction(input eventType_t eventType,
                                      input eventReason_t reason,
                                      input logic [15:0] version);
+        logic automaticFailure, mergeRepeatedFailure;
         begin
-            terminalEvent.eventId<=0; // assigned once, on actual FIFO insertion
-            terminalEvent.eventType<=eventType;
-            terminalEvent.bayId<=INVALID_BAY_ID;
-            terminalEvent.quality<=0;
-            terminalEvent.issuedAtUs<=timeUs;
-            terminalEvent.configVersion<=version;
-            terminalEvent.reason<=reason;
-            terminalEvent.interactionId<=interactionId;
-            state<=INTERACTION_RESULT_QUEUE;
+            automaticFailure=automaticInitialisation && !calibrated &&
+                eventType!=EVENT_CALIBRATION_DONE;
+            // Repeated automatic failures of exactly the same type/reason
+            // form one diagnostic episode. Its first failure is queued; later
+            // repetitions are coalesced before enqueue, never by overwriting
+            // an event already presented to C. interactionId still increments
+            // on every retry and sampleCount/state remain readable. A changed
+            // failure, cancellation and eventual success are always queued.
+            mergeRepeatedFailure=automaticFailure && haveAutoFailure &&
+                eventType!=EVENT_INTERACTION_CANCELLED &&
+                eventType==lastAutoFailureType && reason==lastAutoFailureReason;
+            if(automaticFailure) begin
+                initialRetry<=1;retryPending<=1;retryStartUs<=timeUs;
+                attemptAllowed<=0;red1Count<=0;haveFrame<=0;
+                haveAutoFailure<=eventType!=EVENT_INTERACTION_CANCELLED;
+                lastAutoFailureType<=eventType;lastAutoFailureReason<=reason;
+            end
+            if(mergeRepeatedFailure) state<=INTERACTION_IDLE;
+            else begin
+                terminalEvent.eventId<=0; // assigned once, on actual FIFO insertion
+                terminalEvent.eventType<=eventType;
+                terminalEvent.bayId<=INVALID_BAY_ID;
+                terminalEvent.quality<=0;
+                terminalEvent.issuedAtUs<=timeUs;
+                terminalEvent.configVersion<=version;
+                terminalEvent.reason<=reason;
+                terminalEvent.interactionId<=interactionId;
+                state<=INTERACTION_RESULT_QUEUE;
+            end
         end
     endtask
 
@@ -81,6 +111,9 @@ module fixedSheetInteraction #(
         if(reset) begin
             state<=INTERACTION_IDLE;calibrated<=0;speechArmed<=0;
             attemptAllowed<=1;haveFrame<=0;haveSample<=0;
+            automaticInitialisation<=1;initialRetry<=0;retryPending<=0;retryStartUs<=0;
+            haveAutoFailure<=0;lastAutoFailureType<=EVENT_CALIBRATION_FAILED;
+            lastAutoFailureReason<=REASON_OK;
             lastFrame<=0;lastFrameConfig<=0;lastSampleFrame<=0;
             red1Count<=0;red2Count<=0;sampleCount<=0;
             stateStartUs<=0;interactionId<=0;calibrationAttempt<=0;
@@ -110,9 +143,21 @@ module fixedSheetInteraction #(
                 else if(red2Count<3) red2Count<=red2Count+2'd1;
             end
             if(!enable) begin speechArmed<=0;red1Count<=0;red2Count<=0;end
+            // Unsigned subtraction permits timeUs wrap. Cooldown is idle, so
+            // it does not block visual observations or claim calibration busy.
+            // Discard all pre-cooldown/pre-permit red-card history: reopening
+            // requires three new consecutive, good frames of one configuration.
+            if(retryPending || (initialRetry && !permit)) begin
+                red1Count<=0;haveFrame<=0;
+            end
+            if(retryPending && state==INTERACTION_IDLE && enable && permit &&
+               timeUs-retryStartUs>=RETRY_DELAY_US) begin
+                retryPending<=0;attemptAllowed<=1;
+            end
             case(state)
                 INTERACTION_IDLE,INTERACTION_SPEECH_ARMED:begin
-                    if(enable && attemptAllowed && nextRed1Confirmed && !debugCalArm && !debugSpeechArm) begin
+                    if(enable && attemptAllowed && (!initialRetry || permit) &&
+                       nextRed1Confirmed && !debugCalArm && !debugSpeechArm) begin
                         if(eventCount<4) begin
                             attemptAllowed<=0;interactionId<=interactionId+16'd1;
                             calibrationAttempt<=1;sampleCount<=0;haveSample<=0;
@@ -126,6 +171,8 @@ module fixedSheetInteraction #(
                     // workflow and never supply a marker identity or sample value.
                     if(debugCalArm) begin
                         attemptAllowed<=1;speechArmed<=0;red1Count<=0;red2Count<=0;
+                        automaticInitialisation<=0;initialRetry<=0;retryPending<=0;
+                        haveAutoFailure<=0;haveFrame<=0;
                         state<=INTERACTION_IDLE;
                     end else if(debugSpeechArm) begin
                         speechArmed<=0;red2Count<=0;state<=INTERACTION_IDLE;
@@ -161,6 +208,7 @@ module fixedSheetInteraction #(
                 INTERACTION_CAL_COMMIT:begin
                     if(commitAck) begin
                         calibrated<=1;red2Count<=0;
+                        automaticInitialisation<=0;initialRetry<=0;retryPending<=0;
                         finishInteraction(EVENT_CALIBRATION_DONE,REASON_OK,commitVersion);
                     end else if(!enable || !permit)
                         finishInteraction(EVENT_INTERACTION_CANCELLED,

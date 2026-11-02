@@ -97,12 +97,52 @@ class DebugDecodeTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "reader algorithm"):
             decodeWords(words)
 
+    def testReader3ExplicitSplitThresholdsAndHistoricalIsolation(self):
+        words = fixture()[:96]
+        words[1] = 0x00020002
+        words[95] = (1 << 24) | (3 << 16) | (96 << 8) | 64
+        decoded = decodeWords(words)
+        self.assertEqual(decoded["readerAlgorithm"], 3)
+        self.assertEqual(decoded["whiteMode"], "ROUNDED_STROKES_STRICT_ANCHOR")
+        self.assertEqual(decoded["whiteThresholdExpression"], "R+2*G+B+2 >= 4*whiteMinimum")
+        self.assertEqual(decoded["whiteAnchorThresholdExpression"], "R+2*G+B >= 4*whiteMinimum")
+        self.assertTrue(decoded["candidateSizePruning"])
+        words[95] = (3 << 16) | (96 << 8) | 64
+        with self.assertRaisesRegex(ValueError, "HSV"):
+            decodeWords(words)
+        words[95] = (1 << 24) | (2 << 16) | (96 << 8) | 64
+        legacy = decodeWords(words)
+        self.assertEqual(legacy["whiteThresholdExpression"], "R+2*G+B >= 4*whiteMinimum")
+        self.assertNotIn("candidateSizePruning", legacy)
+        for white, spread in ((95, 64), (96, 63)):
+            words[95] = (1 << 24) | (3 << 16) | (white << 8) | spread
+            with self.assertRaisesRegex(ValueError, "weighted-luma"):
+                decodeWords(words)
+        words[95] = (1 << 24) | (5 << 16) | (96 << 8) | 64
+        with self.assertRaisesRegex(ValueError, "reader algorithm"):
+            decodeWords(words)
+
+    def testReader4WhiteAndColourProfilesAreExplicit(self):
+        words = fixture()[:96]
+        words[1] = 0x00020002
+        words[95] = (2 << 24) | (4 << 16) | (84 << 8) | 64
+        decoded = decodeWords(words)
+        self.assertEqual(decoded['readerAlgorithm'], 4)
+        self.assertEqual(decoded['colourAlgorithm'], 2)
+        self.assertEqual(decoded['whiteMode'], 'UNSATURATED_STROKES_STRICT_ANCHOR')
+        self.assertEqual(decoded['whiteAnchorMinimum'], 96)
+        self.assertEqual(decoded['whiteAnchorThresholdExpression'], 'R+2*G+B >= 384')
+        self.assertIn('2*(max(R,G,B)-min(R,G,B))', decoded['whiteThresholdExpression'])
+        for colour, minimum, spread in ((1, 84, 64), (2, 96, 64), (2, 84, 63)):
+            words[95] = (colour << 24) | (4 << 16) | (minimum << 8) | spread
+            with self.assertRaises(ValueError):decodeWords(words)
+
     def testPixelComparisonSelectsRecordedReaderAndExportsItsWhiteMask(self):
         from PIL import Image
         with tempfile.TemporaryDirectory(prefix="reader_semantics_") as folder:
             imagePath = Path(folder) / "pixel.png"
             Image.new("RGB", (320, 240), (80, 112, 80)).save(imagePath)
-            for algorithm, minimum, expectedWhite in ((1, 112, 0), (2, 96, 255)):
+            for algorithm, minimum, expectedWhite in ((1, 112, 0), (2, 96, 255), (3, 96, 255)):
                 words = fixture()[:96]
                 words[1] = 0x00020002
                 words[9] = 1
@@ -118,6 +158,26 @@ class DebugDecodeTests(unittest.TestCase):
                 self.assertEqual(model.call_args.args[5], minimum)
                 with Image.open(output / "marker_00_white.png") as mask:
                     self.assertEqual(mask.getpixel((0, 0)), expectedWhite)
+
+    def testReader3ExportsSeparateStrokeAndAnchorMasks(self):
+        from PIL import Image
+        with tempfile.TemporaryDirectory(prefix="split_white_") as folder:
+            imagePath = Path(folder) / "pixel.png"
+            # This exact RGB565 triplet was measured in real frame 225's C
+            # stroke: sum383 passes rounded strokes, but not strict anchors.
+            Image.new("RGB", (320, 240), (82, 93, 115)).save(imagePath)
+            words = fixture()[:96]
+            words[1] = 0x00020002; words[9] = 1; words[24] = 4 << 8
+            words[95] = (1 << 24) | (3 << 16) | (96 << 8) | 64
+            reference = {"accepted": False, "reasonCode": 4, "windowScores": {}, "segments": ""}
+            output = Path(folder) / "algorithm3"
+            with patch("projective_reference.classifyProjective", return_value=reference):
+                result = compareMarkerPixels(imagePath, decodeWords(words), output)
+            self.assertEqual(result["status"], "PASS")
+            with Image.open(output / "marker_00_white.png") as mask:
+                self.assertEqual(mask.getpixel((0, 0)), 255)
+            with Image.open(output / "marker_00_strong_white.png") as mask:
+                self.assertEqual(mask.getpixel((0, 0)), 0)
 
     def testWrongFrameAndBuildRejected(self):
         words = fixture()

@@ -1,0 +1,36 @@
+{
+  "schema": "echo7-course-r6-evidence-v1",
+  "R6": "ENVIRONMENT_BLOCKED",
+  "verilatorExecution": "NOT_EXECUTED",
+  "fiveMinuteCleanBuild": "NOT_MEASURED",
+  "hostRunnerChecks": "PASS_9_TESTS",
+  "shellSyntax": "PASS_GIT_BASH_5.2.32",
+  "shellMissingToolExitCode": 2,
+  "modelFixtures": "GENERATED_FROM_PIXELS",
+  "availableTools": {
+    "gitBash": "5.2.32",
+    "clionBundledGcc": "13.1.0",
+    "wslDistributions": [
+      {
+        "name": "docker-desktop",
+        "state": "Stopped",
+        "version": 2
+      }
+    ]
+  },
+  "blocker": "No available Verilator 5.050 or Linux development distribution; Docker was not started and nothing was installed.",
+  "resumeCommand": "bash run_all_tests.sh",
+  "environmentNeeded": "Verilator 5.050, make, a C++ compiler, Python 3 with NumPy and Pillow.",
+  "scope": "Member B only; system simulation is production perceptionCore with six alternating pixel frames, proper row idle budget and report backpressure. This is not whole-vehicle validation.",
+  "files": {
+    "tool_probes.json": "d3813b569d5ff746ec349c2f57c2fee2f65b26a7c6865adef51ff6a756366449",
+    "wsl_readonly_elevated.json": "ec216c6a2e02a64a7d9b7a4b71b55129add69e64e93c88689c5c5d8476532ac0",
+    "docker_probes.json": "b1570f3f14adb6dcb168895d58bdceafdcfd4406b8d183bd8ccefc54a7d77157",
+    "runner_checks.json": "1b10fb67164d965ef4757f47bbbe34cf349754b75a8cdc4fb4305255e5fe5b8f",
+    "host_tests.log": "63e6b974b926602683927bf3389b08ce9f97ecb5e487542ec5b37eba3b82997f",
+    "source_identity.json": "eedcac68191758d5b75faacc0bb0aa6a06a2a5b5623072cf2cdfec04201039bb",
+    "actual_environment.json": "6e074af53157371838b05f261c9e81bb47b98307df14325dbc268e057b074ab4",
+    "shell_entry.json": "5e090df10fa03300541e3e49a657bb9da3a45f26b2d3a9690fae3fd436b89c32",
+    "fixtures.json": "304e9b149ca0b92ed585a51fa4c18f2bcaba8a2471cebde3843d981fac24f17f"
+  }
+}

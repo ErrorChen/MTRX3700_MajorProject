@@ -48,12 +48,14 @@ def quantise565(image):
 
 
 def colourMask(image, redMin=64, blueMin=32, numerator=3, denominator=2, colourAlgorithm=0):
-    """Algorithm 0 preserves historical ratio segmentation; 1 is exact HSV.
+    """Algorithms 0/1 retain historical ratio/HSV pixel semantics.
 
     HSV H is in degrees, S >= 1/2. Red wraps through [-24,0], including pure
-    red H=0; blue is [200,250]. All comparisons use signed integer products.
+    red H=0; algorithm 1 blue is [200,250], algorithm 2 is [200,260].
+    The latter preserves measured dark blue gutters after RGB565 quantisation.
+    All comparisons use signed integer products; calibrated V is independent.
     """
-    if colourAlgorithm not in (0,1):raise ValueError('colourAlgorithm must be 0 or 1')
+    if colourAlgorithm not in (0,1,2):raise ValueError('colourAlgorithm must be 0, 1 or 2')
     values = []
     for red, green, blue in pixelsOf(image):
         if colourAlgorithm==0:
@@ -63,7 +65,8 @@ def colourMask(image, redMin=64, blueMin=32, numerator=3, denominator=2, colourA
             maximum=max(red,green,blue);delta=maximum-min(red,green,blue)
             saturated=delta>0 and 2*delta>=maximum
             redHit=saturated and red==maximum and red>=redMin and -24*delta<=60*(green-blue)<=0
-            blueHit=saturated and blue==maximum and blue>=blueMin and -40*delta<=60*(red-green)<=10*delta
+            blueUpper=10 if colourAlgorithm==1 else 20
+            blueHit=saturated and blue==maximum and blue>=blueMin and -40*delta<=60*(red-green)<=blueUpper*delta
         values.append(0 if redHit == blueHit else (1 if redHit else 2))
     return values
 
@@ -186,7 +189,7 @@ def classify(image, candidate, orientation=0, whiteMin=160):
     return result,crop,mask
 
 
-def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPECIFIED", redMin=64, blueMin=32, cleanup=False,whiteMin=160,colourAlgorithm=0):
+def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPECIFIED", redMin=64, blueMin=32, cleanup=False,whiteMin=160,colourAlgorithm=0,pruneUnusable=False):
     assert orientation in range(4)
     image = quantise565(image)
     width,height = image.size
@@ -202,11 +205,17 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
         from analyse_capture import cleanup as partACleanup
         from candidates_reclaimed_model import candidates_reclaimed
         candidateInput=np.array(rawMask,dtype=np.uint8).reshape(height,width)
-        if colourAlgorithm==1:candidateInput=horizontalRunSupport(candidateInput)
+        if colourAlgorithm in (1,2):candidateInput=horizontalRunSupport(candidateInput)
         cleaned = partACleanup(candidateInput)
         mask = cleaned.reshape(-1).tolist()
-        boundedOracle = candidates_reclaimed(cleaned.tolist(),cap=capacity,min_area=32)
+        boundedOracle = candidates_reclaimed(cleaned.tolist(),cap=capacity,min_area=32,prune_unusable=pruneUnusable)
     candidates,allCounts = components(mask,width,height)
+    beforeSizeCounts = {colour:sum(item["colour"] == colour for item in candidates) for colour in ("red","blue")}
+    if pruneUnusable:
+        from candidates_reclaimed_model import usable_candidate_size
+        candidates = [item for item in candidates if usable_candidate_size(
+            item["bbox"][2]-item["bbox"][0]+1,item["bbox"][3]-item["bbox"][1]+1,
+            1 if item["colour"] == "red" else 2)]
     counts = {colour:sum(item["colour"] == colour for item in candidates) for colour in ("red","blue")}
     overflow = any(count > capacity for count in counts.values()) or bool(boundedOracle and boundedOracle["overflow"])
     peak = {colour:max((sum(item["colour"] == colour and item["bbox"][1] <= y <= item["bbox"][3] for item in candidates) for y in range(height)),default=0) for colour in counts}
@@ -214,13 +223,18 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
               "imageSize":[width,height],"orientationProfile":orientation,"capacityPerColour":capacity,
               "colourProfile":{"redMin":redMin,"blueMin":blueMin,"colourAlgorithm":colourAlgorithm,
                    **({'ratioNumerator':3,'ratioDenominator':2} if colourAlgorithm==0 else
-                      {'redSignedHueDegrees':[-24,0],'blueHueDegrees':[200,250],'minimumSaturation':0.5,'horizontalRunSupport':3})},
+                      {'redSignedHueDegrees':[-24,0],'blueHueDegrees':[200,250 if colourAlgorithm==1 else 260],'minimumSaturation':0.5,'horizontalRunSupport':3})},
               "whiteProfile":{"minimum":whiteMin,"maximumChannelSpread":64,"source":"FIXED_MODEL_PARAMETER_NOT_AUTOMATIC_COLOUR_CALIBRATION"},
-              "cleanup":("RUN3_THEN_PART_A_CAUSAL_LEFT_OR_UPPER" if colourAlgorithm==1 else "PART_A_CAUSAL_RAW_LEFT_OR_UPPER") if cleanup else "NONE",
+              "cleanup":("RUN3_THEN_PART_A_CAUSAL_LEFT_OR_UPPER" if colourAlgorithm in (1,2) else "PART_A_CAUSAL_RAW_LEFT_OR_UPPER") if cleanup else "NONE",
               "boundedCandidateOracle":boundedOracle,
               "candidateCounts":counts,"allComponentsBeforeAreaGate":{"red":allCounts[1],"blue":allCounts[2]},
               "modelPeakOverlappingBboxes":peak,"overflow":overflow,"frameGood":not overflow,
               "capacityBoundary":"Independent BFS; counts do not prove streaming active-label or row-scheduling bounds", "markers":[]}
+    if pruneUnusable:
+        result["candidateSizePruning"] = {"enabled":True,"beforeSizeGate":beforeSizeCounts,
+            "rejected":{colour:beforeSizeCounts[colour]-counts[colour] for colour in counts},
+            "redMinimumDimensions":[24,24],"blueMinimumLongShortDimensions":[20,3],
+            "scope":"Retired components only; active handles and overflow remain unpruned"}
     outPath = Path(output) if output else None
     if outPath: outPath.mkdir(parents=True,exist_ok=True)
     overlay = image.copy()

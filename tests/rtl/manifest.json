@@ -77,6 +77,9 @@
       "name": "memberBVgaOverlay_tb",
       "passMarker": "PASS memberBVgaOverlay_tb",
       "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/debug/memberBVgaContour.sv",
         "rtl/debug/memberBVgaLabels.sv",
@@ -282,6 +285,9 @@
       "name": "vgaMapping_tb",
       "passMarker": "PASS vgaMapping_tb",
       "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
         "rtl/common/camera_pkg.sv",
         "rtl/display/camera_display.sv",
         "rtl/vision/hsvColourGate.sv",
@@ -313,6 +319,75 @@
       ],
       "timeoutSeconds": 120,
       "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_NATIVE_ROI_REPLAY"
+    },
+    {
+      "name": "boundedCandidatesPruning_tb",
+      "passMarker": "PASS boundedCandidatesPruning_tb:",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "tests/rtl/boundedCandidatesPruning_tb.sv"
+      ]
+    },
+    {
+      "name": "glyphBanks_tb",
+      "passMarker": "PASS glyphBanks_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/glyphBanks.sv",
+        "tests/rtl/glyphBanks_tb.sv"
+      ]
+    },
+    {
+      "name": "perceptionCoreCalibration_tb",
+      "passMarker": "PASS perceptionCoreCalibration_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreCalibration_tb.sv"
+      ],
+      "timeoutSeconds": 60,
+      "inputSource": "PROTOCOL_CALIBRATION_OWNERSHIP_AND_COMMIT_INJECTION"
+    },
+    {
+      "name": "memberBVgaHsv_tb",
+      "passMarker": "PASS memberBVgaHsv_tb",
+      "sources": [
+        "rtl/debug/memberBVgaHsv.sv",
+        "tests/rtl/memberBVgaHsv_tb.sv"
+      ],
+      "timeoutSeconds": 120,
+      "inputSource": "SYNTHETIC_DISPLAY_RGB_AND_BACKPRESSURE"
+    },
+    {
+      "name": "memberBVgaDiagnostics_tb",
+      "passMarker": "PASS memberBVgaDiagnostics_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
+        "tests/rtl/memberBVgaDiagnostics_tb.sv"
+      ],
+      "timeoutSeconds": 180,
+      "inputSource": "SYNTHETIC_DISPLAY_RGB_AND_BACKPRESSURE"
     }
   ]
 }

@@ -1,0 +1,12 @@
+COMMAND ["C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe", "-m", "unittest", "discover", "-s", "tests/python", "-p", "test_candidate_pruning.py", "-v"]
+LOG_ENCODING cp936
+testActiveOverflowIsNeverFiltered (test_candidate_pruning.CandidatePruningTests.testActiveOverflowIsNeverFiltered) ... ok
+testRealNinthCandidateStillOverflows (test_candidate_pruning.CandidatePruningTests.testRealNinthCandidateStillOverflows) ... ok
+testRecordedFrame10699UsesCapturedProfileAndPreservesRetainedBoxes (test_candidate_pruning.CandidatePruningTests.testRecordedFrame10699UsesCapturedProfileAndPreservesRetainedBoxes) ... ok
+testReferenceAndMainSizeBoundaries (test_candidate_pruning.CandidatePruningTests.testReferenceAndMainSizeBoundaries) ... ok
+testRetiredFragmentsCannotExhaustCompletedPool (test_candidate_pruning.CandidatePruningTests.testRetiredFragmentsCannotExhaustCompletedPool) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.657s
+
+OK

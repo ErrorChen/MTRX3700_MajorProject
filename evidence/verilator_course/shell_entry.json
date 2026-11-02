@@ -1,0 +1,7 @@
+{
+  "level": "HOST_ENTRY",
+  "returnCode": 2,
+  "expectedReturnCode": 2,
+  "status": "PASS",
+  "R6": "ENVIRONMENT_BLOCKED"
+}

@@ -1,0 +1,84 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "candidate_pruning_legacy_rtl",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T15:28:30.729753+00:00",
+  "inputSource": "PREVIOUS_UNCHANGED_26_CASE_CANDIDATE_VECTORS",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "d5e0ac1d4956a1070b254d8044858d053580ba009e62a7d32c5a894b1959013d",
+  "steps": [
+    {
+      "name": "vlib",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlib.exe",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\simlib"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 0.063,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\vlib.log"
+    },
+    {
+      "name": "compile",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vlog.exe",
+        "-sv",
+        "-work",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\simlib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\rtl\\vision\\candidate_pkg.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\rtl\\vision\\boundedCandidates.sv",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\tests\\rtl\\boundedCandidates_tb.sv"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 0.156,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\compile.log"
+    },
+    {
+      "name": "simulate",
+      "command": [
+        "C:\\intelFPGA_lite\\18.1\\modelsim_ase\\win32aloem\\vsim.exe",
+        "-c",
+        "-onfinish",
+        "exit",
+        "-lib",
+        "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\simlib",
+        "boundedCandidates_tb",
+        "+VECTORS=C:/intelFPGA_lite/MTRX3700/major/build/member_b/20261102T135055_875419Z_test/vectors",
+        "-do",
+        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"
+      ],
+      "returncode": 0,
+      "level": "RTL_SIM",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 40.719,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152830_729753Z_candidate_pruning_legacy_rtl\\simulate.log"
+    }
+  ],
+  "level": "RTL_SIM",
+  "sourceHashes": {
+    "rtl/vision/candidate_pkg.sv": "5c9e7629e13e4cc1ccaa04ac4aba488e56959436288996fe3c828121e424c2ee",
+    "rtl/vision/boundedCandidates.sv": "eb35ba96573ce9fbe9a8400feea3f3a719aab9ae0a0f5355065b81200b2197d3",
+    "tests/rtl/boundedCandidates_tb.sv": "acbeb739d153b3a4bd35446cfcb9fe91d297011c708ff1936d0ef2efc7bfd3f8"
+  },
+  "vectors": {
+    "masks.hex": "f7eef30da9a39d1b5cb2b4f8a84429cce8c0359a11e5d971c8b6b99ad64a8a85",
+    "expected.hex": "7747e4b2738484faf1f0d8afa059644eb57172f6944f347c362b41f18732a2ae"
+  },
+  "exitCode": 0
+}

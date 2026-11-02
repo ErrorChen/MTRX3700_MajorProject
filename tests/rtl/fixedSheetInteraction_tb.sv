@@ -19,7 +19,8 @@ module fixedSheetInteraction_tb;
     logic userEventValid,userEventReady=1;
     integer attempts=0,eventTotal=0;
     userEvent_t events[0:31];
-    fixedSheetInteraction #(.WAIT_TIMEOUT_US(100),.SAMPLE_TIMEOUT_US(100),.COMMIT_TIMEOUT_US(100)) dut(.*);
+    fixedSheetInteraction #(.WAIT_TIMEOUT_US(100),.SAMPLE_TIMEOUT_US(100),.COMMIT_TIMEOUT_US(100),
+        .RETRY_DELAY_US(40)) dut(.*);
     always @(posedge clk) begin
         if(!reset) begin
             if(calibrationAttempt) attempts++;
@@ -53,6 +54,32 @@ module fixedSheetInteraction_tb;
     endtask
     task automatic flushEvent;
         repeat(4) tick();
+    endtask
+    task automatic restart(input logic [31:0] startUs);
+        @(negedge clk);reset=1;
+        frameValid=0;sampleResultValid=0;commitAck=0;debugCalArm=0;debugSpeechArm=0;
+        enable=1;permit=1;frameGood=1;red1Paired=1;red2Seen=1;sampleGood=1;
+        userEventReady=1;frameId=0;configVersion=0;activeCfgVersion=0;commitVersion=0;
+        timeUs=startUs;
+        repeat(2) tick();
+        @(negedge clk);reset=0;attempts=0;eventTotal=0;
+    endtask
+    task automatic badSample;
+        @(negedge clk);sampleGood=0;
+        frame(1);
+        @(negedge clk);sampleGood=1;
+        flushEvent();
+    endtask
+    task automatic finishCommit;
+        @(negedge clk);activeCfgVersion=activeCfgVersion+1;
+        configVersion=activeCfgVersion;commitVersion=activeCfgVersion;commitAck=1;
+        tick();
+        if(commitRequest) $fatal(1,"acknowledged request remained asserted");
+        // An acknowledgement may remain asserted for more than one cycle.
+        // The interaction must consume it once and queue one success only.
+        repeat(3) begin tick();if(commitRequest) $fatal(1,"duplicate commit request after ack");end
+        @(negedge clk);commitAck=0;
+        flushEvent();
     endtask
     initial begin
         repeat(3) tick();
@@ -137,6 +164,77 @@ module fixedSheetInteraction_tb;
         timeUs=6101;tick();flushEvent();
         if(eventTotal!=10 || events[9].eventType!=EVENT_INTERACTION_TIMEOUT ||
            events[9].reason!=REASON_WAIT_TIMEOUT) $fatal(1,"bounded wait timeout");
+
+        // The real startup failure occurred after four valid sampling frames.
+        // A later stable image must recover without a debug command. Keep C
+        // stalled throughout both failures to check event episode coalescing.
+        restart(100);userEventReady=0;
+        beginAttempt();repeat(4) frame(1);badSample();
+        if(calibrated || busy || collectEnable || !userEventValid || attempts!=1 ||
+           sampleCount!=4 || userEvent.reason!=REASON_CAL_SAMPLES_INVALID)
+            $fatal(1,"initial sample failure diagnostic/cooldown");
+        savedEvent=userEvent;
+        repeat(5) frame(0);
+        timeUs=139;tick();frame(0);
+        if(attempts!=1 || busy || userEvent!==savedEvent) $fatal(1,"retry before complete cooldown");
+        timeUs=140;tick();
+        frame(0);frame(0);
+        if(collectEnable || attempts!=1) $fatal(1,"cooldown reused earlier card confirmation");
+        frame(0);
+        if(!collectEnable) $fatal(1,"fresh post-cooldown card did not restart initial sampling");
+        badSample();
+        if(attempts!=2 || busy || userEvent!==savedEvent || eventOverflow)
+            $fatal(1,"same automatic failure overwrote stalled diagnostic");
+        timeUs=180;tick();beginAttempt();samples();finishCommit();
+        if(!calibrated || attempts!=3 || userEvent!==savedEvent || eventOverflow)
+            $fatal(1,"automatic startup recovery did not commit once");
+        @(negedge clk);userEventReady=1;
+        flushEvent();
+        if(eventTotal!=2 || events[0].eventType!=EVENT_CALIBRATION_FAILED ||
+           events[0].interactionId!=1 || events[1].eventType!=EVENT_CALIBRATION_DONE ||
+           events[1].interactionId!=3 || events[1].eventId!=2)
+            $fatal(1,"coalesced episode lost first failure/final success or attempt identity");
+        timeUs=5000;repeat(12) frame(0);
+        if(attempts!=3 || eventTotal!=2 || !speechArmed || busy)
+            $fatal(1,"successful recovery repeated with resident cards");
+
+        // Cooldown arithmetic wraps at 2^32 microseconds. Revoked permission
+        // cannot start a retry; after permission returns, both a bad frame and
+        // an old-configuration frame independently break the confirmation run.
+        restart(32'hfffffff0);beginAttempt();badSample();
+        timeUs=32'h00000017;repeat(4) frame(0);
+        if(attempts!=1 || busy) $fatal(1,"wrapped cooldown expired too early");
+        @(negedge clk);permit=0;timeUs=32'h00000018;
+        repeat(5) frame(0);
+        if(attempts!=1 || busy || collectEnable) $fatal(1,"retry started without permit");
+        @(negedge clk);permit=1;tick();
+        frame(0);frame(0);
+        @(negedge clk);frameGood=0;frame(0);
+        @(negedge clk);frameGood=1;frame(0);frame(0);
+        if(collectEnable) $fatal(1,"bad frame did not clear retry confirmation");
+        @(negedge clk);configVersion=1;frame(0);
+        @(negedge clk);configVersion=0;frame(0);frame(0);
+        if(collectEnable) $fatal(1,"old configuration did not clear retry confirmation");
+        frame(0);
+        if(!collectEnable) $fatal(1,"wrap-safe permitted retry failed to start");
+        frame(1);
+        @(negedge clk);permit=0;tick();flushEvent();
+        if(eventTotal!=2 || events[1].eventType!=EVENT_INTERACTION_CANCELLED ||
+           events[1].reason!=REASON_PERMIT_REVOKED || collectEnable || commitRequest)
+            $fatal(1,"automatic retry cancellation was coalesced or kept active");
+
+        // A changed failure reason is a new observable diagnostic episode.
+        restart(10);beginAttempt();badSample();
+        timeUs=50;tick();beginAttempt();timeUs=151;tick();flushEvent();
+        if(eventTotal!=2 || events[1].eventType!=EVENT_INTERACTION_TIMEOUT ||
+           events[1].reason!=REASON_CAPTURE_TIMEOUT) $fatal(1,"changed automatic failure was hidden");
+
+        // An explicit rearm owns one attempt even if no calibration has ever
+        // succeeded. It cannot silently turn into an automatic retry sequence.
+        restart(0);arm();beginAttempt();badSample();
+        timeUs=10000;repeat(12) frame(0);
+        if(attempts!=1 || eventTotal!=1 || busy || calibrated)
+            $fatal(1,"failed explicit startup rearm retried automatically");
         $display("PASS fixedSheetInteraction_tb");
         $finish;
     end

@@ -23,7 +23,7 @@ module vgaMapping_tb;
     camera_display #(.ROTATE_CCW_90(1)) cameraNew(
         .clk(clk),.reset(reset),.hold_enable(1'b1),.rd_x(newX),.rd_y(newY),.rd_pixel(ramPixel),
         .data(newInput),.startofpacket(newSop),.endofpacket(newEop),.valid(newValid),.ready(newReady));
-    memberBVgaOverlay overlayNew(.clk(clk),.reset(reset),.debugWords(debugWords),
+    memberBVgaOverlay overlayNew(.clk(clk),.reset(reset),.debugWords(debugWords),.showCandidates(1'b0),.showCentre(1'b0),
         .inData(newInput),.inSop(newSop),.inEop(newEop),.inValid(newValid),.inReady(newReady),
         .outData(newOutput),.outSop(newOutSop),.outEop(newOutEop),.outValid(newOutValid),.outReady(sinkReady));
 

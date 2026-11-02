@@ -3,6 +3,7 @@ module memberBVgaOverlay_tb;
     logic clk=0;
     always #20 clk=~clk;
     logic reset=1;
+    logic showCandidates=0,showCentre=0;
     logic [3071:0] debugWords=0;
     logic [29:0] inData=30'h20080200,outData;
     logic inSop=0,inEop=0,inValid=0,inReady,outSop,outEop,outValid,outReady=0;
@@ -13,7 +14,7 @@ module memberBVgaOverlay_tb;
     logic [31:0] expectedFrames[0:99];
     integer frameWritten=0,frameRead=0;
     logic [31:0] priorPayload;
-    memberBVgaOverlay #(.MAX_HOLD_FRAMES(3)) dut(.*);
+    memberBVgaOverlay #(.MAX_HOLD_FRAMES(3),.ENABLE_DIAGNOSTICS(0),.BLUE_HUE_UPPER(250),.DEFAULT_BLUE_MINIMUM(32)) dut(.*);
 
     // Independent display-pixel oracle: multiple disjoint blue regions, a
     // diagonal red region, an orange non-target and an unlabelled reference bar.
@@ -51,9 +52,13 @@ module memberBVgaOverlay_tb;
             if(edgeClass==1)expectedPixel={10'h3ff,10'd0,10'd0};
             if(edgeClass==2)expectedPixel={10'd0,10'd0,10'h3ff};
             gx=x-158;gy=y-3;
-            if(draw && x>=140 && x<500 && gx>=0 && gx<8 && gy>=0 && gy<12)begin
-                ink=gx==7 && ((gy>=1&&gy<=4)||(gy>=6&&gy<=10));
-                expectedPixel=ink?{10'h3ff,10'h3ff,10'h3ff}:30'd0;
+            if(draw && x>=140 && x<500 && gx>=0 && gx<16 && gy>=0 && gy<12)begin
+                ink=(gx==15&&((gy>=1&&gy<=4)||(gy>=6&&gy<=10)))||
+                    (gx==0&&gy>=1&&gy<=10)||((gy==0||gy==5)&&gx>=0&&gx<=4)||(gx==5&&gy>=1&&gy<=4);
+                if(blue)ink=ink||(gy==11&&gx>=0&&gx<=4)||(gx==5&&gy>=6&&gy<=10);
+                else ink=ink||(gy>=6&&gy<=10&&gx==gy-5);
+                expectedPixel=ink?{10'h3ff,10'h3ff,10'h3ff}:
+                    blue?{10'd0,10'd128,10'd512}:{10'd512,10'd0,10'd0};
             end
         end
     endfunction

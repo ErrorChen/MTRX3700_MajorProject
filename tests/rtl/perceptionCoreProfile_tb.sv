@@ -99,14 +99,14 @@ module perceptionCoreProfile_tb;
         force dut.aggregateDone=aggregateDrive;
         force dut.readBank=readBankDrive;
         force dut.processedObservation=completionDrive;
-        checkProfile(0,0,0,48,32,0);
+        checkProfile(0,0,0,48,20,0);
 
         // A new-profile SOF arrives while the old-profile bank is READING.
         pulseSof(1,0,0,0,0);sealCapturedBank();
         pulseSof(2,0,1,0,0);
         if(status.activeCfgVersion!=1)$fatal(1,"Commit did not advance the live profile");
         sealCapturedBank();
-        completeBank(0);checkProfile(1,0,0,48,32,1);
+        completeBank(0);checkProfile(1,0,0,48,20,1);
         completeBank(1);checkProfile(2,1,0,37,30,1);
 
         // A profile commit just after aggregation must not alter the completed

@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "inputSource": "REAL_CAMERA_FRESH_CAPTURE",
+  "frameId": 10699,
+  "sourceBuildId": "0xab41e932",
+  "readerAlgorithmAtCapture": 2,
+  "configVersion": 1,
+  "redMinimum": 32,
+  "blueMinimum": 28,
+  "crc": 5678,
+  "crcHex": "0x162e",
+  "dumpSha256": "30017cac7f049ffc26cc2f20aef1c434a87426ee613c61de094e1af4ed6d21fe",
+  "originalRun": "build/member_b/20261102T152208_947995Z_overflow_capture_search",
+  "freshTransactionValidation": {
+    "status": "PASS",
+    "fresh": true,
+    "countDelta": 1,
+    "snapshotCount": 3,
+    "hostObservedMs": 1793632931569,
+    "proof": "request toggle, changed GCTL count, matching ack and stable pre/post memory state",
+    "hostTimeMeaning": "Host transaction chronology only; not the FPGA capture timestamp"
+  },
+  "actualFrameGood": false,
+  "actualCandidateOverflow": true,
+  "actualAllocationPeakRed": 6,
+  "actualAllocationPeakBlue": 7,
+  "modelComparison": "ccl_comparison.json",
+  "files": {
+    "ccl_comparison.json": "e6c8a27756b3a89af445d5109b9606e71f689d6f8f73a70acf6de9ac0b073b51",
+    "frame10699.png": "344e6fc6487a956322fa4e6c10c1931d73dc42fc45da34e8f6117cdd58ce7d9c",
+    "legacy_rtl.log": "3702db6d7eb5c26be5d4dd2b5b3d870b3418845b1ed403b8821b05c26105b234",
+    "legacy_rtl_result.json": "95baa3cb28cab54c2f8fc76a67ff2e1e7e1f5c3a239e36c815aa606aade54c20",
+    "model.log": "bc62294b7418091ee11f23e1c9c062a01bc95aa89d30ab4fd1090bea3640a6dd",
+    "model_result.json": "97d0d491a756e0a618df998a9ddf358e11a6d537eb6ce5e4f252cf828db85c46",
+    "original_capture_result.json": "2cfd3a106c960b7297a8163dd79466a6fcdba1244215fff6ca212201d66fc964",
+    "pruned_rtl.log": "34e3a2893eef03ce73da3dfc44e923dfa09ebc08c3eeca814d90349be0998e26",
+    "pruned_rtl_result.json": "719236731b7fe4e5cdb2d6527845a371ddf6f1453ef182e7120379bc91cb4fb8",
+    "snapshot_metadata.json": "c1ad174d6c0581dff20edc5b0b90d32c1ad034e0e7a2178618bed74143db44ed"
+  },
+  "limitations": [
+    "Original CAMERA_HW frame is bad due to candidate overflow.",
+    "Pruned results are MODEL CCL replay, not hardware verification of the correction.",
+    "No new ID is inferred from position; pruning checks only necessary inclusive bbox dimensions."
+  ],
+  "validation": {
+    "MODEL": "model_result.json",
+    "RTL_SIM_PRUNING": "pruned_rtl_result.json",
+    "RTL_SIM_LEGACY_DEFAULT": "legacy_rtl_result.json",
+    "QUARTUS_FIT_TIMING": "NOT_EXECUTED_FOR_THIS_CHANGE",
+    "PROGRAMMED": "NOT_EXECUTED_FOR_THIS_CHANGE"
+  }
+}

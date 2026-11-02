@@ -1,0 +1,6 @@
+{
+  "action": "read-only installed distribution enumeration",
+  "returnCode": 0,
+  "output": "  NAME              STATE           VERSION\r\n* docker-desktop    Stopped         2\r\n",
+  "systemChanges": "none"
+}

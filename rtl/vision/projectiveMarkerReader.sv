@@ -14,7 +14,7 @@ module projectiveMarkerReader #(
     input logic [1:0] orientationProfile,
     output logic busy,done,
     output logic [16:0] readAddress,
-    input logic readWhite,readColour,
+    input logic readWhite,readStrongWhite,readColour,
     output vision_pkg::markerArray_t markers,
     output logic [4:0] acceptedCount
 );
@@ -81,7 +81,7 @@ module projectiveMarkerReader #(
     marker_t decision;
     nativeAnchorReader anchorReader(.clk(clk),.reset(reset),.start(state==ANCHOR_START),
         .pointX(pointX),.pointY(pointY),.busy(),.done(anchorDone),
-        .readAddress(anchorReadAddress),.readWhite(readWhite),
+        .readAddress(anchorReadAddress),.readWhite(readStrongWhite),
         .anchorCount(anchorCount),.anchorWidth(anchorWidth),.anchorHeight(anchorHeight),
         .ambiguous(),.overflow(),.allocationPeak(),.componentCount());
     projectiveSerialMultiply coefficientMultiplier(.clk(clk),.reset(reset),

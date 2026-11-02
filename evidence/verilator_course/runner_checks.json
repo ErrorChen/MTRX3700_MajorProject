@@ -1,0 +1,31 @@
+{
+  "level": "HOST_RUNNER_AND_MODEL_VECTOR_GENERATION",
+  "status": "PASS",
+  "R6": "ENVIRONMENT_BLOCKED",
+  "records": [
+    {
+      "name": "host_tests",
+      "returnCode": 0,
+      "expectedReturnCode": 0,
+      "pass": true
+    },
+    {
+      "name": "bash_syntax",
+      "returnCode": 0,
+      "expectedReturnCode": 0,
+      "pass": true
+    },
+    {
+      "name": "vectors",
+      "returnCode": 0,
+      "expectedReturnCode": 0,
+      "pass": true
+    },
+    {
+      "name": "actual_environment",
+      "returnCode": 2,
+      "expectedReturnCode": 2,
+      "pass": true
+    }
+  ]
+}

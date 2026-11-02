@@ -50,13 +50,19 @@ def decodeWords(words):
     # each; old captures must never be silently reinterpreted as HSV inputs.
     readerAlgorithm = words[95] >> 16 if debugSchema == 1 else (words[95] >> 16) & 255
     colourAlgorithm = 0 if debugSchema == 1 else words[95] >> 24
-    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else (0, 1, 2)):
+    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else (0, 1, 2, 3, 4)):
         raise ValueError("unsupported EBP1 reader algorithm")
-    if colourAlgorithm not in (0, 1):
+    if colourAlgorithm not in (0, 1, 2):
         raise ValueError("unsupported EBP1 colour algorithm")
+    if readerAlgorithm == 3 and colourAlgorithm != 1:
+        raise ValueError("reader algorithm 3 requires HSV colour algorithm 1")
+    if readerAlgorithm == 4 and colourAlgorithm != 2:
+        raise ValueError("reader algorithm 4 requires HSV colour algorithm 2")
     whiteMinimum, whiteSpread = (words[95] >> 8) & 255, words[95] & 255
-    if readerAlgorithm == 2 and (whiteMinimum != 96 or whiteSpread != 64):
-        raise ValueError("reader algorithm 2 requires weighted-luma floor96 and spread64")
+    if readerAlgorithm in (2, 3) and (whiteMinimum != 96 or whiteSpread != 64):
+        raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor96 and spread64")
+    if readerAlgorithm == 4 and (whiteMinimum != 84 or whiteSpread != 64):
+        raise ValueError("reader algorithm 4 requires weighted-luma floor84 and spread64")
     captureAge = (words[2] - words[4]) & 0xffffffff
     return {"schema": "EBP1", "debugSchemaVersion": debugSchema, "contractVersion": 2, "timeUs": words[2], "frameId": words[3],
             "captureStartUs": words[4], "completionUs": words[5], "configVersion": words[6],
@@ -74,8 +80,14 @@ def decodeWords(words):
             "buildId": words[92], "readerAlgorithm": readerAlgorithm,
             "colourAlgorithm": colourAlgorithm,
             "whiteMinimum": whiteMinimum, "whiteMaxSpread": whiteSpread,
-            "whiteMode": "QUARTER_WEIGHTED_LUMA" if readerAlgorithm == 2 else "MIN_RGB_CHANNEL",
-            "whiteThresholdExpression": "R+2*G+B >= 4*whiteMinimum" if readerAlgorithm == 2 else "min(R,G,B) >= whiteMinimum",
+            "whiteMode": {2: "QUARTER_WEIGHTED_LUMA", 3: "ROUNDED_STROKES_STRICT_ANCHOR", 4: "UNSATURATED_STROKES_STRICT_ANCHOR"}.get(readerAlgorithm, "MIN_RGB_CHANNEL"),
+            "whiteThresholdExpression": ("R+2*G+B >= 384 OR (R+2*G+B+2 >= 4*whiteMinimum AND 2*(max(R,G,B)-min(R,G,B)) < max(R,G,B))" if readerAlgorithm == 4 else
+                "R+2*G+B+2 >= 4*whiteMinimum" if readerAlgorithm == 3 else
+                "R+2*G+B >= 4*whiteMinimum" if readerAlgorithm == 2 else "min(R,G,B) >= whiteMinimum"),
+            **({"whiteAnchorThresholdExpression": "R+2*G+B >= 4*whiteMinimum",
+                "candidateSizePruning": True} if readerAlgorithm == 3 else {}),
+            **({"whiteAnchorThresholdExpression": "R+2*G+B >= 384", "whiteAnchorMinimum": 96,
+                "candidateSizePruning": True} if readerAlgorithm == 4 else {}),
             "userEventValid": bool(words[90] & 1), "captureAgeAtSnapshotUs": captureAge,
             "processingLatencyUs": (words[5] - words[4]) & 0xffffffff,
             "freshAtSnapshot": freshTime(words[2], words[4], 150000)}
@@ -113,8 +125,9 @@ def compareMarkerPixels(imagePath, decoded, output):
     import json
     from pathlib import Path
     from PIL import Image
-    from vision_reference import classify, pixelsOf
-    from projective_reference import classifyProjective
+    import numpy as np
+    from vision_reference import classify
+    from projective_reference import classifyProjective, whiteProfileFor, whitePixelsFor
 
     image = Image.open(imagePath).convert("RGB")
     output = Path(output)
@@ -129,17 +142,18 @@ def compareMarkerPixels(imagePath, decoded, output):
         if not (0 <= bbox[0] <= bbox[2] < 320 and 0 <= bbox[1] <= bbox[3] < 240):
             raise ValueError("candidate bbox is not an in-frame colour main area")
         candidate = {"colour": "blue" if index >= 8 else "red", "bbox": bbox}
-        if decoded["readerAlgorithm"] in (1, 2):
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4):
             expected = classifyProjective(image, candidate, decoded["orientationProfile"],
                 decoded["redMinimum"], decoded["blueMinimum"], decoded["whiteMinimum"],
                 decoded["whiteMaxSpread"], output / f"marker_{index:02d}_projective",
                 colourAlgorithm=decoded["colourAlgorithm"], readerAlgorithm=decoded["readerAlgorithm"])
             crop = image.crop((bbox[0], bbox[1], bbox[2]+1, bbox[3]+1))
-            mask = Image.new("L", crop.size)
-            mask.putdata([255 if ((pixel[0]+2*pixel[1]+pixel[2] >= 4*decoded["whiteMinimum"])
-                                  if decoded["readerAlgorithm"] == 2 else (min(pixel) >= decoded["whiteMinimum"]))
-                          and max(pixel)-min(pixel) <= decoded["whiteMaxSpread"] else 0
-                          for pixel in pixelsOf(crop)])
+            profile = whiteProfileFor(decoded["readerAlgorithm"], decoded["whiteMinimum"], decoded["whiteMaxSpread"])
+            cropArray = np.asarray(crop, dtype=np.int16)
+            mask = Image.fromarray((whitePixelsFor(cropArray, profile)*255).astype(np.uint8))
+            if decoded["readerAlgorithm"] in (3, 4):
+                strongMask = Image.fromarray((whitePixelsFor(cropArray, profile, anchor=True)*255).astype(np.uint8))
+                strongMask.save(output / f"marker_{index:02d}_strong_white.png")
         else:
             expected, crop, mask = classify(image, candidate, decoded["orientationProfile"], decoded["whiteMinimum"])
         crop.save(output / f"marker_{index:02d}_rgb.png")
@@ -149,7 +163,7 @@ def compareMarkerPixels(imagePath, decoded, output):
             differences.append("accepted")
         if measured["accepted"] and expected["accepted"]:
             differences.extend(field for field in ("digit", "quality") if measured[field] != expected[field])
-        if decoded["readerAlgorithm"] in (1, 2):
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4):
             if measured["reason"] != expected["reasonCode"]:
                 differences.append("reason")
             if expected["windowScores"]:

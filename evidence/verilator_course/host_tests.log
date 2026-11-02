@@ -1,0 +1,14 @@
+testCaughtRequiresIntendedAssertion (test_verilator_suite.VerilatorRunnerTests.testCaughtRequiresIntendedAssertion) ... ok
+testExactVersionRequired (test_verilator_suite.VerilatorRunnerTests.testExactVersionRequired) ... ok
+testExpiredDeadlineNeverLaunches (test_verilator_suite.VerilatorRunnerTests.testExpiredDeadlineNeverLaunches) ... ok
+testMissingToolWritesBlockedExitTwo (test_verilator_suite.VerilatorRunnerTests.testMissingToolWritesBlockedExitTwo) ... ok
+testMutationOnlyChangesPrivateCopy (test_verilator_suite.VerilatorRunnerTests.testMutationOnlyChangesPrivateCopy) ... ok
+testPassRequiresMarkerExitAndNoErrors (test_verilator_suite.VerilatorRunnerTests.testPassRequiresMarkerExitAndNoErrors) ... ok
+testSubprocessPreservesSpacesAndFailure (test_verilator_suite.VerilatorRunnerTests.testSubprocessPreservesSpacesAndFailure) ... ok
+testSystemIsMandatoryAndFirst (test_verilator_suite.VerilatorRunnerTests.testSystemIsMandatoryAndFirst) ... ok
+testWrongVersionIsBlockedBeforeBuild (test_verilator_suite.VerilatorRunnerTests.testWrongVersionIsBlockedBeforeBuild) ... ok
+
+----------------------------------------------------------------------
+Ran 9 tests in 0.046s
+
+OK

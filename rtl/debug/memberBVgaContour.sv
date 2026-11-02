@@ -5,7 +5,9 @@
 // Left/top transitions are marked on the current pixel; right/bottom transitions
 // are one pixel outside the region. At screen boundaries they are marked on the
 // last visible foreground pixel. Red/blue contact uses the current class colour.
-module memberBVgaContour (
+module memberBVgaContour #(
+    parameter int BLUE_HUE_UPPER=250
+) (
     input logic clk, reset,
     input logic [7:0] redMinimum,blueMinimum,
     input logic [29:0] inData,
@@ -31,7 +33,7 @@ module memberBVgaContour (
     assign inReady=!stageValid || outputReady;
     assign sampleX=inSop?10'd0:rasterX;
     assign sampleY=inSop?9'd0:rasterY;
-    hsvColourGate gate(.rgb({inData[29:22],inData[19:12],inData[9:2]}),
+    hsvColourGate #(.BLUE_HUE_UPPER(BLUE_HUE_UPPER)) gate(.rgb({inData[29:22],inData[19:12],inData[9:2]}),
         .redMinimum(activeRed),.blueMinimum(activeBlue),.colourMask(liveClass));
 
     // Separate synchronous read/write block preserves RAM inference. No reset

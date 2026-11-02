@@ -9,7 +9,7 @@ from PIL import Image
 from vision_reference import quantise565,colourMask,recognise,pixelsOf
 from projective_reference import classifyProjective,gridAddresses,whiteProfileFor,whitePixelsFor
 from export_vision_vectors import cases,packCandidate
-from test_projective import warpedCases,algorithm2Cases
+from test_projective import warpedCases,algorithm2Cases,algorithm3Cases,algorithm4Cases
 
 root=Path(__file__).resolve().parents[2]
 
@@ -21,7 +21,7 @@ def rgb565Text(image):
     return ''.join(f'{((r>>3)<<11)|((g>>2)<<5)|(b>>3):04x}\n' for r,g,b in pixelsOf(image))
 
 
-def namedFixtureBindings(vectorCases,readerAlgorithm=2):
+def namedFixtureBindings(vectorCases,readerAlgorithm=4):
     """Resolve semantic fixtures by unique name, independently of list order.
 
     A physical recording must also match the preserved acquisition index. This
@@ -29,7 +29,11 @@ def namedFixtureBindings(vectorCases,readerAlgorithm=2):
     its former numeric position happens to be the one a bench once loaded.
     """
     inputIndex=json.loads((root/'evidence/reader_algorithm2_inputs/index.json').read_text())
-    recordedPrefix='real_frame' if readerAlgorithm==2 else 'recorded_camera_'
+    if readerAlgorithm>=3:
+        inputIndex['records']+=json.loads((root/'evidence/reader_algorithm3_inputs/index.json').read_text())['records']
+    if readerAlgorithm>=4:
+        inputIndex['records']+=json.loads((root/'evidence/reader_algorithm4_inputs/index.json').read_text())['records']
+    recordedPrefix='real_frame' if readerAlgorithm>=2 else 'recorded_camera_'
     wantedNames={f"{recordedPrefix}{record['frameId']}" for record in inputIndex['records']}
     wantedNames.update(('pdf_full_page','counterfactual_swapped'))
     byName={}
@@ -42,11 +46,12 @@ def namedFixtureBindings(vectorCases,readerAlgorithm=2):
     bindings=[]
     for record in inputIndex['records']:
         frameId=record['frameId']
-        caseName=f'real_frame{frameId}' if readerAlgorithm==2 else f'recorded_camera_{frameId}'
+        caseName=f'real_frame{frameId}' if readerAlgorithm>=2 else f'recorded_camera_{frameId}'
         # Algorithm 1 intentionally retains only its four historical recordings.
         if readerAlgorithm==1 and frameId not in (13139,13511,13675,25046):continue
         case=byName.get(caseName)
-        if case is None or case['inputSource']!=RECORDED_SOURCE or case['candidateOverflow']:
+        sourceKind=record['source'] if record['source']=='RECORDED_OV7670_MEMBER_B' else RECORDED_SOURCE
+        if case is None or case['inputSource']!=sourceKind or case['candidateOverflow']:
             raise ValueError(f'Recorded fixture missing, mislabelled or overflowed: {caseName}')
         imagePath=root/record['image']
         actualHash=hashlib.sha256(imagePath.read_bytes()).hexdigest()
@@ -63,7 +68,7 @@ def namedFixtureBindings(vectorCases,readerAlgorithm=2):
     return bindings
 
 
-def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=2):
+def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=4):
     """Write stable replay aliases and an auditable source-to-export hash chain."""
     bindings=namedFixtureBindings(vectorCases,readerAlgorithm)
     for binding in bindings:
@@ -88,11 +93,17 @@ def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=2):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--out',required=True,type=Path)
-    parser.add_argument('--colour-algorithm',type=int,choices=(0,1),default=1)
-    parser.add_argument('--reader-algorithm',type=int,choices=(1,2),default=2)
-    parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,default=32)
+    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2))
+    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4),default=4)
+    parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int)
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
-    if args.reader_algorithm==2:
+    if args.colour_algorithm is None:args.colour_algorithm=2 if args.reader_algorithm==4 else 1
+    if args.blue_min is None:args.blue_min=20 if args.reader_algorithm==4 else 32
+    if args.reader_algorithm==4:
+        vectors=list(algorithm4Cases())
+    elif args.reader_algorithm==3:
+        vectors=list(algorithm3Cases())
+    elif args.reader_algorithm==2:
         vectors=list(algorithm2Cases())
     else:
         # Keep the exact historical 63-case ordering and white semantics.
@@ -108,7 +119,9 @@ def main():
         image=quantise565(image);array=np.asarray(image,dtype=np.int16)
         foreground=np.array(colourMask(image,args.red_min,args.blue_min,colourAlgorithm=args.colour_algorithm)).reshape(240,320)!=0
         white=whitePixelsFor(array,whiteProfile)
-        base=recognise(image,cleanup=True,redMin=args.red_min,blueMin=args.blue_min,colourAlgorithm=args.colour_algorithm)
+        strongWhite=whitePixelsFor(array,whiteProfile,anchor=True)
+        base=recognise(image,cleanup=True,redMin=args.red_min,blueMin=args.blue_min,colourAlgorithm=args.colour_algorithm,
+                       pruneUnusable=args.reader_algorithm>=3)
         candidateWords=[0]*16;expectedWords=[0x000f0001]*16;mapWords=[0xfffff]*(16*1280)
         counts={'red':0,'blue':0};expected=[]
         for candidate in base['markers']:
@@ -124,7 +137,7 @@ def main():
                 addresses=gridAddresses(marker['coefficients'])
                 for pixel,(x,y) in enumerate(addresses):mapWords[slot*1280+pixel]=(y<<9)|x
             expected.append({'slot':slot,**marker})
-            if args.reader_algorithm==2 and 'anchor' in marker['windowScores']:
+            if args.reader_algorithm>=2 and 'anchor' in marker['windowScores']:
                 anchor=marker['windowScores']['anchor'];quad=marker['quadHalfPixels'];roi=anchor['roi']
                 row=[index,*[coordinate for point in quad for coordinate in point],*roi,
                      anchor['white'],anchor['columns'],anchor['rows'],int(anchor['ambiguous']),int(anchor['overflow']),
@@ -136,6 +149,9 @@ def main():
         image.save(prefix.with_suffix('.png'))
         Path(str(prefix)+'_colour.hex').write_text(''.join('1\n' if bit else '0\n' for bit in foreground.reshape(-1)),encoding='ascii')
         Path(str(prefix)+'_white.hex').write_text(''.join('1\n' if bit else '0\n' for bit in white.reshape(-1)),encoding='ascii')
+        # Historical readers use identical white predicates for both consumers;
+        # the additional file leaves all of their existing hex bytes unchanged.
+        Path(str(prefix)+'_strong_white.hex').write_text(''.join('1\n' if bit else '0\n' for bit in strongWhite.reshape(-1)),encoding='ascii')
         Path(str(prefix)+'_candidates.hex').write_text(''.join(f'{word:018x}\n' for word in candidateWords),encoding='ascii')
         Path(str(prefix)+'_expected.hex').write_text(''.join(f'{word:08x}\n' for word in expectedWords),encoding='ascii')
         Path(str(prefix)+'_orientation.hex').write_text(f'{orientation:x}\n',encoding='ascii')

@@ -22,6 +22,10 @@ module colourSampler_tb;
             if(px>=130&&px<=159&&py>=20&&py<=119)
                 rgb=mode==1 ? 24'h0a0a1c : 24'h0a1440;
             if(mode==3&&px==30&&py==60)rgb=24'hffffff;
+            if(mode==4&&px>=20&&px<=119&&py>=20&&py<=119)rgb=24'hff1410;
+            if(mode==5&&px>=130&&px<=159&&py>=20&&py<=119)rgb=24'h0a14ff;
+            if(mode==6&&px>=130&&px<=159&&py>=20&&py<=119)
+                rgb=py<70?24'h081429:24'h081431;
             @(negedge clk);
         end
         pixelValid=0;eop=1;
@@ -40,6 +44,10 @@ module colourSampler_tb;
             $fatal(1,"samples below old segmentation threshold must still be collected");
         scene(2);if(frameSampleGood)$fatal(1,"dark reference accepted");
         scene(3);if(frameSampleGood)$fatal(1,"white pollution accepted");
+        scene(4);if(frameSampleGood)$fatal(1,"clipped dominant red accepted");
+        scene(5);if(frameSampleGood)$fatal(1,"clipped dominant blue accepted");
+        scene(6);if(!frameSampleGood||blueMinimum!=20)
+            $fatal(1,"V floor must use raw darkest validated reference, not midrange");
         orientation=1;scene(0);
         if(!frameSampleGood || redSamples!=400)$fatal(1,"rotated inset sample");
         collectEnable=0;scene(0);if(frameSampleGood)$fatal(1,"disabled collection accepted");

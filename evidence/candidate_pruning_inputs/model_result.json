@@ -1,0 +1,42 @@
+{
+  "schema": "echo7-cli-v1",
+  "command": "candidate_pruning_model",
+  "status": "PASS",
+  "startedUtc": "2026-11-02T15:29:45.405699+00:00",
+  "inputSource": "SYNTHETIC_MASKS_AND_RECORDED_FRAME10699",
+  "outputDirectory": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152945_405699Z_candidate_pruning_model",
+  "python": "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+  "runnerSha256": "d5e0ac1d4956a1070b254d8044858d053580ba009e62a7d32c5a894b1959013d",
+  "steps": [
+    {
+      "name": "tests",
+      "command": [
+        "C:\\Users\\15402\\.cache\\codex-runtimes\\codex-primary-runtime\\dependencies\\python\\python.exe",
+        "-m",
+        "unittest",
+        "discover",
+        "-s",
+        "tests/python",
+        "-p",
+        "test_candidate_pruning.py",
+        "-v"
+      ],
+      "returncode": 0,
+      "level": "MODEL",
+      "scriptSha256": {},
+      "logEncoding": "cp936",
+      "timedOut": false,
+      "treeTerminationConfirmed": null,
+      "ownedParentMayRemain": false,
+      "elapsedSeconds": 0.859,
+      "log": "C:\\intelFPGA_lite\\MTRX3700\\major\\build\\member_b\\20261102T152945_405699Z_candidate_pruning_model\\tests.log"
+    }
+  ],
+  "level": "MODEL",
+  "exitCode": 0,
+  "sourceHashes": {
+    "tools/lib/candidates_reclaimed_model.py": "8b55aaa6041f6d7c3a1c1378c3cfb9a87e4b80f2cc37c2cc8c977e7873a9d399",
+    "tools/lib/vision_reference.py": "77a3435bd91936688a9d1289065f72bb4df8cda5cde362a36c721a45a28c5fde",
+    "tests/python/test_candidate_pruning.py": "c7f7ed02e81ec9d11c84b114992dc0c6c6d20d5fc00811139d78ca0e8a57835c"
+  }
+}

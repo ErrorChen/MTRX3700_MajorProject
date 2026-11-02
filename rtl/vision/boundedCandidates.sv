@@ -11,7 +11,8 @@
 // New SOP aborts old and new frames invalid; next complete frame recovers.
 // IDs count every SOP, first=1, modulo65536. SOP on publication edge is legal.
 module boundedCandidates #(
-    parameter int W=320, H=240, CAP=8, MIN_AREA=32
+    parameter int W=320, H=240, CAP=8, MIN_AREA=32,
+    parameter bit PRUNE_UNUSABLE=0
 ) (
     input logic clk, reset,
     input logic in_valid, in_sop, in_eop,
@@ -87,6 +88,21 @@ module boundedCandidates #(
         c.cx=9'((int'(a.xmin)+int'(a.xmax))/2);
         c.cy=8'((int'(a.ymin)+int'(a.ymax))/2);
         return c;
+    endfunction
+    function automatic logic usable_size(input candidate_t a,input logic colour);
+        logic [9:0] boxWidth;
+        logic [8:0] boxHeight;
+        // Inclusive native-pixel dimensions. This gate applies only when a
+        // root retires, so it cannot hide active-label overflow or alter the
+        // W+CAP row-maintenance budget. Red signs require at least 24x24 in
+        // the downstream reader. Blue also retains either orientation of a
+        // possible 20x3 calibration reference. No location or ID is consulted.
+        boxWidth={1'b0,a.xmax}-{1'b0,a.xmin}+10'd1;
+        boxHeight={1'b0,a.ymax}-{1'b0,a.ymin}+9'd1;
+        if(!PRUNE_UNUSABLE)return 1'b1;
+        if(!colour)return boxWidth>=10'd24 && boxHeight>=9'd24;
+        return (boxWidth>=10'd20 && boxHeight>=9'd3) ||
+               (boxWidth>=10'd3 && boxHeight>=9'd20);
     endfunction
 
     wire starting=in_valid && in_sop;
@@ -224,7 +240,8 @@ module boundedCandidates #(
                        (parent[c][scan_index]!=scan_index+4'd1 || end_frame || !live_roots[c][scan_index])) begin
                         free_slots[c][scan_index]<=1;
                         parent[c][scan_index]<=scan_index+4'd1;boxes[c][scan_index]<='0;
-                        if(parent[c][scan_index]==scan_index+4'd1 && boxes[c][scan_index].valid && int'(boxes[c][scan_index].area)>=MIN_AREA) begin
+                        if(parent[c][scan_index]==scan_index+4'd1 && boxes[c][scan_index].valid &&
+                           int'(boxes[c][scan_index].area)>=MIN_AREA && usable_size(boxes[c][scan_index],1'(c))) begin
                             if(c==0) begin
                                 if(int'(work_red_count)<CAP)begin work_red[work_red_count]<=scan_red;work_red_count<=work_red_count+4'd1;end
                                 else current_overflow[0]<=1;

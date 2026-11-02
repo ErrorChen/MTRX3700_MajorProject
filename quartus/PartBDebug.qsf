@@ -312,6 +312,8 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberCSimulator.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBDebug.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBVgaContour.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBVgaLabels.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBVgaHsv.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBVgaDiagnostics.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/debug/memberBVgaOverlay.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/top/perceptionCore.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/top/perceptionDemoTop.sv

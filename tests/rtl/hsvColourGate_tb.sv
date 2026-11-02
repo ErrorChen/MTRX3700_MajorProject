@@ -7,14 +7,18 @@ module hsvColourGate_tb;
     logic [23:0] rgb=24'd0;
     logic [7:0] redMinimum=8'd48,blueMinimum=8'd32;
     logic [1:0] colourMask;
+    logic [1:0] colourMask260;
     logic [15:0] packed565;
     logic [1:0] expectedMask;
     integer checks=0,redCount,blueCount,neitherCount;
     hsvColourGate dut(.*);
+    hsvColourGate #(.BLUE_HUE_UPPER(260)) currentGate(.rgb(rgb),.redMinimum(redMinimum),
+        .blueMinimum(blueMinimum),.colourMask(colourMask260));
 
     function automatic logic [1:0] hsvOracle(
         input logic [23:0] sample,
-        input logic [7:0] redFloor,blueFloor
+        input logic [7:0] redFloor,blueFloor,
+        input integer blueHueUpper
     );
         real r,g,b,v,minimum,delta,saturation,hue;
         logic redMatch,blueMatch;
@@ -46,7 +50,7 @@ module hsvColourGate_tb;
                     ((hue>=336.0-1.0e-10)||(hue<=1.0e-10));
                 blueMatch=(saturation>=0.5-1.0e-10)&&
                     (v>=real'(blueFloor)/255.0-1.0e-10)&&
-                    (hue>=200.0-1.0e-10)&&(hue<=250.0+1.0e-10);
+                    (hue>=200.0-1.0e-10)&&(hue<=real'(blueHueUpper)+1.0e-10);
             end
             hsvOracle=2'd0;
             if(redMatch&&!blueMatch) hsvOracle=2'd1;
@@ -57,11 +61,13 @@ module hsvColourGate_tb;
     task automatic checkSample(input logic [23:0] sample);
         begin
             rgb=sample;
-            expectedMask=hsvOracle(sample,redMinimum,blueMinimum);
+            expectedMask=hsvOracle(sample,redMinimum,blueMinimum,250);
             #1;
             if(colourMask!==expectedMask)
                 $fatal(1,"HSV mismatch RGB=%06h floors=%0d/%0d actual=%0d expected=%0d",
                     sample,redMinimum,blueMinimum,colourMask,expectedMask);
+            if(colourMask260!==hsvOracle(sample,redMinimum,blueMinimum,260))
+                $fatal(1,"Colour algorithm 2 / H260 mismatch RGB=%06h",sample);
             checks++;
         end
     endtask
@@ -123,6 +129,10 @@ module hsvColourGate_tb;
         checkBoundary({8'd20,8'd0,8'd120},2'd2); // Blue H = 250 exactly.
         checkBoundary({8'd21,8'd0,8'd120},2'd0);
         checkBoundary({8'd19,8'd0,8'd120},2'd2);
+        checkSample({8'd40,8'd0,8'd120});
+        if(colourMask260!=2)$fatal(1,"H260 inclusive boundary rejected");
+        checkSample({8'd41,8'd0,8'd120});
+        if(colourMask260!=0)$fatal(1,"H above260 accepted");
         checkBoundary({8'd100,8'd50,8'd50},2'd1);// S = 0.5 exactly.
         checkBoundary({8'd100,8'd51,8'd51},2'd0);
         checkBoundary({8'd50,8'd50,8'd100},2'd2);

@@ -1,0 +1,49 @@
+{
+  "schema": "ECHO7_READER_ALGORITHM3_INPUTS_1",
+  "records": [
+    {
+      "frameId": 225,
+      "image": "evidence/board_ab41e932_frame225/frame.png",
+      "sha256": "7e87a602db075d206682bb9f424e7bdd2a67e0294479806027657b74fdbe66f6",
+      "source": "RECORDED_OV7670_MEMBER_B",
+      "independentAcquisition": true,
+      "capturedBuildId": "ab41e932",
+      "capturedReaderAlgorithm": 2,
+      "crc": "0x7125",
+      "captureEvidence": "evidence/board_ab41e932_frame225/capture_result.json",
+      "captureRedMinimum": 48,
+      "captureBlueMinimum": 32,
+      "captureConfigVersion": 0
+    }
+  ],
+  "counterfactuals": [
+    {
+      "name": "frame225_C_erased",
+      "sourceFrameId": 225,
+      "edit": "Replace rectangle[271,183,274,195] withRGB(16,24,57); removeobservedCpixels",
+      "expectedRejectedColourDigit": [
+        "blue",
+        6
+      ]
+    },
+    {
+      "name": "frame225_wrong_orientation",
+      "sourceFrameId": 225,
+      "edit": "Rotate entire sourceimage180degrees while orientationProfile remains0",
+      "expectedAccepted": []
+    }
+  ],
+  "privateModelExperiment": {
+    "oldReader2": "75oldcasesPASS;newframe225FAIL",
+    "globalRoundedWhite": "72/76PASS;old47630anchorjoinsboundary",
+    "splitWhite": "78/78PASS;old75plusnewframeand2counterfactuals",
+    "hardwareImplementationOfAlgorithm3": "NOT_YET_EXECUTED_AT_INPUT_RECORD_CREATION"
+  },
+  "artifacts": {
+    "diagnosis.png": "6710f609d07751213613c2cddb17e681120764b739647698f1d3dcb8c2c5459b",
+    "raw_pixel_measurements.json": "d97594a515a580e2500fef94d2e13dd3641f930dec9c7b3f2a83b7fe03dc5868",
+    "packed_two_bit_proof.json": "5aa8df888c3a0b8ae78265923cc7395db55e9d45807dd0144840e73d4c79a7dc",
+    "anchor_counterexample.json": "df23c6b028c75e0603dba451823420e6f594ac29099e34e132e843bb815d90e5"
+  },
+  "boundary": "The original frame was acquired independently byOV7670 and decoded withCRC and same-frame binding. Algorithm3 replay uses it as a known tuning/regression input, not a held-out accuracy sample. The two edited images are labelled counterfactuals, never livecamera."
+}

@@ -30,12 +30,25 @@ def _box(xmin, xmax, ymin, ymax, area):
                 cx=(xmin+xmax)//2, cy=(ymin+ymax)//2)
 
 
-def _colour_rows(mask, colour, cap, minimum):
+def usable_candidate_size(width, height, colour):
+    """Necessary pixel-size bounds, independent of position and marker ID.
+
+    Colour 1 is a red function sign. Colour 2 must retain main signs and the
+    smallest possible blue reference in either orientation. Active handles are
+    never filtered: this predicate is only applied when a component retires.
+    """
+    if colour == 1:
+        return width >= 24 and height >= 24
+    return max(width, height) >= 20 and min(width, height) >= 3
+
+
+def _colour_rows(mask, colour, cap, minimum, prune_unusable=False):
     h, w = len(mask), len(mask[0])
     previous_line = [0]*w
     active = {}  # canonical previous-prefix components, keyed by oracle-only ID
     completed = []
     completed_count = retired_count = lifetime_seeds = max_row_handles = 0
+    size_rejected = 0
     active_overflow = output_overflow = False
     for y, row in enumerate(mask):
         runs = []
@@ -96,6 +109,11 @@ def _colour_rows(mask, colour, cap, minimum):
             if not current_runs or y == h-1:
                 retired_count += 1
                 if combined["area"] >= minimum:
+                    if prune_unusable and not usable_candidate_size(
+                            combined["xmax"]-combined["xmin"]+1,
+                            combined["ymax"]-combined["ymin"]+1, colour):
+                        size_rejected += 1
+                        continue
                     completed_count += 1
                     if len(completed) < cap:
                         completed.append(combined)
@@ -108,13 +126,16 @@ def _colour_rows(mask, colour, cap, minimum):
                     next_line[x0:x1+1] = [new_id]*(x1-x0+1)
         active, previous_line = next_active, next_line
     completed.sort(key=lambda c: tuple(c[k] for k in ("ymin", "xmin", "ymax", "xmax", "area")))
-    return dict(completed=completed, active_overflow=active_overflow,
+    result = dict(completed=completed, active_overflow=active_overflow,
                 output_overflow=output_overflow, max_row_handles=max_row_handles,
                 lifetime_seeds=lifetime_seeds, qualifying_completed=completed_count,
                 total_retired=retired_count)
+    if prune_unusable:
+        result["size_rejected"] = size_rejected
+    return result
 
 
-def candidates_reclaimed(mask, cap=8, min_area=32):
+def candidates_reclaimed(mask, cap=8, min_area=32, prune_unusable=False):
     """Return exact descriptors and conservative per-row capacity results.
 
     Input is a rectangular list of integer rows, 0=background,1=red,2=blue.
@@ -128,7 +149,7 @@ def candidates_reclaimed(mask, cap=8, min_area=32):
         raise ValueError("geometry/cap/min_area outside V2 contract")
     if any(len(row) != w or any(type(p) is not int or p not in (0, 1, 2) for p in row) for row in mask):
         raise ValueError("mask must be rectangular integers0,1,2")
-    results = {name: _colour_rows(mask, colour, cap, min_area) for name, colour in (("red", 1), ("blue", 2))}
+    results = {name: _colour_rows(mask, colour, cap, min_area, prune_unusable) for name, colour in (("red", 1), ("blue", 2))}
     overflow = {name: r["active_overflow"] or r["output_overflow"] for name, r in results.items()}
     valid = not any(overflow.values())
     answer = dict(frame_valid=valid, overflow=not valid,
@@ -138,6 +159,8 @@ def candidates_reclaimed(mask, cap=8, min_area=32):
     for name, r in results.items():
         for field in ("active_overflow", "output_overflow", "max_row_handles", "lifetime_seeds", "qualifying_completed", "total_retired"):
             answer[name+"_"+field] = r[field]
+        if prune_unusable:
+            answer[name+"_size_rejected"] = r["size_rejected"]
     return answer
 
 

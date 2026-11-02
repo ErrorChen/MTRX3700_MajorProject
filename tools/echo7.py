@@ -617,11 +617,11 @@ class Runner:
         comparison = compareMarkerPixels(self.out / "capture/frame.png", self.result["recognition"], self.out / "glyph_check")
         self.result["glyphAgreement"] = comparison
         recognition = self.result["recognition"]
-        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2) else "vision_reference.py"
+        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2, 3, 4) else "vision_reference.py"
         profileArgs = (["--white-min", str(recognition["whiteMinimum"]), "--max-spread", str(recognition["whiteMaxSpread"]),
                         "--colour-algorithm", str(recognition["colourAlgorithm"]),
                         "--reader-algorithm", str(recognition["readerAlgorithm"])]
-                       if recognition["readerAlgorithm"] in (1, 2) else ["--cleanup"])
+                       if recognition["readerAlgorithm"] in (1, 2, 3, 4) else ["--cleanup"])
         self.run("pixel_reference", [sys.executable, HERE / script, self.out / "capture/frame.png",
                  "--orientation", str(recognition["orientationProfile"]),
                  "--red-min", str(recognition["redMinimum"]),

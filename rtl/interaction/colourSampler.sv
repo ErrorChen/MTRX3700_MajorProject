@@ -71,11 +71,16 @@ module colourSampler (
                     redLow>=32&&blueLow>=24&&
                     {1'b0,redLow}>{1'b0,redOther}+9'd8&&
                     {1'b0,blueLow}>{1'b0,blueOther}+9'd8&&
-                    redHigh-redLow<=80&&blueHigh-blueLow<=80&&redOther<224&&blueOther<224;
-                // Midrange/2 adjusts the HSV value floors only. Hue/saturation
-                // and the independent white threshold remain unchanged.
-                redMinimum<=8'(({1'b0,redLow}+{1'b0,redHigh})>>2);
-                blueMinimum<=8'(({1'b0,blueLow}+{1'b0,blueHigh})>>2);
+                    redHigh-redLow<=80&&blueHigh-blueLow<=80&&
+                    redHigh<248&&blueHigh<248&&redOther<224&&blueOther<224;
+                // Use half the darkest validated raw reference sample. The
+                // former midrange/2 floor rejected the darker, oblique bays
+                // even though the card's own reference was valid (frame31285:
+                // blue reference V=41..49, bay border V=16..24). No old colour
+                // mask filters samples; failed/unstable windows never commit.
+                // This changes V only, not hue, saturation or white thresholds.
+                redMinimum<=redLow>>1;
+                blueMinimum<=blueLow>>1;
                 redSamples<=redCount;blueSamples<=blueCount;
                 sampledRedBox<=heldRed;sampledBlueBox<=heldBlue;
             end

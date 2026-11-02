@@ -5,7 +5,11 @@
 // cycle and changes the two configuration floors atomically at frame start.
 // This gate does not claim illumination invariance. Hue/S reject the measured
 // orange background while the separately calibrated V floors handle brightness.
-module hsvColourGate (
+module hsvColourGate #(
+    // 250 preserves colour algorithm 1 replay. Algorithm 2 uses 260: actual
+    // RGB565 blue-card edge pixels at H=251.4 and 259.2 were splitting a card.
+    parameter int BLUE_HUE_UPPER=250
+) (
     input  logic [23:0] rgb,
     input  logic [7:0] redMinimum,
     input  logic [7:0] blueMinimum,
@@ -42,14 +46,15 @@ module hsvColourGate (
         blueNumerator=16'sd60*blueDifference;
         redLowerBound=-16'sd24*chromaSigned;
         blueLowerBound=-16'sd40*chromaSigned;
-        blueUpperBound=16'sd10*chromaSigned;
+        blueUpperBound=16'(BLUE_HUE_UPPER-240)*chromaSigned;
 
         // With R as the unique maximum, wrapped hue -24..0 degrees is
         // exactly -24*chroma <= 60*(G-B) <= 0. Equal G/B is valid H = 0.
         redHit=saturated&&(maximum>=redMinimum)&&(red>green)&&(red>blue)&&
             (redNumerator>=redLowerBound)&&(redNumerator<=16'sd0);
-        // With B as the unique maximum, hue 200..250 degrees is exactly
-        // -40*chroma <= 60*(R-G) <= 10*chroma (the base hue is 240 degrees).
+        // B is the unique maximum. Compare relative to its 240-degree base,
+        // avoiding a per-pixel divider. The profile is a compile-time version;
+        // changing light does not silently select an undocumented algorithm.
         blueHit=saturated&&(maximum>=blueMinimum)&&(blue>red)&&(blue>green)&&
             (blueNumerator>=blueLowerBound)&&(blueNumerator<=blueUpperBound);
         colourMask=2'd0;
