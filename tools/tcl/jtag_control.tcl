@@ -14,10 +14,10 @@ if {$operation eq "list"} {
     }
     exit 0
 }
-if {$operation ni {control calibration-check trial-stream} ||
-    ($operation ne "trial-stream" && [llength $argv] != 4) ||
-    ($operation eq "trial-stream" && [llength $argv] ni {4 5})} {
-    error "usage: list | control/calibration-check cable device commandWord | trial-stream cable device trials ?deadlineSeconds?"
+if {$operation ni {control calibration-check trial-stream query-stream} ||
+    ($operation ni {trial-stream query-stream} && [llength $argv] != 4) ||
+    ($operation in {trial-stream query-stream} && [llength $argv] ni {4 5})} {
+    error "usage: list | control/calibration-check cable device commandWord | trial-stream cable device trials ?deadlineSeconds? | query-stream cable device commandWord ?deadlineSeconds?"
 }
 set cable [lindex $argv 1]
 set device [lindex $argv 2]
@@ -92,6 +92,131 @@ proc frozenWord {heldSource address} {
     write_source_data -instance_index $::instance -value [binary32 [expr {($heldSource & 0xffff00ff) | ($address << 8)}]]
     after 1
     return [unsignedBinary [string range [stableProbe] 96 127]]
+}
+# QRP3 uses the existing frozen bank, separately from EBP1 status. The captured
+# busy bit belongs to the acknowledged action, so address reads cannot race a
+# changing live query state. A rejected READ consumes nothing and leaves the
+# previous packet intact; it must never be decoded as another successful item.
+proc queryRead {phase} {
+    set source [transact [expr {10 << 24}]]
+    set header [string range $::lastActionProbe 0 95]
+    set magic [unsignedBinary [string range $header 0 31]]
+    set build [unsignedBinary [string range $header 32 63]]
+    set meta [unsignedBinary [string range $header 64 95]]
+    if {$magic != 0x42444247 || $build != $::queryBuild || ($meta >> 24) != 8 ||
+        (($meta >> 16) & 255) != 3 || ($meta & 255) != 96} { error "query board identity/schema changed" }
+    if {$meta & 0x4000} {
+        if {(($meta >> 12) & 3) != 2} { error "READ_QUERY rejected with unexpected reason" }
+        return [list BUSY [expr {($meta >> 8) & 1}]]
+    }
+    if {$meta & 0x3000} { error "READ_QUERY error flag/reason disagree" }
+    set words {}
+    for {set address 0} {$address < 8} {incr address} {
+        write_source_data -instance_index $::instance -value [binary32 [expr {($source & 0xffff00ff) | ($address << 8)}]]
+        set probe [stableProbe]
+        if {[string range $probe 0 95] ne $header} { error "query packet header changed while frozen" }
+        lappend words [unsignedBinary [string range $probe 96 127]]
+    }
+    if {[lindex $words 0] != 0x51525033 || [lindex $words 6] != $::queryBuild || [lindex $words 7] != 0x00000308} {
+        error "query packet magic/build/schema mismatch"
+    }
+    set serial $::querySerial
+    incr ::querySerial
+    puts "ECHO7_QUERY_BEGIN\t$serial\t$phase"
+    puts "ECHO7_QUERY_HEADER\t$serial\t$header"
+    for {set address 0} {$address < 8} {incr address} {
+        puts "ECHO7_QUERY_WORD\t$serial\t$address\t[binary32 [lindex $words $address]]"
+    }
+    puts "ECHO7_QUERY_END\t$serial"
+    flush stdout
+    set payload 0
+    for {set index 0} {$index < 5} {incr index} {
+        set payload [expr {$payload | ([lindex $words [expr {1+$index}]] << (32*$index))}]
+    }
+    if {($payload >> 141) != 0} { error "query packet reserved high bits are nonzero" }
+    # Last is bit48; index52:49, count57:53, reason60:58. All items
+    # additionally share the original tag/frame/time/config header[140:61].
+    set last [expr {($payload >> 48) & 1}]
+    set index [expr {($payload >> 49) & 15}]
+    set count [expr {($payload >> 53) & 31}]
+    set reason [expr {($payload >> 58) & 7}]
+    if {$count > 16 || $reason == 7 ||
+        ($count == 0 && ($index != 0 || !$last || $reason < 2)) ||
+        ($count > 0 && ($index >= $count || $last != ($index == $count-1) || $reason > 1 || ($reason == 1 && $count < 2)))} {
+        error "query result index/count/last/reason is inconsistent"
+    }
+    return [list ITEM $last $index $count [list [expr {$payload >> 61}] $count $reason]]
+}
+proc querySequence {phase deadline} {
+    set records 0
+    set identity {}
+    set expectedIndex -1
+    set sawLast 0
+    while {[clock milliseconds] < $deadline} {
+        lassign [queryRead $phase] kind value index count currentIdentity
+        if {$kind eq "BUSY"} {
+            if {!$value && $phase eq "DRAIN"} {
+                if {$records && !$sawLast} { error "abandoned query disappeared before its last item" }
+                return $records
+            }
+            if {!$value && $phase eq "RESULT"} { error "accepted query disappeared before completing" }
+            after 2
+            continue
+        }
+        if {$sawLast || $records >= 16} { error "query emitted more than one bounded response" }
+        if {$records == 0} {
+            set identity $currentIdentity
+            # Recovery may begin part-way through an abandoned response.
+            # A newly issued request must always start at index0.
+            set expectedIndex [expr {$phase eq "RESULT" ? 0 : $index}]
+        }
+        if {$currentIdentity ne $identity || $index != $expectedIndex} { error "query identity/count/sequence changed" }
+        incr expectedIndex
+        incr records
+        set sawLast $value
+        if {$sawLast && $phase eq "RESULT"} { return $records }
+    }
+    error "query timeout; retained packets can be recovered with markers --drain"
+}
+proc streamQuery {command deadlineSeconds} {
+    set opcode [expr {($command >> 24) & 15}]
+    if {$command != 0 && $opcode ni {8 9}} { error "query-stream requires LIST, GET or zero for drain" }
+    if {![string is integer -strict $deadlineSeconds] || $deadlineSeconds < 1 || $deadlineSeconds > 900} {
+        error "query deadlineSeconds must be1..900"
+    }
+    set initial [stableProbe]
+    set meta [unsignedBinary [string range $initial 64 95]]
+    if {[unsignedBinary [string range $initial 0 31]] != 0x42444247 ||
+        ($meta >> 24) != 8 || (($meta >> 16) & 255) != 3 || ($meta & 255) != 96} {
+        error "query operations require BCTL schema8/public3; no command issued"
+    }
+    set ::queryBuild [unsignedBinary [string range $initial 32 63]]
+    set ::querySerial 0
+    set start [clock milliseconds]
+    set deadline [expr {$start+1000*$deadlineSeconds}]
+    puts "ECHO7_QUERY_SESSION\t[string range $initial 0 95]"
+    set drained [querySequence DRAIN $deadline]
+    set returned 0
+    if {$command != 0} {
+        transact $command
+        set meta [string range $::lastActionProbe 64 95]
+        puts "ECHO7_QUERY_ACTION\t$opcode\t$meta"
+        flush stdout
+        if {[unsignedBinary $meta] & 0x7000} { error "LIST/GET action rejected after drain" }
+        # This ACK confirms entry into Csim's held request slot. Only the
+        # following public result packets prove the query actually completed.
+        set returned [querySequence RESULT $deadline]
+    }
+    puts "ECHO7_QUERY_DONE\t$opcode\t$drained\t$returned\t[expr {[clock milliseconds]-$start}]"
+    flush stdout
+}
+if {$operation eq "query-stream"} {
+    set deadlineSeconds 30
+    if {[llength $argv] == 5} { set deadlineSeconds [lindex $argv 4] }
+    set queryCode [catch {streamQuery $command $deadlineSeconds} queryMessage]
+    end_insystem_source_probe
+    if {$queryCode} { error $queryMessage }
+    exit 0
 }
 # A complete bank is retained before publication. Address changes preserve the
 # freeze toggle; every returned word must carry the identical 96-bit header.

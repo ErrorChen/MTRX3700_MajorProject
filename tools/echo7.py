@@ -611,6 +611,28 @@ class Runner:
                 raise RuntimeError("real calibration acceptance failed: " + assessment["reason"])
         return status
 
+    def query(self, opcode, selector=None):
+        """Run one real BCTL session, including recovery of abandoned replies."""
+        from query_transport import parseQueryStream
+        self.result.update(level="PROGRAMMED", inputSource="LIVE_FPGA_QUERY_RESULT",
+                           transport="ONE_BOUNDED_JTAG_QUERY_SESSION")
+        target = self.target()
+        command = opcode << 24
+        if selector is not None:
+            command |= (selector[0] << 4) | selector[1]
+        code, output = self.run("bctl_query", [self.qt("quartus_stp"), "-t", ROOT / "tools/tcl/jtag_control.tcl",
+            "query-stream", target["cable"], target["device"], str(command),
+            str(min(900, max(1, int(self.args.timeout))))], checked=False)
+        self.result["queryTransportExitCode"] = code
+        if code:
+            self.result["queryRecoveryCommand"] = "python tools/echo7.py markers --drain"
+            raise RuntimeError(f"query transport failed with exit {code}; retained packets are in bctl_query.log; use markers --drain")
+        transaction = parseQueryStream(output, opcode, selector)
+        self.result["queryTransaction"] = transaction
+        self.result["operationMeaning"] = ("Drained abandoned FPGA query replies; tracking request unchanged."
+            if opcode == 0 else "Complete FPGA LIST/GET reply; tracking request unchanged. Original capture timestamps must be rechecked before use.")
+        return transaction
+
     def program(self):
         self.result["level"] = "PROGRAMMED"
         buildPath = WORK / "last_build.json"
@@ -747,8 +769,18 @@ class Runner:
         elif c == "capture": self.capture()
         elif c == "status": self.control()
         elif c == "select":
-            self.control((1 << 24) | self.args.bay)
+            self.control((1 << 24) | (1 << 4) | self.args.bay)
             self.result["operationMeaning"] = "C simulator SELECT transaction; not microphone or digit-recognition evidence"
+        elif c in ("track", "locate"):
+            from query_transport import markerSelector
+            selector = markerSelector(self.args.type, self.args.digit)
+            if c == "locate":
+                self.query(9, selector)
+            else:
+                self.control((1 << 24) | (selector[0] << 4) | selector[1])
+                self.result["operationMeaning"] = "Typed C simulator SELECT; locking still requires three unique real frame observations."
+        elif c == "markers":
+            self.query(0 if self.args.drain else 8)
         elif c == "clear": self.control(2 << 24)
         elif c == "calibrate":
             self.control(3 << 24, operation="calibration-check" if getattr(self.args, "verify_busy", False) else "control")
@@ -809,6 +841,13 @@ def main(argv=None):
     group.add_argument("--held", action="store_true")
     select = commands.add_parser("select")
     select.add_argument("--bay", type=int, choices=range(1, 7), required=True)
+    commands.add_parser("markers").add_argument("--drain", action="store_true",
+        help="Recover abandoned query replies only, without issuing another LIST")
+    for name in ("locate", "track"):
+        typed = commands.add_parser(name)
+        typed.add_argument("--type", choices=("bay", "function", "reference"), required=True)
+        typed.add_argument("--digit", type=int,
+            help="bay1..6 or function1/2; omit for the paired calibration reference BJ")
     calibration = commands.add_parser("calibrate")
     calibration.add_argument("--arm", action="store_true", required=True)
     calibration.add_argument("--verify-busy", action="store_true", help="trace real sampling and verify a second arm is rejected while busy")

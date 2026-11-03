@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_VERSION = "5.050"
 SUITE_NAMES = (
     "perceptionCoreContinuous_tb", "hsvColourGate_tb", "targetTracker_tb",
-    "fixedSheetInteraction_tb", "colourSampler_tb",
+    "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb",
 )
 ERROR_PATTERN = re.compile(r"%Error:|Assertion failed|\bFAIL(?:ED)?\b|\*\*\s+(?:Error|Fatal)")
 MUTATION_BEFORE = "newReport.locked = nextCount == 3;"

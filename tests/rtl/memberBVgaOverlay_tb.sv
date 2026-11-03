@@ -94,7 +94,7 @@ module memberBVgaOverlay_tb;
     task automatic metadata(input integer frameId,input logic good,input integer age,input logic blue);
         begin
             debugWords=0;
-            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(perception_pkg::DEBUG_SCHEMA_VERSION),16'd2};
+            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(perception_pkg::DEBUG_SCHEMA_VERSION),16'(perception_pkg::PERCEPTION_CONTRACT_VERSION)};
             debugWords[2*32+:32]=32'd200000;
             debugWords[3*32+:32]=frameId;
             debugWords[4*32+:32]=32'd200000-age;

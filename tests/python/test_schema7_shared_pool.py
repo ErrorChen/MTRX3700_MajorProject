@@ -42,7 +42,7 @@ class Schema7SharedPoolTests(unittest.TestCase):
             old=decodeGrabWords(fixture(schema),BUILD)
             self.assertEqual((old['candidateStorageSlots'],old['outputCandidateCapacity']),(slots,capacity))
             self.assertEqual(old['poolLayout'],'SPLIT_PER_COLOUR')
-        with self.assertRaises(ValueError):schemaLayout(8)
+        with self.assertRaises(ValueError):schemaLayout(9)
 
     def testSharedCountsAreTotalBoundedAndRequireDenseTypedSlots(self):
         words=sharedWords(tuple([False]*2+[True]*14))

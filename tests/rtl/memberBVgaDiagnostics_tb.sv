@@ -141,7 +141,7 @@ module memberBVgaDiagnostics_tb;
         hueBoundaryRgb={8'd61,8'd0,8'd180};#1;
         if(newHueClass!=0)$fatal(1,"FAIL H above260 must reject");
         status='0;status.calibrated=1;status.activeCfgVersion=5;status.speechArmed=1;status.state=INTERACTION_SPEECH_ARMED;
-        debugWords[0+:32]=32'h45425031;debugWords[1*32+:32]=32'h00070002;
+        debugWords[0+:32]=32'h45425031;debugWords[1*32+:32]={16'(perception_pkg::DEBUG_SCHEMA_VERSION),16'(perception_pkg::PERCEPTION_CONTRACT_VERSION)};
         debugWords[3*32+:16]=99;debugWords[7*32+:16]=16'h3020;
         debugWords[9*32+:10]={5'd14,5'd2};debugWords[10*32+:76]=status;debugWords[(DEBUG_TAIL_BASE+1)*32+:4]=8;debugWords[(DEBUG_TAIL_BASE+3)*32]=1;
         debugWords[24*32+:32]=32'h81000000;debugWords[25*32+:32]={7'd0,9'd250,7'd0,9'd280};debugWords[26*32+:32]={8'd0,8'd10,8'd0,8'd50};

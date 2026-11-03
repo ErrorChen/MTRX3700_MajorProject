@@ -13,7 +13,7 @@ from unittest.mock import Mock, patch
 ROOT = Path(__file__).resolve().parents[2]
 sys.path[:0] = [str(ROOT / "tools"), str(ROOT / "tools/lib"), str(ROOT / "tests/python")]
 import echo7
-from contract_model import FIELD_LAYOUTS, packPayload
+from contract_model import payloadLayout, packPayload
 from debug_decode import decodeWords, decodeGrabWords, compareMarkerPixels, requireAlgorithmMode
 from hardware_measurement import measureTrials
 from test_hardware_measurement import FixtureRunner
@@ -26,10 +26,11 @@ RAW_FIELDS = ("rawCameraMode", "rawModeRequested", "rawDisplayActive")
 
 
 def setReport(words, **updates):
-    fields = {name: 0 for name, _ in FIELD_LAYOUTS["targetReport"]}
+    contractVersion = 3 if words[1] >> 16 >= 8 else 2
+    fields = {name: 0 for name, _ in payloadLayout("targetReport", contractVersion)}
     fields.update(frameId=9, captureStartUs=1000, configVersion=4)
     fields.update(updates)
-    packed = packPayload("targetReport", fields)
+    packed = packPayload("targetReport", fields, contractVersion=contractVersion)
     for i in range(5):
         words[13 + i] = (packed >> (32 * i)) & 0xffffffff
 
@@ -38,12 +39,12 @@ def fixture(schema=5, raw=False):
     count = 160 if schema == 6 else 96
     tail = count - 8
     words = [0] * (count + 2)
-    words[0], words[1] = 0x45425031, (schema << 16) | 2
+    words[0], words[1] = 0x45425031, (schema << 16) | (3 if schema >= 8 else 2)
     words[2:8] = [20000, 9, 1000, 12000, 4, (33 << 8) | 28]
     words[tail+3], words[tail+4], words[count], words[count+1] = int(not raw), BUILD, 9, BUILD
-    words[tail+7] = (160 << 8) | 64 if schema == 1 else (2 << 24) | ((5 if schema in (6, 7) else 4) << 16) | (84 << 8) | 64
+    words[tail+7] = (160 << 8) | 64 if schema == 1 else ((3 if schema >= 8 else 2) << 24) | ((5 if schema >= 6 else 4) << 16) | (84 << 8) | 64
     if schema >= 4:
-        words[tail+5] = ((16 if schema in (6, 7) else 8) << 16) | (15 << 8) | ((1 << 24) if schema == 7 else 0)
+        words[tail+5] = ((16 if schema >= 6 else 8) << 16) | (15 << 8) | ((1 << 24) if schema >= 7 else 0)
     if raw:
         words[7] |= 0x00e00000
     setReport(words)
@@ -69,7 +70,7 @@ class RawCameraModeTests(unittest.TestCase):
 
     def testUnknownSchemaAndReservedBitsFail(self):
         with self.assertRaisesRegex(ValueError, "schema"):
-            decodeWords(fixture(8)[:96])
+            decodeWords(fixture(9)[:96])
         for schema, bit in ((5, 16), (5, 17), (5, 24), (5, 31), (4, 21), (3, 22), (2, 20)):
             with self.subTest(schema=schema, bit=bit):
                 words = fixture(schema)
@@ -194,11 +195,11 @@ class RawCameraModeTests(unittest.TestCase):
         runner.run.assert_called_once()
         self.assertNotIn("recognitionAssessment", runner.result)
 
-    def testBctlSchemas5Through7ActionAcceptedAndSchema8Rejected(self):
-        for schema in (5, 6, 7, 8):
+    def testBctlSchemas5Through8ActionAcceptedAndSchema9Rejected(self):
+        for schema in (5, 6, 7, 8, 9):
             with self.subTest(schema=schema):
                 words = fixture(schema)[:-2]
-                meta = (schema << 24) | 0x00028000 | len(words)
+                meta = (schema << 24) | ((3 if schema >= 8 else 2) << 16) | 0x8000 | len(words)
                 header = f"{0x42444247:032b}{BUILD:032b}{meta:032b}"
                 lines = [f"ECHO7_HEADER\t{header}", f"ECHO7_ACTION\t1\t{meta:032b}"]
                 lines.extend(f"ECHO7_WORD\t{i}\t{word:032b}" for i, word in enumerate(words))
@@ -207,11 +208,11 @@ class RawCameraModeTests(unittest.TestCase):
                 runner.target = lambda: {"cable": "SYNTHETIC", "device": "SYNTHETIC"}
                 runner.qt = lambda name: "NOT_EXECUTED"
                 runner.run = lambda *args, **kwargs: (0, "\n".join(lines))
-                if schema in (5, 6, 7):
+                if schema in (5, 6, 7, 8):
                     state = runner.control((1 << 24) | 3)
                     self.assertEqual(state["schema"], schema)
                 else:
-                    with self.assertRaisesRegex(RuntimeError, "schema"):
+                    with self.assertRaisesRegex((RuntimeError, ValueError), "schema"):
                         runner.control((1 << 24) | 3)
 
     def testAlgorithmComparisonRefusesEachRawFlagIncludingSelectSnapshot(self):
@@ -328,7 +329,7 @@ proc write_source_data {args} {
 proc read_probe_data {args} {
     set address [expr {($::source>>8)&255}]
     set word [lindex $::words $address]
-    set meta [expr {(SCHEMA<<24)|(2<<16)|((($::source>>31)&1)<<15)|[llength $::words]}]
+    set meta [expr {(SCHEMA<<24)|((SCHEMA>=8?3:2)<<16)|((($::source>>31)&1)<<15)|[llength $::words]}]
     return "[bits 0x42444247 32][bits 0x12345678 32][bits $meta 32][bits $word 32]"
 }
 set ::words {WORDS}
@@ -351,7 +352,7 @@ source SCRIPT
         self.assertNotIn("ECHO7_TRIAL_DONE", output)
 
     def testActualTclRefusesUnknownSchemaBeforeSendingAction(self):
-        code, output = self.invokeRawTcl(schema=8, operation="control")
+        code, output = self.invokeRawTcl(schema=9, operation="control")
         self.assertNotEqual(code, 0)
         self.assertIn("unsupported BCTL schema before action", output)
         self.assertNotIn("ECHO7_ACTION", output)

@@ -246,6 +246,87 @@ configured-orientation bbox pairing, not an unlimited-angle calibration claim.
 Its source, tests, fitted result and new board measurements are recorded below
 only when executed; a9caa52f results above do not certify that new source.
 
+### Executed checkpoint127d80b2: scale-aware calibration pairing
+
+This checkpoint was completed before the later RUN2/publicv3 edits. Its exact
+sourceSHA is127d80b2962cd3b1eb203e9270e1d569a90277437b0d2d7f63709e7d1329e2ab;
+SOFSHA7618efef5201a3ddc9dd70fdf073d13045293f3431d5a5fdd51d68ff8dbb807a.
+Build20261103T014610_881799Z_build passed full Quartus18.1 flow and timing.
+Adjusted ALMs26528/32070; actual placed31581/32070 (98%); registers36651,
+M10K347, DSP47, memory2790208bits. Worst setup/hold/recovery/removal slack was
+2.588/0.102/27.511/0.397ns. All72 timing/constraint checks passed, with63
+synchroniser chains.104 warning occurrences had no new unexplained signature;
+ten previously reviewed32-to15bit truncation warnings disappeared after explicit
+widths. Physical placement margin remained small and required another actual
+fit for subsequent additions.
+
+ModelSim's complete35-bench frozen suite20261103T014940_657181Z_test passed;
+the R6 Verilator5.050 Bash entry20261103T014758_481494Z_verilator_course passed
+in89.781s and caught the intended premature-lock mutant. The two targeted
+calibration benches20261103T014519_152810Z_test passed310checks. An earlier
+targeted aggregate014319 remained FAIL because its source changed mid-run,
+even though its individual benches passed; it was not promoted to a green run.
+
+Program20261103T021011_039452Z_program succeeded on DE-SoC[USB-1], FPGAindex2,
+ID0x02D120DD; board buildId127d80b2/schema7 was read back. Fresh capture
+20261103T021040_629684Z_capture, frame689/config1, recognised all10 numbered
+markers plus uniqueBJ. Three real calibration attempts021125/021131/021136
+committed versions2/3/4, each with8valid sample frames. Conservative observed
+attempt-to-commit bounds were600946,605891,531185µs. Each busy-request rejection
+test also confirmed the original attempt completed. Camera trial
+20261103T021159_884118Z_test passed300/300 in each of three runs (900/900),
+maximum capture-to-completion46313/46310/46309µs. These results certify
+colourAlgorithm2/RUN3,reader5,public2/schema7, not the later unbuilt edits.
+
+### Consolidation checks and subsequent RUN2/publicv3 development
+
+The authorised cleanup removed1705 files totalling92.7MiB after a SHA inventory
+at build/member_b/document_cleanup_inventory.json. Required regression inputs
+were reduced to15real PNGs and their profiles/truth/provenance,28files about865KB
+under tests/fixtures/camera. Seven reference PDFs were retained byte-for-byte;
+their final location is docs/ directly. Formal single-page marker artwork stays
+in assets/markers. No Git history or user database was removed. Later Git HEAD
+was observed at d1c29be (user commit,2026-11-03T13:46:29+11:00); source hashes,
+not an assumption about an earlier HEAD, bind each test/build.
+
+Post-migration MODEL run20261103T015637_094102Z_test passed239tests with no skips.
+An earlier isolated export run retained three scratch-directory setup failures;
+the fixed BCTL/submission follow-up015326 passed9tests. Portable repository
+checks now work in an exported tree without.git, using a temporary isolated Git
+directory and real ignore semantics; six new tests and an actual no-Git export
+passed021140_repository_check. The explicit datasheet sidecar/source hash is
+required before a generated PDF can enter a submission ZIP.
+
+RUN2 was introduced specifically for the observed frame37621 split, retaining
+the filter's two-token delay and flush schedule. ColourAlgorithm3 uses the same
+HSV2 gate but keeps runs of at least2pixels; historical colour2 remains RUN3.
+Across15real images/32profiles, model accepted counts were267(RUN3),269(RUN2),
+271(no horizontal filter), with no existing accepted ID lost and no overflow.
+RUN2 reconnected the measured two-pixel side bridges. Peak red/blue activity
+increased from9/8 to13/9; synthetic sixteen width2noise bars can now overflow
+and correctly invalidate a frame.410synthetic cases preserved295 accepts,
+236 explicit negatives had zero false accepts, and334known expectations had
+zero mismatch. The real1×3 anchor remains rejected; no direction was guessed.
+The actual dual-RUN2/RUN3 RTL bench021935 passed2841rows,909120pixels and
+243local patterns. Related91host tests passed with resultSHA
+f7089e5913dc6625bb3abfed5351ac850bab98c98b03d4ba3cd30a185a3efa40.
+
+The user's next interface request exposed that publicv2 SELECT could only track
+blue bays and offered no public marker inventory/location query. Publicv3 adds
+typed identities (blue bay, red function, uniqueBJ), LIST/GET alongside the same
+CLEAR/SELECT request channel, and an independent query response stream. Query
+snapshots use three small synchronous descriptor banks, not a second colour
+frame buffer. All positions still derive from recognised pixels and retain
+native frame/time/config metadata. GET returns all same-type/digit positions;
+tracking refuses ambiguous duplicates. Private schema8 and QRP3 transport,
+host commands/client, consumers and tests are upgraded together. The sole
+normative protocol is README §7–8 and perception_pkg.sv.
+
+During implementation, targeted run024944 passed CDC, collision, calibration
+and pause benches individually but its aggregate remained FAIL because the
+query-store source changed during execution. Final frozen-source evidence must
+be recorded separately; no partial run certifies a later binary.
+
 ### Current-source completion record
 
 IN_PROGRESS: append final source/SOF identity, executed tests, fit/program and

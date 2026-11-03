@@ -10,14 +10,20 @@ from trial_stream import parseTrialStream, TrialRecordReader
 BUILD = 0x12345678
 
 
-def record(serial=0, phase="INITIAL", trial=0, bay=0, actionMeta=0x04028060):
+def record(serial=0, phase="INITIAL", trial=0, bay=0, actionMeta=None, schema=4):
     words = [0] * 96
-    words[0], words[1], words[92], words[93] = 0x45425031, 0x00040002, BUILD, (8 << 16) | (12 << 8)
+    version = 3 if schema == 8 else 2
+    meta = (schema << 24) | (version << 16) | 0x8060
+    if actionMeta is None:
+        actionMeta = meta
+    words[0], words[1], words[92], words[93] = 0x45425031, (schema << 16) | version, BUILD, (8 << 16) | (12 << 8)
+    if schema == 8:
+        words[93] = (1 << 24) | (16 << 16) | (15 << 8)
     lines = [f"ECHO7_TRIAL_BEGIN\t{serial}\t{phase}\t{trial}\t{bay}"]
     if phase in ("SELECT", "CLEAR"):
         opcode = 1 if phase == "SELECT" else 2
         lines += [f"ECHO7_TRIAL_ACTION\t{serial}\t{opcode}\t{actionMeta:032b}"]
-    lines += [f"ECHO7_TRIAL_HEADER\t{serial}\t{0x42444247:032b}{BUILD:032b}{0x04028060:032b}"]
+    lines += [f"ECHO7_TRIAL_HEADER\t{serial}\t{0x42444247:032b}{BUILD:032b}{meta:032b}"]
     lines += [f"ECHO7_TRIAL_WORD\t{serial}\t{i}\t{word:032b}" for i, word in enumerate(words)]
     lines += [f"ECHO7_TRIAL_END\t{serial}"]
     return "\n".join(lines) + "\n"
@@ -62,6 +68,29 @@ class TrialStreamTests(unittest.TestCase):
         reader.control()
         with self.assertRaisesRegex(RuntimeError, "out of order"):
             reader.control((1 << 24) | 1)
+
+
+    def testSchemaEightUsesPublicThreeAndTypedBayCommand(self):
+        text = record(schema=8) + record(1, "SELECT", 1, 1, schema=8) + record(2, "STATUS", 1, 1, schema=8) + record(3, "CLEAR", schema=8)
+        rows, _ = parseTrialStream(text, BUILD)
+        self.assertEqual(rows[0]["decoded"]["contractVersion"], 3)
+        self.assertIn("markerType", rows[0]["decoded"]["targetReport"])
+        self.assertNotIn("bayId", rows[0]["decoded"]["targetReport"])
+        reader = TrialRecordReader(argparse.Namespace(args=None, out=None, result={}), rows)
+        for command in (0, (1 << 24) | (1 << 4) | 1, 0, 2 << 24):
+            reader.control(command)
+        self.assertEqual(reader.position, 4)
+        wrong = TrialRecordReader(argparse.Namespace(args=None, out=None, result={}), rows)
+        wrong.control()
+        with self.assertRaisesRegex(RuntimeError, "sequence differs"):
+            wrong.control((1 << 24) | (2 << 4) | 1)
+
+    def testMixedPublicVersionInTrialHeaderOrActionIsRejected(self):
+        valid = record(schema=8)
+        with self.assertRaisesRegex(ValueError, "identity"):
+            parseTrialStream(valid.replace(f"{0x08038060:032b}", f"{0x08028060:032b}"), BUILD)
+        with self.assertRaisesRegex(ValueError, "incompatible schema"):
+            parseTrialStream(record(0, "SELECT", 1, 1, 0x08028060, schema=8), BUILD)
 
 
 if __name__ == "__main__":

@@ -549,6 +549,33 @@
         "rtl/vision/markerQueryStore.sv",
         "tests/rtl/markerQueryStore_tb.sv"
       ]
+    },
+    {
+      "name": "perceptionCoreQuery_tb",
+      "passMarker": "PASS perceptionCoreQuery_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreQuery_tb.sv"
+      ],
+      "inputSource": "PROTOCOL_READER_INJECTION"
     }
   ]
 }

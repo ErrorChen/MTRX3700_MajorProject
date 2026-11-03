@@ -174,15 +174,15 @@ Contours follow raw HSV boundaries, supporting several same-colour and non-recta
 
 轮廓沿原始HSV边界，可显示多个同色非矩形区域，但轮廓本身不是识别。SW9优先关闭所有覆盖图形，不受SW0/SW1影响。暂停时相机、原生帧号和时间继续；输入SOF应用暂停/恢复时版本只增一次、取消未提交校色、保留已提交颜色并清跟踪。禁用帧明确报告坏/空观测，已展示且被反压的事务仍稳定。readiness在禁用请求后立即下降，恢复后直到新正常完成帧才上升，锁定仍须三个新唯一观测。切换请求、处理实际模式、显示实际模式分别记录，过渡期短暂不同合法。
 
-## 7. Authoritative Member B/C contract v2 / 唯一 B/C 契约v2
+## 7. Authoritative Member B/C contract v3 / 唯一 B/C 契约v3
 
 This section and [perception_pkg.sv](rtl/common/perception_pkg.sv) define the single public contract. [perceptionLink.sv](rtl/common/perceptionLink.sv) provides perception/controller/monitor directions; [perceptionCore.sv](rtl/top/perceptionCore.sv) is the integration entry and [memberCSimulator.sv](rtl/debug/memberCSimulator.sv) is a stationary consumer. All fields are unsigned, packed in table order from most significant to least significant. This internal FPGA contract does not specify off-chip serial byte order.
 
 本节及共享 package 是唯一公共契约；perceptionLink 定义双方/监视方向，perceptionCore 为集成入口，memberCSimulator 为无运动消费者。字段均无符号，按表序从高位到低位打包；此 FPGA 内部接口不定义片外串行字节序。
 
-`PERCEPTION_CONTRACT_VERSION=2`, `DEFAULT_ACTIVE_BAY_MASK=10'h07E`, `INVALID_BAY_ID=4'hF`. Only1–6 are enabled;0/7/8/9 are invalid selections. CLEAR is a distinct operation. `fixedSheetMode=1` is a B configuration, not another C channel. Contract version is distinct from run-time configVersion and private debug schema. The public widths are22/139/104/76bits; legacy75-bit status cannot silently connect to the76-bit version. No per-transaction version field is added; both sides build from the same package and verify `$bits`.
+`PERCEPTION_CONTRACT_VERSION=3`, `DEFAULT_ACTIVE_BAY_MASK=10'h07E`, `INVALID_BAY_ID=4'hF`. A marker is identified by **type and digit**, never its candidate slot or sheet position. `MARKER_BAY=1` means blue1–6; `MARKER_FUNCTION=2` means red1/2; `MARKER_REFERENCE=3,digit=15` means the uniquely paired blue calibration strip BJ. `MARKER_NONE=0,digit=15` is the empty identity. Blue0/7/8/9 and unimplemented red digits are invalid. `fixedSheetMode=1` is a B configuration. Contract version is distinct from run-time configVersion and private debug schema. Request/report/query/event/status widths are24/141/141/104/76bits. Both sides build from the same package and verify `$bits`; v2 wiring cannot silently connect to v3. No version field is repeated in every public transaction.
 
-公共协议版本2、掩码0x07E、无效ID为15，只启用1–6；CLEAR独立，不能复用0。fixedSheetMode属于B配置，不增加C通道。协议版本、运行配置版本和私有调试schema是不同概念。四个结构位宽为22/139/104/76，旧75位状态不能隐式补位连接；双方从同一package构建并检查位宽，不额外逐包添加版本字段。
+公共协议版本3，用**类型＋数字**表达查询目标，不能用槽号或纸面位置。类型1为蓝车位1–6，类型2为红功能牌1/2，类型3加数字15为唯一配对确认的蓝校色条BJ，类型0加数字15表示空身份。蓝0/7/8/9及未实现红牌无效。掩码仍为0x07E，CLEAR独立。请求/跟踪报告/查询结果/事件/状态分别为24/141/141/104/76位；v2必须显式迁移，不能靠补位连接。双方共用package，协议版本与运行配置版本、调试schema分开，避免逐包重复版本开销。
 
 ### 7.1 Clock, reset and channels / 时钟、复位与通道
 
@@ -193,8 +193,9 @@ This section and [perception_pkg.sv](rtl/common/perception_pkg.sv) define the si
 | `timeUs` |32| Top→B/C | Shared microsecond counter, modulo2³², resets0 / 共享微秒计数、模回绕 |
 | `interactionEnable` |1| C→B | Enable interactions/arming; low cancels unfinished work and disarms / 允许交互，低取消未完事务并撤武装 |
 | `interactionPermit` |1| C→B | C confirms stationary and permits actual work continuously / C确认静止并持续许可实际工作 |
-| `targetRequest`, `targetRequestValid/Ready` |22,1,1| C→B, C→B/B→C | Request transaction / 请求事务 |
-| `targetReport`, `targetReportValid/Ready` |139,1,1| B→C, B→C/C→B | Per-capture target result; valid does not mean observed / 采集帧结果，valid不等于看见 |
+| `targetRequest`, `targetRequestValid/Ready` |24,1,1| C→B, C→B/B→C | Four operations share one channel / 四种操作共用一个请求通道 |
+| `targetReport`, `targetReportValid/Ready` |141,1,1| B→C, B→C/C→B | Continuous selected-target result; valid does not mean observed / 持续跟踪结果，valid不等于看见 |
+| `queryResult`, `queryResultValid/Ready` |141,1,1| B→C, B→C/C→B | On-demand LIST/GET result batch / 按需列举、位置查询结果批次 |
 | `userEvent`, `userEventValid/Ready` |104,1,1| B→C, B→C/C→B | Interaction terminal event / 交互终结事件 |
 | `status` |76| B→C | Registered current status, no valid/ready / 注册的当前状态，无独立握手 |
 
@@ -202,19 +203,20 @@ A transfer occurs only on `!reset && valid && ready`. A sender must assert valid
 
 只有非复位且valid/ready同为1的沿发生传输；发送方不能等ready才置valid。反压后valid及整个载荷保持到握手或共同复位，新请求、提交或取消也不能改写。复位优先，清双方valid/ready、队列、bank、跟踪历史和C缓存；恢复默认颜色/version0、未校准、未武装、空闲无目标，链路恢复前readiness为0。不支持B独自复位而C继续沿用旧缓存，这需要另行升级epoch/监控契约。
 
-### 7.2 `targetRequest_t` —22bits / 目标请求
+### 7.2 `targetRequest_t` —24bits / 统一请求
 
 | Field / 字段 | Bits | Meaning / 含义 |
 |---|---:|---|
-| `operation` |2|0=`TARGET_CLEAR`,1=`TARGET_SELECT`;2/3reserved / 保留 |
+| `operation` |2|0=`TARGET_CLEAR`,1=`TARGET_SELECT`,2=`TARGET_LIST`,3=`TARGET_GET` |
 | `requestTag` |16| New tag per request,0legal; modulo wrap / 每次新请求标签，0合法 |
-| `bayId` |4| SELECT accepts1–6; CLEAR ignores / SELECT只接受1–6，CLEAR忽略 |
+| `markerType` |2|0NONE,1BAY (blue),2FUNCTION (red),3REFERENCE (BJ) / 标牌类型 |
+| `digit` |4| BAY1–6,FUNCTION1/2,REFERENCE15; CLEAR/LIST ignore identity / 数字或BJ专用值15 |
 
-At acceptance C changes its expected tag and clears cached measurement; B clears confirmation. A new request binds from the first complete capture after safe application. Frames already captured/processing keep their old bound tag. An invalid operation/ID is consumed, clears selection, retains the new tag, sets FAULT_REQUEST_INVALID and reports bayId15/targetSelected0/INVALID_REQUEST; it cannot leave the old target active. CLEAR gives NO_SELECTION. Tags compare by equality, not magnitude, and must not be reused while old same-tag transactions can remain. Acceptance is not lock.
+SELECT starts continuous tracking of the exact type/digit; CLEAR stops tracking. At acceptance C changes its expected tracking tag and clears its cache; B clears confirmation. The request binds from the first complete capture after safe application. Already captured/processing frames retain their old bound tag. An invalid SELECT identity is consumed, clears selection, keeps its tag, sets FAULT_REQUEST_INVALID and reports NONE/15,targetSelected0,INVALID_REQUEST. CLEAR gives NO_SELECTION. **LIST returns all recognised markers; GET returns all locations matching one exact identity. Neither changes selection, tracking tag, confirmation count or cache.** LIST/GET use queryResult, not targetReport. An invalid GET produces QUERY_INVALID_REQUEST and leaves tracking intact. Tags compare by equality and must not be reused while old same-tag transactions remain. Acceptance is neither recognition nor lock.
 
-请求接受后C切换期望tag并清缓存，B清连续确认；新请求从安全生效后的首个完整采集帧绑定。已采集/处理中旧帧仍保留旧tag。无效操作/ID也被消费，但清选择、保留新tag、置故障并报告无效请求，不能暗中维持旧目标；CLEAR报告无选择。tag按相等比较，不比大小，旧同tag事务可能滞留时不能复用。接受不代表锁定。
+SELECT持续跟踪指定类型和数字；CLEAR停止跟踪。只有这两类请求更新跟踪tag并清确认/缓存，已采集旧帧保留旧tag。无效SELECT清选择、保留新tag并报告NONE/15及INVALID_REQUEST，不能继续旧目标。**LIST列出当前识别标牌；GET返回指定类型和数字的全部位置，均不改变当前跟踪。** 两种查询通过queryResult返回，无效GET也不影响跟踪。Tag按相等比较，旧事务未排空前不能复用；请求被接受不代表已经识别或锁定。
 
-### 7.3 `targetReport_t` —139bits / 目标报告
+### 7.3 `targetReport_t` —141bits / 持续跟踪报告
 
 | Field / 字段 | Bits | Meaning / 含义 |
 |---|---:|---|
@@ -222,11 +224,12 @@ At acceptance C changes its expected tag and clears cached measurement; B clears
 | `frameId` |16| Original capture sequence,0legal / 原生采集序号 |
 | `captureStartUs` |32| Actual capture SOF time / 真实采集SOF时间 |
 | `configVersion` |16| Configuration actually used by this frame / 本帧实际配置 |
-| `bayId` |4| Selected1–6, otherwise15 / 选中号码或15 |
+| `markerType` |2| Selected type, otherwiseNONE / 选中类型或空 |
+| `digit` |4| Selected digit,15 forBJ or empty; inspect type / 选中数字，BJ或空为15，须结合类型 |
 | `frameGood` |1| Whole consistent frame/candidates/glyph/config / 整帧与附属数据一致可用 |
 | `observed` |1| Exactly one reliable current selected target / 当前唯一可靠目标 |
 | `locked` |1| Confirmed across three consecutive distinct good frames / 连续三个不同好帧确认 |
-| `ambiguous` |1| Multiple accepted locations for selected number / 同号多个位置 |
+| `ambiguous` |1| Multiple accepted locations for the exact selected type/digit / 同类型同数字多个位置 |
 | `targetSelected` |1| Legal logical selection, not visibility / 逻辑选择合法，不等于可见 |
 | `centreU` |8| Public u0–239 / 对外横坐标 |
 | `centreV` |9| Public v0–319 / 对外纵坐标 |
@@ -394,9 +397,10 @@ All budgets are below2³¹µs. Events formed in the same microsecond as cancella
 
 ```text
 currentRequest.operation==TARGET_SELECT
-&& currentRequest.bayId in {1,2,3,4,5,6}
+&& markerEnabled(currentRequest.markerType,currentRequest.digit)
 && report.requestTag==currentRequest.requestTag
-&& report.bayId==currentRequest.bayId
+&& report.markerType==currentRequest.markerType
+&& report.digit==currentRequest.digit
 && report.configVersion==status.activeCfgVersion
 && report.targetSelected && report.frameGood
 && report.observed && report.locked && !report.ambiguous
@@ -408,15 +412,97 @@ C may additionally require calibrated as its policy; a real default-profile obse
 
 C可按自身政策额外要求calibrated，但默认配置真实观察与已完成用户校色是两件事。空闲武装busy0不能永久阻断观察，实际交互时仍可记录真实视觉结果；busy0或事件不是运动许可。B不提供距离、转向、停车完成或可行驶结论。新请求/配置、当前流坏/缺帧与过期使缓存失效，旧tag/配置、重复/倒序包不能替换当前有效缓存，每次使用还检查实时状态/时间。JTAG选择走同一接口，绝非语音证据。
 
+### 7.9 `queryResult_t` —141bits / 当前标牌与位置查询
+
+Use LIST to answer “which signs can B see?” and GET to answer “where are the blue1 signs?”. Each accepted request reserves the **latest complete frame at that edge**, not a newly triggered camera frame. One query may be outstanding. Further query requests wait for its final result transfer; SELECT/CLEAR and targetReport remain independent. A sender must finish a stalled request before presenting another request on the same channel. The host client drains abandoned queries explicitly before starting another.
+
+LIST回答“当前识别到哪些牌”，GET回答“蓝1在哪里”。请求接受时锁定**当时最新完整帧**，不触发新拍摄。最多一个未完成查询；第二个查询须等前一批排空，但查询响应反压不影响SELECT/CLEAR、相机或持续报告。同一个请求通道上已被反压的请求不能自行换成另一条；主机客户端会先明确排空遗留查询。
+
+| Field / 字段 | Bits | Meaning / 含义 |
+|---|---:|---|
+| `requestTag` |16| Query tag, independent of active tracking tag / 查询tag，不替换跟踪tag |
+| `frameId` |16| Same captured frame for the complete batch / 整批同一采集帧 |
+| `captureStartUs` |32| Original SOF timestamp / 原始采集时间 |
+| `configVersion` |16| Configuration of that frame / 本帧配置 |
+| `reason` |3| Query result code below / 查询结果码 |
+| `count` |5| Number of matching entries,0–16 / 本批匹配条数 |
+| `index` |4| Entry index0…count−1;0 for empty / 本批序号，不是稳定对象ID |
+| `last` |1| Final item; also1 for the sole empty/error packet / 末项标记 |
+| `markerType` |2| BAY,FUNCTION,REFERENCE; NONE for empty / 标牌类型 |
+| `digit` |4| Real digit;15 forBJ/empty / 真实数字或BJ/空值 |
+| `centreU` |8| As §7.4 / 同§7.4 |
+| `centreV` |9| As §7.4 / 同§7.4 |
+| `boxWidth` |8| Coloured region width / 彩色区域宽 |
+| `boxHeight` |9| Coloured region height / 彩色区域高 |
+| `quality` |8| Digit quality; BJ uses its paired red1 quality / 数字质量，BJ继承配对红1质量 |
+
+| Value | Reason | Meaning / 含义 |
+|---:|---|---|
+|0|`QUERY_OK`|Nonempty LIST, or one GET match / LIST有结果或GET唯一结果 |
+|1|`QUERY_MULTIPLE`|GET matched multiple locations; return every location / GET多位置，逐条返回全部 |
+|2|`QUERY_NOT_FOUND`|A good current frame contains no match / 当前好帧没有匹配 |
+|3|`QUERY_FRAME_BAD`|Latest frame is invalid/dropped; do not reuse older good data / 最新帧坏或丢弃，不冒用旧好帧 |
+|4|`QUERY_NOT_READY`|No complete frame or perception currently unavailable / 尚无完整帧或链路不可用 |
+|5|`QUERY_INVALID_REQUEST`|Invalid GET identity / GET身份非法 |
+|6|`QUERY_STALE`|Frame configuration differs or original age exceeds budget / 配置不符或原始采集超龄 |
+|7|Reserved / 保留|Reject unknown values / 拒绝未知值 |
+
+For count>0, all packets share tag,frameId,captureStartUs,configVersion,count,reason; index increases by one and only the final packet has last1. LIST may legitimately contain the same type/digit twice. GET then returns both with MULTIPLE; **SELECT of that identity reports ambiguous1 with zero measurements**, rather than choosing the first. Red1 and blue1 never conflict. Unknown/rejected glyphs do not appear. BJ appears only after unique same-frame red1/reference pairing; an arbitrary blue rectangle is not BJ. Candidate overflow invalidates the frame, not just the missing item.
+
+count大于0时，全批tag、帧号、时间、配置、总数及原因相同；index连续递增，只有末项last为1。LIST允许同类型同数字重复；GET返回全部位置并标MULTIPLE，而**SELECT遇同类型同数字多位置时报告歧义、测量清零**，不会随意取第一个。红1与蓝1不冲突；拒识不列出，BJ必须来自同帧唯一配对，任意蓝矩形不能冒充。候选溢出使整帧无效。
+
+Empty/error replies contain exactly one packet: count0,index0,last1,typeNONE,digit15 and zero geometry/quality. Error precedence is INVALID_REQUEST,NOT_READY,FRAME_BAD,STALE,then match evaluation. With no captured frame, frame/time are0 and config is the current active version. The initial query age budget is150000µs. Once accepted, a batch remains immutable through configuration changes and stalls; C must recheck **live** readiness, configuration and original age before using it. QUERY_OK does not mean locked or permission to move. No separate header, operation echo, slot identifier or whole image is transferred.
+
+空结果/错误统一只发一条：count0、index0、last1、NONE/15、位置尺寸质量全零。错误优先级为非法请求、未就绪、坏帧、过期，之后才匹配。尚无采集帧时帧号/时间为0，配置为当前版本。初始年龄预算150000µs。已接受整批在配置变化或反压时仍保持原内容，C每次使用须检查**实时**readiness、配置及原始年龄；QUERY_OK不等于锁定或运动许可。不额外传头包、操作回显、候选槽号或整图。
+
+Three banks of16×64-bit descriptors separate WRITING, latest complete and READING ownership in synchronous RAM. Publication follows all16 writes and the optional BJ patch. A stalled reader owns its bank; new captures keep replacing the latest complete bank. A newer dropped/raw frame invalidates the latest answer, and a delayed older completion cannot restore it. Common reset discards all ownership and pending transactions without bulk RAM reset.
+
+三个16×64位描述符RAM分离写入、最新完成和读取所有权，全部16槽及可选BJ补写结束后才发布。查询反压锁住自己的bank，新采集仍更新最新完整帧。更新的坏/纯相机帧使查询失效，延迟完成旧帧不能覆盖它。共同复位清所有权与事务，不逐项清大RAM。
+
+### 7.10 Member C connection and commands / Member C接入步骤与命令
+
+For FPGA integration, compile the shared package before both teams' modules. Replace the `memberCSimulator`/`memberBDebug` request producer in [perceptionDemoTop.sv](rtl/top/perceptionDemoTop.sv) with C's controller, and connect the four valid/ready channels plus status, common reset/time and interaction permissions to `perceptionCore`. Keep the camera wrapper and its CDC intact. `queryBusy` and debugWords are private wrapper diagnostics; C only needs queryRequestReady/valid and queryResultReady/valid. Do not instantiate two request drivers. C may hold queryResultReady high when its sink can consume one item per clock.
+
+FPGA集成先编译共享package。以[顶层现有连线](rtl/top/perceptionDemoTop.sv)为模板，将memberCSimulator/memberBDebug请求源换成C控制器，接入请求、跟踪报告、查询结果、事件四个valid/ready通道，以及status、共同复位/时基和交互许可。保留相机及其CDC。queryBusy与debugWords是调试wrapper信号，C只需公共握手；不能同时接两个请求驱动。接收器能够每拍消费时可将queryResultReady常置1。
+
+| C's intention / C的需求 | Request payload / 请求 | Response / 返回 |
+|---|---|---|
+| List all recognised signs / 列出当前标牌 | `{TARGET_LIST,tag,MARKER_NONE,4'hf}` | queryResult untillast / 读到last |
+| Locate every blue1 / 查蓝1全部位置 | `{TARGET_GET,tag,MARKER_BAY,4'd1}` | one/multiple/empty query batch / 唯一、多位置或空 |
+| Locate red1 / 查红1位置 | `{TARGET_GET,tag,MARKER_FUNCTION,4'd1}` | independent of blue1 / 不与蓝1混淆 |
+| Locate BJ / 查校色条 | `{TARGET_GET,tag,MARKER_REFERENCE,4'hf}` | only actual uniquely paired BJ / 仅真实唯一配对BJ |
+| Continuously track blue3 / 持续跟踪蓝3 | `{TARGET_SELECT,tag,MARKER_BAY,4'd3}` | targetReport each completed observation / 持续报告 |
+| Track red2 orBJ / 跟踪红2或BJ | SELECT with FUNCTION/2 orREFERENCE/15 | same3-frame lock and loss rules / 相同三帧锁定规则 |
+| Stop tracking / 停止跟踪 | `{TARGET_CLEAR,tag,MARKER_NONE,4'hf}` | NO_SELECTION; queries unaffected / 清跟踪，不影响查询 |
+
+Request sequencing is a small register/FSM: load the payload and assert valid; hold both while ready0; on valid&&ready deassert valid. For LIST/GET remember a separate queryTag and accumulate only transferred packets until last. For SELECT/CLEAR change the expected tracking tag **at transfer**. Do not clear the tracking cache when sending LIST/GET. Use §7.8 for each cached tracking measurement, and §7.9 for query entries. The compiled C reference is [memberCSimulator.sv](rtl/debug/memberCSimulator.sv); executable consumer and query tests are listed in [the RTL manifest](tests/rtl/manifest.json).
+
+请求端用寄存器/FSM：装载payload并置valid；ready为0时保持两者；握手后清valid。LIST/GET单独保存queryTag，只累计真正握手的结果直到last；SELECT/CLEAR在**握手沿**更新期望跟踪tag。发送查询不能清跟踪缓存。跟踪按§7.8、查询按§7.9逐次判断可用性；现成C参考及RTL测试均可编译运行。
+
+```powershell
+python tools/echo7.py markers
+python tools/echo7.py locate --type bay --digit 1
+python tools/echo7.py locate --type function --digit 1
+python tools/echo7.py locate --type reference
+python tools/echo7.py track --type bay --digit 3
+python tools/echo7.py track --type function --digit 2
+python tools/echo7.py clear
+python tools/echo7.py markers --drain
+```
+
+These PC commands exercise the actual public RTL transactions through BCTL and the stationary C simulator. `select --bay 3` remains an alias for tracking blue3. JTAG transport can take longer than a camera frame, so original capture timestamps are retained; a position returned to the PC is historical by the time it arrives and is not a motor-control measurement. Real C uses CLOCK_50 directly. Each command returns JSON and a nonzero exit code for transport/protocol failure; an explicit NOT_FOUND/MULTIPLE is a valid protocol result whose meaning the caller must inspect.
+
+这些PC命令通过BCTL和无运动C模拟器执行真正的公共RTL事务；select --bay 3保留为蓝3跟踪别名。JTAG传输可能慢于相机帧，返回PC的位置保留原始时间，不能当作实时底盘控制测量；真正C直接使用CLOCK_50。命令输出JSON，传输/协议失败返回非零；NOT_FOUND或MULTIPLE属于明确有效的协议结果，调用方仍须判断含义。
+
 ## 8. Private debug interface and commands / 私有调试接口与命令
 
-Public v2 remains unchanged. Private schema7 has96 frozen32-bit words; GRAB appends captured frameId/buildId for98words. BCTL exposes96. Schema6's historical split16-per-colour trial is distinct and must not be decoded as shared16. Model JSON schema is another independent version. Every slot carries explicit colour, including rejection; slot/order is never an ID source.
+Public v3 uses private schema8:96 frozen32-bit status words, with captured frameId/buildId appended by GRAB for98words. Schema8 versions the typed24-bit request/141-bit report and adds an independent QRP3 query packet. Schema1–7 are explicitly decoded as publicv2; schema6's historical split16-per-colour trial is distinct from shared16. Model JSON schema is another independent version. Every slot carries explicit colour, including rejection; slot/order is never an ID source.
 
-公共v2不变。私有schema7为96个冻结32位字，GRAB附采集frameId/buildId后共98字，BCTL读取96字。历史schema6每色16槽不是共享16，不能混解；模型JSON版本又是独立概念。每槽包括拒识也显式带颜色，槽号/排序不能提供答案。
+公共v3对应私有schema8，状态仍为96个冻结32位字，GRAB追加采集frameId/buildId后98字。schema8明确升级类型化请求/报告并增加独立QRP3查询包；历史schema1–7按公共v2显式解码，schema6每色16槽不能混作共享16。模型JSON另有版本；槽号和排列顺序永远不能提供数字答案。
 
 | Words / 字 | Current meaning / 当前含义 |
 |---|---|
-|0–1|Magic0x45425031, schema7/public contract2 / 魔数及版本 |
+|0–1|Magic0x45425031, schema8/public contract3 / 魔数及版本 |
 |3–6|Completed native frameId, original capture time, completion time and frame configuration / 完成帧身份、原始采集/完成时间及配置 |
 |7|Red/blue minima, configured orientation; bit20completed-frame SW8 bypass,21completed-frame raw mode,22synchronised SW9 request,23actual VGA raw mode / 阈值、方向、三层实际模式 |
 |9|Bits4:0red count,9:5blue count; total≤16 / 红蓝5位计数，总计≤16 |
@@ -425,10 +511,18 @@ Public v2 remains unchanged. Private schema7 has96 frozen32-bit words; GRAB appe
 |24–87|16shared slots×4words; first word bit30isBlue / 16共享槽，显式颜色 |
 |88|Current request / 当前请求 |
 |89|Last sample frame/count/checks / 最后采样帧、数量与检查 |
-|90|bit0eventValid,1reportValid,2eventHistory,3BJvalid,bits7:4BJglobalSlot / 有效位、历史与BJ槽 |
+|90|bit0eventValid,1reportValid,2eventHistory,3BJvalid,bits7:4BJglobalSlot,15:8BJquality,16queryBusy / 有效位、历史、BJ槽/质量、查询忙 |
 |91–93|frameGood,buildId; word93bytes: sharedLayout1/total16/active15, low nibbles active peaks / 帧有效、构建与容量高水位 |
 |94|Saturating completionDiscardCount in31:16; low bits3transport history,2overflow,1candidate error,0schedule overrun / 丢弃与故障 |
-|95|colourAlgorithm2,readerAlgorithm5,white84/spread64 / 实际算法与白字参数 |
+|95|colourAlgorithm3 (RUN2),readerAlgorithm5,white84/spread64 / 实际算法与白字参数 |
+
+BCTL sourceWord uses bit31 as the transaction toggle, bits27:24 as opcode, bits15:8 as frozen-word address, and bits5:4/type plus3:0/digit as selector. Opcodes1SELECT,2CLEAR,3calibrate,4speech-arm,5status snapshot,6orientation,7auto-cycle,8LIST,9GET,10READ_QUERY. LIST/GET ACK confirms the C simulator request slot accepted the command; query completion requires the actual response batch. READ_QUERY ACK follows a real queryResult valid/ready transfer. If no result is available it returns BUSY without consuming or replacing the frozen bank. Frozen probe meta bit8 distinguishes a pending query from a completely drained channel. Queries are drained/enqueued/read in one Tcl session, with timeout and a recoverable `markers --drain` operation.
+
+BCTL源字bit31为事务翻转，27:24为操作码，15:8为冻结字地址，5:4/3:0为类型/数字。操作码1选择、2清除、3校色、4武装、5状态快照、6方向、7自动循环、8列举、9查询、10读取查询项。LIST/GET的ACK表示C模拟器请求槽受理，须完整收到查询批次才算完成。READ_QUERY只有公共结果实际握手后才成功ACK；暂未有结果则返回BUSY，不消费、不改冻结数据。probe meta冻结bit8区分仍在处理和已排空；同一Tcl会话完成排空/发送/读取，超时可用markers --drain恢复。
+
+READ_QUERY reuses the existing frozen bank: word0=`0x51525033` (QRP3), words1–5 contain `{19'b0,queryResult}` with increasing words representing increasing bit positions, word6=buildId, word7=`0x00000308` (public3/private8). Remaining words are0. Address-only reads never consume another item. Host checks build/schema, tag, frame/time/config/count, index continuity, last and identities before returning the batch. QRP3 is not an EBP1 status snapshot and must use its own decoder.
+
+READ_QUERY复用原冻结bank：字0为QRP3魔数，字1–5为补19位零后的141位queryResult，字编号递增对应位位置递增；字6为buildId，字7为0x00000308，其余清零。只改地址不会多消费。主机检查构建/schema、tag、同帧时间配置/数量、序号与末项及身份，QRP3不能当EBP1状态包解析。
 
 BCTL transport acknowledgement returns for a completed command transaction, including BUSY/disabled errors. Successful calibration/speech-arm **action acceptance** is reported only when the interaction FSM consumes that action; busy/disabled rejects it explicitly and does not queue a retry. Transport ACK alone is not acceptance, starting or completion. After successful acceptance, verify interactionId, eight valid samples, terminal event and config increment. A held toggle/address read cannot issue another action. Last-event history is never delivered again to C. Calibration's verify-busy command fails if a second request rejects correctly but the first never commits.
 
@@ -444,6 +538,7 @@ BCTL transport acknowledgement returns for a completed command transaction, incl
 |`capture --held`|Old snapshot only; never another lock frame / 仅旧快照，不增加锁定帧 |
 |`status`|Actual build/config/candidates/interaction/status / 实际状态 |
 |`select --bay 1..6`, `clear`|C-simulator request, not vision bypass / C请求，不绕过视觉 |
+|`markers [--drain]`, `locate --type ...`, `track --type ...`|Public LIST/GET/typedSELECT through real BCTL transactions / 公共列举、位置查询、类型化跟踪 |
 |`orientation --profile 0..3`|Configured geometry profile, not a forced digit / 配置几何方向，不注入数字 |
 |`calibrate --arm [--verify-busy]`|Permit another real red1/sample attempt / 允许另一真实红1采样 |
 |`speech --arm`, `speech --record`|Reserved/deferred real-input path; no fake recognition / 保留/暂缓真实语音路径 |

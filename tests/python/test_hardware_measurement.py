@@ -6,7 +6,7 @@ import sys
 import tempfile
 import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools/lib"))
-from hardware_measurement import measureTrials,scoreRegions,TrackingAcquisition
+from hardware_measurement import measureTrials,scoreRegions,TrackingAcquisition,markerIdentity,baySelectCommand
 
 
 class FixtureRunner:
@@ -256,6 +256,59 @@ class HardwareMeasurementTests(unittest.TestCase):
             self.assertEqual(trial["captureToCompletionUs"]["maximum"],150001)
             self.assertEqual(trial["latencyTarget"]["status"],"FAIL")
             self.assertTrue(runner.cleared)
+
+
+class TypedFixtureRunner(FixtureRunner):
+    """New synthetic public-v3 data; archived v2 fixtures above stay unchanged."""
+    def __init__(self, folder, wrongTypeFrame=None):
+        super().__init__(folder)
+        self.commands = []
+        self.wrongTypeFrame = wrongTypeFrame
+
+    def control(self, command=0):
+        self.commands.append(command)
+        result = super().control(command)
+        state = result["decoded"]
+        state["contractVersion"] = 3
+        report = state["targetReport"]
+        report["digit"] = report.pop("bayId")
+        report["markerType"] = 2 if self.frame == self.wrongTypeFrame else 1
+        state["activeRequest"].update(operation=1, markerType=1, digit=self.bay)
+        return result
+
+
+class TypedHardwareMeasurementTests(unittest.TestCase):
+    def testThreeTypedTrialsKeepNinetyReportsAndExplicitBayStimulus(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runner=TypedFixtureRunner(folder)
+            measureTrials(runner,3)
+            self.assertEqual([t["passedSamples"] for t in runner.result["trials"]],[30,30,30])
+            self.assertEqual(len(runner.result["observations"]),90)
+            self.assertEqual([command for command in runner.commands if command >> 24 == 1],
+                             [baySelectCommand(bay,3) for _ in range(3) for bay in range(1,7)])
+            self.assertNotIn("bayId", runner.result["observations"][0]["status"]["targetReport"])
+
+    def testRedSameDigitCannotPassBlueBayAndFailureRemainsRecorded(self):
+        with tempfile.TemporaryDirectory() as folder:
+            runner=TypedFixtureRunner(folder,wrongTypeFrame=2)
+            with self.assertRaisesRegex(RuntimeError,"no success-only filtering"):
+                measureTrials(runner,1)
+            failures=[row for row in runner.result["observations"] if row["status"]["frameId"]==2]
+            self.assertEqual(len(failures),1)
+            self.assertEqual(failures[0]["status"]["targetReport"]["markerType"],2)
+            self.assertIn("unexpected_old_request_report",failures[0]["issues"])
+            self.assertEqual(runner.result["trials"][0]["currentRequestSamples"],30)
+            self.assertEqual(runner.result["trials"][0]["allObservedSamples"],31)
+            self.assertTrue(runner.cleared)
+
+    def testIdentityLayoutsAreExplicitAndMalformedV3CannotFallBack(self):
+        self.assertEqual(markerIdentity({"bayId":3},2),(1,3))
+        self.assertEqual(markerIdentity({"markerType":2,"digit":1},3),(2,1))
+        for payload in ({"bayId":1},{"digit":1},{"markerType":1,"digit":1,"bayId":1}):
+            with self.assertRaises(ValueError): markerIdentity(payload,3)
+        with self.assertRaises(ValueError): markerIdentity({"bayId":1},4)
+        self.assertEqual(baySelectCommand(1,2),0x1000001)
+        self.assertEqual(baySelectCommand(1,3),0x1000011)
 
 
 if __name__ == "__main__":

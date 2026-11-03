@@ -7,7 +7,7 @@ import unittest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch
-from contract_model import FIELD_LAYOUTS, packPayload
+from contract_model import LEGACY_V2_FIELD_LAYOUTS as FIELD_LAYOUTS, packPayload
 from debug_decode import decodeWords, decodeGrabWords, compareMarkerPixels
 
 
@@ -18,7 +18,7 @@ def fixture():
     words[2], words[3], words[4], words[5] = 20000, 9, 1000, 12000
     fields = {name: 0 for name, _ in FIELD_LAYOUTS["targetReport"]}
     fields["frameId"] = 9
-    packed = packPayload("targetReport", fields)
+    packed = packPayload("targetReport", fields, contractVersion=2)
     for i in range(5):
         words[13 + i] = (packed >> (32 * i)) & 0xffffffff
     words[96] = 9

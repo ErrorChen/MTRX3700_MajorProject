@@ -29,7 +29,7 @@ class Schema6CapacityTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "requires exactly"):
                 decodeWords(words)
         with self.assertRaisesRegex(ValueError, "schema"):
-            schemaLayout(8)
+            schemaLayout(9)
 
     def testCount16AndFinalBlueSlotAreNotTruncated(self):
         words = fixture(6)

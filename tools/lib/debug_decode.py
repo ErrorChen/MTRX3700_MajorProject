@@ -105,6 +105,12 @@ def decodeWords(words):
     calibrationReferenceValid = bool(words[tail+2] & 8) if debugSchema >= 5 else False
     calibrationReferenceIndex = (words[tail+2] >> 4) & (capacity-1) if debugSchema >= 5 else 0
     calibrationReferenceMarkerIndex = calibrationReferenceIndex if layout["sharedPool"] else capacity+calibrationReferenceIndex
+    if debugSchema >= 8:
+        from contract_model import markerEnabled
+        if not calibrationReferenceValid and ((words[tail+2] >> 8) & 255):
+            raise ValueError("invalid calibration reference carries stale quality")
+        if report["observed"] and not markerEnabled(report["markerType"], report["digit"]):
+            raise ValueError("observed typed target report has invalid identity")
     if rawCameraMode and (words[tail+3] or words[9] or any(m["accepted"] for m in markers)
                           or calibrationReferenceValid):
         raise ValueError("raw-camera completed frame claims good recognition, candidates, accepted markers or calibration reference")

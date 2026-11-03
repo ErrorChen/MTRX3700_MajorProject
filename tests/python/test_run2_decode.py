@@ -60,7 +60,7 @@ class Run2DecodeTests(unittest.TestCase):
             with self.subTest(schema=schema), self.assertRaises(ValueError):
                 decodeWords(withProfile(fixture(schema), 3, reader)[:-2])
         for reader in range(5):
-            with self.subTest(reader=reader), self.assertRaisesRegex(ValueError, "requires schema7 and reader"):
+            with self.subTest(reader=reader), self.assertRaisesRegex(ValueError, "requires schema7/8 and reader"):
                 decodeWords(withProfile(fixture(7), 3, reader)[:-2])
 
     def testUnknownColourFourStillFailsClosed(self):
