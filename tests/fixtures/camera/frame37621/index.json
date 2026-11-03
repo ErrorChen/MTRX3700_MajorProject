@@ -1,0 +1,25 @@
+{
+  "buildId": 2848630063,
+  "frameId": 37621,
+  "configVersion": 18,
+  "colourAlgorithm": 2,
+  "readerAlgorithm": 5,
+  "redMinimum": 33,
+  "blueMinimum": 28,
+  "orientationProfile": 0,
+  "bypassPerspective": false,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "schema": "member-b-recorded-regression-profile-v1",
+  "hardwareDebugSchemaVersion": 7,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "sourceIndexSha256": "44ccd33241d7b4fe5bfa054e3453ff87e832900cb6e714c491b47f8ff919f48c",
+  "originalCaptureResultSha256": "44ccd33241d7b4fe5bfa054e3453ff87e832900cb6e714c491b47f8ff919f48c",
+  "files": {
+    "frame.png": "b8e4c79714ab9632e2f548d55a339eb94a8dabb29c513f58c0536a481faccd6d"
+  },
+  "use": "Horizontal-run preprocessing counterexample: rotated blue1 may split into separate components. Capture protocol/model-agreement PASS does not assert complete printed-scene recognition."
+}

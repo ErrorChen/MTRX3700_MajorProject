@@ -6,12 +6,52 @@ board observation; a GRAB image requires the additional native frame binding.
 from contract_model import FIELD_LAYOUTS, unpackPayload, freshTime
 
 
+def schemaLayout(debugSchema):
+    """Private packet geometry; the public contract remains version 2.
+
+    Schemas 1..5 retain eight candidates per colour; schema6 retains16 per
+    colour. Schema7 has16 total shared slots. Four-bit active labels remain
+    separate from these completed stores, and the public contract stays v2.
+    """
+    if debugSchema not in (1, 2, 3, 4, 5, 6, 7):
+        raise ValueError("unsupported EBP1 schema")
+    capacity = 16 if debugSchema >= 6 else 8
+    markerCount = capacity if debugSchema >= 7 else 2 * capacity
+    return {"wordCount": 24 + 4 * markerCount + 8, "tailBase": 24 + 4 * markerCount,
+            "capacity": capacity, "markerCount": markerCount, "sharedPool": debugSchema >= 7,
+            "poolLayout": "SHARED_TOTAL" if debugSchema >= 7 else "SPLIT_PER_COLOUR",
+            "countBits": 5 if debugSchema >= 6 else 4}
+
+
+def requireAlgorithmMode(decoded):
+    """Reject paused/requested/display-raw states as algorithm trial evidence.
+
+    The three bits have different timing boundaries and may legitimately differ
+    during a switch transition. They are not a corruption test; any asserted bit
+    means that a stable normal/perspective-only trial is not currently valid.
+    Older schemas have no raw switch and remain compatible through False defaults.
+    """
+    if any(decoded.get(field, False) for field in
+           ("rawCameraMode", "rawModeRequested", "rawDisplayActive")):
+        raise RuntimeError("RAW_CAMERA_MODE: algorithm trials require SW9 down and both capture/display returned to processing mode")
+
+
 def decodeWords(words):
-    if len(words) != 96 or any(not isinstance(w, int) or not 0 <= w <= 0xffffffff for w in words):
-        raise ValueError("EBP1 requires exactly 96 unsigned 32-bit words")
+    if len(words) < 2 or any(type(w) is not int or not 0 <= w <= 0xffffffff for w in words):
+        raise ValueError("EBP1 requires unsigned 32-bit words")
     debugSchema = words[1] >> 16
-    if words[0] != 0x45425031 or debugSchema not in (1, 2) or words[1] & 0xffff != 2:
+    layout = schemaLayout(debugSchema)
+    if len(words) != layout["wordCount"]:
+        raise ValueError(f"EBP1 schema{debugSchema} requires exactly {layout['wordCount']} unsigned 32-bit words")
+    if words[0] != 0x45425031 or words[1] & 0xffff != 2:
         raise ValueError("unsupported EBP1 magic/schema/contract")
+    tail, capacity, countBits = layout["tailBase"], layout["capacity"], layout["countBits"]
+    countMask = (1 << countBits) - 1
+    redCount, blueCount = words[9] & countMask, (words[9] >> countBits) & countMask
+    if words[9] >> (2 * countBits) or redCount > capacity or blueCount > capacity:
+        raise ValueError("candidate counts exceed schema capacity or contain reserved bits")
+    if layout["sharedPool"] and redCount + blueCount > capacity:
+        raise ValueError("candidate counts exceed shared completed pool capacity")
 
     def payload(name, first, count):
         value = sum(words[first + i] << (32 * i) for i in range(count))
@@ -20,9 +60,9 @@ def decodeWords(words):
     status = payload("status", 10, 3)
     report = payload("targetReport", 13, 5)
     event = payload("userEvent", 18, 4)
-    request = unpackPayload("targetRequest", words[88])
+    request = unpackPayload("targetRequest", words[tail])
     markers = []
-    for index in range(16):
+    for index in range(layout["markerCount"]):
         at = 24 + 4 * index
         descriptor, xs, ys, reserved = words[at:at+4]
         marker = {"index": index, "accepted": bool(descriptor >> 31), "isBlue": bool((descriptor >> 30) & 1),
@@ -39,56 +79,110 @@ def decodeWords(words):
             if not (0 <= marker["xMin"] <= marker["xMax"] < 320 and 0 <= marker["yMin"] <= marker["yMax"] < 240):
                 raise ValueError(f"marker{index} bbox is outside native pixels")
         markers.append(marker)
+    if layout["sharedPool"]:
+        present = markers[:redCount+blueCount]
+        if sum(not marker["isBlue"] for marker in present) != redCount:
+            raise ValueError("shared candidate slot colours differ from red/blue counts")
+        if any(marker["accepted"] for marker in markers[redCount+blueCount:]):
+            raise ValueError("accepted marker lies outside dense shared candidate slots")
     if not report["observed"] and any(report[k] for k in ("centreU", "centreV", "boxWidth", "boxHeight", "quality", "locked")):
         raise ValueError("unobserved target report contains a public measurement")
-    diagnosticReserved = words[94] >> 4 if debugSchema == 1 else words[94] & 0x0000fff0
-    if (words[3] >> 16 or words[6] >> 16 or words[91] >> 1
-            or words[93] >> 8 or diagnosticReserved):
+    diagnosticReserved = words[tail+6] >> 4 if debugSchema == 1 else words[tail+6] & 0x0000fff0
+    # word7: RGB floors[15:0], reserved[17:16], orientation[19:18],
+    # perspective[20] since schema3, frame-bound raw[21], synchronised request[22]
+    # and display-packet mode[23] since schema5. Future bits must not be ignored.
+    allowedProfileBits = 0x000cffff | (0x00100000 if debugSchema >= 3 else 0)
+    if debugSchema >= 5:
+        allowedProfileBits |= 0x00e00000
+    if (words[3] >> 16 or words[6] >> 16 or words[tail+3] >> 1
+            or (words[tail+5] >> 24 != 1 if debugSchema >= 7 else words[tail+5] >> (24 if debugSchema >= 4 else 8)) or diagnosticReserved
+            or words[7] & ~allowedProfileBits
+            or words[tail+2] >> (8 if debugSchema >= 6 else 7 if debugSchema >= 5 else 3 if debugSchema >= 4 else 2)):
         raise ValueError("EBP1 reserved fields are nonzero")
+    rawCameraMode = bool(words[7] & (1 << 21)) if debugSchema >= 5 else False
+    calibrationReferenceValid = bool(words[tail+2] & 8) if debugSchema >= 5 else False
+    calibrationReferenceIndex = (words[tail+2] >> 4) & (capacity-1) if debugSchema >= 5 else 0
+    calibrationReferenceMarkerIndex = calibrationReferenceIndex if layout["sharedPool"] else capacity+calibrationReferenceIndex
+    if rawCameraMode and (words[tail+3] or words[9] or any(m["accepted"] for m in markers)
+                          or calibrationReferenceValid):
+        raise ValueError("raw-camera completed frame claims good recognition, candidates, accepted markers or calibration reference")
+    if calibrationReferenceValid:
+        reference = markers[calibrationReferenceMarkerIndex]
+        referenceInRange = calibrationReferenceIndex < redCount+blueCount if layout["sharedPool"] else calibrationReferenceIndex < blueCount
+        if (not words[tail+3] or not referenceInRange
+                or reference["accepted"] or not reference["isBlue"]
+                or not 0 <= reference["xMin"] <= reference["xMax"] < 320
+                or not 0 <= reference["yMin"] <= reference["yMax"] < 240):
+            raise ValueError("calibration reference is not a good-frame, in-range rejected blue candidate")
+    # A public valid/ready report may be stalled from an earlier frame. Its
+    # identity/observed values are not required to match raw completed metadata
+    # here; GRAB independently checks its stricter captured-frame binding.
     # Schema 1 used a 16-bit reader ID and always used ratio segmentation.
     # Schema 2 explicitly identifies colour and reader algorithms in one byte
     # each; old captures must never be silently reinterpreted as HSV inputs.
-    readerAlgorithm = words[95] >> 16 if debugSchema == 1 else (words[95] >> 16) & 255
-    colourAlgorithm = 0 if debugSchema == 1 else words[95] >> 24
-    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else (0, 1, 2, 3, 4)):
+    readerAlgorithm = words[tail+7] >> 16 if debugSchema == 1 else (words[tail+7] >> 16) & 255
+    colourAlgorithm = 0 if debugSchema == 1 else words[tail+7] >> 24
+    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else range(6) if debugSchema >= 6 else range(5)):
         raise ValueError("unsupported EBP1 reader algorithm")
     if colourAlgorithm not in (0, 1, 2):
         raise ValueError("unsupported EBP1 colour algorithm")
     if readerAlgorithm == 3 and colourAlgorithm != 1:
         raise ValueError("reader algorithm 3 requires HSV colour algorithm 1")
-    if readerAlgorithm == 4 and colourAlgorithm != 2:
-        raise ValueError("reader algorithm 4 requires HSV colour algorithm 2")
-    whiteMinimum, whiteSpread = (words[95] >> 8) & 255, words[95] & 255
+    if readerAlgorithm in (4, 5) and colourAlgorithm != 2:
+        raise ValueError(f"reader algorithm {readerAlgorithm} requires HSV colour algorithm 2")
+    whiteMinimum, whiteSpread = (words[tail+7] >> 8) & 255, words[tail+7] & 255
     if readerAlgorithm in (2, 3) and (whiteMinimum != 96 or whiteSpread != 64):
         raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor96 and spread64")
-    if readerAlgorithm == 4 and (whiteMinimum != 84 or whiteSpread != 64):
-        raise ValueError("reader algorithm 4 requires weighted-luma floor84 and spread64")
+    if readerAlgorithm in (4, 5) and (whiteMinimum != 84 or whiteSpread != 64):
+        raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor84 and spread64")
+    activeCapacity = (words[tail+5] >> 8) & 255 if debugSchema >= 4 else 8
+    outputCapacity = (words[tail+5] >> 16) & 255 if debugSchema >= 4 else 8
+    if not 1 <= activeCapacity <= 15 or outputCapacity != capacity:
+        raise ValueError("unsupported active/output candidate capacity")
     captureAge = (words[2] - words[4]) & 0xffffffff
-    return {"schema": "EBP1", "debugSchemaVersion": debugSchema, "contractVersion": 2, "timeUs": words[2], "frameId": words[3],
+    return {"schema": "EBP1", "debugSchemaVersion": debugSchema, "statusWordCount": layout["wordCount"],
+            "contractVersion": 2, "timeUs": words[2], "frameId": words[3],
             "captureStartUs": words[4], "completionUs": words[5], "configVersion": words[6],
             "orientationProfile": (words[7] >> 18) & 3, "redMinimum": (words[7] >> 8) & 255,
+            "bypassPerspective": bool(words[7] & (1 << 20)) if debugSchema >= 3 else False,
+            "rawCameraMode": rawCameraMode,
+            "rawModeRequested": bool(words[7] & (1 << 22)) if debugSchema >= 5 else False,
+            "rawDisplayActive": bool(words[7] & (1 << 23)) if debugSchema >= 5 else False,
+            "calibrationReferenceValid": calibrationReferenceValid,
+            "calibrationReferenceIndex": calibrationReferenceIndex,
+            "calibrationReferenceMarkerIndex": calibrationReferenceMarkerIndex,
+            **({"calibrationReferenceBlueIndex": calibrationReferenceIndex} if not layout["sharedPool"] else {}),
             "blueMinimum": words[7] & 255, "bufferDropCount": words[8],
-            "redCandidateCount": words[9] & 15, "blueCandidateCount": (words[9] >> 4) & 15,
+            "redCandidateCount": redCount, "blueCandidateCount": blueCount,
             "status": status, "targetReport": report, "userEvent": event, "activeRequest": request,
             "redSamples": words[22], "blueSamples": words[23], "markers": markers,
-            "calibrationSampleFrames": words[89], "reportValid": bool(words[90] & 2),
-            "frameGood": bool(words[91]), "allocationPeakRed": words[93] & 15,
-            "allocationPeakBlue": (words[93] >> 4) & 15,
-            "candidateOverflow": bool(words[94] & 4), "candidateError": bool(words[94] & 2),
-            "candidateOverrun": bool(words[94] & 1), "transportFaultSticky": bool(words[94] & 8),
-            "completionDiscardCount": (words[94] >> 16) if debugSchema == 2 else 0,
-            "buildId": words[92], "readerAlgorithm": readerAlgorithm,
+            "calibrationSampleFrames": words[tail+1] & 15 if debugSchema >= 4 else words[tail+1],
+            "calibrationLastSample": ({"frameId": words[tail+1] >> 16,
+                "checks": {name: bool(words[tail+1] & (1 << (8+bit))) for bit, name in enumerate(
+                    ("samplerGood", "frameGood", "red1Paired", "geometryStable", "windowStable"))}}
+                if debugSchema >= 4 else None),
+            "activeCandidateCapacity": activeCapacity, "outputCandidateCapacity": outputCapacity,
+            "poolLayout": layout["poolLayout"], "sharedCandidatePool": layout["sharedPool"],
+            "candidateStorageSlots": layout["markerCount"],
+            "userEventHeld": bool(words[tail+2] & 4) if debugSchema >= 4 else False, "reportValid": bool(words[tail+2] & 2),
+            "frameGood": bool(words[tail+3]), "allocationPeakRed": words[tail+5] & 15,
+            "allocationPeakBlue": (words[tail+5] >> 4) & 15,
+            "candidateOverflow": bool(words[tail+6] & 4), "candidateError": bool(words[tail+6] & 2),
+            "candidateOverrun": bool(words[tail+6] & 1), "transportFaultSticky": bool(words[tail+6] & 8),
+            "completionDiscardCount": (words[tail+6] >> 16) if debugSchema >= 2 else 0,
+            "buildId": words[tail+4], "readerAlgorithm": readerAlgorithm,
             "colourAlgorithm": colourAlgorithm,
             "whiteMinimum": whiteMinimum, "whiteMaxSpread": whiteSpread,
-            "whiteMode": {2: "QUARTER_WEIGHTED_LUMA", 3: "ROUNDED_STROKES_STRICT_ANCHOR", 4: "UNSATURATED_STROKES_STRICT_ANCHOR"}.get(readerAlgorithm, "MIN_RGB_CHANNEL"),
-            "whiteThresholdExpression": ("R+2*G+B >= 384 OR (R+2*G+B+2 >= 4*whiteMinimum AND 2*(max(R,G,B)-min(R,G,B)) < max(R,G,B))" if readerAlgorithm == 4 else
+            "whiteMode": {2: "QUARTER_WEIGHTED_LUMA", 3: "ROUNDED_STROKES_STRICT_ANCHOR", 4: "UNSATURATED_STROKES_STRICT_ANCHOR", 5: "UNSATURATED_STROKES_STRICT_ANCHOR"}.get(readerAlgorithm, "MIN_RGB_CHANNEL"),
+            "readerOrientationMode": "PER_MARKER_ANCHOR" if readerAlgorithm == 5 else "CONFIGURED_QUARTER_TURN",
+            "whiteThresholdExpression": ("R+2*G+B >= 384 OR (R+2*G+B+2 >= 4*whiteMinimum AND 2*(max(R,G,B)-min(R,G,B)) < max(R,G,B))" if readerAlgorithm in (4, 5) else
                 "R+2*G+B+2 >= 4*whiteMinimum" if readerAlgorithm == 3 else
                 "R+2*G+B >= 4*whiteMinimum" if readerAlgorithm == 2 else "min(R,G,B) >= whiteMinimum"),
             **({"whiteAnchorThresholdExpression": "R+2*G+B >= 4*whiteMinimum",
                 "candidateSizePruning": True} if readerAlgorithm == 3 else {}),
             **({"whiteAnchorThresholdExpression": "R+2*G+B >= 384", "whiteAnchorMinimum": 96,
-                "candidateSizePruning": True} if readerAlgorithm == 4 else {}),
-            "userEventValid": bool(words[90] & 1), "captureAgeAtSnapshotUs": captureAge,
+                "candidateSizePruning": True} if readerAlgorithm in (4, 5) else {}),
+            "userEventValid": bool(words[tail+2] & 1), "captureAgeAtSnapshotUs": captureAge,
             "processingLatencyUs": (words[5] - words[4]) & 0xffffffff,
             "freshAtSnapshot": freshTime(words[2], words[4], 150000)}
 
@@ -102,15 +196,18 @@ def checkGrabSchema(words):
 
 def decodeGrabWords(words, expectedBuildId):
     checkGrabSchema(words)
-    if len(words) != 98:
-        raise ValueError("B GRAB requires 98 words including native capture binding and buildId")
-    decoded = decodeWords(words[:96])
-    capturedFrame = words[96]
+    if len(words) < 2:
+        raise ValueError("B GRAB requires a schema header")
+    wordCount = schemaLayout(words[1] >> 16)["wordCount"]
+    if len(words) != wordCount + 2:
+        raise ValueError(f"B GRAB requires {wordCount+2} words including native capture binding and buildId")
+    decoded = decodeWords(words[:wordCount])
+    capturedFrame = words[wordCount]
     if capturedFrame > 65535 or decoded["frameId"] != capturedFrame or decoded["targetReport"]["frameId"] != capturedFrame:
         raise ValueError("FRAME_MISMATCH: pixels, recognition and target report do not describe the same native frame")
-    if words[97] != expectedBuildId or decoded["buildId"] != expectedBuildId:
+    if words[wordCount+1] != expectedBuildId or decoded["buildId"] != expectedBuildId:
         raise ValueError("B GRAB buildId differs from the successful source/SOF manifest")
-    decoded["buildId"] = words[97]
+    decoded["buildId"] = words[wordCount+1]
     decoded["sameFrameVerified"] = True
     return decoded
 
@@ -122,6 +219,8 @@ def compareMarkerPixels(imagePath, decoded, output):
     from that ROI's captured white pixels. No paper slot or manifest ID is read.
     This check proves glyph agreement, not a model of streaming label capacity.
     """
+    if decoded.get("rawCameraMode", False):
+        raise ValueError("NOT_APPLICABLE_RAW_CAMERA_MODE: raw camera frames have no recognition result to compare")
     import json
     from pathlib import Path
     from PIL import Image
@@ -134,24 +233,28 @@ def compareMarkerPixels(imagePath, decoded, output):
     output.mkdir(parents=True, exist_ok=True)
     comparisons = []
     redCount, blueCount = decoded["redCandidateCount"], decoded["blueCandidateCount"]
-    if redCount > 8 or blueCount > 8:
-        raise ValueError("CAP8 candidate counts exceed the implemented array bounds")
-    for index in list(range(redCount)) + list(range(8, 8 + blueCount)):
+    capacity = decoded.get("outputCandidateCapacity", 8)
+    if redCount > capacity or blueCount > capacity:
+        raise ValueError("candidate counts exceed the implemented array bounds")
+    indices = (list(range(redCount+blueCount)) if decoded.get("sharedCandidatePool", False) else
+               list(range(redCount)) + list(range(capacity, capacity + blueCount)))
+    for index in indices:
         measured = decoded["markers"][index]
         bbox = [measured[k] for k in ("xMin", "yMin", "xMax", "yMax")]
         if not (0 <= bbox[0] <= bbox[2] < 320 and 0 <= bbox[1] <= bbox[3] < 240):
             raise ValueError("candidate bbox is not an in-frame colour main area")
-        candidate = {"colour": "blue" if index >= 8 else "red", "bbox": bbox}
-        if decoded["readerAlgorithm"] in (1, 2, 3, 4):
+        candidate = {"colour": "blue" if measured["isBlue"] else "red", "bbox": bbox}
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5):
             expected = classifyProjective(image, candidate, decoded["orientationProfile"],
                 decoded["redMinimum"], decoded["blueMinimum"], decoded["whiteMinimum"],
                 decoded["whiteMaxSpread"], output / f"marker_{index:02d}_projective",
-                colourAlgorithm=decoded["colourAlgorithm"], readerAlgorithm=decoded["readerAlgorithm"])
+                colourAlgorithm=decoded["colourAlgorithm"], readerAlgorithm=decoded["readerAlgorithm"],
+                bypassPerspective=decoded.get("bypassPerspective",False))
             crop = image.crop((bbox[0], bbox[1], bbox[2]+1, bbox[3]+1))
             profile = whiteProfileFor(decoded["readerAlgorithm"], decoded["whiteMinimum"], decoded["whiteMaxSpread"])
             cropArray = np.asarray(crop, dtype=np.int16)
             mask = Image.fromarray((whitePixelsFor(cropArray, profile)*255).astype(np.uint8))
-            if decoded["readerAlgorithm"] in (3, 4):
+            if decoded["readerAlgorithm"] in (3, 4, 5):
                 strongMask = Image.fromarray((whitePixelsFor(cropArray, profile, anchor=True)*255).astype(np.uint8))
                 strongMask.save(output / f"marker_{index:02d}_strong_white.png")
         else:
@@ -163,7 +266,9 @@ def compareMarkerPixels(imagePath, decoded, output):
             differences.append("accepted")
         if measured["accepted"] and expected["accepted"]:
             differences.extend(field for field in ("digit", "quality") if measured[field] != expected[field])
-        if decoded["readerAlgorithm"] in (1, 2, 3, 4):
+            if decoded["readerAlgorithm"] == 5 and measured["orientation"] != expected["orientationProfile"]:
+                differences.append("orientation")
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5):
             if measured["reason"] != expected["reasonCode"]:
                 differences.append("reason")
             if expected["windowScores"]:
@@ -172,12 +277,16 @@ def compareMarkerPixels(imagePath, decoded, output):
                     differences.append("segments")
         comparisons.append({"index": index, "match": not differences, "differences": differences,
                             "measured": measured, "pixelReference": expected})
+    invalidFrame = not decoded["frameGood"] or any(decoded.get(key, False) for key in
+        ("candidateOverflow", "candidateError", "candidateOverrun"))
     result = {"schema": "echo7-captured-glyph-check-v1", "level": "CAMERA_HW_WITH_MODEL_COMPARISON",
               "source": "RECORDED_CAMERA_SAME_FRAME", "frameId": decoded["frameId"],
               "readerAlgorithm": decoded["readerAlgorithm"], "comparedCandidateCount": len(comparisons),
               "whiteMode": decoded["whiteMode"], "whiteMinimum": decoded["whiteMinimum"],
               "whiteMaxSpread": decoded["whiteMaxSpread"],
               "debugSchemaVersion": decoded["debugSchemaVersion"], "colourAlgorithm": decoded["colourAlgorithm"],
-              "status": "PASS" if all(c["match"] for c in comparisons) else "FAIL", "comparisons": comparisons}
+              "status": "PASS" if comparisons and not invalidFrame and all(c["match"] for c in comparisons) else "FAIL",
+              "reason": "INVALID_CAPTURED_FRAME" if invalidFrame else "NO_CANDIDATES_TO_COMPARE" if not comparisons else "PIXEL_COMPARISON",
+              "comparisons": comparisons}
     (output / "comparison.json").write_text(json.dumps(result, indent=2) + "\n")
     return result

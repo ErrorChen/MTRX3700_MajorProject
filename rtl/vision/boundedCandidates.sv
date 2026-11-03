@@ -1,26 +1,30 @@
 // ECHO-7 Part A | Human owner: Member A (name/SID pending).
 // AI-assisted by OpenAI Codex; human review required.
-// V2: exact 4-connected CCL. CAP bounds active handles (including aliases);
-// a separate CAP completed pool applies MIN_AREA when roots retire.
+// Exact 4-connected CCL. ACTIVE_CAP bounds temporary handles (including aliases);
+// CAP bounds one shared red/blue completed pool, applying MIN_AREA at retirement.
+// Same-edge retirement allocates red first, then blue; colour travels with each
+// dense slot. Neither colour has a reserved share of the production pool.
 // Never reuse within a row. Canonicalize ALL W line entries before freeing
 // aliases or absent roots. Either capacity overflow invalidates the whole frame.
 // Output order is retirement order; area is exact, centre is bbox midpoint.
-// Leave W+CAP invalid clocks after each row; the next edge accepts a new row.
-// Final publication: W+CAP+1 clocks after EOP. No ready/backpressure.
+// Leave W+ACTIVE_CAP invalid clocks after each row; the next edge accepts a row.
+// Final publication: W+ACTIVE_CAP+1 clocks after EOP. No ready/backpressure.
 // Unexpected housekeeping pixels flag error+overrun; EOP forces termination.
 // New SOP aborts old and new frames invalid; next complete frame recovers.
 // IDs count every SOP, first=1, modulo65536. SOP on publication edge is legal.
 module boundedCandidates #(
-    parameter int W=320, H=240, CAP=8, MIN_AREA=32,
-    parameter bit PRUNE_UNUSABLE=0
+    parameter int W=320, H=240, CAP=8, MIN_AREA=32, ACTIVE_CAP=(CAP>15?15:CAP),
+    parameter bit PRUNE_UNUSABLE=0, SHARED_POOL=1
 ) (
     input logic clk, reset,
     input logic in_valid, in_sop, in_eop,
     input logic [1:0] in_mask,
     input logic [8:0] in_x,
     input logic [7:0] in_y,
-    output candidate_pkg::candidate_t [7:0] red_candidates, blue_candidates,
-    output logic [3:0] red_count, blue_count,
+    output candidate_pkg::candidate_array_t sharedCandidates,
+    output logic [candidate_pkg::MAX_CANDIDATES-1:0] sharedColours,
+    output logic [4:0] sharedCount,
+    output logic [4:0] red_count, blue_count,
     output logic out_valid, frame_valid,
     output logic red_overflow, blue_overflow, overflow,
     output logic frame_error, overrun,
@@ -37,9 +41,9 @@ module boundedCandidates #(
     // the CURRENT parent table when consumed: the previous pixel may union
     // these components on the immediately preceding clock edge.
     logic [3:0] prefetched_up [0:1];
-    logic [3:0] parent [0:1][0:CAP-1];
-    candidate_t boxes [0:1][0:CAP-1];
-    logic [CAP-1:0] free_slots [0:1], live_roots [0:1];
+    logic [3:0] parent [0:1][0:ACTIVE_CAP-1];
+    candidate_t boxes [0:1][0:ACTIVE_CAP-1];
+    logic [ACTIVE_CAP-1:0] free_slots [0:1], live_roots [0:1];
     // Bench-visible high-water mark; aliases occupy handles until row seal.
     logic [3:0] allocation_peak [0:1];
     assign allocationPeakRed=allocation_peak[0];
@@ -49,8 +53,11 @@ module boundedCandidates #(
     logic [15:0] next_id, current_id;
     logic [8:0] expected_x, canon_index;
     logic [7:0] expected_y;
-    logic [3:0] scan_index, work_red_count, work_blue_count;
-    candidate_array_t work_red, work_blue, publish_red, publish_blue;
+    logic [3:0] scan_index;
+    logic [4:0] work_red_count, work_blue_count,workCount,blueInsertSlot;
+    candidate_array_t workCandidates,publishCandidates;
+    logic [MAX_CANDIDATES-1:0] workColours;
+    logic [1:0] retireCandidate,insertCandidate;
     candidate_t scan_red, scan_blue;
     logic publish_ok;
     assign busy = state != IDLE;
@@ -58,14 +65,14 @@ module boundedCandidates #(
     function automatic logic [3:0] root_of(input logic colour,input logic [3:0] label_id);
         // Union redirects every alias of the losing root on that edge.
         // All allocated handles therefore point directly to canonical roots.
-        if(label_id!=0 && int'(label_id)<=CAP)
+        if(label_id!=0 && int'(label_id)<=ACTIVE_CAP)
             return parent[colour][int'(label_id)-1];
         return 4'd0;
     endfunction
-    function automatic logic [3:0] used_count(input logic [CAP-1:0] available);
+    function automatic logic [3:0] used_count(input logic [ACTIVE_CAP-1:0] available);
         logic [3:0] n;
         n=0;
-        for(int i=0;i<CAP;i++) if(!available[i]) n=n+4'd1;
+        for(int i=0;i<ACTIVE_CAP;i++) if(!available[i]) n=n+4'd1;
         return n;
     endfunction
     function automatic candidate_t add_pixel(input candidate_t a,input logic [8:0] x,input logic [7:0] y);
@@ -94,7 +101,7 @@ module boundedCandidates #(
         logic [8:0] boxHeight;
         // Inclusive native-pixel dimensions. This gate applies only when a
         // root retires, so it cannot hide active-label overflow or alter the
-        // W+CAP row-maintenance budget. Red signs require at least 24x24 in
+        // W+ACTIVE_CAP row-maintenance budget. Red signs require at least 24x24 in
         // the downstream reader. Blue also retains either orientation of a
         // possible 20x3 calibration reference. No location or ID is consulted.
         boxWidth={1'b0,a.xmax}-{1'b0,a.xmin}+10'd1;
@@ -118,7 +125,7 @@ module boundedCandidates #(
     wire overlapping_start=starting && (state==COLLECT || housekeeping || row_ready);
     wire unexpected_publish_pixel=publishing && in_valid && !in_sop;
     logic [3:0] canonical_red,canonical_blue;
-    logic [CAP-1:0] pixelAvailable [0:1];
+    logic [ACTIVE_CAP-1:0] pixelAvailable [0:1];
     logic [3:0] pixelOccupiedPlusOne [0:1];
     logic [3:0] pixelChosenLabel [0:1],pixelMergedLabel [0:1];
     logic [3:0] pixelLeftRoot [0:1],pixelUpRoot [0:1];
@@ -129,7 +136,7 @@ module boundedCandidates #(
     // enables select the arriving colour. The shared raster FSM is unchanged.
     always_comb begin
         for(int pixelColour=0;pixelColour<2;pixelColour++)begin
-            pixelAvailable[pixelColour]=starting?{CAP{1'b1}}:free_slots[pixelColour];
+            pixelAvailable[pixelColour]=starting?{ACTIVE_CAP{1'b1}}:free_slots[pixelColour];
             pixelOccupiedPlusOne[pixelColour]=used_count(pixelAvailable[pixelColour])+4'd1;
             pixelChosenLabel[pixelColour]=0;pixelMergedLabel[pixelColour]=0;pixelLeftRoot[pixelColour]=0;pixelUpRoot[pixelColour]=0;
             pixelAllocate[pixelColour]=0;pixelCapacityHit[pixelColour]=0;pixelUpdatedBox[pixelColour]='0;
@@ -137,7 +144,7 @@ module boundedCandidates #(
                 if(in_x!=0 && !starting)pixelLeftRoot[pixelColour]=root_of(1'(pixelColour),left_label[pixelColour]);
                 if(in_y!=0 && !starting)pixelUpRoot[pixelColour]=root_of(1'(pixelColour),prefetched_up[pixelColour]);
                 if(pixelLeftRoot[pixelColour]==0 && pixelUpRoot[pixelColour]==0) begin
-                    for(int i=0;i<CAP;i++)if(pixelChosenLabel[pixelColour]==0 && pixelAvailable[pixelColour][i])pixelChosenLabel[pixelColour]=4'(i+1);
+                    for(int i=0;i<ACTIVE_CAP;i++)if(pixelChosenLabel[pixelColour]==0 && pixelAvailable[pixelColour][i])pixelChosenLabel[pixelColour]=4'(i+1);
                     if(pixelChosenLabel[pixelColour]!=0) begin
                         pixelAllocate[pixelColour]=1;pixelUpdatedBox[pixelColour].valid=1;
                         pixelUpdatedBox[pixelColour].xmin=in_x;pixelUpdatedBox[pixelColour].xmax=in_x;
@@ -159,7 +166,7 @@ module boundedCandidates #(
     // Verification aliases preserve the original bench's per-pixel view.
     // They are absent from synthesis and never drive production state.
     logic colour,allocate_pixel,capacity_hit;
-    logic [CAP-1:0] available;
+    logic [ACTIVE_CAP-1:0] available;
     logic [3:0] chosen_label,merged_label,left_root,up_root,occupied_plus_one;
     candidate_t updated_box;
     always_comb begin
@@ -183,28 +190,44 @@ module boundedCandidates #(
             canonical_blue=root_of(1,line_label[1][canon_index]);
         end
         scan_red='0;scan_blue='0;
-        if(state==RETIRE && int'(scan_index)<CAP) begin
+        if(state==RETIRE && int'(scan_index)<ACTIVE_CAP) begin
             scan_red=with_centre(boxes[0][scan_index]);scan_blue=with_centre(boxes[1][scan_index]);
         end
+        retireCandidate=0;insertCandidate=0;blueInsertSlot=workCount;
+        if(state==RETIRE)begin
+            for(int c=0;c<2;c++)begin
+                retireCandidate[c]=!free_slots[c][scan_index] &&
+                    parent[c][scan_index]==scan_index+4'd1 && (end_frame||!live_roots[c][scan_index]) &&
+                    boxes[c][scan_index].valid && int'(boxes[c][scan_index].area)>=MIN_AREA &&
+                    usable_size(boxes[c][scan_index],1'(c));
+            end
+            // SHARED_POOL=0 exists only for retained CAP8 regression vectors;
+            // it uses the same single16-slot storage with per-colour limits.
+            // Production elaborates SHARED_POOL=1 and removes those branches.
+            insertCandidate[0]=retireCandidate[0] && workCount<MAX_CANDIDATES &&
+                (SHARED_POOL ? workCount<CAP : work_red_count<CAP);
+            blueInsertSlot=workCount+5'(insertCandidate[0]);
+            insertCandidate[1]=retireCandidate[1] && blueInsertSlot<MAX_CANDIDATES &&
+                (SHARED_POOL ? blueInsertSlot<CAP : work_blue_count<CAP);
+        end
         publish_ok=!current_bad && current_overflow==0 && !unexpected_publish_pixel;
-        publish_red=work_red;publish_blue=work_blue;
-        for(int i=0;i<8;i++) begin
-            publish_red[i].valid=work_red[i].valid && publish_ok;
-            publish_blue[i].valid=work_blue[i].valid && publish_ok;
+        publishCandidates=workCandidates;
+        for(int i=0;i<MAX_CANDIDATES;i++) begin
+            publishCandidates[i].valid=workCandidates[i].valid && publish_ok;
         end
     end
     always_ff @(posedge clk) begin
         if(reset) begin
             state<=IDLE;expected_x<=0;expected_y<=0;next_id<=0;current_id<=0;
             current_overflow<=0;current_bad<=0;current_overrun<=0;end_frame<=0;
-            canon_index<=0;scan_index<=0;work_red_count<=0;work_blue_count<=0;
-            work_red<='0;work_blue<='0;
-            red_candidates<='0;blue_candidates<='0;red_count<=0;blue_count<=0;
+            canon_index<=0;scan_index<=0;work_red_count<=0;work_blue_count<=0;workCount<=0;
+            workCandidates<='0;workColours<=0;
+            sharedCandidates<='0;sharedColours<=0;sharedCount<=0;red_count<=0;blue_count<=0;
             out_valid<=0;frame_valid<=0;frame_error<=0;overrun<=0;
             red_overflow<=0;blue_overflow<=0;overflow<=0;frame_id<=0;
             for(int c=0;c<2;c++) begin
                 free_slots[c]<='1;live_roots[c]<='0;allocation_peak[c]<=0;left_label[c]<=0;prefetched_up[c]<=0;
-                for(int i=0;i<CAP;i++) begin parent[c][i]<=4'(i+1);boxes[c][i]<='0;end
+                for(int i=0;i<ACTIVE_CAP;i++) begin parent[c][i]<=4'(i+1);boxes[c][i]<='0;end
             end
             // First valid row ignores and overwrites stale line RAM.
         end else begin
@@ -240,26 +263,27 @@ module boundedCandidates #(
                        (parent[c][scan_index]!=scan_index+4'd1 || end_frame || !live_roots[c][scan_index])) begin
                         free_slots[c][scan_index]<=1;
                         parent[c][scan_index]<=scan_index+4'd1;boxes[c][scan_index]<='0;
-                        if(parent[c][scan_index]==scan_index+4'd1 && boxes[c][scan_index].valid &&
-                           int'(boxes[c][scan_index].area)>=MIN_AREA && usable_size(boxes[c][scan_index],1'(c))) begin
-                            if(c==0) begin
-                                if(int'(work_red_count)<CAP)begin work_red[work_red_count]<=scan_red;work_red_count<=work_red_count+4'd1;end
-                                else current_overflow[0]<=1;
-                            end else begin
-                                if(int'(work_blue_count)<CAP)begin work_blue[work_blue_count]<=scan_blue;work_blue_count<=work_blue_count+4'd1;end
-                                else current_overflow[1]<=1;
-                            end
-                        end
                     end
+                    if(retireCandidate[c]&&!insertCandidate[c])current_overflow[c]<=1;
                 end
-                if(scan_index==4'(CAP-1))state<=ROW_DONE;
+                if(insertCandidate[0])begin
+                    workCandidates[workCount[3:0]]<=scan_red;workColours[workCount[3:0]]<=0;
+                    work_red_count<=work_red_count+5'd1;
+                end
+                if(insertCandidate[1])begin
+                    workCandidates[blueInsertSlot[3:0]]<=scan_blue;workColours[blueInsertSlot[3:0]]<=1;
+                    work_blue_count<=work_blue_count+5'd1;
+                end
+                workCount<=workCount+5'(insertCandidate[0])+5'(insertCandidate[1]);
+                if(scan_index==4'(ACTIVE_CAP-1))state<=ROW_DONE;
                 else scan_index<=scan_index+4'd1;
             end
             if(state==ROW_DONE) begin
                 if(end_frame) begin
                     out_valid<=1;frame_valid<=publish_ok;
-                    red_candidates<=publish_red;blue_candidates<=publish_blue;
-                    red_count<=publish_ok?work_red_count:4'd0;blue_count<=publish_ok?work_blue_count:4'd0;
+                    sharedCandidates<=publishCandidates;sharedColours<=publish_ok?workColours:16'd0;
+                    sharedCount<=publish_ok?workCount:5'd0;
+                    red_count<=publish_ok?work_red_count:5'd0;blue_count<=publish_ok?work_blue_count:5'd0;
                     frame_error<=current_bad || unexpected_publish_pixel;
                     overrun<=current_overrun || unexpected_publish_pixel;
                     red_overflow<=current_overflow[0];blue_overflow<=current_overflow[1];
@@ -280,14 +304,14 @@ module boundedCandidates #(
                     out_valid<=1;frame_valid<=0;frame_error<=1;overrun<=housekeeping;
                     red_overflow<=current_overflow[0];blue_overflow<=current_overflow[1];
                     overflow<=|current_overflow;frame_id<=current_id;
-                    red_candidates<='0;blue_candidates<='0;red_count<=0;blue_count<=0;
+                    sharedCandidates<='0;sharedColours<=0;sharedCount<=0;red_count<=0;blue_count<=0;
                 end
                 next_id<=next_id+16'd1;current_id<=next_id+16'd1;current_overflow<=0;
                 current_bad<=overlapping_start;current_overrun<=housekeeping;end_frame<=0;
-                work_red<='0;work_blue<='0;work_red_count<=0;work_blue_count<=0;
+                workCandidates<='0;workColours<=0;workCount<=0;work_red_count<=0;work_blue_count<=0;
                 for(int c=0;c<2;c++) begin
                     free_slots[c]<='1;live_roots[c]<='0;allocation_peak[c]<=0;left_label[c]<=0;
-                    for(int i=0;i<CAP;i++)begin parent[c][i]<=4'(i+1);boxes[c][i]<='0;end
+                    for(int i=0;i<ACTIVE_CAP;i++)begin parent[c][i]<=4'(i+1);boxes[c][i]<='0;end
                 end
             end
             if(accepting) begin
@@ -307,7 +331,7 @@ module boundedCandidates #(
                         if(pixelMergedLabel[pixelColour]!=0)begin
                             // Aliases remain allocated until the existing
                             // canonicalisation/retirement pass: no early reuse.
-                            for(int aliasSlot=0;aliasSlot<CAP;aliasSlot++)
+                            for(int aliasSlot=0;aliasSlot<ACTIVE_CAP;aliasSlot++)
                                 if(parent[pixelColour][aliasSlot]==pixelMergedLabel[pixelColour])
                                     parent[pixelColour][aliasSlot]<=pixelChosenLabel[pixelColour];
                             boxes[pixelColour][int'(pixelMergedLabel[pixelColour])-1].valid<=0;boxes[pixelColour][int'(pixelMergedLabel[pixelColour])-1].area<=0;
@@ -328,15 +352,19 @@ module boundedCandidates #(
 `ifndef SYNTHESIS
     initial begin
         assert(W>=1 && W<=320 && H>=1 && H<=240)else $fatal(1,"geometry must fit native 320x240");
-        assert(CAP>=1 && CAP<=8)else $fatal(1,"CAP must be 1..8");
+        assert(CAP>=1 && CAP<=MAX_CANDIDATES)else $fatal(1,"CAP must be 1..16");
+        assert(SHARED_POOL || CAP<=MAX_CANDIDATES/2)else $fatal(1,"legacy split limits must fit the shared storage");
+        assert(ACTIVE_CAP>=1 && ACTIVE_CAP<=15)else $fatal(1,"ACTIVE_CAP must fit four-bit nonzero labels 1..15");
         assert(MIN_AREA>=1 && MIN_AREA<=W*H)else $fatal(1,"MIN_AREA outside frame size");
     end
     always_ff @(posedge clk)if(!reset)begin
         assert(work_red_count<=CAP && work_blue_count<=CAP)else $fatal(1,"completed pool count out of range");
-        assert(allocation_peak[0]<=CAP && allocation_peak[1]<=CAP)else $fatal(1,"active allocation peak out of range");
+        assert(workCount==work_red_count+work_blue_count && workCount<=MAX_CANDIDATES &&
+            (!SHARED_POOL||workCount<=CAP))else $fatal(1,"shared completed pool accounting failed");
+        assert(allocation_peak[0]<=ACTIVE_CAP && allocation_peak[1]<=ACTIVE_CAP)else $fatal(1,"active allocation peak out of range");
         if(out_valid && !frame_valid)begin
-            assert(red_count==0 && blue_count==0)else $fatal(1,"invalid frame published counts");
-            for(int i=0;i<8;i++)assert(!red_candidates[i].valid && !blue_candidates[i].valid)else $fatal(1,"invalid frame published candidate");
+            assert(red_count==0 && blue_count==0 && sharedCount==0 && sharedColours==0)else $fatal(1,"invalid frame published counts/colours");
+            for(int i=0;i<MAX_CANDIDATES;i++)assert(!sharedCandidates[i].valid)else $fatal(1,"invalid frame published candidate");
         end
     end
 `endif

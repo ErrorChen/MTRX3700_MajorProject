@@ -3,6 +3,8 @@
 // CAMERA_HW recognition. It uses real SOF/bank metadata logic and controls the
 // completion edge to reproduce configuration changes around a held old bank.
 module perceptionCoreProfile_tb;
+    logic bypassPerspective=0;
+    logic processingEnable=1;
     import perception_pkg::*;
     logic clk=0,pclk=0,reset=1,resetPclk=1;
     always #10 clk=~clk;
@@ -21,7 +23,7 @@ module perceptionCoreProfile_tb;
     userEvent_t userEvent;
     logic userEventValid,userEventReady=1;
     perceptionStatus_t status;
-    logic [3071:0] debugWords;
+    logic [DEBUG_WORD_COUNT*32-1:0] debugWords;
     logic completedFrame;
     logic [15:0] completedFrameId;
     logic [79:0] sofDrive=0;
@@ -29,6 +31,7 @@ module perceptionCoreProfile_tb;
     logic [7:0] shadowRedDrive=37,shadowBlueDrive=30;
     frameObservation_t completionDrive;
     integer capturedBank=0,checks=0,completions=0,reusedBank;
+    logic debugInteractionArmReady;
     perceptionCore dut(.*);
     always @(posedge clk) if(!reset)timeUs<=timeUs+1;
 
@@ -145,6 +148,21 @@ module perceptionCoreProfile_tb;
         if(capturedBank!=1)$fatal(1,"Coincident SOF should claim the other free bank");
         sealCapturedBank();completeBank(capturedBank);checkProfile(10,5,3,50,35,5);
         if(completions!=9||dut.completionDiscardCount!=0)$fatal(1,"Profile regression completion accounting");
+        // SW9's already-synchronised core input may change mid-frame. Only a
+        // subsequent SOF applies it; the old owned bank retains its own mode.
+        pulseSof(11,3,0,0,0);sealCapturedBank();
+        bypassPerspective=1;
+        repeat(3)@(negedge clk);
+        if(dut.activeBypass||status.activeCfgVersion!=5)$fatal(1,"Bypass applied before SOF");
+        pulseSof(12,3,0,0,0);sealCapturedBank();
+        completeBank(0);
+        if(debugWords[7*32+20]||debugWords[6*32+:16]!=5)$fatal(1,"Old bank relabelled as bypass");
+        completeBank(1);
+        if(!debugWords[7*32+20]||debugWords[6*32+:16]!=6)$fatal(1,"Bypass mode/version not bound to bank");
+        pulseSof(13,3,0,0,0);sealCapturedBank();completeBank(capturedBank);
+        if(status.activeCfgVersion!=6)$fatal(1,"Held SW9 repeatedly changed configuration");
+        bypassPerspective=0;pulseSof(14,3,0,0,0);sealCapturedBank();completeBank(capturedBank);
+        if(debugWords[7*32+20]||status.activeCfgVersion!=7)$fatal(1,"Normal mode did not resume atomically");
         $display("PASS perceptionCoreProfile_tb checks=%0d acceptedCompletions=%0d source=PROTOCOL_CONFIG_INJECTION",checks,completions);
         $finish;
     end

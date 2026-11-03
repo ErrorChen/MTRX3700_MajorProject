@@ -1,0 +1,155 @@
+{
+  "schema": "echo7-test-only-printed-regions-v1",
+  "coordinateSystem": "native320x240",
+  "inputSource": "MANUAL_PIXEL_ANNOTATION_OF_RECORDED_CAMERA",
+  "frameId": 19645,
+  "sourceImage": "frame.png",
+  "sourcePngSha256": "352ea541489934199839a4871416515a803542ac2824d5adbad3064c9c2c24d4",
+  "runtimeUse": "Forbidden: labels are test expectations, never sent to FPGA. This truth is bound to frame19645; a changed arrangement requires a separately reviewed truth.",
+  "annotationMethod": "Independent view_image of the native PNG and a nearest-neighbour 3x inspection copy. No current recognition marker list was read to assign labels.",
+  "orientationConvention": "nativeQuarterTurn is a visual clockwise quarter turn relative to the native image; 0=upright,1=clockwise90. Perspective roll is not a measured continuous angle.",
+  "bboxConvention": "Manual inclusive regions enclosing the visible coloured main areas; approximate annotation margins, not pixel-exact segmentation.",
+  "regions": [
+    {
+      "isBlue": false,
+      "digit": 1,
+      "bbox": [
+        34,
+        0,
+        110,
+        91
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": false,
+      "digit": 2,
+      "bbox": [
+        33,
+        150,
+        112,
+        239
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        170,
+        8,
+        223,
+        94
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        224,
+        19,
+        269,
+        97
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 3,
+      "bbox": [
+        171,
+        88,
+        225,
+        173
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 4,
+      "bbox": [
+        226,
+        92,
+        270,
+        168
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 5,
+      "bbox": [
+        171,
+        166,
+        225,
+        239
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 6,
+      "bbox": [
+        226,
+        163,
+        270,
+        239
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        272,
+        29,
+        316,
+        96
+      ],
+      "nativeQuarterTurn": 1,
+      "anchorCorner": "upperRight"
+    },
+    {
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        273,
+        93,
+        316,
+        154
+      ],
+      "nativeQuarterTurn": 1,
+      "anchorCorner": "upperRight"
+    }
+  ],
+  "nonDigitRegions": [
+    {
+      "isBlue": true,
+      "digit": null,
+      "bbox": [
+        33,
+        90,
+        111,
+        113
+      ],
+      "kind": "CALIBRATION_REFERENCE",
+      "note": "Visible blue strip below red1, without a digit; not a parking bay."
+    }
+  ],
+  "edgeReview": [
+    "All ten digit identities are visibly legible. Red1 and the eight upright signs have upper-left orientation anchors; the two extra blue signs have upper-right anchors and clockwise-quarter-turn glyphs.",
+    "The upper red1 coloured area reaches y=0, although its small white anchor is now visible inside the image.",
+    "Red2 and the bottom blue panels reach y=239; the outer sheet/bottom panel margins are cropped. Full A4 border coverage is not established by this image.",
+    "A foreground dark object is adjacent to the right/lower paper margin near blue6. The digit6 strokes remain visible; the extreme right paper boundary is partly obscured.",
+    "The two extra blue signs occupy only about30 pixels across their narrow dimension. Their visible orientation is clear, but this annotation does not guarantee stable per-frame anchor segmentation."
+  ]
+}

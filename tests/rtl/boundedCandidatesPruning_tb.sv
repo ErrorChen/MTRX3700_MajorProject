@@ -4,23 +4,46 @@
 // invalid clocks between rows; no frame/candidate ID is injected as an answer.
 module boundedCandidatesPruning_tb;
     import candidate_pkg::*;
+    candidate_array_t red_candidates,blue_candidates,oldRed,oldBlue;
+
+    // Legacy geometry oracles consume per-colour views. This adapter is test
+    // code only; the DUT has one physical completed pool and a colour bitmap.
+    candidate_array_t sharedCandidates,oldSharedCandidates;
+    logic [15:0] sharedColours,oldSharedColours;
+    logic [4:0] sharedCount;
+    function automatic candidate_array_t colourView(input candidate_array_t values,input logic [15:0] colours,input logic blue);
+        candidate_array_t result;
+        integer count;
+        result='0;count=0;
+        for(int slot=0;slot<16;slot++)if(values[slot].valid&&colours[slot]==blue)begin
+            result[count]=values[slot];count++;
+        end
+        return result;
+    endfunction
+    always_comb begin
+        red_candidates=colourView(sharedCandidates,sharedColours,0);
+        blue_candidates=colourView(sharedCandidates,sharedColours,1);
+        oldRed=colourView(oldSharedCandidates,oldSharedColours,0);
+        oldBlue=colourView(oldSharedCandidates,oldSharedColours,1);
+    end
+
     localparam int W=320,H=240,CAP=8,ROW_GAP=W+CAP,FINAL_LATENCY=ROW_GAP+1;
     logic clk=0,reset=1,in_valid=0,in_sop=0,in_eop=0;
     always #5 clk=~clk;
     logic [1:0] in_mask=0;
     logic [8:0] in_x=0;
     logic [7:0] in_y=0;
-    candidate_t [7:0] red_candidates,blue_candidates,oldRed,oldBlue;
-    logic [3:0] red_count,blue_count,oldRedCount,oldBlueCount,allocationPeakRed,allocationPeakBlue,oldPeakRed,oldPeakBlue;
+    logic [4:0] red_count,blue_count,oldRedCount,oldBlueCount;
+    logic [3:0] allocationPeakRed,allocationPeakBlue,oldPeakRed,oldPeakBlue;
     logic out_valid,frame_valid,red_overflow,blue_overflow,overflow,frame_error,overrun,busy;
     logic oldOutValid,oldFrameValid,oldRedOverflow,oldBlueOverflow,oldOverflow,oldError,oldOverrun;
     logic [15:0] frame_id;
     int cycles=0,lastPixelCycle,checks=0;
     always @(posedge clk)cycles++;
-    boundedCandidates #(.W(W),.H(H),.CAP(CAP),.MIN_AREA(32),.PRUNE_UNUSABLE(1)) dut(.*);
-    boundedCandidates #(.W(W),.H(H),.CAP(CAP),.MIN_AREA(32)) legacy(
+    boundedCandidates #(.SHARED_POOL(0),.W(W),.H(H),.CAP(CAP),.MIN_AREA(32),.PRUNE_UNUSABLE(1)) dut(.*);
+    boundedCandidates #(.SHARED_POOL(0),.W(W),.H(H),.CAP(CAP),.MIN_AREA(32)) legacy(
         .clk(clk),.reset(reset),.in_valid(in_valid),.in_sop(in_sop),.in_eop(in_eop),
-        .in_mask(in_mask),.in_x(in_x),.in_y(in_y),.red_candidates(oldRed),.blue_candidates(oldBlue),
+        .in_mask(in_mask),.in_x(in_x),.in_y(in_y),.sharedCandidates(oldSharedCandidates),.sharedColours(oldSharedColours),.sharedCount(),
         .red_count(oldRedCount),.blue_count(oldBlueCount),.out_valid(oldOutValid),.frame_valid(oldFrameValid),
         .red_overflow(oldRedOverflow),.blue_overflow(oldBlueOverflow),.overflow(oldOverflow),
         .frame_error(oldError),.overrun(oldOverrun),.frame_id(),.busy(),

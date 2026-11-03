@@ -1,0 +1,18 @@
+{
+  "source": "RECORDED_CAMERA_SAME_FRAME",
+  "buildId": 431361329,
+  "frameId": 30507,
+  "configVersion": 1,
+  "redMinimum": 33,
+  "blueMinimum": 28,
+  "colourAlgorithm": 2,
+  "readerAlgorithm": 4,
+  "historicalActiveCapacity": 8,
+  "outputCapacity": 8,
+  "status": "HISTORICAL_CAMERA_HW_FAIL",
+  "use": "Training counterexample for active capacity change; never independent post-fix acceptance",
+  "files": {
+    "frame.png": "467601441dc8eea7b2d5a552bd7b79084496e9765f014d376b976f6991a79088"
+  },
+  "sourceIndexSha256": "0eea5eb717857f6887141c30a69dc23b6d11157df5ca9a40811c19088b8889ff"
+}

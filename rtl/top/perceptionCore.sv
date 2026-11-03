@@ -1,5 +1,5 @@
-// CLOCK_50 processing, native-pixel FIFO input, no motion outputs. A 334-clock
-// row guard preserves CAP8's 328-cycle housekeeping plus run/cleanup latency.
+// CLOCK_50 processing, native-pixel FIFO input, no motion outputs. Temporary
+// label capacity is independent of the sixteen completed candidates shared by both colours.
 module perceptionCore (
     input logic clk,reset,pclk,resetPclk,cameraFrameStart,cameraPixelValid,
     input logic [15:0] cameraPixel,
@@ -7,7 +7,14 @@ module perceptionCore (
     input logic [8:0] cameraY,
     input logic [31:0] timeUs,
     input logic interactionEnable,interactionPermit,debugCalArm,debugSpeechArm,
+    output logic debugInteractionArmReady,
     input logic [1:0] orientationProfile,
+    input logic bypassPerspective,
+    // CLOCK_50 control. Readiness falls immediately when disabled; the pixel
+    // processing mode changes atomically at the next input SOF. Camera capture,
+    // native frame numbering, the shared clock and held team transactions run
+    // continuously in both modes.
+    input logic processingEnable,
     input perception_pkg::targetRequest_t targetRequest,
     input logic targetRequestValid,
     output logic targetRequestReady,
@@ -18,7 +25,7 @@ module perceptionCore (
     output logic userEventValid,
     input logic userEventReady,
     output perception_pkg::perceptionStatus_t status,
-    output logic [3071:0] debugWords,
+    output logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,
     output logic completedFrame,
     output logic [15:0] completedFrameId
 );
@@ -26,6 +33,15 @@ module perceptionCore (
     import candidate_pkg::*;
     import perception_pkg::*;
     import vision_pkg::*;
+    // Real source5633257e frame16493 exhausted all twelve temporary red
+    // handles, invalidating the whole frame. Fifteen is the largest capacity
+    // representable by four-bit labels with zero reserved as the sentinel.
+    // Actual frame56554 contains nine completed blue regions (including the
+    // calibration bar). Sixteen completed outputs retain this scene without
+    // widening active labels; a genuine seventeenth output still rejects the
+    // whole frame. Row maintenance remains335 clocks (336 after EOP).
+    localparam int ACTIVE_CAPACITY=15, OUTPUT_CAPACITY=16;
+    localparam int ROW_GUARD=320+ACTIVE_CAPACITY+6;
     targetRequest_t activeRequest;
     logic streamValid,transportFault;
     logic [79:0] streamData;
@@ -36,10 +52,17 @@ module perceptionCore (
     wire [7:0] y=streamData[23:16];
     wire pixelSop=pixelValid&&x==0&&y==0;
     wire pixelEop=pixelValid&&x==319&&y==239;
-    wire [23:0] rgb=rgb565_to_rgb888(streamData[15:0]);
+    logic activeProcessing,rawFrameOpen,lastFrameRaw;
+    wire processingModeChange=sof&&(activeProcessing!=processingEnable);
+    wire processingReset=reset||!activeProcessing||processingModeChange;
+    wire processingPixelValid=pixelValid&&activeProcessing&&!processingReset;
+    // Stop combinational colour/white classification toggling in raw mode as
+    // well as stopping all sequential processing. The capture FIFO is untouched.
+    wire [23:0] rgb=activeProcessing?rgb565_to_rgb888(streamData[15:0]):24'd0;
     wire [9:0] r={2'b0,rgb[23:16]},g={2'b0,rgb[15:8]},b={2'b0,rgb[7:0]};
     logic [7:0] activeRedMinimum,activeBlueMinimum,shadowRedMinimum,shadowBlueMinimum;
     logic [1:0] activeOrientation;
+    logic activeBypass,bankBypass[0:1],lastFrameBypass;
     logic [15:0] configVersion;
     wire [1:0] colourMask;
     hsvColourGate #(.BLUE_HUE_UPPER(260)) colourGate (.rgb(rgb),.redMinimum(activeRedMinimum),
@@ -81,18 +104,21 @@ module perceptionCore (
     // Keep complete >=3-pixel horizontal runs, including their first/last
     // pixels. This removes quantised orange speckles without eroding card
     // corners. The reader's foreground bank deliberately retains raw HSV bits.
-    horizontalRunFilter runFilter (.clk(clk),.reset(reset||abandonAtSof),
-        .in_valid(pixelValid),.in_sop(pixelSop),.in_eop(pixelEop),.in_x(x),.in_y(y),.in_mask(colourMask),
+    horizontalRunFilter runFilter (.clk(clk),.reset(processingReset||abandonAtSof),
+        .in_valid(processingPixelValid),.in_sop(pixelSop),.in_eop(pixelEop),.in_x(x),.in_y(y),.in_mask(colourMask),
         .out_valid(runValid),.out_sop(runSop),.out_eop(runEop),.out_x(runX),.out_y(runY),.out_mask(runMask));
-    causalMaskCleanup cleanup (.clk(clk),.reset(reset||abandonAtSof),.in_valid(runValid),.in_sop(runSop),.in_eop(runEop),
+    causalMaskCleanup cleanup (.clk(clk),.reset(processingReset||abandonAtSof),.in_valid(runValid),.in_sop(runSop),.in_eop(runEop),
         .in_x(runX),.in_y(runY),.in_mask(runMask),.out_valid(cleanValid),.out_sop(cleanSop),
         .out_eop(cleanEop),.out_x(cleanX),.out_y(cleanY),.out_mask(cleanMask));
-    candidate_array_t redCandidates,blueCandidates;
-    logic [3:0] redCount,blueCount,allocationPeakRed,allocationPeakBlue;
+    candidate_array_t sharedCandidates;
+    logic [15:0] sharedColours;
+    logic [4:0] sharedCount;
+    logic [4:0] redCount,blueCount;
+    logic [3:0] allocationPeakRed,allocationPeakBlue;
     logic candidateValid,candidateGood,candidateOverflow,candidateError,candidateOverrun;
     logic [15:0] candidateSequence;
-    boundedCandidates #(.PRUNE_UNUSABLE(1)) candidates (.clk(clk),.reset(reset||abandonAtSof),.in_valid(cleanValid),.in_sop(cleanSop),.in_eop(cleanEop),
-        .in_mask(cleanMask),.in_x(cleanX),.in_y(cleanY),.red_candidates(redCandidates),.blue_candidates(blueCandidates),
+    boundedCandidates #(.CAP(OUTPUT_CAPACITY),.SHARED_POOL(1),.PRUNE_UNUSABLE(1),.ACTIVE_CAP(ACTIVE_CAPACITY)) candidates (.clk(clk),.reset(processingReset||abandonAtSof),.in_valid(cleanValid),.in_sop(cleanSop),.in_eop(cleanEop),
+        .in_mask(cleanMask),.in_x(cleanX),.in_y(cleanY),.sharedCandidates(sharedCandidates),.sharedColours(sharedColours),.sharedCount(sharedCount),
         .red_count(redCount),.blue_count(blueCount),.out_valid(candidateValid),.frame_valid(candidateGood),
         .overflow(candidateOverflow),.red_overflow(),.blue_overflow(),.frame_error(candidateError),
         .overrun(candidateOverrun),.frame_id(candidateSequence),.busy(),
@@ -100,18 +126,21 @@ module perceptionCore (
     typedef enum logic [1:0] {FREE,WRITING,READY,READING} bankState_t;
     bankState_t bankState[0:1];
     frameObservation_t bankMeta[0:1],captureMeta,observation,processedObservation;
-    candidate_array_t bankRed[0:1],bankBlue[0:1];
+    candidate_array_t bankCandidates[0:1];
+    logic [15:0] bankColours[0:1];
     logic [1:0] bankOrientation[0:1];
     // The segmentation profile belongs to the captured bank, not the later
     // global profile when that bank finishes recognition.
     logic [7:0] bankRedMinimum[0:1],bankBlueMinimum[0:1];
-    logic [3:0] bankRedCount[0:1],bankBlueCount[0:1],bankPeakRed[0:1],bankPeakBlue[0:1];
+    logic [4:0] bankRedCount[0:1],bankBlueCount[0:1];
+    logic [3:0] bankPeakRed[0:1],bankPeakBlue[0:1];
     logic [2:0] bankCandidateFaults[0:1];
     logic writeBank,haveWriteBank,readBank,readerStart,readerBusy,readerDone;
     // Part A intentionally publishes an aborted old frame on an overlapping SOP.
     // Discarding a partial capture here resets only the candidate/cleanup state,
     // so that old packet cannot be attached to the new frame's metadata.
-    assign abandonAtSof=sof&&haveWriteBank&&bankState[writeBank]==WRITING&&!candidateValid;
+    assign abandonAtSof=sof&&activeProcessing&&processingEnable&&!processingModeChange&&
+        haveWriteBank&&bankState[writeBank]==WRITING&&!candidateValid;
     logic [16:0] glyphAddress;
     logic glyphWhite,glyphStrongWhite,glyphColour;
     markerArray_t markers,lastMarkers;
@@ -119,13 +148,14 @@ module perceptionCore (
     logic observationValid;
     logic [15:0] bufferDropCount,reportDropCount;
     logic requestInvalidFault;
-    glyphBanks glyphMemory (.clk(clk),.writeEnable(pixelValid&&haveWriteBank&&x<320&&y<240),
+    glyphBanks glyphMemory (.clk(clk),.writeEnable(processingPixelValid&&haveWriteBank&&x<320&&y<240),
         .writeBank(writeBank),.writeAddress(17'(y)*17'd320+17'(x)),.writeWhite(whitePixel),
         .writeStrongWhite(strongWhitePixel),.writeColour(colourMask!=0),
         .readBank(readBank),.readAddress(glyphAddress),.readWhite(glyphWhite),
         .readStrongWhite(glyphStrongWhite),.readColour(glyphColour));
-    projectiveMarkerReader reader (.clk(clk),.reset(reset),.start(readerStart),.redCandidates(bankRed[readBank]),
-        .blueCandidates(bankBlue[readBank]),.orientationProfile(bankOrientation[readBank]),.busy(readerBusy),
+    projectiveMarkerReader reader (.clk(clk),.reset(processingReset),.start(readerStart),.sharedCandidates(bankCandidates[readBank]),
+        .sharedColours(bankColours[readBank]),.orientationProfile(bankOrientation[readBank]),.busy(readerBusy),
+        .bypassPerspective(bankBypass[readBank]),
         .done(readerDone),.readAddress(glyphAddress),.readWhite(glyphWhite),
         .readStrongWhite(glyphStrongWhite),.readColour(glyphColour),
         .markers(markers),.acceptedCount(acceptedCount));
@@ -137,24 +167,39 @@ module perceptionCore (
 
     // Pair using the red card's local geometry, never a sheet cell/known bay.
     function automatic logic referencePaired(input marker_t card,input candidate_t refBox,input logic [1:0] rotation);
-        // Native extrema are at most 319; signed 15-bit intermediates cover
-        // differences, +/-4 tolerance and the largest constant product (x12).
+        // All geometry is in native pixels along the configured card axes.
+        // Signed15-bit intermediates cover coordinates <=319, doubled centres,
+        // signed gaps and the largest constant product (width x12 <=3840).
+        // Pair lateral centres, not both absolute bbox edges: perspective can
+        // change strip width while keeping its centre aligned with its own red1.
+        // Tolerance is ceil(cardWidth/16), with no fixed pixel allowance. Ceil
+        // retains one-pixel quantisation at small scales; twice-centre arithmetic
+        // avoids rounding either centre before comparing them. This remains a
+        // configured-quadrant check, not arbitrary-angle projective calibration.
         logic signed [14:0] cw,ch,rw,rh,lo,hi,rl,rhEnd,gap;
+        logic signed [14:0] centreDelta2,centreTolerance,overlapLow,overlapHigh,overlapWidth;
         begin
-            cw=rotation[0]?int'(card.yMax)-int'(card.yMin)+1:int'(card.xMax)-int'(card.xMin)+1;
-            ch=rotation[0]?int'(card.xMax)-int'(card.xMin)+1:int'(card.yMax)-int'(card.yMin)+1;
-            rw=rotation[0]?int'(refBox.ymax)-int'(refBox.ymin)+1:int'(refBox.xmax)-int'(refBox.xmin)+1;
-            rh=rotation[0]?int'(refBox.xmax)-int'(refBox.xmin)+1:int'(refBox.ymax)-int'(refBox.ymin)+1;
-            lo=rotation[0]?int'(card.yMin):int'(card.xMin);hi=rotation[0]?int'(card.yMax):int'(card.xMax);
-            rl=rotation[0]?int'(refBox.ymin):int'(refBox.xmin);rhEnd=rotation[0]?int'(refBox.ymax):int'(refBox.xmax);
+            cw=15'(rotation[0]?int'(card.yMax)-int'(card.yMin)+1:int'(card.xMax)-int'(card.xMin)+1);
+            ch=15'(rotation[0]?int'(card.xMax)-int'(card.xMin)+1:int'(card.yMax)-int'(card.yMin)+1);
+            rw=15'(rotation[0]?int'(refBox.ymax)-int'(refBox.ymin)+1:int'(refBox.xmax)-int'(refBox.xmin)+1);
+            rh=15'(rotation[0]?int'(refBox.xmax)-int'(refBox.xmin)+1:int'(refBox.ymax)-int'(refBox.ymin)+1);
+            lo=15'(rotation[0]?int'(card.yMin):int'(card.xMin));hi=15'(rotation[0]?int'(card.yMax):int'(card.xMax));
+            rl=15'(rotation[0]?int'(refBox.ymin):int'(refBox.xmin));rhEnd=15'(rotation[0]?int'(refBox.ymax):int'(refBox.xmax));
             case(rotation)
-                0:gap=int'(refBox.ymin)-int'(card.yMax)-1;
-                1:gap=int'(card.xMin)-int'(refBox.xmax)-1;
-                2:gap=int'(card.yMin)-int'(refBox.ymax)-1;
-                default:gap=int'(refBox.xmin)-int'(card.xMax)-1;
+                0:gap=15'(int'(refBox.ymin)-int'(card.yMax)-1);
+                1:gap=15'(int'(card.xMin)-int'(refBox.xmax)-1);
+                2:gap=15'(int'(card.yMin)-int'(refBox.ymax)-1);
+                default:gap=15'(int'(refBox.xmin)-int'(card.xMax)-1);
             endcase
-            referencePaired=refBox.valid&&gap>=0&&gap*8<=ch&&rw*10>=cw*8&&rw*10<=cw*12&&
-                rh*10>=ch&&rh*10<=ch*3&&rl>=lo-4&&rl<=lo+4&&rhEnd>=hi-4&&rhEnd<=hi+4;
+            centreDelta2=rl+rhEnd-lo-hi;
+            centreTolerance=(cw+15'sd15)>>>4;
+            overlapLow=lo>rl?lo:rl;overlapHigh=hi<rhEnd?hi:rhEnd;
+            overlapWidth=overlapHigh>=overlapLow?overlapHigh-overlapLow+15'sd1:15'sd0;
+            referencePaired=refBox.valid&&cw>0&&ch>0&&rw>0&&rh>0&&
+                gap>=0&&gap*15'sd8<=ch&&rw*15'sd10>=cw*15'sd8&&rw*15'sd10<=cw*15'sd12&&
+                rh*15'sd10>=ch&&rh*15'sd10<=ch*15'sd3&&
+                centreDelta2>=-(centreTolerance<<<1)&&centreDelta2<=(centreTolerance<<<1)&&
+                overlapWidth*15'sd5>=cw*15'sd4;
         end
     endfunction
     function automatic logic stationary(input candidate_t a,input candidate_t c);
@@ -167,6 +212,8 @@ module perceptionCore (
     candidate_t bankSampleRed[0:1],bankSampleBlue[0:1];
     logic red1Paired,red2Seen,roiValid;
     logic [4:0] pairCount,red2Count;
+    logic [3:0] pairReferenceIndex,lastCalibrationReferenceIndex;
+    logic lastCalibrationReferenceValid;
     // One geometric comparator is shared across candidate pairs. The former
     // combinational 16x8 loop duplicated 128 arithmetic/priority paths and was
     // the largest contributor to the failed fit. Keep the READING bank owned
@@ -174,24 +221,24 @@ module perceptionCore (
     typedef enum logic [1:0] {AG_IDLE,AG_MARKER,AG_REFERENCE,AG_DONE} aggregateState_t;
     aggregateState_t aggregateState;
     logic [3:0] markerIndex;
-    logic [2:0] referenceIndex;
+    logic [3:0] referenceIndex;
     wire aggregateDone=aggregateState==AG_DONE;
     // Capture can report a newer truncated/dropped frame on the same clock as
     // an older owned bank finishes classification. The newer bad observation
     // must win: publishing the old good result would hide immediate lock loss.
     wire captureDropNow=abandonAtSof||(candidateValid&&!haveWriteBank);
-    wire aggregateAccepted=aggregateDone&&!captureDropNow;
+    wire aggregateAccepted=aggregateDone&&!captureDropNow&&activeProcessing&&processingEnable&&!processingModeChange;
     logic [15:0] completionDiscardCount;
     assign red1Paired=pairCount==1;
     assign red2Seen=red2Count==1;
     always_ff @(posedge clk) begin
-        if(reset) begin
+        if(processingReset) begin
             aggregateState<=AG_IDLE;markerIndex<=0;referenceIndex<=0;
-            processedObservation<='0;pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;
+            processedObservation<='0;pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;
         end else case(aggregateState)
             AG_IDLE: if(readerDone) begin
                 processedObservation<=bankMeta[readBank];processedObservation.matchCount<=0;
-                pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;
+                pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;
                 markerIndex<=0;referenceIndex<=0;aggregateState<=AG_MARKER;
             end
             AG_MARKER: begin
@@ -214,18 +261,23 @@ module perceptionCore (
                 else markerIndex<=markerIndex+4'd1;
             end
             AG_REFERENCE: begin
-                if(referencePaired(markers[markerIndex],bankBlue[readBank][referenceIndex],bankOrientation[readBank])) begin
+                // A recognised blue bay cannot double as the red-1 reference,
+                // even if an unusual scene makes its bbox match the geometry.
+                // Only this actual unique pairing may receive the BJ label.
+                if(bankColours[readBank][referenceIndex]&&!markers[referenceIndex].accepted&&
+                    referencePaired(markers[markerIndex],bankCandidates[readBank][referenceIndex],bankOrientation[readBank])) begin
                     // Saturating uniqueness must not wrap back to one.
                     if(pairCount<2) pairCount<=pairCount+5'd1;
                     pairRed.valid<=1;
                     pairRed.xmin<=markers[markerIndex].xMin;pairRed.xmax<=markers[markerIndex].xMax;
                     pairRed.ymin<=markers[markerIndex].yMin;pairRed.ymax<=markers[markerIndex].yMax;
-                    pairBlue<=bankBlue[readBank][referenceIndex];
+                    pairBlue<=bankCandidates[readBank][referenceIndex];
+                    pairReferenceIndex<=referenceIndex;
                 end
-                if(referenceIndex==7) begin
+                if(referenceIndex==15) begin
                     if(markerIndex==15) aggregateState<=AG_DONE;
                     else begin markerIndex<=markerIndex+4'd1;aggregateState<=AG_MARKER;end
-                end else referenceIndex<=referenceIndex+3'd1;
+                end else referenceIndex<=referenceIndex+4'd1;
             end
             AG_DONE: aggregateState<=AG_IDLE;
             default: aggregateState<=AG_IDLE;
@@ -233,36 +285,57 @@ module perceptionCore (
     end
     logic collectEnable,calibrationAttempt,commitRequest,commitAck,calibrated,speechArmed,interactionBusy;
     logic commitConsumed;
-    wire applyCommit=commitRequest&&!commitConsumed&&interactionEnable&&interactionPermit;
+    wire applyCommit=commitRequest&&!commitConsumed&&interactionEnable&&interactionPermit&&
+        processingEnable&&activeProcessing;
     logic [3:0] sampleCount;
     logic [15:0] interactionId;
     interactionKind_t interactionKind;
     interactionState_t interactionState;
+    assign debugInteractionArmReady=interactionEnable&&processingEnable&&activeProcessing&&
+        (interactionState==INTERACTION_IDLE||interactionState==INTERACTION_SPEECH_ARMED);
     logic eventOverflow,samplerGood;
     logic [7:0] sampleRedMinimum,sampleBlueMinimum;
     logic [16:0] redSamples,blueSamples;
     logic bankSampling[0:1],bankSampleGood[0:1];
     logic [7:0] bankSampleRedMin[0:1],bankSampleBlueMin[0:1];
     logic [15:0] bankInteractionId[0:1];
+    logic [16:0] bankRedSamples[0:1],bankBlueSamples[0:1];
+    logic [16:0] lastSampleRedCount,lastSampleBlueCount;
+    logic [15:0] lastSampleFrameId;
+    logic [4:0] lastSampleChecks;
+    userEvent_t lastConsumedEvent;
+    logic haveConsumedEvent;
+    // Diagnostic history is separate from valid/ready delivery: retaining an
+    // accepted event never delivers it to C a second time.
+    always_ff @(posedge clk) begin
+        if(reset)begin lastConsumedEvent<='0;haveConsumedEvent<=0;end
+        else if(userEventValid&&userEventReady)begin
+            lastConsumedEvent<=userEvent;haveConsumedEvent<=1;
+        end
+    end
     logic [7:0] windowRedMaximum,windowBlueMaximum;
     // Samples are accepted only by the collection window that requested them.
     // A reader may finish an older bank after cancellation or another request.
     wire currentSample=aggregateAccepted&&bankSampling[readBank]&&collectEnable&&
         bankInteractionId[readBank]==interactionId&&
         processedObservation.configVersion==configVersion;
-    wire sampleGood=bankSampleGood[readBank]&&red1Paired&&processedObservation.frameGood&&
-        stationary(pairRed,bankSampleRed[readBank])&&stationary(pairBlue,bankSampleBlue[readBank])&&
-        (sampleCount==0||(int'(bankSampleRedMin[readBank])-int'(shadowRedMinimum)<=24&&
+    wire sampleGeometryGood=stationary(pairRed,bankSampleRed[readBank])&&stationary(pairBlue,bankSampleBlue[readBank]);
+    wire sampleWindowGood=sampleCount==0||(
+        int'(bankSampleRedMin[readBank])-int'(shadowRedMinimum)<=24&&
         int'(windowRedMaximum)-int'(bankSampleRedMin[readBank])<=24&&
         int'(bankSampleBlueMin[readBank])-int'(shadowBlueMinimum)<=24&&
-        int'(windowBlueMaximum)-int'(bankSampleBlueMin[readBank])<=24));
-    colourSampler sampler (.clk(clk),.reset(reset),.sof(sof),.pixelValid(pixelValid),.eop(pixelEop),
+        int'(windowBlueMaximum)-int'(bankSampleBlueMin[readBank])<=24);
+    wire sampleGood=bankSampleGood[readBank]&&red1Paired&&processedObservation.frameGood&&
+        sampleGeometryGood&&sampleWindowGood;
+    colourSampler sampler (.clk(clk),.reset(processingReset),.sof(sof),.pixelValid(processingPixelValid),.eop(pixelEop),
         .collectEnable(collectEnable),.roiValid(roiValid),.x(x),.y(y),.rgb(rgb),.orientation(activeOrientation),
         .redBox(lastPairRed),.blueBox(lastPairBlue),.frameSampleGood(samplerGood),.redMinimum(sampleRedMinimum),
         .blueMinimum(sampleBlueMinimum),.redSamples(redSamples),.blueSamples(blueSamples),
         .sampledRedBox(sampledRed),.sampledBlueBox(sampledBlue));
-    fixedSheetInteraction interaction (.clk(clk),.reset(reset),.timeUs(timeUs),.enable(interactionEnable),
-        .permit(interactionPermit),.debugCalArm(debugCalArm),.debugSpeechArm(debugSpeechArm),
+    fixedSheetInteraction interaction (.clk(clk),.reset(reset),.timeUs(timeUs),
+        .enable(interactionEnable&&processingEnable&&activeProcessing),
+        .permit(interactionPermit),.debugCalArm(debugCalArm&&debugInteractionArmReady),
+        .debugSpeechArm(debugSpeechArm&&debugInteractionArmReady),
         .frameValid(aggregateAccepted),.frameGood(processedObservation.frameGood),.frameId(processedObservation.frameId),
         .configVersion(processedObservation.configVersion),.activeCfgVersion(configVersion),.red1Paired(red1Paired),
         .red2Seen(red2Seen),.sampleResultValid(currentSample),.sampleGood(sampleGood),
@@ -275,13 +348,17 @@ module perceptionCore (
     logic [7:0] lastFrameRedMinimum,lastFrameBlueMinimum;
     logic haveFrame,lastFrameGood;
     logic [31:0] lastCompletionUs,lastCaptureUs;
-    logic [3:0] lastRedCount,lastBlueCount,lastPeakRed,lastPeakBlue;
+    logic [4:0] lastRedCount,lastBlueCount;
+    logic [3:0] lastPeakRed,lastPeakBlue;
     logic [2:0] lastCandidateFaults;
     always_ff @(posedge clk) begin
         if(reset)begin
             rowGuard<=0;activeRedMinimum<=48;activeBlueMinimum<=20;shadowRedMinimum<=255;shadowBlueMinimum<=255;
             windowRedMaximum<=0;windowBlueMaximum<=0;
-            activeOrientation<=0;configVersion<=0;commitAck<=0;commitConsumed<=0;writeBank<=0;haveWriteBank<=0;readBank<=0;readerStart<=0;
+            lastSampleRedCount<=0;lastSampleBlueCount<=0;lastSampleFrameId<=0;lastSampleChecks<=0;
+            activeOrientation<=0;activeBypass<=0;lastFrameBypass<=0;configVersion<=0;commitAck<=0;commitConsumed<=0;writeBank<=0;haveWriteBank<=0;readBank<=0;readerStart<=0;
+            activeProcessing<=1;rawFrameOpen<=0;lastFrameRaw<=0;
+            lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;
             observationValid<=0;observation<='0;captureMeta<='0;bufferDropCount<=0;faults<=0;haveFrame<=0;lastCompletionUs<=0;
             lastMarkers<='0;lastFrameId<=0;lastCaptureUs<=0;lastRedCount<=0;lastBlueCount<=0;roiValid<=0;
             lastPairRed<='0;lastPairBlue<='0;completedFrame<=0;completedFrameId<=0;lastFrameGood<=0;
@@ -290,23 +367,30 @@ module perceptionCore (
             lastFrameRedMinimum<=48;lastFrameBlueMinimum<=20;
             completionDiscardCount<=0;
             for(int i=0;i<2;i++)begin
-                bankState[i]<=FREE;bankMeta[i]<='0;bankRed[i]<='0;bankBlue[i]<='0;bankOrientation[i]<=0;
+                bankState[i]<=FREE;bankMeta[i]<='0;bankCandidates[i]<='0;bankColours[i]<=0;bankOrientation[i]<=0;
+                bankBypass[i]<=0;
                 bankRedMinimum[i]<=48;bankBlueMinimum[i]<=20;
                 bankRedCount[i]<=0;bankBlueCount[i]<=0;bankPeakRed[i]<=0;bankPeakBlue[i]<=0;bankCandidateFaults[i]<=0;
                 bankSampling[i]<=0;bankSampleGood[i]<=0;bankSampleRedMin[i]<=0;bankSampleBlueMin[i]<=0;
-                bankInteractionId[i]<=0;
+                bankInteractionId[i]<=0;bankRedSamples[i]<=0;bankBlueSamples[i]<=0;
                 bankSampleRed[i]<='0;bankSampleBlue[i]<='0;
             end
         end else begin
             readerStart<=0;observationValid<=0;commitAck<=0;completedFrame<=0;
             if(!commitRequest)commitConsumed<=0;
             if(rowGuard!=0)rowGuard<=rowGuard-9'd1;
-            if(pixelValid&&x==319)rowGuard<=9'd334;
+            if(processingPixelValid&&x==319)rowGuard<=9'(ROW_GUARD);
             if(transportFault)faults[FAULT_CAMERA_TRANSPORT]<=1;
             if(requestInvalidFault)faults[FAULT_REQUEST_INVALID]<=1;
             if(calibrationAttempt)begin
                 shadowRedMinimum<=255;shadowBlueMinimum<=255;
                 windowRedMaximum<=0;windowBlueMaximum<=0;
+            end
+            if(currentSample)begin
+                lastSampleFrameId<=processedObservation.frameId;
+                lastSampleRedCount<=bankRedSamples[readBank];lastSampleBlueCount<=bankBlueSamples[readBank];
+                lastSampleChecks<={sampleWindowGood,sampleGeometryGood,red1Paired,
+                    processedObservation.frameGood,bankSampleGood[readBank]};
             end
             if(currentSample&&sampleGood&&!calibrationAttempt)begin
                 if(bankSampleRedMin[readBank]<shadowRedMinimum)shadowRedMinimum<=bankSampleRedMin[readBank];
@@ -319,19 +403,42 @@ module perceptionCore (
                 if(applyCommit)begin
                     activeRedMinimum<=shadowRedMinimum;activeBlueMinimum<=shadowBlueMinimum;
                     configVersion<=configVersion+16'd1;commitAck<=1;commitConsumed<=1;
-                end else if(activeOrientation!=orientationProfile)configVersion<=configVersion+16'd1;
+                end else if(activeOrientation!=orientationProfile||activeBypass!=bypassPerspective||processingModeChange)
+                    configVersion<=configVersion+16'd1;
+                activeProcessing<=processingEnable;rawFrameOpen<=!processingEnable;
+                activeBypass<=bypassPerspective;
                 activeOrientation<=orientationProfile;captureMeta<='0;
                 captureMeta.boundRequest<=targetRequest_t'(streamData[71:50]);captureMeta.frameId<=streamData[49:34];
                 captureMeta.captureStartUs<=streamData[33:2];
-                captureMeta.configVersion<=configVersion+16'(applyCommit||activeOrientation!=orientationProfile);
-                captureMeta.frameGood<=!streamData[78];
-                if(abandonAtSof)begin
+                captureMeta.configVersion<=configVersion+16'(applyCommit||activeOrientation!=orientationProfile||
+                    activeBypass!=bypassPerspective||processingModeChange);
+                captureMeta.frameGood<=processingEnable&&!streamData[78];
+                if(processingModeChange)begin
+                    // A stopped reader may still own either bank. Discard both
+                    // ownership tokens before a fresh normal frame can claim
+                    // bank0. No reset reaches the camera bridge or the tracker.
+                    haveFrame<=0;roiValid<=0;rowGuard<=0;readerStart<=0;
+                    haveWriteBank<=processingEnable;writeBank<=0;
+                    for(int i=0;i<2;i++)begin
+                        bankState[i]<=FREE;bankSampling[i]<=0;bankSampleGood[i]<=0;
+                        bankCandidates[i]<='0;bankColours[i]<=0;bankRedCount[i]<=0;bankBlueCount[i]<=0;
+                    end
+                    if(processingEnable)begin
+                        bankState[0]<=WRITING;bankOrientation[0]<=orientationProfile;
+                        bankBypass[0]<=bypassPerspective;
+                        bankRedMinimum[0]<=activeRedMinimum;bankBlueMinimum[0]<=activeBlueMinimum;
+                        bankSampling[0]<=0;bankInteractionId[0]<=interactionId;
+                    end
+                end else if(!processingEnable)begin
+                    haveWriteBank<=0;rowGuard<=0;roiValid<=0;
+                end else if(abandonAtSof)begin
                     // A new SOF without a completed candidate packet abandons
                     // the truncated frame. Reclaim only its WRITING bank; READY
                     // and READING banks are never overwritten by this recovery.
                     observation<=captureMeta;observation.frameGood<=0;
                     observation.resourceDrop<=1;observationValid<=1;
                     bankOrientation[writeBank]<=orientationProfile;
+                    bankBypass[writeBank]<=bypassPerspective;
                     bankRedMinimum[writeBank]<=applyCommit?shadowRedMinimum:activeRedMinimum;
                     bankBlueMinimum[writeBank]<=applyCommit?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[writeBank]<=collectEnable;
@@ -341,6 +448,7 @@ module perceptionCore (
                 end else if(bankState[0]==FREE||bankState[1]==FREE)begin
                     writeBank<=bankState[0]==FREE?1'b0:1'b1;haveWriteBank<=1;
                     bankState[bankState[0]==FREE?0:1]<=WRITING;bankOrientation[bankState[0]==FREE?0:1]<=orientationProfile;
+                    bankBypass[bankState[0]==FREE?0:1]<=bypassPerspective;
                     bankRedMinimum[bankState[0]==FREE?0:1]<=applyCommit?shadowRedMinimum:activeRedMinimum;
                     bankBlueMinimum[bankState[0]==FREE?0:1]<=applyCommit?shadowBlueMinimum:activeBlueMinimum;
                     bankSampling[bankState[0]==FREE?0:1]<=collectEnable;
@@ -351,27 +459,29 @@ module perceptionCore (
                     faults[FAULT_MASK_BUFFER_OVERRUN]<=1;
                 end
             end
-            if(candidateValid)begin
+            if(candidateValid&&activeProcessing&&!processingModeChange)begin
                 if(candidateOverflow)faults[FAULT_CANDIDATE_OVERFLOW]<=1;
                 if(haveWriteBank)begin
                     bankMeta[writeBank]<=captureMeta;bankMeta[writeBank].frameGood<=captureMeta.frameGood&&candidateGood&&!candidateOverflow;
-                    bankRed[writeBank]<=redCandidates;bankBlue[writeBank]<=blueCandidates;bankState[writeBank]<=READY;
+                    bankCandidates[writeBank]<=sharedCandidates;bankColours[writeBank]<=sharedColours;bankState[writeBank]<=READY;
                     // Diagnostics travel with the same owned bank as its image.
                     bankRedCount[writeBank]<=redCount;bankBlueCount[writeBank]<=blueCount;
                     bankPeakRed[writeBank]<=allocationPeakRed;bankPeakBlue[writeBank]<=allocationPeakBlue;
                     bankCandidateFaults[writeBank]<={candidateOverflow,candidateError,candidateOverrun};
                     // A simultaneous SOF may already have claimed the other bank.
                     if(!sof)haveWriteBank<=0;
+                    bankRedSamples[writeBank]<=redSamples;bankBlueSamples[writeBank]<=blueSamples;
                     bankSampleGood[writeBank]<=samplerGood;bankSampleRedMin[writeBank]<=sampleRedMinimum;
                     bankSampleBlueMin[writeBank]<=sampleBlueMinimum;bankSampleRed[writeBank]<=sampledRed;bankSampleBlue[writeBank]<=sampledBlue;
                 end else begin
                     observation<=captureMeta;observation.resourceDrop<=1;observation.frameGood<=0;observationValid<=1;
                 end
             end
-            if(!readerBusy&&!readerStart&&!readerDone&&aggregateState==AG_IDLE&&(bankState[0]==READY||bankState[1]==READY))begin
+            if(activeProcessing&&processingEnable&&!processingModeChange&&!readerBusy&&!readerStart&&!readerDone&&
+                aggregateState==AG_IDLE&&(bankState[0]==READY||bankState[1]==READY))begin
                 readBank<=bankState[0]==READY?1'b0:1'b1;bankState[bankState[0]==READY?0:1]<=READING;readerStart<=1;
             end
-            if(aggregateDone)begin
+            if(aggregateDone&&activeProcessing&&!processingModeChange)begin
                 // Release the old reader even if its result loses arbitration.
                 // Snapshot publication and calibration must use the same
                 // accepted result as the report; never attach old good marker
@@ -387,38 +497,64 @@ module perceptionCore (
                 lastFrameGood<=processedObservation.frameGood;
                 lastFrameConfigVersion<=processedObservation.configVersion;
                 lastFrameOrientation<=bankOrientation[readBank];
+                lastFrameBypass<=bankBypass[readBank];
+                lastFrameRaw<=0;
+                lastCalibrationReferenceValid<=red1Paired&&processedObservation.frameGood;
+                lastCalibrationReferenceIndex<=red1Paired&&processedObservation.frameGood?pairReferenceIndex:4'd0;
                 lastFrameRedMinimum<=bankRedMinimum[readBank];lastFrameBlueMinimum<=bankBlueMinimum[readBank];
                 lastRedCount<=bankRedCount[readBank];lastBlueCount<=bankBlueCount[readBank];
                 lastPeakRed<=bankPeakRed[readBank];lastPeakBlue<=bankPeakBlue[readBank];
                 lastCandidateFaults<=bankCandidateFaults[readBank];
                 roiValid<=red1Paired&&processedObservation.frameGood;lastPairRed<=pairRed;lastPairBlue<=pairBlue;
             end
+            if(!activeProcessing&&rawFrameOpen&&pixelEop)begin
+                // GRAB still receives a new, immutable result token for each
+                // raw frame. Invalid/empty recognition is intentional here,
+                // not evidence that the camera transport failed. SOF metadata
+                // and native frame identity continue through the same FIFO.
+                rawFrameOpen<=0;observation<=captureMeta;observationValid<=1;
+                observation.frameGood<=0;observation.matchCount<=0;
+                lastMarkers<='0;lastRedCount<=0;lastBlueCount<=0;lastPeakRed<=0;lastPeakBlue<=0;
+                lastCandidateFaults<=0;lastFrameGood<=0;lastFrameRaw<=1;
+                lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;
+                lastFrameId<=captureMeta.frameId;lastCaptureUs<=captureMeta.captureStartUs;
+                lastFrameConfigVersion<=captureMeta.configVersion;
+                lastFrameOrientation<=activeOrientation;lastFrameBypass<=activeBypass;
+                lastFrameRedMinimum<=activeRedMinimum;lastFrameBlueMinimum<=activeBlueMinimum;
+                lastCompletionUs<=timeUs;completedFrame<=1;completedFrameId<=captureMeta.frameId;
+            end
         end
     end
     always_comb begin
         status='0;status.interactionBusy=interactionBusy;status.kind=interactionKind;status.state=interactionState;
-        status.calibrated=calibrated;status.audioReady=0;status.perceptionReady=haveFrame&&freshTime(timeUs,lastCompletionUs,32'd150000);
+        status.calibrated=calibrated;status.audioReady=0;
+        status.perceptionReady=processingEnable&&activeProcessing&&haveFrame&&freshTime(timeUs,lastCompletionUs,32'd150000);
         status.activeCfgVersion=configVersion;status.reportDropCount=reportDropCount;status.eventOverflow=eventOverflow;
         status.faultFlags=faults;status.interactionId=interactionId;status.speechArmed=speechArmed;
         debugWords='0;
-        debugWords[0*32+:32]=32'h45425031;debugWords[1*32+:32]=32'h00020002;
+        debugWords[0*32+:32]=32'h45425031;
+        debugWords[1*32+:32]={16'(DEBUG_SCHEMA_VERSION),16'(PERCEPTION_CONTRACT_VERSION)};
         debugWords[2*32+:32]=timeUs;debugWords[3*32+:32]={16'd0,lastFrameId};debugWords[4*32+:32]=lastCaptureUs;
         debugWords[5*32+:32]=lastCompletionUs;debugWords[6*32+:32]={16'd0,lastFrameConfigVersion};
-        debugWords[7*32+:32]={12'd0,lastFrameOrientation,2'd0,lastFrameRedMinimum,lastFrameBlueMinimum};
-        debugWords[8*32+:32]={16'd0,bufferDropCount};debugWords[9*32+:32]={24'd0,lastBlueCount,lastRedCount};
-        debugWords[10*32+:76]=status;debugWords[13*32+:139]=targetReport;debugWords[18*32+:104]=userEvent;
-        debugWords[22*32+:32]={15'd0,redSamples};debugWords[23*32+:32]={15'd0,blueSamples};
-        for(int i=0;i<16;i++)begin
+        debugWords[7*32+:32]={10'd0,lastFrameRaw,lastFrameBypass,lastFrameOrientation,2'd0,lastFrameRedMinimum,lastFrameBlueMinimum};
+        debugWords[8*32+:32]={16'd0,bufferDropCount};debugWords[9*32+:32]={22'd0,lastBlueCount,lastRedCount};
+        debugWords[10*32+:76]=status;debugWords[13*32+:139]=targetReport;debugWords[18*32+:104]=userEventValid?userEvent:lastConsumedEvent;
+        debugWords[22*32+:32]={15'd0,lastSampleRedCount};debugWords[23*32+:32]={15'd0,lastSampleBlueCount};
+        for(int i=0;i<DEBUG_MARKER_COUNT;i++)begin
             debugWords[(24+i*4)*32+:32]={lastMarkers[i].accepted,lastMarkers[i].isBlue,lastMarkers[i].orientation,
                 lastMarkers[i].digit,lastMarkers[i].quality,lastMarkers[i].reason,1'b0,lastMarkers[i].segments};
             debugWords[(25+i*4)*32+:32]={7'd0,lastMarkers[i].xMin,7'd0,lastMarkers[i].xMax};
             debugWords[(26+i*4)*32+:32]={8'd0,lastMarkers[i].yMin,8'd0,lastMarkers[i].yMax};
         end
-        debugWords[88*32+:32]={10'd0,activeRequest};debugWords[89*32+:32]={28'd0,sampleCount};
-        debugWords[90*32+:32]={30'd0,targetReportValid,userEventValid};
-        debugWords[91*32+:32]={31'd0,lastFrameGood};
-        debugWords[93*32+:32]={24'd0,lastPeakBlue,lastPeakRed};
-        debugWords[94*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
-        debugWords[95*32+:32]={8'd2,8'd4,8'(WHITE_LUMA_QUARTER),8'd64};
+        debugWords[(DEBUG_TAIL_BASE+0)*32+:32]={10'd0,activeRequest};
+        debugWords[(DEBUG_TAIL_BASE+1)*32+:32]={lastSampleFrameId,3'd0,lastSampleChecks,4'd0,sampleCount};
+        debugWords[(DEBUG_TAIL_BASE+2)*32+:32]={24'd0,lastCalibrationReferenceIndex,lastCalibrationReferenceValid,
+            haveConsumedEvent&&!userEventValid,targetReportValid,userEventValid};
+        debugWords[(DEBUG_TAIL_BASE+3)*32+:32]={31'd0,lastFrameGood};
+        // Schema7 high byte1 identifies a total shared pool, not per-colour
+        // capacity. Counts and each marker's explicit isBlue remain separate.
+        debugWords[(DEBUG_TAIL_BASE+5)*32+:32]={8'd1,8'(OUTPUT_CAPACITY),8'(ACTIVE_CAPACITY),lastPeakBlue,lastPeakRed};
+        debugWords[(DEBUG_TAIL_BASE+6)*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
+        debugWords[(DEBUG_TAIL_BASE+7)*32+:32]={8'd2,8'd5,8'(WHITE_LUMA_QUARTER),8'd64};
     end
 endmodule

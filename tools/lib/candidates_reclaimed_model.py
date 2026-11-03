@@ -42,7 +42,8 @@ def usable_candidate_size(width, height, colour):
     return max(width, height) >= 20 and min(width, height) >= 3
 
 
-def _colour_rows(mask, colour, cap, minimum, prune_unusable=False):
+def _colour_rows(mask, colour, cap, minimum, prune_unusable=False, active_capacity=None):
+    if active_capacity is None: active_capacity = cap
     h, w = len(mask), len(mask[0])
     previous_line = [0]*w
     active = {}  # canonical previous-prefix components, keyed by oracle-only ID
@@ -67,7 +68,7 @@ def _colour_rows(mask, colour, cap, minimum, prune_unusable=False):
         lifetime_seeds += seeds
         handles = len(active) + seeds
         max_row_handles = max(max_row_handles, handles)
-        active_overflow |= handles > cap
+        active_overflow |= handles > active_capacity
 
         old_count = len(active)
         graph = {node: set() for node in range(1, old_count+len(runs)+1)}
@@ -135,23 +136,33 @@ def _colour_rows(mask, colour, cap, minimum, prune_unusable=False):
     return result
 
 
-def candidates_reclaimed(mask, cap=8, min_area=32, prune_unusable=False):
+def candidates_reclaimed(mask, cap=8, min_area=32, prune_unusable=False, active_capacity=None, shared_capacity=None):
     """Return exact descriptors and conservative per-row capacity results.
 
     Input is a rectangular list of integer rows, 0=background,1=red,2=blue.
     All valid output descriptor ordering is intentionally unspecified; compare
     multisets of (xmin,xmax,ymin,ymax,area,cx,cy), not slot order.
+    shared_capacity selects a single total completed store, overriding the
+    per-colour cap. Its canonical output is test order, never RTL retirement
+    order. Active label capacity remains an independent per-colour constraint.
     """
     if not mask or not mask[0]:
         raise ValueError("nonempty rectangular mask required")
+    if active_capacity is None: active_capacity = cap
+    if shared_capacity is not None and not 1 <= shared_capacity <= 16:
+        raise ValueError("shared completed capacity must be 1..16")
+    if not 1 <= active_capacity <= 15:
+        raise ValueError("active capacity must fit four-bit nonzero labels 1..15")
     h, w = len(mask), len(mask[0])
-    if not (1 <= w <= 320 and 1 <= h <= 240 and 1 <= cap <= 8 and 1 <= min_area <= w*h):
+    if not (1 <= w <= 320 and 1 <= h <= 240 and 1 <= cap <= 16 and 1 <= min_area <= w*h):
         raise ValueError("geometry/cap/min_area outside V2 contract")
     if any(len(row) != w or any(type(p) is not int or p not in (0, 1, 2) for p in row) for row in mask):
         raise ValueError("mask must be rectangular integers0,1,2")
-    results = {name: _colour_rows(mask, colour, cap, min_area, prune_unusable) for name, colour in (("red", 1), ("blue", 2))}
+    outputCap = shared_capacity if shared_capacity is not None else cap
+    results = {name: _colour_rows(mask, colour, outputCap, min_area, prune_unusable, active_capacity) for name, colour in (("red", 1), ("blue", 2))}
     overflow = {name: r["active_overflow"] or r["output_overflow"] for name, r in results.items()}
-    valid = not any(overflow.values())
+    sharedOverflow = shared_capacity is not None and sum(r["qualifying_completed"] for r in results.values()) > shared_capacity
+    valid = not any(overflow.values()) and not sharedOverflow
     answer = dict(frame_valid=valid, overflow=not valid,
                   red_overflow=overflow["red"], blue_overflow=overflow["blue"],
                   red=results["red"]["completed"] if valid else [],
@@ -161,6 +172,14 @@ def candidates_reclaimed(mask, cap=8, min_area=32, prune_unusable=False):
             answer[name+"_"+field] = r[field]
         if prune_unusable:
             answer[name+"_size_rejected"] = r["size_rejected"]
+    if shared_capacity is not None:
+        canonical = [{"colour": name, "descriptor": item}
+                     for name in ("red", "blue") for item in answer[name]]
+        canonical.sort(key=lambda item: (*[item["descriptor"][key] for key in
+                                           ("ymin", "xmin", "ymax", "xmax")], item["colour"]))
+        answer.update(sharedCapacity=shared_capacity, sharedOutputOverflow=sharedOverflow,
+                      sharedCandidates=canonical,
+                      sharedCandidateOrder="MODEL_CANONICAL_GEOMETRY_NOT_RTL_RETIREMENT_ORDER")
     return answer
 
 

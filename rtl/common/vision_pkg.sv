@@ -10,5 +10,7 @@ package vision_pkg;
         logic [8:0] xMin,xMax;
         logic [7:0] yMin,yMax;
     } marker_t;
+    // Sixteen completed slots are shared by both colours. isBlue carries the
+    // observed colour; neither slot order nor slot address implies colour/ID.
     typedef marker_t [15:0] markerArray_t;
 endpackage

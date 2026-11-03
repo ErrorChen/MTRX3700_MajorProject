@@ -1,7 +1,7 @@
 // Member B bench: native camera, HSV/projective perception, a safe C simulator,
 // JTAG evidence and live VGA. Chassis pins remain undriven. The inherited camera
 // configuration/capture/display path retains its original attribution.
-// AI-assisted implementation: OpenAI Codex; see docs/inputs/OWNERS.md and docs/inputs/AI_STATEMENT.md.
+// AI-assisted implementation: OpenAI Codex; see root OWNERS.md and README.md.
 /*
  *  perceptionDemoTop.sv -- OV7670 camera and Member B on the DE1-SoC.
  *
@@ -29,7 +29,7 @@ module perceptionDemoTop #(
     input  wire        CLOCK_50,
     output wire [6:0] HEX0, HEX1, HEX2,
     input  wire [3:0]  KEY,
-    input  wire [4:0]  SW, // SW0: per-candidate samples; SW1: central sample ROI.
+    input  wire [9:0]  SW, // SW0/1 diagnostics; SW8 perspective bypass; SW9 pure camera.
     output wire [9:0]  LEDR,
     inout  wire [35:0] GPIO_1,
     output wire        VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_N, VGA_SYNC_N,
@@ -57,9 +57,13 @@ module perceptionDemoTop #(
     // camera configuration is conveyed by these asynchronous switches.
     (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
     logic [1:0] switchMeta=0,switchSync=0;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
+    logic rawVgaMeta=0,rawVgaSync=0;
     always_ff @(posedge clk_25) begin
         if(reset25) begin switchMeta<=0;switchSync<=0;end
         else begin switchMeta<=SW[1:0];switchSync<=switchMeta;end
+        if(reset25)begin rawVgaMeta<=0;rawVgaSync<=0;end
+        else begin rawVgaMeta<=SW[9];rawVgaSync<=rawVgaMeta;end
     end
 
     // ---- the camera's pins ---------------------------------------------------------------------
@@ -110,6 +114,22 @@ module perceptionDemoTop #(
     always_ff @(posedge CLOCK_50) rs50<={rs50[0],~KEY[0]};
     always_ff @(posedge cam_pclk) rsPclk<={rsPclk[0],~KEY[0]};
     wire reset50=rs50[1],resetPclk=rsPclk[1];
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
+    logic bypassMeta=0,bypassSync=0;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
+    logic rawProcessingMeta=0,rawProcessingSync=0;
+    (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS" *)
+    logic rawDisplayMeta=0,rawDisplaySync=0;
+    logic rawDisplayActive;
+    always_ff @(posedge CLOCK_50)begin
+        if(reset50)begin bypassMeta<=0;bypassSync<=0;end
+        else begin bypassMeta<=SW[8];bypassSync<=bypassMeta;end
+        if(reset50)begin rawProcessingMeta<=0;rawProcessingSync<=0;rawDisplayMeta<=0;rawDisplaySync<=0;end
+        else begin
+            rawProcessingMeta<=SW[9];rawProcessingSync<=rawProcessingMeta;
+            rawDisplayMeta<=rawDisplayActive;rawDisplaySync<=rawDisplayMeta;
+        end
+    end
     logic [5:0] microsecondDivider;
     logic [31:0] timeUs;
     always_ff @(posedge CLOCK_50) begin
@@ -123,20 +143,27 @@ module perceptionDemoTop #(
     perceptionStatus_t status;
     logic requestValid,requestReady,reportValid,reportReady,eventValid,eventReady;
     logic commandValid,commandReady,commandClear,calibrateArm,speechArm,autoCycle,measurementUsable;
+    logic debugInteractionArmReady;
     logic [3:0] commandBayId;
     logic [1:0] orientationProfile;
-    logic [3071:0] coreWords,debugWords,completedWords,cameraWords,displayWords;
+    logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] coreWords,debugWords,completedWords,cameraWords,displayWords;
     logic completedFrame;
     logic [15:0] completedFrameId;
     always_comb begin
         debugWords=coreWords;
-        debugWords[92*32+:32]=`MEMBER_B_BUILD_ID;
+        debugWords[(DEBUG_TAIL_BASE+4)*32+:32]=`MEMBER_B_BUILD_ID;
+        // Schema7 distinguishes live control/display state from bit21, which
+        // describes the completed camera frame. Each flag is a single-bit CDC.
+        debugWords[7*32+22]=rawProcessingSync;
+        debugWords[7*32+23]=rawDisplaySync;
     end
     perceptionCore core (
         .clk(CLOCK_50),.reset(reset50),.pclk(cam_pclk),.resetPclk(resetPclk),
         .cameraFrameStart(frame_start),.cameraPixelValid(px_valid),.cameraPixel(px),.cameraX(px_x),.cameraY(px_y),
         .timeUs(timeUs),.interactionEnable(1'b1),.interactionPermit(1'b1),
         .debugCalArm(calibrateArm),.debugSpeechArm(speechArm),.orientationProfile(orientationProfile),
+        .debugInteractionArmReady(debugInteractionArmReady),
+        .bypassPerspective(bypassSync),.processingEnable(!rawProcessingSync),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),
         .userEvent(userEvent),.userEventValid(eventValid),.userEventReady(eventReady),.status(status),
@@ -153,6 +180,7 @@ module perceptionDemoTop #(
     memberBDebug #(.BUILD_ID(`MEMBER_B_BUILD_ID)) debugControl (
         .clk(CLOCK_50),.reset(reset50),.debugWords(debugWords),.commandValid(commandValid),.commandReady(commandReady),
         .commandClear(commandClear),.commandBayId(commandBayId),.calibrateArm(calibrateArm),.speechArm(speechArm),
+        .interactionArmReady(debugInteractionArmReady),
         .orientationProfile(orientationProfile),.autoCycle(autoCycle));
     // Wait until the tracker has consumed the completed observation. Freeze a
     // complete frame record, then cross it with a held-bus request/ack handshake.
@@ -164,16 +192,17 @@ module perceptionDemoTop #(
             if(completionDelay[1])completedWords<=debugWords;
         end
     end
-    heldBusCdc #(.WIDTH(3072)) resultToCamera (
+    heldBusCdc #(.WIDTH(DEBUG_WORD_COUNT*32)) resultToCamera (
         .sourceClk(CLOCK_50),.sourceReset(reset50),.sourceData(completedWords),
         .destinationClk(cam_pclk),.destinationReset(resetPclk),.destinationData(cameraWords),.destinationValid());
-    heldBusCdc #(.WIDTH(3072)) resultToDisplay (
+    heldBusCdc #(.WIDTH(DEBUG_WORD_COUNT*32)) resultToDisplay (
         .sourceClk(CLOCK_50),.sourceReset(reset50),.sourceData(completedWords),
         .destinationClk(clk_25),.destinationReset(reset25),.destinationData(displayWords),.destinationValid());
     logic [29:0] overlayData;
     logic overlaySop,overlayEop,overlayValid,overlayReady;
-    memberBVgaOverlay overlay (
+    memberBVgaModeSwitch overlay (
         .clk(clk_25),.reset(reset25),.debugWords(displayWords),
+        .rawModeRequested(rawVgaSync),.rawModeActive(rawDisplayActive),
         .showCandidates(switchSync[0]),.showCentre(switchSync[1]),
         .inData(st_data),.inSop(st_sop),.inEop(st_eop),.inValid(st_valid),.inReady(st_ready),
         .outData(overlayData),.outSop(overlaySop),.outEop(overlayEop),.outValid(overlayValid),.outReady(overlayReady));
@@ -188,19 +217,19 @@ module perceptionDemoTop #(
     logic [15:0] sensorFrameId;
     logic [15:0] snapshotFrameId;
     logic snapshotResultTimeout;
-    logic [98*32-1:0] snapshotResults;
+    logic [(DEBUG_WORD_COUNT+2)*32-1:0] snapshotResults;
     always_ff @(posedge cam_pclk)begin
         if(resetPclk)sensorFrameId<=0;
         else if(frame_start)sensorFrameId<=sensorFrameId+16'd1;
     end
     always_comb begin
         snapshotResults='0;
-        for(int i=0;i<96;i++)snapshotResults[(97-i)*32+:32]=cameraWords[i*32+:32];
+        for(int i=0;i<DEBUG_WORD_COUNT;i++)snapshotResults[(DEBUG_WORD_COUNT+1-i)*32+:32]=cameraWords[i*32+:32];
         snapshotResults[32+:32]={16'd0,snapshotFrameId};
         snapshotResults[0+:32]=`MEMBER_B_BUILD_ID;
     end
     logic snapBusy,snapReady;
-    frame_snap #(.MODE(0),.N_RESULTS(98),.WAIT_FOR_RESULTS(1)) snap_u (
+    frame_snap #(.MODE(0),.N_RESULTS(DEBUG_WORD_COUNT+2),.WAIT_FOR_RESULTS(1)) snap_u (
         .pclk(cam_pclk),.reset(resetPclk),.frame_start(frame_start),.px_valid(px_valid),.pixel(px),.x(px_x),.y(px_y),
         .results(snapshotResults),.trigger(~KEY[1]),.busy(snapBusy),.ready(snapReady),
         .results_valid(cameraWords[3*32+:16]==snapshotFrameId),

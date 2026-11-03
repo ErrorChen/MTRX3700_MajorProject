@@ -19,8 +19,8 @@ def threeOfFourCleanup(mask):
  count=left.astype(np.uint8)+above.astype(np.uint8)+diagonal.astype(np.uint8)
  return np.where((mask!=0)&(count>=2),mask,0).astype(np.uint8)
 
-inputs=[(frame,root/f'evidence/real_inputs/frame{frame}.png') for frame in (13139,13511,13675)]
-inputs.append((25046,root/'evidence/hsv_audit/frame25046.png'))
+inputs=[(frame,root/f'tests/fixtures/camera/frame{frame}/frame.png') for frame in (13139,13511,13675)]
+inputs.append((25046,root/'tests/fixtures/camera/frame25046/frame.png'))
 results=[]
 for filterName,filterFunction in [('AND_LEFT_ABOVE',twoDimensionalCleanup),('CURRENT_PLUS_TWO_OF_LEFT_ABOVE_DIAGONAL',threeOfFourCleanup)]:
  for redMin in (32,37,40,48):

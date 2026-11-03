@@ -33,8 +33,8 @@ def analyse(image,redMin,selection):
 
 
 def main():
-    inputs=[(frame,root/f'evidence/real_inputs/frame{frame}.png') for frame in (13139,13511,13675)]
-    inputs.append((25046,root/'evidence/hsv_audit/frame25046.png'))
+    inputs=[(frame,root/f'tests/fixtures/camera/frame{frame}/frame.png') for frame in (13139,13511,13675)]
+    inputs.append((25046,root/'tests/fixtures/camera/frame25046/frame.png'))
     profiles=[]
     for selection in ('both','red','blue'):
         for redMin in (48,37):

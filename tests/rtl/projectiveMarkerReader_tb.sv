@@ -1,8 +1,10 @@
 `timescale 1ns/1ps
 // Independent integer-homography/model vectors include source-labelled real
 // captures and synthetic counterfactuals. Candidate extraction is outside this
-// bench; the complete core replay separately exercises the real CAP8 pipeline.
+// bench; the complete core replay separately exercises the candidate pipeline.
 module projectiveMarkerReader_tb;
+    logic bypassPerspective=0;
+    bit bypassMode=0;
     import candidate_pkg::*;
     import vision_pkg::*;
     logic clk=0;
@@ -11,13 +13,18 @@ module projectiveMarkerReader_tb;
     logic [1:0] orientationProfile;
     logic [16:0] readAddress;
     logic [4:0] acceptedCount;
-    candidate_array_t redCandidates,blueCandidates;
+    candidate_array_t sharedCandidates;
+    logic [15:0] sharedColours;
     markerArray_t markers;
     logic whiteBank[0:76799],strongWhiteBank[0:76799],colourBank[0:76799];
     logic [68:0] candidateWords[0:15];
+    logic candidateColours[0:15];
     logic [31:0] expectedWords[0:15];
+    logic [1:0] expectedOrientations[0:15];
     logic [19:0] mapWords[0:20479];
     logic [31:0] countWord[0:0];
+    logic [31:0] slotCountWord[0:0];
+    logic sharedPoolWord[0:0];
     logic [1:0] orientationWord[0:0];
     string vectorsPath,filename;
     integer expectedCount,cycles,currentVector=0,coordinateChecks=0,maxCycles=0;
@@ -68,9 +75,15 @@ module projectiveMarkerReader_tb;
     endtask
     initial begin
         if(!$value$plusargs("VECTORS=%s",vectorsPath))$fatal(1,"Missing +VECTORS path");
+        bypassMode=$test$plusargs("BYPASS");
+        if(bypassMode)vectorsPath={vectorsPath,"/bypass"};
         filename={vectorsPath,"/projective_count.hex"};requireFile(filename);$readmemh(filename,countWord);
-        if($isunknown(countWord[0])||countWord[0]<1||countWord[0]>256)$fatal(1,"Invalid projective vector count");
-        redCandidates='0;blueCandidates='0;orientationProfile=0;
+        filename={vectorsPath,"/projective_slot_count.hex"};requireFile(filename);$readmemh(filename,slotCountWord);
+        filename={vectorsPath,"/projective_shared_pool.hex"};requireFile(filename);$readmemh(filename,sharedPoolWord);
+        if(slotCountWord[0]!==32'd16||sharedPoolWord[0]!==1'b1)
+            $fatal(1,"Current reader RTL requires explicit shared16 vectors; historical split replay needs its historical source");
+        if($isunknown(countWord[0])||countWord[0]<1||countWord[0]>512)$fatal(1,"Invalid projective vector count");
+        sharedCandidates='0;sharedColours=0;orientationProfile=0;
         repeat(3)@(negedge clk);reset=0;
         checkSignedProduct(-16777216,-2048);checkSignedProduct(-16777216,2047);
         checkSignedProduct(16777215,-2048);checkSignedProduct(16777215,2047);
@@ -83,14 +96,16 @@ module projectiveMarkerReader_tb;
             filename=$sformatf("%s/projective_%0d_strong_white.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,strongWhiteBank);
             filename=$sformatf("%s/projective_%0d_colour.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,colourBank);
             filename=$sformatf("%s/projective_%0d_candidates.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,candidateWords);
+            filename=$sformatf("%s/projective_%0d_candidate_colours.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,candidateColours);
             filename=$sformatf("%s/projective_%0d_expected.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,expectedWords);
             filename=$sformatf("%s/projective_%0d_orientation.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,orientationWord);
+            filename=$sformatf("%s/projective_%0d_expected_orientation.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,expectedOrientations);
             filename=$sformatf("%s/projective_%0d_map.hex",vectorsPath,vectorIndex);requireFile(filename);$readmemh(filename,mapWords);
-            for(int slot=0;slot<8;slot++)begin redCandidates[slot]=candidateWords[slot];blueCandidates[slot]=candidateWords[slot+8];end
-            orientationProfile=orientationWord[0];compareMap=1;
+            for(int slot=0;slot<16;slot++)begin sharedCandidates[slot]=candidateWords[slot];sharedColours[slot]=candidateColours[slot];end
+            orientationProfile=orientationWord[0];bypassPerspective=bypassMode;compareMap=1;
             @(negedge clk);start=1;
             @(negedge clk);start=0;
-            redCandidates='0;blueCandidates='0;orientationProfile=orientationWord[0]+2'd1;
+            sharedCandidates='0;sharedColours=~sharedColours;orientationProfile=orientationWord[0]+2'd1;bypassPerspective=!bypassMode;
             cycles=0;
             while(!done&&cycles<2000000)begin @(negedge clk);cycles++;end
             if(!done)$fatal(1,"Reader exceeds 40 ms frame budget vector=%0d",vectorIndex);
@@ -102,8 +117,9 @@ module projectiveMarkerReader_tb;
                 if(actualWord!==expectedWords[slot])
                     $fatal(1,"Classification mismatch vector=%0d slot=%0d expected=%08h actual=%08h segments=%07b",
                         vectorIndex,slot,expectedWords[slot],actualWord,actualMarker.segments);
-                if(actualMarker.orientation!==orientationWord[0]||actualMarker.isBlue!==(slot>=8))
-                    $fatal(1,"Latched orientation/type mismatch vector=%0d slot=%0d",vectorIndex,slot);
+                if(actualMarker.orientation!==expectedOrientations[slot]||actualMarker.isBlue!==candidateColours[slot])
+                    $fatal(1,"Pixel-derived orientation/type mismatch vector=%0d slot=%0d actual=%0d expected=%0d",
+                        vectorIndex,slot,actualMarker.orientation,expectedOrientations[slot]);
                 if({actualMarker.xMin,actualMarker.xMax,actualMarker.yMin,actualMarker.yMax}!==
                     {expectedBox.xmin,expectedBox.xmax,expectedBox.ymin,expectedBox.ymax})
                     $fatal(1,"Canonical rectification changed external native bbox");
@@ -113,8 +129,8 @@ module projectiveMarkerReader_tb;
             $display("PROJECTIVE_MATCH vector=%0d accepted=%0d cycles=%0d latencyUs=%0d",vectorIndex,expectedCount,cycles,cycles/50);
             @(negedge clk);if(done)$fatal(1,"done must be one cycle");
         end
-        redCandidates[0]='0;redCandidates[0].valid=1;
-        redCandidates[0].xmin=0;redCandidates[0].xmax=53;redCandidates[0].ymin=0;redCandidates[0].ymax=60;
+        sharedCandidates[0]='0;sharedCandidates[0].valid=1;sharedColours=0;
+        sharedCandidates[0].xmin=0;sharedCandidates[0].xmax=53;sharedCandidates[0].ymin=0;sharedCandidates[0].ymax=60;
         @(negedge clk);start=1;@(negedge clk);start=0;
         repeat(100)@(negedge clk);reset=1;
         @(negedge clk);if(busy||done||acceptedCount||markers!='0)$fatal(1,"Reset failed to abandon projective scan");

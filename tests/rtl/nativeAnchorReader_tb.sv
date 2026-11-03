@@ -10,7 +10,11 @@ module nativeAnchorReader_tb;
     logic [3:0] allocationPeak;
     logic [15:0] componentCount;
     logic whiteBank[0:76799];
-    logic [31:0] metadata[0:8191],count[0:0];
+    // Reader5 evaluates four native anchor hypotheses before glyph decoding.
+    // Include rejected hypotheses, so ambiguity/overflow cases are not lost.
+    // This is testbench storage only; the synthesised reader is unchanged.
+    localparam int MAX_NATIVE_CASES=4096, RECORD_WORDS=20;
+    logic [31:0] metadata[0:MAX_NATIVE_CASES*RECORD_WORDS-1],count[0:0];
     string inputs,fileName;
     integer previousSource=-1,currentCase=0,cycles,maxCycles=0,overflowCases=0,ambiguousCases=0,validAnchors=0;
     logic dividerStart=0,dividerDone;
@@ -74,7 +78,10 @@ module nativeAnchorReader_tb;
     initial begin
         if(!$value$plusargs("VECTORS=%s",inputs))
             $fatal(1,"Missing vector paths");
-        $readmemh({inputs,"/anchor_count.hex"},count);$readmemh({inputs,"/anchor_meta.hex"},metadata);
+        $readmemh({inputs,"/anchor_count.hex"},count);
+        if($isunknown(count[0])||count[0]<1||count[0]>MAX_NATIVE_CASES)
+            $fatal(1,"Invalid native anchor vector count (bounded testbench capacity=%0d)",MAX_NATIVE_CASES);
+        $readmemh({inputs,"/anchor_meta.hex"},metadata);
         for(int i=0;i<4;i++)begin pointX[i]=0;pointY[i]=0;dividerNumerator[i]=0;end
         repeat(3)@(negedge clk);reset=0;
         checkDividerAndClipping();

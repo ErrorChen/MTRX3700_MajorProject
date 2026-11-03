@@ -103,8 +103,8 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out',type=Path,default=ROOT/'build/member_b/hsv_audit_replay')
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
-    inputs=[(frame,ROOT/f'evidence/real_inputs/frame{frame}.png') for frame in (13139,13511,13675)]
-    inputs.append((25046,ROOT/'evidence/hsv_audit/frame25046.png'))
+    inputs=[(frame,ROOT/f'tests/fixtures/camera/frame{frame}/frame.png') for frame in (13139,13511,13675)]
+    inputs.append((25046,ROOT/'tests/fixtures/camera/frame25046/frame.png'))
     records=[];contact=Image.new('RGB',(960,4*270),'white');draw=ImageDraw.Draw(contact)
     for row,(frameId,path) in enumerate(inputs):
         image=quantise565(Image.open(path).convert('RGB'));rois,masks=roiReport(image)

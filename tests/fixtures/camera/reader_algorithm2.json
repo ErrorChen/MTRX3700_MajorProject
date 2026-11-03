@@ -1,0 +1,54 @@
+{
+  "schema": "ECHO7_READER_ALGORITHM2_INPUTS_1",
+  "records": [
+    {
+      "frameId": 13139,
+      "image": "tests/fixtures/camera/frame13139/frame.png",
+      "sha256": "a82b6babea7dd9b4364cecbeb241b3532e49982d52a337e83b02b397bf9e60aa",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true
+    },
+    {
+      "frameId": 13511,
+      "image": "tests/fixtures/camera/frame13511/frame.png",
+      "sha256": "71cec2c8cdb7ca1bf6e3ff24caa94aabc056ca21c0972504090b197dca904a70",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true
+    },
+    {
+      "frameId": 13675,
+      "image": "tests/fixtures/camera/frame13675/frame.png",
+      "sha256": "3206193dde4003b093b178af412645793c4bc2ce3118a12b535a35110df0e9b8",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true
+    },
+    {
+      "frameId": 25046,
+      "image": "tests/fixtures/camera/frame25046/frame.png",
+      "sha256": "76bb3dd58bfed55fce45e9362ed8f2a91000a66276b719ce7f00cd1afd180955",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true
+    },
+    {
+      "frameId": 47630,
+      "image": "tests/fixtures/camera/frame47630/frame.png",
+      "sha256": "e8ed1a3d7d4db63d63a34daabfc30f0077fc7e4c9db9246e8782d7c2405b3678",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true
+    },
+    {
+      "frameId": 2462,
+      "image": "tests/fixtures/camera/frame2462/frame.png",
+      "sha256": "4cf21fe20b49e448ca2dae052e24d637cce23f9ddfbf4e3563bb95b95eceb279",
+      "source": "REAL_OV7670_STATIONARY_CAMERA_BASELINE",
+      "independentAcquisition": true,
+      "crc": "0x076a",
+      "crcOkay": true,
+      "gctlBefore": 6,
+      "gctlAfter": 7,
+      "dumpSha256": "2b813716f437b2b791f63d62c91c6688e265a100bde6cb4ee674ed74eba2843a"
+    }
+  ],
+  "boundary": "Six independently acquired camera frames, now known tuning/regression inputs; no Member B on-board recognition or held-out accuracy claim. Frame ID wrap is legal; host receive time is not capture time.",
+  "sourceIndexSha256": "f6701899bc8d17687ae4159bcdc73ee9fc01a40436b3d0a72359bf5d121aee83"
+}

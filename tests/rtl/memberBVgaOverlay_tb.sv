@@ -4,12 +4,12 @@ module memberBVgaOverlay_tb;
     always #20 clk=~clk;
     logic reset=1;
     logic showCandidates=0,showCentre=0;
-    logic [3071:0] debugWords=0;
+    logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords=0;
     logic [29:0] inData=30'h20080200,outData;
     logic inSop=0,inEop=0,inValid=0,inReady,outSop,outEop,outValid,outReady=0;
-    logic expectedDraw=0,expectedBlue=1;
+    logic expectedDraw=0,expectedBlue=1,expectedReference=0;
     integer inputX=0,inputY=0,writeCount=0,readCount=0,readyCycles=0;
-    logic [31:0] expectedQueue[0:20000];
+    logic [31:0] expectedQueue[0:80000];
     logic priorStall=0;
     logic [31:0] expectedFrames[0:99];
     integer frameWritten=0,frameRead=0;
@@ -36,7 +36,7 @@ module memberBVgaOverlay_tb;
             if(x>=450&&x<460)rawPixel={10'd816,10'd408,10'd0}; // orange H30
         end
     endfunction
-    function automatic logic [29:0] expectedPixel(input integer x,y,input logic draw,blue);
+    function automatic logic [29:0] expectedPixel(input integer x,y,input logic draw,blue,isReference);
         integer gx,gy;
         logic [1:0] here,left,above,edgeClass;
         logic hEdge,vEdge,ink;
@@ -54,6 +54,7 @@ module memberBVgaOverlay_tb;
             gx=x-158;gy=y-3;
             if(draw && x>=140 && x<500 && gx>=0 && gx<16 && gy>=0 && gy<12)begin
                 ink=(gx==15&&((gy>=1&&gy<=4)||(gy>=6&&gy<=10)))||
+                    (isReference&&((gy==11&&gx>=9&&gx<=14)||(gx==8&&gy>=6&&gy<=10)))||
                     (gx==0&&gy>=1&&gy<=10)||((gy==0||gy==5)&&gx>=0&&gx<=4)||(gx==5&&gy>=1&&gy<=4);
                 if(blue)ink=ink||(gy==11&&gx>=0&&gx<=4)||(gx==5&&gy>=6&&gy<=10);
                 else ink=ink||(gy>=6&&gy<=10&&gx==gy-5);
@@ -75,7 +76,7 @@ module memberBVgaOverlay_tb;
             priorPayload={outSop,outEop,outData};
             if(inValid && inReady)begin
                 if(inSop)begin expectedFrames[frameWritten]=debugWords[3*32+:32];frameWritten=frameWritten+1;end
-                expectedQueue[writeCount]={inSop,inEop,expectedPixel(inputX,inputY,expectedDraw,expectedBlue)};
+                expectedQueue[writeCount]={inSop,inEop,expectedPixel(inputX,inputY,expectedDraw,expectedBlue,expectedReference)};
                 writeCount=writeCount+1;
             end
             if(dut.contourValid && dut.contourReady && dut.contourSop)begin
@@ -93,13 +94,25 @@ module memberBVgaOverlay_tb;
     task automatic metadata(input integer frameId,input logic good,input integer age,input logic blue);
         begin
             debugWords=0;
+            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(perception_pkg::DEBUG_SCHEMA_VERSION),16'd2};
             debugWords[2*32+:32]=32'd200000;
             debugWords[3*32+:32]=frameId;
             debugWords[4*32+:32]=32'd200000-age;
-            debugWords[91*32]=good;
+            debugWords[(perception_pkg::DEBUG_TAIL_BASE+3)*32]=good;
             debugWords[24*32+:32]={1'b1,blue,2'd0,4'd1,8'd255,8'd0,1'd0,7'b0000110};
             debugWords[25*32+:32]={7'd0,9'd310,7'd0,9'd319};
             debugWords[26*32+:32]={8'd0,8'd10,8'd0,8'd20};
+        end
+    endtask
+    task automatic referenceMetadata(input integer frameId,input logic validPair,input logic good,input integer age,input integer schema);
+        begin
+            metadata(frameId,good,age,1);
+            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(schema),16'd2};
+            debugWords[84*32+:32]=32'h4f000000;
+            debugWords[85*32+:32]=debugWords[25*32+:32];
+            debugWords[86*32+:32]=debugWords[26*32+:32];
+            debugWords[24*32+:32]=0;
+            debugWords[(perception_pkg::DEBUG_TAIL_BASE+2)*32+3]=validPair;debugWords[(perception_pkg::DEBUG_TAIL_BASE+2)*32+4+:4]=15;
         end
     endtask
     task automatic sendPixels(input integer count,input logic draw,input logic blue,input logic mutateMidFrame);
@@ -130,6 +143,15 @@ module memberBVgaOverlay_tb;
         metadata(4,1,150001,1);sendPixels(200,0,1,0);
         metadata(5,1,-1,1);sendPixels(200,0,1,0);
         metadata(6,1,100,1);sendPixels(200,1,1,0);
+        // BJ is a separately proven blue reference. Rejected blue pixels alone
+        // must never invent this label, and older schemas have no such proof.
+        expectedReference=1;
+        referenceMetadata(7,1,1,100,7);sendPixels(9600,1,1,0);
+        referenceMetadata(8,0,1,100,7);sendPixels(9600,0,1,0);
+        referenceMetadata(9,1,0,100,7);sendPixels(9600,0,1,0);
+        referenceMetadata(10,1,1,150001,7);sendPixels(9600,0,1,0);
+        referenceMetadata(11,1,1,100,4);sendPixels(9600,0,1,0);
+        expectedReference=0;
         // Consecutive one-pixel/truncated packets must retain their own metadata.
         for(int f=0;f<8;f++)begin
             @(negedge clk);#1;metadata(100+f,1,100,1);

@@ -1,0 +1,22 @@
+{
+  "schema": "member-b-recorded-input-v1",
+  "inputSource": "LIVE_CAMERA_RETAINED",
+  "buildId": "5633257e",
+  "frameId": 56554,
+  "configVersion": 20,
+  "redMinimum": 33,
+  "blueMinimum": 28,
+  "colourAlgorithm": 2,
+  "readerAlgorithm": 4,
+  "hardwareDebugSchemaVersion": 4,
+  "activeCapacity": 12,
+  "outputCapacity": 8,
+  "originalResult": "FAIL",
+  "use": "Recorded counterexample for model/RTL regression; later replays do not change original hardware result.",
+  "files": {
+    "frame.png": "2af1f9d68ff6142be95b26280095fff4994292f4c535f151344c36b28a23a0a7"
+  },
+  "sourceIndexSha256": "346db484e3239701f28f95f44b8d78611fc46bd5b46d9971284f7ad60e6bf7be",
+  "originalCaptureResultSha256": "9244edf4b01181bb10973cda6252e9691cfe1b297254da3eef54d1a2f67c3e26",
+  "retention": "Image/profile only. Original acquisition result remains historically FAIL; execution narrative was consolidated in VERSION_README.md."
+}

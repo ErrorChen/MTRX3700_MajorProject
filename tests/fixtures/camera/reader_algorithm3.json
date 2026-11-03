@@ -1,0 +1,20 @@
+{
+  "schema": "ECHO7_READER_ALGORITHM3_INPUTS_1",
+  "records": [
+    {
+      "frameId": 225,
+      "image": "tests/fixtures/camera/frame225/frame.png",
+      "sha256": "7e87a602db075d206682bb9f424e7bdd2a67e0294479806027657b74fdbe66f6",
+      "source": "RECORDED_OV7670_MEMBER_B",
+      "independentAcquisition": true,
+      "capturedBuildId": "ab41e932",
+      "capturedReaderAlgorithm": 2,
+      "crc": "0x7125",
+      "captureRedMinimum": 48,
+      "captureBlueMinimum": 32,
+      "captureConfigVersion": 0
+    }
+  ],
+  "boundary": "The original frame was acquired independently byOV7670 and decoded withCRC and same-frame binding. Algorithm3 replay uses it as a known tuning/regression input, not a held-out accuracy sample. The two edited images are labelled counterfactuals, never livecamera.",
+  "sourceIndexSha256": "73e8d733d1662369e49a2106ac45041d2560dd99dce7e31996f9f58e9ef49fc0"
+}

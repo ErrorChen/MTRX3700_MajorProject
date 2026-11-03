@@ -31,3 +31,6 @@ Thumbs.db
 Desktop.ini
 *.swp
 *~
+# Run evidence is generated under build/. Small required regression inputs are
+# explicitly versioned under tests/fixtures, never hidden evidence archives.
+/evidence/

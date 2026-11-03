@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Index current files/runs without rewriting historical evidence.
+"""Index current source, run outputs and curated fixtures under ignored build/.
 
-Original provenance remains in evidence/metadata.json, with old paths explained
-by relocation_index.json. This collector needs no removed demonstration trees.
+Historical development outcomes are consolidated in ROOT VERSION_README.md.
+This collector does not recreate a separate historical evidence repository.
 """
 from pathlib import Path
 from datetime import datetime,timezone
 import hashlib,json,subprocess
 
 root=Path(__file__).resolve().parents[2]
-out=root/'evidence'
+out=root/'build/member_b'
 
 def main():
     out.mkdir(parents=True,exist_ok=True)
@@ -26,11 +26,11 @@ def main():
         runs.append({'path':path.relative_to(root).as_posix(),'sha256':hashFile(path),
                      **{key:data.get(key) for key in ('command','status','level','startedUtc','inputSource')}})
     retained=[{'path':p.relative_to(root).as_posix(),'sha256':hashFile(p),'bytes':p.stat().st_size}
-              for p in sorted(out.rglob('*')) if p.is_file() and p.name!='current_index.json']
+              for p in sorted((root/'tests/fixtures').rglob('*')) if p.is_file()]
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=root,text=True).strip()
-    record={'schema':'ECHO7_CURRENT_EVIDENCE_INDEX_2','collectedUtc':datetime.now(timezone.utc).isoformat(),
+    record={'schema':'ECHO7_CURRENT_EVIDENCE_INDEX_3','collectedUtc':datetime.now(timezone.utc).isoformat(),
         'gitHead':head,'sourceFiles':sources,'runIndex':runs,'retainedEvidence':retained,
-        'historicalProvenance':'metadata.json','pathRelocation':'relocation_index.json',
+        'historicalProvenance':'VERSION_README.md','fixtureProvenance':'tests/fixtures/camera/manifest.json',
         'boundary':'An index is not validation. Use each run status, source hashes and layer. Old evidence is never promoted to current acceptance.'}
     (out/'current_index.json').write_text(json.dumps(record,indent=2)+chr(10),encoding='utf-8')
     print(json.dumps({'status':'PASS','action':'INDEX_ONLY','sourceFiles':len(sources),'runs':len(runs),'retainedFiles':len(retained)}))

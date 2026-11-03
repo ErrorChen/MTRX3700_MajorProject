@@ -146,6 +146,7 @@ class DebugDecodeTests(unittest.TestCase):
                 words = fixture()[:96]
                 words[1] = 0x00020002
                 words[9] = 1
+                words[91] = 1  # Synthetic good-frame prerequisite for glyph agreement.
                 words[24] = 4 << 8
                 words[95] = (1 << 24) | (algorithm << 16) | (minimum << 8) | 64
                 reference = {"accepted": False, "reasonCode": 4, "windowScores": {}, "segments": ""}
@@ -168,6 +169,7 @@ class DebugDecodeTests(unittest.TestCase):
             Image.new("RGB", (320, 240), (82, 93, 115)).save(imagePath)
             words = fixture()[:96]
             words[1] = 0x00020002; words[9] = 1; words[24] = 4 << 8
+            words[91] = 1  # This test exercises white masks, not a bad/overflow frame.
             words[95] = (1 << 24) | (3 << 16) | (96 << 8) | 64
             reference = {"accepted": False, "reasonCode": 4, "windowScores": {}, "segments": ""}
             output = Path(folder) / "algorithm3"

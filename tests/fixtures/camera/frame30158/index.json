@@ -1,0 +1,26 @@
+{
+  "buildId": 2848630063,
+  "frameId": 30158,
+  "configVersion": 14,
+  "colourAlgorithm": 2,
+  "readerAlgorithm": 5,
+  "redMinimum": 33,
+  "blueMinimum": 28,
+  "orientationProfile": 0,
+  "bypassPerspective": false,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "schema": "member-b-recorded-regression-profile-v1",
+  "hardwareDebugSchemaVersion": 7,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "sourceIndexSha256": "67085a862af3ab64fb134e987d832bccf20bd9e780556d61c25e896b04296f3b",
+  "originalCaptureResultSha256": "ed0afff2f60d16bc99eb607bafe0f5736a6b0c782c9dac802b22e6a97845ea4a",
+  "files": {
+    "frame.png": "6ea07cf32fa1fb2003c0e46d81412b3985563b6183a5342365a1197be2415847",
+    "expected_regions.json": "2290861d6fcf7b79704274b7997673404f405072c42921c5b8b8ebde34a42feb"
+  },
+  "use": "Independent photographed truth for host-only scene scoring; never feed printed labels to FPGA. Verify unchanged physical arrangement before a new live trial."
+}

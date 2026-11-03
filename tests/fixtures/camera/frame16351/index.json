@@ -1,0 +1,22 @@
+{
+  "schema": "member-b-recorded-input-v1",
+  "inputSource": "LIVE_CAMERA_RETAINED",
+  "buildId": "5633257e",
+  "frameId": 16351,
+  "configVersion": 20,
+  "redMinimum": 33,
+  "blueMinimum": 28,
+  "colourAlgorithm": 2,
+  "readerAlgorithm": 4,
+  "hardwareDebugSchemaVersion": 4,
+  "activeCapacity": 12,
+  "outputCapacity": 8,
+  "originalResult": "FAIL",
+  "use": "Actual retained counterexample/positive replay input for reader5. Original source5633 acceptance is unchanged; model/RTL replay does not constitute a new camera acquisition.",
+  "files": {
+    "frame.png": "f39d2a63d16b47fe74aa6bd5200493b7c9889b0510932594ec26efa4e70e2b3f"
+  },
+  "sourceIndexSha256": "879e99a21566db9c25c0c6d81afe711ec92d23f790815fad4a02a07b5faa384c",
+  "originalCaptureResultSha256": "3ccbe5ad288a597a3ef3e73f8ae71d2083f2a191f60baaef9079608b5f20f59c",
+  "retention": "Image/profile only. Original acquisition result remains historically FAIL; execution narrative was consolidated in VERSION_README.md."
+}

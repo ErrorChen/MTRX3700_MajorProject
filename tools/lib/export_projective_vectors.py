@@ -21,18 +21,18 @@ def rgb565Text(image):
     return ''.join(f'{((r>>3)<<11)|((g>>2)<<5)|(b>>3):04x}\n' for r,g,b in pixelsOf(image))
 
 
-def namedFixtureBindings(vectorCases,readerAlgorithm=4):
+def namedFixtureBindings(vectorCases,readerAlgorithm=5):
     """Resolve semantic fixtures by unique name, independently of list order.
 
     A physical recording must also match the preserved acquisition index. This
     rejects a synthetic case accidentally labelled as a recorded input, even if
     its former numeric position happens to be the one a bench once loaded.
     """
-    inputIndex=json.loads((root/'evidence/reader_algorithm2_inputs/index.json').read_text())
+    inputIndex=json.loads((root/'tests/fixtures/camera/reader_algorithm2.json').read_text())
     if readerAlgorithm>=3:
-        inputIndex['records']+=json.loads((root/'evidence/reader_algorithm3_inputs/index.json').read_text())['records']
+        inputIndex['records']+=json.loads((root/'tests/fixtures/camera/reader_algorithm3.json').read_text())['records']
     if readerAlgorithm>=4:
-        inputIndex['records']+=json.loads((root/'evidence/reader_algorithm4_inputs/index.json').read_text())['records']
+        inputIndex['records']+=json.loads((root/'tests/fixtures/camera/reader_algorithm4.json').read_text())['records']
     recordedPrefix='real_frame' if readerAlgorithm>=2 else 'recorded_camera_'
     wantedNames={f"{recordedPrefix}{record['frameId']}" for record in inputIndex['records']}
     wantedNames.update(('pdf_full_page','counterfactual_swapped'))
@@ -68,11 +68,14 @@ def namedFixtureBindings(vectorCases,readerAlgorithm=4):
     return bindings
 
 
-def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=4):
+def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=5,sharedPool=None):
     """Write stable replay aliases and an auditable source-to-export hash chain."""
     bindings=namedFixtureBindings(vectorCases,readerAlgorithm)
+    if sharedPool is None:sharedPool=readerAlgorithm==5
     for binding in bindings:
         suffixes=('rgb565','candidates','expected') if binding['alias'].startswith('continuous_') else ('rgb565',)
+        if sharedPool and binding['alias'].startswith('continuous_'):
+            suffixes+=('candidate_colours',)
         for suffix in suffixes:
             source=outputDir/f"projective_{binding['index']}_{suffix}.hex"
             sourceHash=hashlib.sha256(source.read_bytes()).hexdigest()
@@ -94,12 +97,45 @@ def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=4):
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--out',required=True,type=Path)
     parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2))
-    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4),default=4)
+    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4,5),default=5)
+    parser.add_argument('--capture-result',type=Path,help='One actual verified GRAB result and its recorded profile; no synthetic substitutions')
+    parser.add_argument('--bypass-perspective',action='store_true')
+    poolGroup=parser.add_mutually_exclusive_group()
+    poolGroup.add_argument('--shared-pool',action='store_true',dest='sharedPool',default=None)
+    poolGroup.add_argument('--split-pool',action='store_false',dest='sharedPool',help='Historical reader5/schema6 separate pools; requires its historical 32-slot RTL consumer')
+    parser.add_argument('--case',action='append',dest='caseNames',help='Export only named cases for an attributable targeted RTL replay')
     parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int)
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
-    if args.colour_algorithm is None:args.colour_algorithm=2 if args.reader_algorithm==4 else 1
-    if args.blue_min is None:args.blue_min=20 if args.reader_algorithm==4 else 32
-    if args.reader_algorithm==4:
+    if args.colour_algorithm is None:args.colour_algorithm=2 if args.reader_algorithm>=4 else 1
+    if args.blue_min is None:args.blue_min=20 if args.reader_algorithm>=4 else 32
+    captureBinding=None
+    activeCapacity=15 if args.reader_algorithm>=4 else 8
+    outputCapacity=16 if args.reader_algorithm>=5 else 8
+    sharedPool=args.reader_algorithm==5 if args.sharedPool is None else args.sharedPool
+    if args.capture_result:
+        capture=json.loads(args.capture_result.read_text(encoding='utf-8'))
+        measured=capture['recognition']
+        if measured.get('rawCameraMode'):
+            raise ValueError('R7 recognition replay requires an algorithm-enabled capture; raw-camera mode intentionally has no recogniser output')
+        if not capture.get('fresh') or not measured.get('sameFrameVerified'):
+            raise ValueError('R7 input must be a verified fresh same-frame camera acquisition')
+        imagePath=args.capture_result.parent/'capture/frame.png'
+        args.reader_algorithm=measured['readerAlgorithm'];args.colour_algorithm=measured['colourAlgorithm']
+        args.red_min=measured['redMinimum'];args.blue_min=measured['blueMinimum']
+        activeCapacity=measured['activeCandidateCapacity'] if measured['debugSchemaVersion']>=4 else 8
+        outputCapacity=measured['outputCandidateCapacity']
+        sharedPool=measured['debugSchemaVersion']>=7
+        captureBinding={'frameId':measured['frameId'],'configVersion':measured['configVersion'],
+            'buildId':measured['buildId'],'captureResultSha256':hashlib.sha256(args.capture_result.read_bytes()).hexdigest(),
+            'imageSha256':hashlib.sha256(imagePath.read_bytes()).hexdigest(),
+            'capturedBypassPerspective':measured['bypassPerspective'],
+            'boundary':'Recorded camera pixels replayed offline; this simulation is not another live acquisition.'}
+        vectors=[(f"held_out_frame{measured['frameId']}",Image.open(imagePath),
+            measured['orientationProfile'],None,'RECORDED_CAMERA_EXPLICIT_PROFILE')]
+    elif args.reader_algorithm==5:
+        from test_auto_orientation import algorithm5Cases
+        vectors=list(algorithm5Cases())
+    elif args.reader_algorithm==4:
         vectors=list(algorithm4Cases())
     elif args.reader_algorithm==3:
         vectors=list(algorithm3Cases())
@@ -109,11 +145,19 @@ def main():
         # Keep the exact historical 63-case ordering and white semantics.
         legacy=list(cases())
         legacy.extend((name,image,orientation) for name,image,orientation,expected in warpedCases())
-        for frameId in (13139,13511,13675):legacy.append((f'recorded_camera_{frameId}',Image.open(root/f'evidence/real_inputs/frame{frameId}.png'),0))
-        legacy.append(('recorded_camera_25046',Image.open(root/'evidence/hsv_audit/frame25046.png'),0))
+        for frameId in (13139,13511,13675):legacy.append((f'recorded_camera_{frameId}',Image.open(root/f'tests/fixtures/camera/frame{frameId}/frame.png'),0))
+        legacy.append(('recorded_camera_25046',Image.open(root/'tests/fixtures/camera/frame25046/frame.png'),0))
         vectors=[(name,image,orientation,None,'RECORDED_OV7670_STATIONARY_BASELINE' if name.startswith('recorded_camera_') else 'SYNTHETIC_PIXELS') for name,image,orientation in legacy]
+    if args.caseNames:
+        wanted=set(args.caseNames)
+        vectors=[vector for vector in vectors if vector[0] in wanted]
+        if {vector[0] for vector in vectors}!=wanted:raise ValueError('Requested projective case was not found or uniquely named')
+    if sharedPool and args.reader_algorithm!=5:
+        raise ValueError('Shared completed pool requires reader5')
     whiteProfile=whiteProfileFor(args.reader_algorithm)
     (args.out/'projective_count.hex').write_text(f'{len(vectors):08x}\n',encoding='ascii')
+    (args.out/'projective_slot_count.hex').write_text(f'{outputCapacity if sharedPool else 2*outputCapacity:08x}\n',encoding='ascii')
+    (args.out/'projective_shared_pool.hex').write_text(f'{int(sharedPool):x}\n',encoding='ascii')
     manifest=[];anchorRows=[];anchorManifest=[]
     for index,(name,image,orientation,expectedIds,inputSource) in enumerate(vectors):
         image=quantise565(image);array=np.asarray(image,dtype=np.int16)
@@ -121,30 +165,53 @@ def main():
         white=whitePixelsFor(array,whiteProfile)
         strongWhite=whitePixelsFor(array,whiteProfile,anchor=True)
         base=recognise(image,cleanup=True,redMin=args.red_min,blueMin=args.blue_min,colourAlgorithm=args.colour_algorithm,
-                       pruneUnusable=args.reader_algorithm>=3)
-        candidateWords=[0]*16;expectedWords=[0x000f0001]*16;mapWords=[0xfffff]*(16*1280)
+                       pruneUnusable=args.reader_algorithm>=3,activeCapacity=activeCapacity,capacity=outputCapacity,
+                       sharedCapacity=outputCapacity if sharedPool else None)
+        slots=outputCapacity if sharedPool else 2*outputCapacity
+        candidateWords=[0]*slots;expectedWords=[0x000f0001]*slots;mapWords=[0xfffff]*(slots*1280)
+        candidateColours=[0]*slots
+        expectedOrientations=[orientation]*slots
         counts={'red':0,'blue':0};expected=[]
-        for candidate in base['markers']:
+        candidateRows=base['markers']
+        # This fixture changes only the explicit input-slot permutation. The
+        # recogniser must follow the independent colour bitmap and pixels.
+        if sharedPool and name.startswith('shared_shuffled_'):
+            candidateRows=list(reversed(candidateRows))
+        for candidateNumber,candidate in enumerate(candidateRows):
             fields={key:candidate[key] for key in ('colour','bbox','area')}
-            colour=fields['colour'];slot=counts[colour]+(8 if colour=='blue' else 0);counts[colour]+=1
-            assert counts[colour]<=8,'No truncated candidate vector permitted'
+            colour=fields['colour'];slot=candidateNumber if sharedPool else counts[colour]+(outputCapacity if colour=='blue' else 0);counts[colour]+=1
+            assert slot<slots and counts[colour]<=outputCapacity,'No truncated candidate vector permitted'
             candidateWords[slot]=packCandidate(fields)
+            candidateColours[slot]=int(colour=='blue')
             marker=classifyProjective(image,fields,orientation=orientation,redMin=args.red_min,blueMin=args.blue_min,
-                                     colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm)
+                                     colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm,bypassPerspective=args.bypass_perspective)
             digit=marker['digit'] if marker['accepted'] else 15
             expectedWords[slot]=(int(marker['accepted'])<<24)|(digit<<16)|(marker['quality']<<8)|marker['reasonCode']
-            if marker['reasonCode'] not in (1,6):
+            expectedOrientations[slot]=marker['orientationProfile']
+            if marker.get('gridSampled',marker['reasonCode'] not in (1,6)):
                 addresses=gridAddresses(marker['coefficients'])
                 for pixel,(x,y) in enumerate(addresses):mapWords[slot*1280+pixel]=(y<<9)|x
             expected.append({'slot':slot,**marker})
-            if args.reader_algorithm>=2 and 'anchor' in marker['windowScores']:
-                anchor=marker['windowScores']['anchor'];quad=marker['quadHalfPixels'];roi=anchor['roi']
+            # Reader5's prepass can reject before a glyph grid/windowScores
+            # exists. Export every actually evaluated native hypothesis so
+            # missing, multiple-component and active-overflow ROIs remain in
+            # the independent native-reader bench. In particular, do not
+            # filter out the very negative branches that the bench must prove.
+            anchorInputs=[]
+            if args.reader_algorithm==5:
+                anchorInputs=[(hypothesis['anchor'],hypothesis['quadHalfPixels'],hypothesis['orientation'])
+                              for hypothesis in marker.get('orientationHypotheses',[])]
+            elif args.reader_algorithm>=2 and 'anchor' in marker['windowScores']:
+                anchorInputs=[(marker['windowScores']['anchor'],marker['quadHalfPixels'],marker['orientationProfile'])]
+            for anchor,quad,anchorOrientation in anchorInputs:
+                roi=anchor['roi']
                 row=[index,*[coordinate for point in quad for coordinate in point],*roi,
                      anchor['white'],anchor['columns'],anchor['rows'],int(anchor['ambiguous']),int(anchor['overflow']),
                      min(8,anchor['peakActiveHandles']),0xffffffff if anchor['overflow'] else anchor['completedComponents']]
                 assert len(row)==20
                 anchorRows.append(row)
-                anchorManifest.append({'sourceIndex':index,'case':name,'slot':slot,'quadHalfPixels':quad,**anchor})
+                anchorManifest.append({'sourceIndex':index,'case':name,'slot':slot,
+                    'orientationHypothesis':anchorOrientation,'quadHalfPixels':quad,**anchor})
         prefix=args.out/f'projective_{index}'
         image.save(prefix.with_suffix('.png'))
         Path(str(prefix)+'_colour.hex').write_text(''.join('1\n' if bit else '0\n' for bit in foreground.reshape(-1)),encoding='ascii')
@@ -153,21 +220,29 @@ def main():
         # the additional file leaves all of their existing hex bytes unchanged.
         Path(str(prefix)+'_strong_white.hex').write_text(''.join('1\n' if bit else '0\n' for bit in strongWhite.reshape(-1)),encoding='ascii')
         Path(str(prefix)+'_candidates.hex').write_text(''.join(f'{word:018x}\n' for word in candidateWords),encoding='ascii')
+        if sharedPool:
+            Path(str(prefix)+'_candidate_colours.hex').write_text(''.join(f'{value:x}\n' for value in candidateColours),encoding='ascii')
         Path(str(prefix)+'_expected.hex').write_text(''.join(f'{word:08x}\n' for word in expectedWords),encoding='ascii')
         Path(str(prefix)+'_orientation.hex').write_text(f'{orientation:x}\n',encoding='ascii')
+        Path(str(prefix)+'_expected_orientation.hex').write_text(''.join(f'{value:x}\n' for value in expectedOrientations),encoding='ascii')
         Path(str(prefix)+'_map.hex').write_text(''.join(f'{word:05x}\n' for word in mapWords),encoding='ascii')
         Path(str(prefix)+'_rgb565.hex').write_text(rgb565Text(image),encoding='ascii')
         manifest.append({'index':index,'name':name,'orientation':orientation,'expected':expected,
                          'inputSource':inputSource,'expectedIds':expectedIds,'candidateOverflow':base['overflow']})
-    namedFixtures=writeNamedAliases(args.out,manifest,args.reader_algorithm)
-    (args.out/'projective_manifest.json').write_text(json.dumps({'schema':'ECHO7_PROJECTIVE_VECTORS_3','colourAlgorithm':args.colour_algorithm,
-        'readerAlgorithm':args.reader_algorithm,'redMinimum':args.red_min,'blueMinimum':args.blue_min,
+    namedFixtures={'fixtures':[]} if args.capture_result or args.caseNames else writeNamedAliases(args.out,manifest,args.reader_algorithm,sharedPool)
+    (args.out/'projective_manifest.json').write_text(json.dumps({'schema':'ECHO7_PROJECTIVE_VECTORS_4' if sharedPool else 'ECHO7_PROJECTIVE_VECTORS_3','colourAlgorithm':args.colour_algorithm,
+        'readerAlgorithm':args.reader_algorithm,'redMinimum':args.red_min,'blueMinimum':args.blue_min,'bypassPerspective':args.bypass_perspective,
         'whiteProfile':whiteProfile,'whiteMin':whiteProfile['minimum'],'maximumSpread':64,
+        'activeCapacity':activeCapacity,'outputCapacity':outputCapacity,'captureBinding':captureBinding,
+        'candidatePoolMode':'SHARED' if sharedPool else 'SPLIT_PER_COLOUR',
+        'candidateOrder':'MODEL_CANONICAL_GEOMETRY_NOT_RTL_RETIREMENT_ORDER; shared_shuffled cases reverse the explicit slot order',
         'namedFixtures':namedFixtures['fixtures'],'cases':manifest},indent=2)+'\n',encoding='utf-8')
     (args.out/'anchor_count.hex').write_text(f'{len(anchorRows):08x}\n',encoding='ascii')
     (args.out/'anchor_meta.hex').write_text(''.join(f'{value&0xffffffff:08x}\n' for row in anchorRows for value in row),encoding='ascii')
     (args.out/'anchor_manifest.json').write_text(json.dumps({'schema':'ECHO7_NATIVE_ANCHOR_VECTORS_1','readerAlgorithm':args.reader_algorithm,
-        'recordWords':20,'cases':anchorManifest},indent=2)+'\n',encoding='utf-8')
+        'recordWords':20,'coverage':{'valid':sum(row['white']>0 for row in anchorManifest),
+        'ambiguous':sum(row['ambiguous'] for row in anchorManifest),'overflow':sum(row['overflow'] for row in anchorManifest)},
+        'cases':anchorManifest},indent=2)+'\n',encoding='utf-8')
     print(json.dumps({'status':'PASS','layer':'VECTOR_GENERATION','readerAlgorithm':args.reader_algorithm,
         'cases':len(vectors),'nativeAnchorRois':len(anchorRows),'out':str(args.out)}))
 

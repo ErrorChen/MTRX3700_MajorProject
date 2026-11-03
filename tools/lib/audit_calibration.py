@@ -18,15 +18,33 @@ from projective_reference import recogniseProjective
 from vision_reference import quantise565
 
 
-def paired(card, reference):
+def paired(card, reference, rotation=0, pairingAlgorithm=2):
+    """Mirror the configured-quadrant RTL predicate in native pixel units.
+
+    Algorithm2 compares doubled centres with ceil(cardWidth/16) tolerance and
+    at least80% main-card overlap. It has no fixed pixel alignment allowance.
+    Algorithm1 is retained only for reproducing historical audits. Neither
+    version estimates arbitrary-angle calibration geometry from the marker ID.
+    """
+    if rotation not in range(4):raise ValueError('unsupported configured orientation')
+    if pairingAlgorithm not in (1,2):raise ValueError('unsupported pairing algorithm')
     x0,y0,x1,y1=card
     bx0,by0,bx1,by1=reference
-    width,height=x1-x0+1,y1-y0+1
-    refWidth,refHeight=bx1-bx0+1,by1-by0+1
-    gap=by0-y1-1
+    width,height=(y1-y0+1,x1-x0+1) if rotation&1 else (x1-x0+1,y1-y0+1)
+    refWidth,refHeight=(by1-by0+1,bx1-bx0+1) if rotation&1 else (bx1-bx0+1,by1-by0+1)
+    low,high=(y0,y1) if rotation&1 else (x0,x1)
+    refLow,refHigh=(by0,by1) if rotation&1 else (bx0,bx1)
+    gap=(by0-y1-1,x0-bx1-1,y0-by1-1,bx0-x1-1)[rotation]
+    if pairingAlgorithm==1:
+        aligned=abs(refLow-low)<=4 and abs(refHigh-high)<=4
+    else:
+        centreDelta2=refLow+refHigh-low-high
+        centreTolerance=(width+15)//16
+        overlap=max(0,min(high,refHigh)-max(low,refLow)+1)
+        aligned=abs(centreDelta2)<=2*centreTolerance and overlap*5>=width*4
+    if min(width,height,refWidth,refHeight)<=0:return False
     return (gap>=0 and gap*8<=height and width*8<=refWidth*10<=width*12
-            and height<=refHeight*10<=height*3
-            and abs(bx0-x0)<=4 and abs(bx1-x1)<=4)
+            and height<=refHeight*10<=height*3 and aligned)
 
 
 def sample(image, redBox, blueBox, samplerAlgorithm=2):
@@ -77,7 +95,7 @@ def audit(inputDirectory, outputDirectory):
         image=Image.open(inputDirectory/f'frame{frameId}.png').convert('RGB')
         recognised=recogniseProjective(image,redMin=64,inputSource='RECORDED_CAMERA',colourAlgorithm=0,readerAlgorithm=1)
         cards=[m for m in recognised['markers'] if m['accepted'] and m['colour']=='red' and m['digit']==1]
-        pairs=[(card['bbox'],blue['bbox']) for card in cards for blue in recognised['markers'] if blue['colour']=='blue' and paired(card['bbox'],blue['bbox'])]
+        pairs=[(card['bbox'],blue['bbox']) for card in cards for blue in recognised['markers'] if blue['colour']=='blue' and paired(card['bbox'],blue['bbox'],pairingAlgorithm=1)]
         if len(pairs)!=1:raise AssertionError(f'Expected unique measured red1/reference pair, got {pairs}')
         currentPair=pairs[0]
         # This entry point reproduces the retained algorithm1 historical audit.

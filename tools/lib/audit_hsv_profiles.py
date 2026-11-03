@@ -6,8 +6,8 @@ root=Path(__file__).resolve().parents[2]
 sys.path.insert(0,str(root/'tools/lib'))
 from audit_hsv import hsvMask,candidateReport,ROIS
 from vision_reference import quantise565
-inputs=[(frame,root/f'evidence/real_inputs/frame{frame}.png') for frame in (13139,13511,13675)]
-inputs.append((25046,root/'evidence/hsv_audit/frame25046.png'))
+inputs=[(frame,root/f'tests/fixtures/camera/frame{frame}/frame.png') for frame in (13139,13511,13675)]
+inputs.append((25046,root/'tests/fixtures/camera/frame25046/frame.png'))
 results=[]
 for upper in (0,1,2,-1,-2):
  for redMin in (32,40,48):

@@ -8,7 +8,7 @@ module memberBVgaOverlay #(
     parameter int DEFAULT_BLUE_MINIMUM=20
 ) (
     input logic clk, reset,
-    input logic [3071:0] debugWords,
+    input logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,
     input logic showCandidates,showCentre,
     input logic [29:0] inData,
     input logic inSop,inEop,inValid,
@@ -17,7 +17,7 @@ module memberBVgaOverlay #(
     output logic outSop,outEop,outValid,
     input logic outReady
 );
-    logic [3071:0] frameDebug;
+    logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] frameDebug;
     logic [29:0] contourData;
     logic contourSop,contourEop,contourValid,contourReady,contourInputReady;
     logic pendingSop;
@@ -34,7 +34,8 @@ module memberBVgaOverlay #(
     always_ff @(posedge clk)begin
         if(reset)begin frameDebug<=0;pendingSop<=0;end
         else begin
-            if(contourValid && contourReady && contourSop)pendingSop<=0;
+            if(ENABLE_DIAGNOSTICS ? (labelValid&&labelReady&&labelSop) :
+                                   (contourValid&&contourReady&&contourSop))pendingSop<=0;
             if(inValid && inReady && inSop)begin frameDebug<=debugWords;pendingSop<=1;end
         end
     end

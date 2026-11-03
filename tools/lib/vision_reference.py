@@ -189,7 +189,13 @@ def classify(image, candidate, orientation=0, whiteMin=160):
     return result,crop,mask
 
 
-def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPECIFIED", redMin=64, blueMin=32, cleanup=False,whiteMin=160,colourAlgorithm=0,pruneUnusable=False):
+def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPECIFIED", redMin=64, blueMin=32, cleanup=False,whiteMin=160,colourAlgorithm=0,pruneUnusable=False,activeCapacity=None,sharedCapacity=None):
+    # This primitive retains the historical CAP8/reader0 defaults. Production
+    # reader5 invokes it through projective_reference with output16/active15.
+    if not 1 <= capacity <= 16 or not 1 <= (capacity if activeCapacity is None else activeCapacity) <= 15:
+        raise ValueError("output capacity must be 1..16 and active capacity 1..15; output16 requires an explicit activeCapacity")
+    if sharedCapacity is not None and not 1 <= sharedCapacity <= 16:
+        raise ValueError("shared completed capacity must be 1..16")
     assert orientation in range(4)
     image = quantise565(image)
     width,height = image.size
@@ -208,7 +214,8 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
         if colourAlgorithm in (1,2):candidateInput=horizontalRunSupport(candidateInput)
         cleaned = partACleanup(candidateInput)
         mask = cleaned.reshape(-1).tolist()
-        boundedOracle = candidates_reclaimed(cleaned.tolist(),cap=capacity,min_area=32,prune_unusable=pruneUnusable)
+        boundedOracle = candidates_reclaimed(cleaned.tolist(),cap=capacity,min_area=32,prune_unusable=pruneUnusable,
+            active_capacity=activeCapacity,shared_capacity=sharedCapacity)
     candidates,allCounts = components(mask,width,height)
     beforeSizeCounts = {colour:sum(item["colour"] == colour for item in candidates) for colour in ("red","blue")}
     if pruneUnusable:
@@ -217,10 +224,13 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
             item["bbox"][2]-item["bbox"][0]+1,item["bbox"][3]-item["bbox"][1]+1,
             1 if item["colour"] == "red" else 2)]
     counts = {colour:sum(item["colour"] == colour for item in candidates) for colour in ("red","blue")}
-    overflow = any(count > capacity for count in counts.values()) or bool(boundedOracle and boundedOracle["overflow"])
+    if sharedCapacity is not None:
+        candidates.sort(key=lambda item: (item["bbox"][1],item["bbox"][0],item["bbox"][3],item["bbox"][2],item["colour"]))
+    overflow = ((sum(counts.values()) > sharedCapacity if sharedCapacity is not None else any(count > capacity for count in counts.values()))
+                or bool(boundedOracle and boundedOracle["overflow"]))
     peak = {colour:max((sum(item["colour"] == colour and item["bbox"][1] <= y <= item["bbox"][3] for item in candidates) for y in range(height)),default=0) for colour in counts}
     result = {"schema":"ECHO7_VISION_MODEL_1","layer":"MODEL","inputSource":inputSource,
-              "imageSize":[width,height],"orientationProfile":orientation,"capacityPerColour":capacity,
+              "imageSize":[width,height],"orientationProfile":orientation,"capacityPerColour":capacity,"activeCapacityPerColour":capacity if activeCapacity is None else activeCapacity,
               "colourProfile":{"redMin":redMin,"blueMin":blueMin,"colourAlgorithm":colourAlgorithm,
                    **({'ratioNumerator':3,'ratioDenominator':2} if colourAlgorithm==0 else
                       {'redSignedHueDegrees':[-24,0],'blueHueDegrees':[200,250 if colourAlgorithm==1 else 260],'minimumSaturation':0.5,'horizontalRunSupport':3})},
@@ -230,6 +240,9 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
               "candidateCounts":counts,"allComponentsBeforeAreaGate":{"red":allCounts[1],"blue":allCounts[2]},
               "modelPeakOverlappingBboxes":peak,"overflow":overflow,"frameGood":not overflow,
               "capacityBoundary":"Independent BFS; counts do not prove streaming active-label or row-scheduling bounds", "markers":[]}
+    if sharedCapacity is not None:
+        result.update(capacityPerColour=None,sharedCapacity=sharedCapacity,poolLayout="SHARED_TOTAL",
+                      sharedCandidateOrder="MODEL_CANONICAL_GEOMETRY_NOT_RTL_RETIREMENT_ORDER")
     if pruneUnusable:
         result["candidateSizePruning"] = {"enabled":True,"beforeSizeGate":beforeSizeCounts,
             "rejected":{colour:beforeSizeCounts[colour]-counts[colour] for colour in counts},

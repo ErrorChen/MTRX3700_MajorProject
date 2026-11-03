@@ -40,15 +40,46 @@ def extractCorners(foreground,bbox,orientation=0):
     return [[int(xx[index])+x0,int(yy[index])+y0] for index in indices]
 
 
-def homographyCoefficients(corners,orientation=0):
+def supportCorners(foreground,bbox):
+    """Sixteen fixed directional supports; bounded, pixel-only quad recovery.
+
+    The diameter endpoints and maximum signed distances on either side recover
+    four corners without assuming they lie near the native bbox diagonals.
+    Directional scores use only coefficients -2..2. Duplicate support points
+    are deliberately retained: RTL examines the same ordered 120 pairs.
+    """
+    x0,y0,x1,y1=bbox
+    yy,xx=np.nonzero(foreground[y0:y1+1,x0:x1+1])
+    if not len(xx):return None
+    directions=((1,0),(2,1),(1,1),(1,2),(0,1),(-1,2),(-1,1),(-2,1),
+                (-1,0),(-2,-1),(-1,-1),(-1,-2),(0,-1),(1,-2),(1,-1),(2,-1))
+    points=[]
+    for a,b in directions:
+        index=int(np.argmax(a*xx+b*yy))
+        points.append((int(xx[index])+x0,int(yy[index])+y0))
+    first,second=max(((a,b) for a in range(15) for b in range(a+1,16)),
+        key=lambda pair:sum((points[pair[0]][axis]-points[pair[1]][axis])**2 for axis in (0,1)))
+    a,b=points[first],points[second]
+    cross=lambda point:(b[0]-a[0])*(point[1]-a[1])-(b[1]-a[1])*(point[0]-a[0])
+    quad=[list(a),list(min(points,key=cross)),list(b),list(max(points,key=cross))]
+    if len(set(map(tuple,quad)))!=4:return None
+    base=min(range(4),key=lambda index:(sum(quad[index]),quad[index][1],quad[index][0]))
+    return quad[base:]+quad[:base]
+
+
+def homographyCoefficients(corners,orientation=0,continuous=False):
     # Native corner centres become canonical outer pixel edges in half-pixel
     # units. Rotate the expansion with the chosen canonical orientation.
     offsets=[(-1,-1),(1,-1),(1,1),(-1,1)]
     def rotateOffset(dx,dy):
         return [(dx,dy),(-dy,dx),(-dx,-dy),(dy,-dx)][orientation]
     quad=[]
+    sumX,sumY=sum(p[0] for p in corners),sum(p[1] for p in corners)
     for (x,y),(dx,dy) in zip(corners,offsets):
-        dx,dy=rotateOffset(dx,dy);quad.append([2*x+dx,2*y+dy])
+        if continuous:
+            dx=(4*x>sumX)-(4*x<sumX);dy=(4*y>sumY)-(4*y<sumY)
+        else:dx,dy=rotateOffset(dx,dy)
+        quad.append([2*x+dx,2*y+dy])
     (x0,y0),(x1,y1),(x2,y2),(x3,y3)=quad
     dx1,dx2,dx3=x1-x2,x3-x2,x0-x1+x2-x3
     dy1,dy2,dy3=y1-y2,y3-y2,y0-y1+y2-y3
@@ -94,7 +125,7 @@ def projectionScores(white):
     return scores
 
 
-def whiteProfileFor(readerAlgorithm=4,whiteMin=None,maxSpread=64):
+def whiteProfileFor(readerAlgorithm=5,whiteMin=None,maxSpread=64):
     """Resolve explicit historical/new white-bank semantics, never relabel them.
 
     Algorithms 1 and 2 retain their exact recorded semantics. Algorithm 3 rounds
@@ -102,18 +133,18 @@ def whiteProfileFor(readerAlgorithm=4,whiteMin=None,maxSpread=64):
     the exact algorithm-2 floor, which preserves separation from the paper.
     These fixed profiles are not calibrated by the red/blue interaction.
     """
-    if readerAlgorithm not in (1,2,3,4):raise ValueError('readerAlgorithm must be 1, 2, 3 or 4')
-    if whiteMin is None:whiteMin=112 if readerAlgorithm==1 else 84 if readerAlgorithm==4 else 96
+    if readerAlgorithm not in (1,2,3,4,5):raise ValueError('readerAlgorithm must be 1..5')
+    if whiteMin is None:whiteMin=112 if readerAlgorithm==1 else 84 if readerAlgorithm>=4 else 96
     if not 0<=whiteMin<=255 or not 0<=maxSpread<=255:raise ValueError('White profile fields must be unsigned 8-bit')
     if readerAlgorithm in (2,3) and (whiteMin!=96 or maxSpread!=64):
         raise ValueError(f'Reader algorithm {readerAlgorithm} requires fixed weighted-luma minimum 96 and maximum channel spread 64')
-    if readerAlgorithm==4 and (whiteMin!=84 or maxSpread!=64):
-        raise ValueError('Reader algorithm 4 requires weighted-luma minimum 84 and maximum channel spread 64')
-    profile={'mode':{1:'MINIMUM_RGB_CHANNEL',2:'WEIGHTED_LUMA',3:'ROUNDED_STROKES_STRICT_ANCHOR',4:'UNSATURATED_STROKES_STRICT_ANCHOR'}[readerAlgorithm],
+    if readerAlgorithm>=4 and (whiteMin!=84 or maxSpread!=64):
+        raise ValueError('Reader algorithms 4/5 require weighted-luma minimum 84 and maximum channel spread 64')
+    profile={'mode':{1:'MINIMUM_RGB_CHANNEL',2:'WEIGHTED_LUMA',3:'ROUNDED_STROKES_STRICT_ANCHOR',4:'UNSATURATED_STROKES_STRICT_ANCHOR',5:'UNSATURATED_STROKES_STRICT_ANCHOR'}[readerAlgorithm],
         'minimum':whiteMin,'maximumChannelSpread':maxSpread,'source':'FIXED_PARAMETER_NOT_AUTOMATIC_CALIBRATION'}
     if readerAlgorithm==2:profile.update(sumWeights=[1,2,1],sumMinimum=384)
     if readerAlgorithm==3:profile.update(sumWeights=[1,2,1],sumMinimum=382,anchorSumMinimum=384,roundingBias=2)
-    if readerAlgorithm==4:profile.update(sumWeights=[1,2,1],sumMinimum=334,anchorSumMinimum=384,
+    if readerAlgorithm>=4:profile.update(sumWeights=[1,2,1],sumMinimum=334,anchorSumMinimum=384,
         anchorMinimum=96,roundingBias=2,weakSaturationNumerator=1,weakSaturationDenominator=2,
         strongWhiteIncludedInStrokes=True)
     return profile
@@ -202,17 +233,73 @@ def nativeAnchorScores(nativeWhite,quadHalfPixels,capacity=8):
     return result
 
 
-def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=None,readerAlgorithm=4):
-    if blueMin is None:blueMin=20 if readerAlgorithm==4 else 32
-    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm==4 else 1
+def classifyAutomatic(image,candidate,orientation,redMin,blueMin,whiteMin,maxSpread,output,colourAlgorithm,bypassPerspective,activeCapacity):
+    """Reader5: exactly one valid native anchor among four cyclic hypotheses.
+
+    Marker orientation names a corner offset from native min(x+y), ties y,x.
+    It is neither a continuous angle nor the externally configured coordinate
+    profile. No expected digit, scene cell or candidate order enters selection.
+    """
+    image=quantise565(image);profile=whiteProfileFor(5,whiteMin,maxSpread)
+    if image.size!=(320,240) or orientation not in range(4):raise ValueError('Invalid native image/orientation hint')
+    if colourAlgorithm!=2:raise ValueError('Reader5 requires HSV colour algorithm2')
+    bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
+    result={**candidate,'readerAlgorithm':5,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,
+        'kind':'UNKNOWN','quality':0,'orientationProfile':orientation,'reasonCode':1,'reasonName':'GEOMETRY',
+        'quad':None,'windowScores':{},'inputWhiteProfile':profile,'segments':'','gridSampled':False,
+        'orientationMode':'AUTO_UNIQUE_NATIVE_ANCHOR','orientationHypotheses':[],'bypassPerspective':bool(bypassPerspective)}
+    if not (0<=x0<=x1<320 and 0<=y0<=y1<240 and x1-x0+1>=24 and y1-y0+1>=24):return result
+    foreground=np.asarray(colourMask(image,redMin,blueMin,colourAlgorithm=colourAlgorithm)).reshape(240,320)!=0
+    result['foregroundCount']=int(foreground[y0:y1+1,x0:x1+1].sum())
+    quad=([[x0,y0],[x1,y0],[x1,y1],[x0,y1]] if bypassPerspective else supportCorners(foreground,bbox))
+    if quad is None or result['foregroundCount']<32:return result
+    nativeWhite=whitePixelsFor(np.asarray(image,dtype=np.int16),profile,anchor=True)
+    choices=[]
+    for offset in range(4):
+        hypothesis=(orientation+offset)&3
+        corners=quad[hypothesis:]+quad[:hypothesis]
+        coefficients,quad2=homographyCoefficients(corners,hypothesis,continuous=True)
+        cross=[(quad2[(i+1)%4][0]-quad2[i][0])*(quad2[(i+2)%4][1]-quad2[(i+1)%4][1])-
+               (quad2[(i+1)%4][1]-quad2[i][1])*(quad2[(i+2)%4][0]-quad2[(i+1)%4][0]) for i in range(4)]
+        edges=[sum((quad2[(i+1)%4][axis]-quad2[i][axis])**2 for axis in (0,1)) for i in range(4)]
+        area=sum(quad2[i][0]*quad2[(i+1)%4][1]-quad2[(i+1)%4][0]*quad2[i][1] for i in range(4))
+        if min(cross)<=0 or min(edges)<4*24*24 or area<8*400:return result
+        anchor=nativeAnchorScores(nativeWhite,quad2)
+        good=anchor['white']>=3 and anchor['rows']>=2 and anchor['columns']>=2
+        result['orientationHypotheses'].append({'orientation':hypothesis,'anchorGood':good,
+            'quad':corners,'quadHalfPixels':quad2,'anchor':anchor})
+        if good:choices.append((hypothesis,corners))
+    if len(choices)!=1:
+        result.update(reasonCode=4,reasonName='ANCHOR_ORIENTATION_AMBIGUOUS' if len(choices)>1 else 'ANCHOR_OR_HOLE',
+                      quad=quad[orientation:]+quad[:orientation],orientationAnchorMatches=min(2,len(choices)))
+        if output:
+            out=Path(output);out.mkdir(parents=True,exist_ok=True)
+            image.crop((x0,y0,x1+1,y1+1)).save(out/'native_crop.png')
+            (out/'result.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
+        return result
+    selected,corners=choices[0]
+    classified=classifyProjective(image,candidate,selected,redMin,blueMin,whiteMin,maxSpread,output,
+        colourAlgorithm,5,bypassPerspective,activeCapacity,_automaticHypothesis=True,_corners=corners)
+    classified.update(orientationMode='AUTO_UNIQUE_NATIVE_ANCHOR',orientationAnchorMatches=1,
+        orientationHypotheses=result['orientationHypotheses'])
+    if output:(Path(output)/'result.json').write_text(json.dumps(classified,indent=2)+'\n',encoding='utf-8')
+    return classified
+
+
+def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=None,readerAlgorithm=5,bypassPerspective=False,activeCapacity=None,_automaticHypothesis=False,_corners=None):
+    if activeCapacity is None:activeCapacity=15 if readerAlgorithm>=4 else 8
+    if blueMin is None:blueMin=20 if readerAlgorithm>=4 else 32
+    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm>=4 else 1
+    if readerAlgorithm==5 and not _automaticHypothesis:
+        return classifyAutomatic(image,candidate,orientation,redMin,blueMin,whiteMin,maxSpread,output,colourAlgorithm,bypassPerspective,activeCapacity)
     image=quantise565(image)
     if image.size!=(320,240):raise ValueError('Projective native frame must be 320x240')
     if orientation not in range(4):raise ValueError('orientation must be 0..3')
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
     if readerAlgorithm==3 and colourAlgorithm!=1:
         raise ValueError('Reader algorithm 3 packed glyph classes require HSV colour algorithm 1')
-    if readerAlgorithm==4 and colourAlgorithm!=2:
-        raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
+    if readerAlgorithm>=4 and colourAlgorithm!=2:
+        raise ValueError('Reader algorithms 4/5 packed glyph classes require HSV colour algorithm 2')
     if any(not 0<=value<=255 for value in (redMin,blueMin)):raise ValueError('Thresholds must be unsigned 8-bit')
     bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
     result={**candidate,'readerAlgorithm':readerAlgorithm,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,'kind':'UNKNOWN','quality':0,
@@ -225,10 +312,14 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whit
     foregroundCount=int(foreground[y0:y1+1,x0:x1+1].sum())
     result['foregroundCount']=foregroundCount
     if foregroundCount<32:return result
-    corners=extractCorners(foreground,bbox,orientation)
+    corners=_corners if _corners is not None else extractCorners(foreground,bbox,orientation)
+    if bypassPerspective and readerAlgorithm<5:
+        axisCorners=[[x0,y0],[x1,y0],[x1,y1],[x0,y1]]
+        corners=axisCorners[orientation:]+axisCorners[:orientation]
+    result['bypassPerspective']=bool(bypassPerspective)
     result['quad']=corners
     if corners is None or len(set(map(tuple,corners)))!=4:return result
-    coefficients,quad2=homographyCoefficients(corners,orientation)
+    coefficients,quad2=homographyCoefficients(corners,orientation,continuous=readerAlgorithm>=5)
     result['quadHalfPixels']=quad2;result['coefficients']=coefficients
     crossProducts=[]
     for index in range(4):
@@ -243,6 +334,7 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whit
     addresses=gridAddresses(coefficients)
     if addresses is None:
         result.update(reasonCode=6,reasonName='PROJECTIVE_RANGE');return result
+    result['gridSampled']=True
     source=np.asarray(image,dtype=np.int16)
     rectified=np.array([source[y,x] for x,y in addresses],dtype=np.int16).reshape(40,32,3)
     white=whitePixelsFor(rectified,profile)
@@ -283,9 +375,14 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whit
     return result
 
 
-def recogniseProjective(image,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=None,readerAlgorithm=4):
-    if blueMin is None:blueMin=20 if readerAlgorithm==4 else 32
-    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm==4 else 1
+def recogniseProjective(image,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,cleanup=True,output=None,inputSource='UNSPECIFIED',colourAlgorithm=None,readerAlgorithm=5,bypassPerspective=False,activeCapacity=None,outputCapacity=None,sharedPool=None):
+    if activeCapacity is None:activeCapacity=15 if readerAlgorithm>=4 else 8
+    if outputCapacity is None:outputCapacity=16 if readerAlgorithm>=5 else 8
+    if sharedPool is None:sharedPool=readerAlgorithm==5
+    if sharedPool and readerAlgorithm!=5:
+        raise ValueError('Shared completed candidates require reader5; historical readers retain split pools')
+    if blueMin is None:blueMin=20 if readerAlgorithm>=4 else 32
+    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm>=4 else 1
     image=quantise565(image)
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
     if readerAlgorithm==3 and colourAlgorithm!=1:
@@ -293,15 +390,18 @@ def recogniseProjective(image,orientation=0,redMin=48,blueMin=None,whiteMin=None
     if readerAlgorithm==4 and colourAlgorithm!=2:
         raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
     base=recognise(image,orientation=orientation,redMin=redMin,blueMin=blueMin,cleanup=cleanup,inputSource=inputSource,
-                   colourAlgorithm=colourAlgorithm,pruneUnusable=readerAlgorithm>=3)
+                   colourAlgorithm=colourAlgorithm,pruneUnusable=readerAlgorithm>=3,activeCapacity=activeCapacity,capacity=outputCapacity,
+                   sharedCapacity=outputCapacity if sharedPool else None)
     result={key:value for key,value in base.items() if key!='markers'}
-    result.update(schema='ECHO7_PROJECTIVE_MODEL_5' if readerAlgorithm==4 else 'ECHO7_PROJECTIVE_MODEL_4' if readerAlgorithm==3 else 'ECHO7_PROJECTIVE_MODEL_3',
-                  readerAlgorithm=readerAlgorithm,colourAlgorithm=colourAlgorithm,markers=[],whiteProfile=profile)
+    result.update(schema='ECHO7_PROJECTIVE_MODEL_7' if sharedPool else 'ECHO7_PROJECTIVE_MODEL_6' if readerAlgorithm==5 else 'ECHO7_PROJECTIVE_MODEL_5' if readerAlgorithm==4 else 'ECHO7_PROJECTIVE_MODEL_4' if readerAlgorithm==3 else 'ECHO7_PROJECTIVE_MODEL_3',
+                  readerAlgorithm=readerAlgorithm,colourAlgorithm=colourAlgorithm,markers=[],whiteProfile=profile,
+                  candidatePoolMode='SHARED' if sharedPool else 'SPLIT_PER_COLOUR',
+                  candidateOrder='MODEL_CANONICAL_GEOMETRY_NOT_RTL_RETIREMENT_ORDER')
     out=Path(output) if output else None
     if out:out.mkdir(parents=True,exist_ok=True)
     for index,candidate in enumerate(base['markers']):
         fields={key:candidate[key] for key in ('colour','area','bbox')}
-        marker=classifyProjective(image,fields,orientation,redMin,blueMin,profile['minimum'],maxSpread,out/f'candidate_{index:02d}' if out else None,colourAlgorithm=colourAlgorithm,readerAlgorithm=readerAlgorithm)
+        marker=classifyProjective(image,fields,orientation,redMin,blueMin,profile['minimum'],maxSpread,out/f'candidate_{index:02d}' if out else None,colourAlgorithm=colourAlgorithm,readerAlgorithm=readerAlgorithm,bypassPerspective=bypassPerspective)
         if result['overflow']:marker.update(accepted=False,quality=0,reasonCode=7,reasonName='FRAME_CAPACITY_OVERFLOW')
         marker['candidateIndex']=index;result['markers'].append(marker)
     if out:(out/'projective.json').write_text(json.dumps(result,indent=2)+'\n',encoding='utf-8')
@@ -315,10 +415,16 @@ def main():
     parser.add_argument('--orientation',type=int,choices=range(4),default=0)
     parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,help='Default: 20 for reader4; 32 for historical readers')
     parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2),help='Default: HSV2 for reader4; historical HSV1 for readers1-3')
-    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4),default=4)
+    parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4,5),default=5)
+    parser.add_argument('--output-capacity',type=int,choices=(8,16),help='Completed pool capacity; shared16 for reader5, per-colour8 for historical readers')
+    poolGroup=parser.add_mutually_exclusive_group()
+    poolGroup.add_argument('--shared-pool',action='store_true',dest='sharedPool',default=None,help='One shared completed pool (default reader5/private schema7)')
+    poolGroup.add_argument('--split-pool',action='store_false',dest='sharedPool',help='Historical separate colour pools, including reader5/private schema6')
+    parser.add_argument('--active-capacity',type=int,choices=range(1,16),help='Temporary labels; current production15, historical schema1-3 use8')
+    parser.add_argument('--bypass-perspective',action='store_true',help='R9 axis-aligned bbox baseline; identity still comes from pixels')
     parser.add_argument('--white-min',type=int,help='Fixed profiles: reader1 min-RGB112; reader2/3 luma96; reader4 dim unsaturated84/strict anchor96');parser.add_argument('--max-spread',type=int,default=64)
     args=parser.parse_args()
-    result=recogniseProjective(Image.open(args.image),args.orientation,args.red_min,args.blue_min,args.white_min,args.max_spread,output=args.out,inputSource=args.source,colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm)
+    result=recogniseProjective(Image.open(args.image),args.orientation,args.red_min,args.blue_min,args.white_min,args.max_spread,output=args.out,inputSource=args.source,colourAlgorithm=args.colour_algorithm,readerAlgorithm=args.reader_algorithm,bypassPerspective=args.bypass_perspective,activeCapacity=args.active_capacity,outputCapacity=args.output_capacity,sharedPool=args.sharedPool)
     print(json.dumps(result))
     return int(result['overflow'])
 

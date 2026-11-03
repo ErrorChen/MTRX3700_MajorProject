@@ -1,9 +1,0 @@
-{
-  "readerAlgorithm": 1,
-  "status": "PASS",
-  "historicalCases": 63,
-  "originalHexFilesCompared": 454,
-  "differentFiles": [],
-  "addedStrongWhiteFiles": 63,
-  "strongEqualsHistoricalWhite": true
-}

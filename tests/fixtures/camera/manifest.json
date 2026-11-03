@@ -1,0 +1,231 @@
+{
+  "schema": "member-b-camera-regression-inputs-v1",
+  "purpose": "Minimal recorded pixels and acquisition profiles required by maintained model/RTL regression inputs. No historical execution-log archive.",
+  "evidenceBoundary": "Known recorded OV7670 regression/tuning inputs. Offline model/RTL replay is not another acquisition or independent post-fix hardware acceptance. Synthetic edits are created by the tests and labelled separately.",
+  "provenance": {
+    "owner": "MTRX3700 ECHO-7 team; Member B maintainer SID540207680",
+    "sourceRepository": "https://github.com/paekinator/MTRX3700-Major-Project",
+    "sourceRelationship": "Same-group preliminary camera code by Hajin and Jiaze Sun; camera recordings collected during this project.",
+    "licenceStatus": "No separate licence for these team camera recordings was found; no new licence or ownership grant is asserted.",
+    "permissionBasis": "User authorised repository cleanup and reproducible tests. Only inputs required for those tests are retained here; obsolete evidence directories are removed.",
+    "notices": "Original source/IP notices remain in their source files. Printed marker inputs and origin are described in ROOT OWNERS.md."
+  },
+  "files": [
+    {
+      "path": "frame13139/frame.png",
+      "sha256": "a82b6babea7dd9b4364cecbeb241b3532e49982d52a337e83b02b397bf9e60aa",
+      "bytes": 55579,
+      "originalPath": "evidence/real_inputs/frame13139.png",
+      "originalSha256": "a82b6babea7dd9b4364cecbeb241b3532e49982d52a337e83b02b397bf9e60aa",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame13511/frame.png",
+      "sha256": "71cec2c8cdb7ca1bf6e3ff24caa94aabc056ca21c0972504090b197dca904a70",
+      "bytes": 55905,
+      "originalPath": "evidence/real_inputs/frame13511.png",
+      "originalSha256": "71cec2c8cdb7ca1bf6e3ff24caa94aabc056ca21c0972504090b197dca904a70",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame13675/frame.png",
+      "sha256": "3206193dde4003b093b178af412645793c4bc2ce3118a12b535a35110df0e9b8",
+      "bytes": 55547,
+      "originalPath": "evidence/real_inputs/frame13675.png",
+      "originalSha256": "3206193dde4003b093b178af412645793c4bc2ce3118a12b535a35110df0e9b8",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame25046/frame.png",
+      "sha256": "76bb3dd58bfed55fce45e9362ed8f2a91000a66276b719ce7f00cd1afd180955",
+      "bytes": 55446,
+      "originalPath": "evidence/hsv_audit/frame25046.png",
+      "originalSha256": "76bb3dd58bfed55fce45e9362ed8f2a91000a66276b719ce7f00cd1afd180955",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame47630/frame.png",
+      "sha256": "e8ed1a3d7d4db63d63a34daabfc30f0077fc7e4c9db9246e8782d7c2405b3678",
+      "bytes": 55493,
+      "originalPath": "evidence/camera_counterexample_47630/frame.png",
+      "originalSha256": "e8ed1a3d7d4db63d63a34daabfc30f0077fc7e4c9db9246e8782d7c2405b3678",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame2462/frame.png",
+      "sha256": "4cf21fe20b49e448ca2dae052e24d637cce23f9ddfbf4e3563bb95b95eceb279",
+      "bytes": 54309,
+      "originalPath": "evidence/reader_algorithm2_inputs/frame2462.png",
+      "originalSha256": "4cf21fe20b49e448ca2dae052e24d637cce23f9ddfbf4e3563bb95b95eceb279",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame225/frame.png",
+      "sha256": "7e87a602db075d206682bb9f424e7bdd2a67e0294479806027657b74fdbe66f6",
+      "bytes": 55435,
+      "originalPath": "evidence/board_ab41e932_frame225/frame.png",
+      "originalSha256": "7e87a602db075d206682bb9f424e7bdd2a67e0294479806027657b74fdbe66f6",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame31285/frame.png",
+      "sha256": "11dc6002f272c7dec04b4629dc8db143df9da2695dd367ea4738ffb3d84ceb32",
+      "bytes": 57937,
+      "originalPath": "evidence/lighting_frame31285/frame.png",
+      "originalSha256": "11dc6002f272c7dec04b4629dc8db143df9da2695dd367ea4738ffb3d84ceb32",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame10699/frame.png",
+      "sha256": "344e6fc6487a956322fa4e6c10c1931d73dc42fc45da34e8f6117cdd58ce7d9c",
+      "bytes": 53091,
+      "originalPath": "evidence/candidate_pruning_inputs/frame10699.png",
+      "originalSha256": "344e6fc6487a956322fa4e6c10c1931d73dc42fc45da34e8f6117cdd58ce7d9c",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame30507/frame.png",
+      "sha256": "467601441dc8eea7b2d5a552bd7b79084496e9765f014d376b976f6991a79088",
+      "bytes": 54203,
+      "originalPath": "evidence/active_capacity_frame30507/frame.png",
+      "originalSha256": "467601441dc8eea7b2d5a552bd7b79084496e9765f014d376b976f6991a79088",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame56554/frame.png",
+      "sha256": "2af1f9d68ff6142be95b26280095fff4994292f4c535f151344c36b28a23a0a7",
+      "bytes": 55068,
+      "originalPath": "evidence/member_b_capacity16/input_duplicate_scene/frame.png",
+      "originalSha256": "2af1f9d68ff6142be95b26280095fff4994292f4c535f151344c36b28a23a0a7",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "frame16351/frame.png",
+      "sha256": "f39d2a63d16b47fe74aa6bd5200493b7c9889b0510932594ec26efa4e70e2b3f",
+      "bytes": 55745,
+      "originalPath": "evidence/member_b_capacity16/input_duplicate_scene_frame16351/frame.png",
+      "originalSha256": "f39d2a63d16b47fe74aa6bd5200493b7c9889b0510932594ec26efa4e70e2b3f",
+      "transformation": "NONE; byte-identical PNG"
+    },
+    {
+      "path": "reader_algorithm2.json",
+      "sha256": "3e9b37a439e3487c270840953ef413f66cdc7f7ffa8667eee5aa3ac7523ce078",
+      "bytes": 2273,
+      "originalPath": "evidence/reader_algorithm2_inputs/index.json",
+      "originalSha256": "f6701899bc8d17687ae4159bcdc73ee9fc01a40436b3d0a72359bf5d121aee83",
+      "transformation": "Retained records, pixel hashes and acquisition metadata; rewrote image paths, removed unused report/log references and historical experiment summaries."
+    },
+    {
+      "path": "reader_algorithm3.json",
+      "sha256": "237ae7c682ab5181b0e858533717035a893a0f1a538bbfb8b36fd3b6319cd2cd",
+      "bytes": 912,
+      "originalPath": "evidence/reader_algorithm3_inputs/index.json",
+      "originalSha256": "73e8d733d1662369e49a2106ac45041d2560dd99dce7e31996f9f58e9ef49fc0",
+      "transformation": "Retained records, pixel hashes and acquisition metadata; rewrote image paths, removed unused report/log references and historical experiment summaries."
+    },
+    {
+      "path": "reader_algorithm4.json",
+      "sha256": "b3c6bcd05c2cae19e81d8393c3472662abbf60769bfd6be9b8e490920040cc36",
+      "bytes": 1490,
+      "originalPath": "evidence/reader_algorithm4_inputs/index.json",
+      "originalSha256": "32d4c7bce003932dab4e69598f2eca10444b80c932b7cda7d9ed79e8280878ec",
+      "transformation": "Retained records, pixel hashes and acquisition metadata; rewrote image paths, removed unused report/log references and historical experiment summaries."
+    },
+    {
+      "path": "frame10699/index.json",
+      "sha256": "3c9db79daebbb7165e782ccc60469e14be3d8a8fe1a36a46ff16215ae1773aa0",
+      "bytes": 609,
+      "originalPath": "evidence/candidate_pruning_inputs/index.json",
+      "originalSha256": "8cfe4edebe3dae1e142f51dd4058f29f1ea56f47516a029d48d6fd48709ab8fc",
+      "transformation": "Retained required acquisition/profile fields and PNG hash; omitted unused generated logs, masks, binary dump and report lists."
+    },
+    {
+      "path": "frame30507/index.json",
+      "sha256": "5a4621f0b96cd9b2d48e7d1fb23d93bbf218f2ae508786b035f50fc7cdbd64c8",
+      "bytes": 610,
+      "originalPath": "evidence/active_capacity_frame30507/index.json",
+      "originalSha256": "0eea5eb717857f6887141c30a69dc23b6d11157df5ca9a40811c19088b8889ff",
+      "transformation": "Retained required acquisition/profile fields and PNG hash; omitted unused generated logs, masks, binary dump and report lists."
+    },
+    {
+      "path": "frame56554/index.json",
+      "sha256": "596a7ebad67928248e78cf7e73b460c39eb5a48344ccffa8a10e063cce962ee9",
+      "bytes": 937,
+      "originalPath": "evidence/member_b_capacity16/input_duplicate_scene/index.json",
+      "originalSha256": "346db484e3239701f28f95f44b8d78611fc46bd5b46d9971284f7ad60e6bf7be",
+      "transformation": "Retained required acquisition/profile fields and PNG hash; omitted unused generated logs, masks, binary dump and report lists."
+    },
+    {
+      "path": "frame16351/index.json",
+      "sha256": "82b5b98747d8cac4445be68c54f7eb221f262797a880529d5c9e6cd98d0009ed",
+      "bytes": 1007,
+      "originalPath": "evidence/member_b_capacity16/input_duplicate_scene_frame16351/index.json",
+      "originalSha256": "879e99a21566db9c25c0c6d81afe711ec92d23f790815fad4a02a07b5faa384c",
+      "transformation": "Retained required acquisition/profile fields and PNG hash; omitted unused generated logs, masks, binary dump and report lists."
+    },
+    {
+      "path": "frame19645/frame.png",
+      "sha256": "352ea541489934199839a4871416515a803542ac2824d5adbad3064c9c2c24d4",
+      "bytes": 56042,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame19645/frame.png",
+      "originalSha256": "352ea541489934199839a4871416515a803542ac2824d5adbad3064c9c2c24d4",
+      "transformation": "NONE; byte-identical input"
+    },
+    {
+      "path": "frame19645/expected_regions.json",
+      "sha256": "125630561280cd370338d40a83b089d519e7538eec715bed0723654baf8f8e24",
+      "bytes": 4240,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame19645/expected_regions.json",
+      "originalSha256": "125630561280cd370338d40a83b089d519e7538eec715bed0723654baf8f8e24",
+      "transformation": "NONE; byte-identical input"
+    },
+    {
+      "path": "frame19645/index.json",
+      "sha256": "7a4a8fda396ca2bc0a5aad48a1ccc3f432ab97b6a281e75886137794ba4a3223",
+      "bytes": 1089,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame19645/index.json",
+      "originalSha256": "bcf3d35f0171895cf4f9ba20ee4f0327c8da92b49b6f71bb8eeb12bb9250b81a",
+      "transformation": "Derived small acquisition/profile identity from original capture; retained only hashes of copied pixel/truth inputs, no binary dump or execution logs."
+    },
+    {
+      "path": "frame30158/frame.png",
+      "sha256": "6ea07cf32fa1fb2003c0e46d81412b3985563b6183a5342365a1197be2415847",
+      "bytes": 57418,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame30158/frame.png",
+      "originalSha256": "6ea07cf32fa1fb2003c0e46d81412b3985563b6183a5342365a1197be2415847",
+      "transformation": "NONE; byte-identical input"
+    },
+    {
+      "path": "frame30158/expected_regions.json",
+      "sha256": "2290861d6fcf7b79704274b7997673404f405072c42921c5b8b8ebde34a42feb",
+      "bytes": 4137,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame30158/expected_regions.json",
+      "originalSha256": "2290861d6fcf7b79704274b7997673404f405072c42921c5b8b8ebde34a42feb",
+      "transformation": "NONE; byte-identical input"
+    },
+    {
+      "path": "frame30158/index.json",
+      "sha256": "030ffdf5a8d275e564dcb047e0974a0ae6c94b5b19d7ba5e3324321ca17184b6",
+      "bytes": 1089,
+      "originalPath": "evidence/member_b_shared16/input_adjusted_frame30158/index.json",
+      "originalSha256": "67085a862af3ab64fb134e987d832bccf20bd9e780556d61c25e896b04296f3b",
+      "transformation": "Derived small acquisition/profile identity from original capture; retained only hashes of copied pixel/truth inputs, no binary dump or execution logs."
+    },
+    {
+      "path": "frame37621/frame.png",
+      "sha256": "b8e4c79714ab9632e2f548d55a339eb94a8dabb29c513f58c0536a481faccd6d",
+      "bytes": 55871,
+      "originalPath": "build/member_b/20261103T013531_934094Z_capture/capture/frame.png",
+      "originalSha256": "b8e4c79714ab9632e2f548d55a339eb94a8dabb29c513f58c0536a481faccd6d",
+      "transformation": "NONE; byte-identical input"
+    },
+    {
+      "path": "frame37621/index.json",
+      "sha256": "4ebf5967347bf7b6341498d1a6b136b10b1c99906f263c46aa1532a3b0b86f11",
+      "bytes": 1018,
+      "originalPath": "build/member_b/20261103T013531_934094Z_capture/result.json",
+      "originalSha256": "44ccd33241d7b4fe5bfa054e3453ff87e832900cb6e714c491b47f8ff919f48c",
+      "transformation": "Derived small acquisition/profile identity from original capture; retained only hashes of copied pixel/truth inputs, no binary dump or execution logs."
+    }
+  ]
+}

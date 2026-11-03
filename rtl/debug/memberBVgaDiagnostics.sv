@@ -9,7 +9,7 @@ module memberBVgaDiagnostics #(
     parameter int DEFAULT_BLUE_MINIMUM=20
 )(
     input logic clk,reset,showCandidates,showCentre,
-    input logic [3071:0] debugWords,rawDebugWords,
+    input logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,rawDebugWords,
     input logic [29:0] rawData,
     input logic rawSop,rawEop,rawAccept,
     input logic [29:0] inData,
@@ -20,12 +20,19 @@ module memberBVgaDiagnostics #(
     input logic outReady
 );
     import perception_pkg::*;
-    localparam int SLOTS=17;
+    // Bound display cost independently of the16 shared production candidates: six red
+    // rows, eight blue bay rows, centre16, and a dedicated calibration bar17.
+    // Slots6/7 are reserved. BJ never consumes a blue bay presentation tag.
+    localparam int SLOTS=18, CENTRE_SLOT=16, REFERENCE_SLOT=17;
     // Record: valid79, accepted78, blue77, digit76:73, centreX72:64,
-    // centreY63:55, RGB54:31, H30:22, S21:14, V13:6, colour5:4.
+    // centreY63:55, RGB54:31, H30:22, S21:14, V13:6, colour5:4,
+    // calibrationReference0. The last flag is a schema7 proven pairing, not ID.
     logic [79:0] workRecords[0:SLOTS-1],publishedRecords[0:SLOTS-1],displayRecords[0:SLOTS-1];
     // Sampling metadata: valid24, accepted23, blue22, digit21:18, x17:9,y8:0.
     logic [24:0] sampleMeta[0:SLOTS-1],workMeta[0:SLOTS-1],nextMeta[0:SLOTS-1];
+    logic [SLOTS-1:0] nextReference,sampleReference,workReference;
+    logic [3:0] sampleReferenceIndex,workReferenceIndex,publishedReferenceIndex;
+    logic [1:0] nextOverflow,sampleOverflow,workOverflow,publishedOverflow;
     logic [23:0] workRgb[0:SLOTS-1];
     logic [13:0] sumRed[0:SLOTS-1],sumGreen[0:SLOTS-1],sumBlue[0:SLOTS-1];
     logic [6:0] sampleCount[0:SLOTS-1];
@@ -41,6 +48,7 @@ module memberBVgaDiagnostics #(
     logic [15:0] previousMetadataFrame,previousConfigVersion;
     logic [7:0] repeatedMetadataScans;
     perceptionStatus_t displayStatus;
+    logic displayBypass;
     logic [3:0] displaySampleCount;
     typedef enum logic [1:0] {IDLE,START_CONVERSION,WAIT_CONVERSION} conversionState_t;
     conversionState_t conversionState;
@@ -52,8 +60,22 @@ module memberBVgaDiagnostics #(
     logic [79:0] convertedRecord;
     logic [31:0] metadataHeader,metadataX,metadataY;
     logic [8:0] mappedX,mappedY;
-    integer nativeXMin,nativeXMax,nativeYMin,nativeYMax,centreMatches;
-    logic candidatePresent;
+    logic [8:0] nativeXMin,nativeXMax;
+    logic [7:0] nativeYMin,nativeYMax;
+    logic [5:0] centreMatches;
+    logic [4:0] redSampleCount,blueSampleCount;
+    logic candidatePresent,candidateReference;
+    // Presentation is compact and independent of internal candidate addresses:
+    // red rows0..5 use #A..#F; blue rows0..7 use #0..#7. Unknown candidates
+    // do not reserve a sample/panel slot; all16 shared candidates remain in JTAG/core.
+    logic [SLOTS-1:0] nextUiVisible,displayUiVisible;
+    logic [3:0] nextUiTags[0:15],displayUiTags[0:15];
+    logic [3:0] nextPanelSlots[0:13],displayPanelSlots[0:13];
+    logic [3:0] nextRedRows,nextBlueRows,displayRedRows,displayBlueRows;
+    logic nextRedOverflow,displayRedOverflow,nextBlueOverflow,displayBlueOverflow;
+    logic displaySourceFresh,displaySourceGood;
+    logic [31:0] displaySourceAge;
+    logic [3:0] redUiCount,blueUiCount;
     logic [29:0] renderedData,textBackground;
     logic [79:0] selectedRecord;
     logic textActive;
@@ -67,6 +89,45 @@ module memberBVgaDiagnostics #(
     logic [6:0] characterIndex;
     logic [2:0] glyphRow,glyphColumn;
     integer panelSlot,panelLine,crossSlot,localX,localY;
+    // Exact bounded unsigned constant division. Quartus18.1 implemented the
+    // original /6 then /10 chain as deep combinational dividers (37 levels,
+    // -0.291ns setup in source7eec0ba4). These reciprocal products are exact
+    // over every input of the declared width; the independent arithmetic TB
+    // exhausts all values. They preserve the stream latency and pixel layout.
+    function automatic logic [7:0] divideSix(input logic [9:0] value);
+        logic [19:0] product;
+        product=20'(value)*20'd683;
+        return product[19:12];
+    endfunction
+    function automatic logic [2:0] remainderSix(input logic [9:0] value);
+        logic [9:0] quotient;
+        quotient=10'(divideSix(value));
+        return 3'(value-((quotient<<2)+(quotient<<1)));
+    endfunction
+    function automatic logic [5:0] divideTen(input logic [8:0] value);
+        logic [16:0] product;
+        product=17'(value)*17'd205;
+        return product[16:11];
+    endfunction
+    function automatic logic [3:0] remainderTen(input logic [8:0] value);
+        logic [8:0] quotient;
+        quotient=9'(divideTen(value));
+        return 4'(value-((quotient<<3)+(quotient<<1)));
+    endfunction
+    function automatic logic [2:0] divideHundred(input logic [8:0] value);
+        logic [14:0] product;
+        product=15'(value)*15'd41;
+        return product[14:12];
+    endfunction
+    // Exact for valid native interval endpoints (0..320). Ten-bit sums
+    // cover 0..958; no signed 32-bit multiply/divide is inferred per slot.
+    function automatic logic [8:0] scaledCentre(input logic [8:0] first,lastExclusive);
+        logic [9:0] lowerScaled,upperScaled,sumScaled;
+        lowerScaled={1'b0,first}+({1'b0,first}>>1);
+        upperScaled={1'b0,lastExclusive}+({1'b0,lastExclusive}>>1)-10'd1;
+        sumScaled=lowerScaled+upperScaled;
+        return sumScaled[9:1];
+    endfunction
     wire acceptedRaw=rawAccept&&!reset;
     assign rawPixelX=rawSop?10'd0:rawX;
     assign rawPixelY=rawSop?9'd0:rawY;
@@ -82,34 +143,50 @@ module memberBVgaDiagnostics #(
         convertedRecord={workMeta[conversionIndex][24:18],workMeta[conversionIndex][17:9],
             workMeta[conversionIndex][8:0],workRgb[conversionIndex],convertedHue,
             convertedSaturation,convertedValue,convertedColour,4'd0};
+        convertedRecord[0]=workReference[conversionIndex];
         metadataHeader=0;metadataX=0;metadataY=0;mappedX=0;mappedY=0;
         rawCaptureAge=rawDebugWords[2*32+:32]-rawDebugWords[4*32+:32];
-        metadataFresh=rawDebugWords[31:0]==32'h45425031&&!rawCaptureAge[31]&&rawCaptureAge<=32'd150000&&
+        metadataFresh=rawDebugWords[31:0]==32'h45425031&&rawDebugWords[1*32+16+:16]==16'(DEBUG_SCHEMA_VERSION)&&
+            !rawCaptureAge[31]&&rawCaptureAge<=32'd150000&&
             (rawDebugWords[3*32+:16]!=previousMetadataFrame||rawDebugWords[6*32+:16]!=previousConfigVersion||repeatedMetadataScans<8'd9);
-        nativeXMin=0;nativeXMax=0;nativeYMin=0;nativeYMax=0;centreMatches=0;candidatePresent=0;
+        nativeXMin=0;nativeXMax=0;nativeYMin=0;nativeYMax=0;centreMatches=0;candidatePresent=0;candidateReference=0;
+        redSampleCount=0;blueSampleCount=0;nextOverflow=0;nextReference=0;
         for(int i=0;i<SLOTS;i++)nextMeta[i]=0;
-        nextMeta[16]={1'b1,1'b0,1'b0,4'd0,9'd320,9'd240};
-        for(int i=0;i<16;i++)begin
+        nextMeta[CENTRE_SLOT]={1'b1,1'b0,1'b0,4'd0,9'd320,9'd240};
+        for(int i=0;i<DEBUG_MARKER_COUNT;i++)begin
             metadataHeader=rawDebugWords[(24+4*i)*32+:32];
             metadataX=rawDebugWords[(25+4*i)*32+:32];metadataY=rawDebugWords[(26+4*i)*32+:32];
-            nativeXMin=int'(metadataX[24:16]);nativeXMax=int'(metadataX[8:0]);
-            nativeYMin=int'(metadataY[23:16]);nativeYMax=int'(metadataY[7:0]);
-            candidatePresent=metadataFresh&&
-                ((i<8?i<int'(rawDebugWords[9*32+:4]):i-8<int'(rawDebugWords[9*32+4+:4]))||
-                 (!rawDebugWords[91*32]&&nativeXMax>nativeXMin&&nativeYMax>nativeYMin))&&
+            nativeXMin=metadataX[24:16];nativeXMax=metadataX[8:0];
+            nativeYMin=metadataY[23:16];nativeYMax=metadataY[7:0];
+            candidatePresent=metadataFresh&&rawDebugWords[(DEBUG_TAIL_BASE+3)*32]&&
+                (5'(i)<rawDebugWords[9*32+:5]+rawDebugWords[9*32+5+:5])&&
                 nativeXMin<=nativeXMax&&nativeXMax<320&&nativeYMin<=nativeYMax&&nativeYMax<240;
             // Convert inclusive bbox endpoints before calculating display centre.
-            mappedX=9'(140+(((nativeYMin*3)/2)+(((nativeYMax+1)*3)/2-1))/2);
-            mappedY=9'((((319-nativeXMax)*3/2)+((320-nativeXMin)*3/2-1))/2);
-            nextMeta[i]={candidatePresent,metadataHeader[31]&&rawDebugWords[91*32],1'(i>=8),metadataHeader[27:24],mappedX,mappedY};
-            if(candidatePresent&&rawDebugWords[91*32]&&metadataHeader[31]&&nativeXMin<=159&&nativeXMax>=159&&nativeYMin<=120&&nativeYMax>=120)begin
-                centreMatches++;
-                nextMeta[16][23:18]={1'b1,metadataHeader[30],metadataHeader[27:24]};
+            mappedX=9'd140+scaledCentre({1'b0,nativeYMin},{1'b0,nativeYMax}+9'd1);
+            mappedY=scaledCentre(9'd319-nativeXMax,9'd320-nativeXMin);
+            candidateReference=candidatePresent&&metadataHeader[30]&&rawDebugWords[(DEBUG_TAIL_BASE+2)*32+3]&&
+                4'(i)==rawDebugWords[(DEBUG_TAIL_BASE+2)*32+4+:4];
+            if(candidateReference)begin
+                nextMeta[REFERENCE_SLOT]={1'b1,1'b0,1'b1,4'd15,mappedX,mappedY};
+                nextReference[REFERENCE_SLOT]=1;
+            end else if(candidatePresent&&metadataHeader[31]&&metadataHeader[27:24]>=1&&metadataHeader[27:24]<=6)begin
+                if(!metadataHeader[30])begin
+                    if(redSampleCount<6)nextMeta[redSampleCount]={1'b1,1'b1,1'b0,metadataHeader[27:24],mappedX,mappedY};
+                    redSampleCount=redSampleCount+5'd1;
+                end else begin
+                    if(blueSampleCount<8)nextMeta[8+blueSampleCount]={1'b1,1'b1,1'b1,metadataHeader[27:24],mappedX,mappedY};
+                    blueSampleCount=blueSampleCount+5'd1;
+                end
+                if(nativeXMin<=159&&nativeXMax>=159&&nativeYMin<=120&&nativeYMax>=120)begin
+                    centreMatches=centreMatches+6'd1;
+                    nextMeta[CENTRE_SLOT][23:18]={1'b1,metadataHeader[30],metadataHeader[27:24]};
+                end
             end
         end
         // An ID here only associates the centre with an already accepted sign.
         // Multiple overlapping accepted boxes do not produce a guessed ID.
-        if(centreMatches!=1)nextMeta[16][23:18]=0;
+        if(centreMatches!=1)nextMeta[CENTRE_SLOT][23:18]=0;
+        nextOverflow={blueSampleCount>8,redSampleCount>6};
     end
     always_ff @(posedge clk)begin
         if(reset)begin
@@ -120,6 +197,9 @@ module memberBVgaDiagnostics #(
             previousMetadataFrame<=0;previousConfigVersion<=0;repeatedMetadataScans<=0;
             sampleFrameGood<=0;workFrameGood<=0;publishedFrameGood<=0;
             sampleMetadataFresh<=0;workMetadataFresh<=0;publishedMetadataFresh<=0;
+            sampleReference<=0;workReference<=0;
+            sampleReferenceIndex<=0;workReferenceIndex<=0;publishedReferenceIndex<=0;
+            sampleOverflow<=0;workOverflow<=0;publishedOverflow<=0;
             for(int i=0;i<SLOTS;i++)begin
                 sampleMeta[i]<=0;workMeta[i]<=0;workRgb[i]<=0;workRecords[i]<=0;publishedRecords[i]<=0;
                 sumRed[i]<=0;sumGreen[i]<=0;sumBlue[i]<=0;sampleCount[i]<=0;
@@ -128,7 +208,9 @@ module memberBVgaDiagnostics #(
             if(acceptedRaw)begin
                 if(rawSop)begin
                     sampleScanId<=sampleScanId+16'd1;sampleMetadataFrame<=rawDebugWords[3*32+:16];
-                    sampleFrameGood<=rawDebugWords[91*32];sampleMetadataFresh<=metadataFresh;
+                    sampleFrameGood<=rawDebugWords[(DEBUG_TAIL_BASE+3)*32];sampleMetadataFresh<=metadataFresh;
+                    sampleReference<=nextReference;
+                    sampleReferenceIndex<=rawDebugWords[(DEBUG_TAIL_BASE+2)*32+4+:4];sampleOverflow<=nextOverflow;
                     previousMetadataFrame<=rawDebugWords[3*32+:16];previousConfigVersion<=rawDebugWords[6*32+:16];
                     if(rawDebugWords[3*32+:16]!=previousMetadataFrame||rawDebugWords[6*32+:16]!=previousConfigVersion)repeatedMetadataScans<=0;
                     else if(repeatedMetadataScans!=255)repeatedMetadataScans<=repeatedMetadataScans+8'd1;
@@ -153,6 +235,8 @@ module memberBVgaDiagnostics #(
                     conversionIndex<=0;conversionState<=START_CONVERSION;
                     workScanId<=sampleScanId;workMetadataFrame<=sampleMetadataFrame;
                     workFrameGood<=sampleFrameGood;workMetadataFresh<=sampleMetadataFresh;
+                    workReference<=sampleReference;
+                    workReferenceIndex<=sampleReferenceIndex;workOverflow<=sampleOverflow;
                     workRedMinimum<=sampleRedMinimum;workBlueMinimum<=sampleBlueMinimum;
                     for(int i=0;i<SLOTS;i++)begin
                         workMeta[i]<=sampleMeta[i];
@@ -165,14 +249,53 @@ module memberBVgaDiagnostics #(
             if(converterStart)conversionState<=WAIT_CONVERSION;
             if(conversionState==WAIT_CONVERSION&&converterValid)begin
                 workRecords[conversionIndex]<=convertedRecord;
-                if(conversionIndex==16)begin
-                    for(int i=0;i<16;i++)publishedRecords[i]<=workRecords[i];
-                    publishedRecords[16]<=convertedRecord;publishedReady<=1;
+                if(conversionIndex==SLOTS-1)begin
+                    for(int i=0;i<SLOTS-1;i++)publishedRecords[i]<=workRecords[i];
+                    publishedRecords[SLOTS-1]<=convertedRecord;publishedReady<=1;
+                    publishedReferenceIndex<=workReferenceIndex;publishedOverflow<=workOverflow;
                     publishedScanId<=workScanId;publishedMetadataFrame<=workMetadataFrame;
                     publishedFrameGood<=workFrameGood;publishedMetadataFresh<=workMetadataFresh;
                     conversionState<=IDLE;
                 end else begin conversionIndex<=conversionIndex+5'd1;conversionState<=START_CONVERSION;end
             end
+        end
+    end
+
+    always_comb begin
+        displaySourceAge=debugWords[2*32+:32]-debugWords[4*32+:32];
+        displaySourceFresh=debugWords[31:0]==32'h45425031 && debugWords[1*32+16+:16]==16'(DEBUG_SCHEMA_VERSION) &&
+            !displaySourceAge[31] && displaySourceAge<=32'd150000;
+        displaySourceGood=displaySourceFresh && debugWords[(DEBUG_TAIL_BASE+3)*32];
+        nextUiVisible=0;redUiCount=0;blueUiCount=0;
+        nextRedRows=0;nextBlueRows=0;nextRedOverflow=0;nextBlueOverflow=0;
+        for(int i=0;i<16;i++)nextUiTags[i]=0;
+        for(int row=0;row<14;row++)nextPanelSlots[row]=0;
+        for(int i=0;i<16;i++)begin
+            if(publishedReady && publishedFrameGood && publishedMetadataFresh && displaySourceGood &&
+               publishedRecords[i][79] &&
+               publishedRecords[i][78] && publishedRecords[i][76:73]>=1 && publishedRecords[i][76:73]<=6)begin
+                if(i<8)begin
+                    if(redUiCount<6)begin
+                        nextUiVisible[i]=1;
+                        nextUiTags[i]=4'(10+redUiCount);
+                        nextPanelSlots[redUiCount]=4'(i);
+                    end
+                    redUiCount=redUiCount+4'd1;
+                end else begin
+                    nextUiVisible[i]=1;
+                    nextUiTags[i]=4'(blueUiCount);
+                    nextPanelSlots[6+blueUiCount]=4'(i);
+                    blueUiCount=blueUiCount+4'd1;
+                end
+            end
+        end
+        nextRedRows=redUiCount>6?4'd6:4'(redUiCount);
+        nextBlueRows=4'(blueUiCount);
+        if(publishedReady && publishedFrameGood && publishedMetadataFresh && displaySourceGood)begin
+            nextRedOverflow=publishedOverflow[0];nextBlueOverflow=publishedOverflow[1];
+            nextUiVisible[REFERENCE_SLOT]=publishedRecords[REFERENCE_SLOT][79] && publishedRecords[REFERENCE_SLOT][0] &&
+                debugWords[(DEBUG_TAIL_BASE+2)*32+3] &&
+                debugWords[(DEBUG_TAIL_BASE+2)*32+4+:4]==publishedReferenceIndex;
         end
     end
 
@@ -205,6 +328,7 @@ module memberBVgaDiagnostics #(
             "G":bits=35'b01111_10000_10000_10111_10001_10001_01111;
             "H":bits=35'b10001_10001_10001_11111_10001_10001_10001;
             "I":bits=35'b01110_00100_00100_00100_00100_00100_01110;
+            "J":bits=35'b00111_00010_00010_00010_10010_10010_01100;
             "L":bits=35'b10000_10000_10000_10000_10000_10000_11111;
             "M":bits=35'b10001_11011_10101_10101_10001_10001_10001;
             "N":bits=35'b10001_11001_10101_10011_10001_10001_10001;
@@ -232,35 +356,46 @@ module memberBVgaDiagnostics #(
         numberValue=0;decimalPosition=0;decimalActive=0;numberValid=0;selectedRecord=0;
         panelSlot=-1;panelLine=-1;crossSlot=-1;localX=0;localY=0;textBackground=30'd0;fontRow=0;
         if(heldShowCandidates)begin
-            // Matching hexadecimal slot tags identify these sample ROIs and
-            // the side-panel rows. A slot tag is never a recognised digit.
-            for(int i=0;i<16;i++)if(displayRecords[i][79])begin
+            // Compact display tags identify the matching sample ROI and panel.
+            // These tags never replace the separately displayed recognised ID.
+            for(int i=0;i<SLOTS;i++)if(displayUiVisible[i])begin
                 localX=int'(pixelX)-int'(displayRecords[i][72:64]);
                 localY=int'(pixelY)-int'(displayRecords[i][63:55]);
                 if(localX>=-2&&localX<=1&&localY>=-2&&localY<=1&&
                     (localX==-2||localX==1||localY==-2||localY==1))renderedData={10'h3ff,10'h3ff,10'd0};
-                if(localX>=3&&localX<9&&localY>=-3&&localY<4)begin
+                if(localX>=3&&localX<15&&localY>=-3&&localY<4)begin
                     crossSlot=i;textX=8'(localX-3);textY=6'(localY+3);
                 end
             end
-            if(crossSlot>=0)begin textActive=1;character=hexCharacter(4'(crossSlot));end
+            if(crossSlot>=0)begin
+                textActive=1;
+                if(crossSlot==REFERENCE_SLOT)character=textX<6?"B":"J";
+                else character=textX<6?"#":hexCharacter(displayUiTags[crossSlot]);
+            end
             if(pixelX<140||pixelX>=500)begin
                 for(int row=0;row<8;row++)if(pixelY>=70+row*46&&pixelY<70+row*46+30)begin
-                    panelSlot=row+(pixelX>=500?8:0);textX=pixelX>=500?8'(pixelX-504):8'(pixelX-4);
-                    localY=int'(pixelY)-(70+row*46);textY=6'(localY)%6'd10;panelLine=int'(6'(localY)/6'd10);
-                    if(pixelX>=4&&pixelX<136||pixelX>=504&&pixelX<636)textActive=1;
+                    if((pixelX<140 && row<int'(displayRedRows)) ||
+                       (pixelX>=500 && row<int'(displayBlueRows)) ||
+                       (pixelX<140 && row==6 && displayUiVisible[REFERENCE_SLOT]))begin
+                        if(pixelX<140 && row==6)panelSlot=REFERENCE_SLOT;
+                        else panelSlot=int'(displayPanelSlots[pixelX>=500?6+row:row]);
+                        textX=pixelX>=500?8'(pixelX-504):8'(pixelX-4);
+                        localY=int'(pixelY)-(70+row*46);textY=6'(remainderTen(9'(6'(localY))));panelLine=int'(divideTen(9'(6'(localY))));
+                        if(pixelX>=4&&pixelX<136||pixelX>=504&&pixelX<636)textActive=1;
+                    end
                 end
                 if(panelSlot>=0)begin
-                    selectedRecord=displayRecords[panelSlot];characterIndex=textX/8'd6;
+                    selectedRecord=displayRecords[panelSlot];characterIndex=divideSix({2'd0,textX});
                     numberValid=selectedRecord[79];
                     if(panelLine==0)begin
-                        if(characterIndex==0)character=panelSlot<8?"R":"B";
-                        else if(characterIndex==1)character=selectedRecord[78]&&selectedRecord[79]?hexCharacter(selectedRecord[76:73]):"?";
+                        if(characterIndex==0)character=selectedRecord[77]?"B":"R";
+                        else if(characterIndex==1)character=selectedRecord[0]?"J":hexCharacter(selectedRecord[76:73]);
+                        else if(panelSlot==REFERENCE_SLOT&&characterIndex>=3&&characterIndex<=5)character=stringCharacter("REF",3,int'(characterIndex)-3);
                         else if(characterIndex==3)character="#";
-                        else if(characterIndex==4)character=hexCharacter(4'(panelSlot));
-                        else if(characterIndex>=6)character=stringCharacter("4X4",3,int'(characterIndex)-6);
+                        else if(characterIndex==4&&panelSlot<16)character=hexCharacter(displayUiTags[panelSlot]);
+                        else if(characterIndex>=7)character=stringCharacter("4X4",3,int'(characterIndex)-7);
                         else character=" ";
-                        textBackground=panelSlot<8?{10'd256,10'd0,10'd0}:{10'd0,10'd64,10'd256};
+                        textBackground=selectedRecord[77]?{10'd0,10'd64,10'd256}:{10'd256,10'd0,10'd0};
                     end else begin
                         if(characterIndex==0)character=panelLine==1?"R":"H";
                         else if(characterIndex==5)character=panelLine==1?"G":"S";
@@ -278,20 +413,32 @@ module memberBVgaDiagnostics #(
                     end
                 end
             end
+            // Six red tag letters are available by request. Extra accepted red
+            // objects remain in the internal arrays; disclose the display cap.
+            if(displayRedOverflow && pixelX>=4 && pixelX<52 && pixelY>=430 && pixelY<437)begin
+                textActive=1;textX=8'(pixelX-4);textY=6'(pixelY-430);decimalActive=0;
+                character=stringCharacter("RED OVF",7,int'(divideSix({2'd0,textX})));
+                textBackground={10'd256,10'd0,10'd0};
+            end
+            if(displayBlueOverflow && pixelX>=504 && pixelX<558 && pixelY>=430 && pixelY<437)begin
+                textActive=1;textX=8'(pixelX-504);textY=6'(pixelY-430);decimalActive=0;
+                character=stringCharacter("BLUE OVF",8,int'(divideSix({2'd0,textX})));
+                textBackground={10'd0,10'd64,10'd256};
+            end
         end
         if(heldShowCentre)begin
             if(pixelX>=316&&pixelX<=323&&pixelY>=236&&pixelY<=243&&
                 (pixelX==316||pixelX==323||pixelY==236||pixelY==243))renderedData={10'h3ff,10'h3ff,10'h3ff};
             if(pixelY>=448&&pixelY<475&&pixelX<500)begin
-                localY=int'(pixelY)-448;panelLine=int'(6'(localY)/6'd10);textY=6'(localY)%6'd10;textX=8'(pixelX);
+                localY=int'(pixelY)-448;panelLine=int'(divideTen(9'(6'(localY))));textY=6'(remainderTen(9'(6'(localY))));textX=8'(pixelX);
                 // Centre panel is intentionally 240 px wide, avoiding wrap in textX.
                 if(pixelX<240)begin
-                    textActive=1;characterIndex=textX/8'd6;selectedRecord=displayRecords[16];numberValid=selectedRecord[79];
+                    textActive=1;characterIndex=divideSix({2'd0,textX});selectedRecord=displayRecords[16];numberValid=selectedRecord[79];
                     if(panelLine==0)begin
                         character=stringCharacter("CENTRE8X8 C:  ID:  ",19,int'(characterIndex));
                         if(characterIndex==12)character=!numberValid?"?":selectedRecord[5:4]==1?"R":selectedRecord[5:4]==2?"B":"-";
-                        if(characterIndex==16)character=selectedRecord[78]&&numberValid?(selectedRecord[77]?"B":"R"):"?";
-                        if(characterIndex==17)character=selectedRecord[78]&&numberValid?hexCharacter(selectedRecord[76:73]):"?";
+                        if(characterIndex==16)character=selectedRecord[78]&&numberValid&&displayFrameGood&&displayMetadataFresh?(selectedRecord[77]?"B":"R"):"?";
+                        if(characterIndex==17)character=selectedRecord[78]&&numberValid&&displayFrameGood&&displayMetadataFresh?hexCharacter(selectedRecord[76:73]):"?";
                     end else begin
                         if(characterIndex==0)character=panelLine==1?"R":"H";
                         else if(characterIndex==5)character=panelLine==1?"G":"S";
@@ -306,7 +453,7 @@ module memberBVgaDiagnostics #(
         end
         if((pixelX<140||pixelX>=500)&&pixelY>=34&&pixelY<51)begin
             textActive=1;textX=pixelX>=500?8'(pixelX-504):8'(pixelX-4);
-            textY=pixelY<41?6'(pixelY-34):6'(pixelY-44);characterIndex=textX/8'd6;decimalActive=0;
+            textY=pixelY<41?6'(pixelY-34):6'(pixelY-44);characterIndex=divideSix({2'd0,textX});decimalActive=0;
             character=" ";textBackground=0;
             if(pixelY<41)begin
                 if(characterIndex<4)character=stringCharacter(pixelX<140?"VGA:":"META:",pixelX<140?4:5,int'(characterIndex));
@@ -322,35 +469,37 @@ module memberBVgaDiagnostics #(
             end
         end
         if(pixelY<20)begin
-            textActive=1;textBackground=0;textX=8'(pixelX);textY=6'(pixelY%9'd10);
-            characterIndex=7'(pixelX/10'd6);decimalActive=0;
+            textActive=1;textBackground=0;textX=8'(pixelX);textY=6'(remainderTen(pixelY));
+            characterIndex=7'(divideSix(pixelX));decimalActive=0;
             // Header spans at most 64 characters. Use the full column here.
             if(pixelY<10)begin
-                case(int'(pixelX/10'd6))
-                    0,1,2,3:character=stringCharacter("CAL:",4,int'(pixelX/10'd6));
+                case(int'(divideSix(pixelX)))
+                    0,1,2,3:character=stringCharacter("CAL:",4,int'(divideSix(pixelX)));
                     4:character=displayStatus.interactionBusy?"B":displayStatus.calibrated?"Y":"W";
-                    6,7,8,9:character=stringCharacter("CFG:",4,int'(pixelX/10'd6)-6);
-                    10,11,12,13:character=hexCharacter(4'(displayStatus.activeCfgVersion>>(4*(13-int'(pixelX/10'd6)))));
-                    15,16,17,18,19,20,21:character=stringCharacter("SAMPLE:",7,int'(pixelX/10'd6)-15);
+                    6,7,8,9:character=stringCharacter("CFG:",4,int'(divideSix(pixelX))-6);
+                    10,11,12,13:character=hexCharacter(4'(displayStatus.activeCfgVersion>>(4*(13-int'(divideSix(pixelX))))));
+                    15,16,17,18,19,20,21:character=stringCharacter("SAMPLE:",7,int'(divideSix(pixelX))-15);
                     22:character=hexCharacter(displaySampleCount);
-                    24,25,26,27:character=stringCharacter("ARM:",4,int'(pixelX/10'd6)-24);
+                    24,25,26,27:character=stringCharacter("ARM:",4,int'(divideSix(pixelX))-24);
                     28:character=displayStatus.speechArmed?"1":"0";
-                    30,31,32,33,34,35,36,37,38,39,40,41,42,43:character=stringCharacter("AUDIO DEFERRED",14,int'(pixelX/10'd6)-30);
-                    45,46,47,48,49,50:character=stringCharacter("STATE:",6,int'(pixelX/10'd6)-45);
+                    30,31,32,33,34,35,36,37,38,39,40,41,42,43:character=stringCharacter("AUDIO DEFERRED",14,int'(divideSix(pixelX))-30);
+                    45,46,47,48,49,50:character=stringCharacter("STATE:",6,int'(divideSix(pixelX))-45);
                     51:character=hexCharacter(displayStatus.state);
+                    53,54,55,56,57,58,59:character=stringCharacter("BYPASS:",7,int'(divideSix(pixelX))-53);
+                    60:character=displayBypass?"1":"0";
                     default:character=" ";
                 endcase
-            end else character=stringCharacter("SW0:REGIONS SW1:CENTRE RGB/S/V:0-255 H:DEG VGA HELD",51,int'(pixelX/10'd6));
+            end else character=stringCharacter("SW0:REGIONS SW1:CENTRE RGB/S/V:0-255 H:DEG VGA HELD",51,int'(divideSix(pixelX)));
         end
         if(decimalActive)begin
             if(!numberValid)character="-";
             else case(decimalPosition)
-                0:character=8'd48+8'(numberValue/9'd100);
-                1:character=8'd48+8'((numberValue/9'd10)%9'd10);
-                default:character=8'd48+8'(numberValue%9'd10);
+                0:character=8'd48+8'(divideHundred(numberValue));
+                1:character=8'd48+8'(remainderTen(9'(divideTen(numberValue))));
+                default:character=8'd48+8'(remainderTen(numberValue));
             endcase
         end
-        glyphColumn=pixelY<20?3'(pixelX%10'd6):3'(textX%8'd6);glyphRow=3'(textY);fontRow=font(character,glyphRow);
+        glyphColumn=pixelY<20?3'(remainderSix(pixelX)):3'(remainderSix({2'd0,textX}));glyphRow=3'(textY);fontRow=font(character,glyphRow);
         if(textActive)begin
             renderedData=textBackground;
             if(textY<7&&glyphColumn<5&&fontRow[4-glyphColumn])renderedData={10'h3ff,10'h3ff,10'h3ff};
@@ -360,8 +509,12 @@ module memberBVgaDiagnostics #(
         if(reset)begin
             outValid<=0;outData<=0;outSop<=0;outEop<=0;rasterX<=0;rasterY<=0;
             heldShowCandidates<=0;heldShowCentre<=0;displayStatus<='0;displaySampleCount<=0;
+            displayBypass<=0;
             displayScanId<=0;displayMetadataFrame<=0;
             displayFrameGood<=0;displayMetadataFresh<=0;
+            displayUiVisible<=0;displayRedRows<=0;displayBlueRows<=0;displayRedOverflow<=0;displayBlueOverflow<=0;
+            for(int i=0;i<16;i++)displayUiTags[i]<=0;
+            for(int row=0;row<14;row++)displayPanelSlots[row]<=0;
             for(int i=0;i<SLOTS;i++)displayRecords[i]<=0;
         end else if(inReady)begin
             outValid<=inValid;
@@ -369,9 +522,15 @@ module memberBVgaDiagnostics #(
                 outData<=renderedData;outSop<=inSop;outEop<=inEop;
                 if(inSop)begin
                     heldShowCandidates<=showCandidates;heldShowCentre<=showCentre;
-                    displayStatus<=debugWords[10*32+:76];displaySampleCount<=debugWords[89*32+:4];
+                    displayStatus<=debugWords[10*32+:76];displaySampleCount<=debugWords[(DEBUG_TAIL_BASE+1)*32+:4];
+                    displayBypass<=debugWords[1*32+16+:16]>=3&&debugWords[7*32+20];
                     displayScanId<=publishedScanId;displayMetadataFrame<=publishedMetadataFrame;
-                    displayFrameGood<=publishedFrameGood;displayMetadataFresh<=publishedMetadataFresh;
+                    displayFrameGood<=publishedFrameGood&&displaySourceGood;
+                    displayMetadataFresh<=publishedMetadataFresh&&displaySourceFresh;
+                    displayUiVisible<=nextUiVisible;displayRedRows<=nextRedRows;displayBlueRows<=nextBlueRows;
+                    displayRedOverflow<=nextRedOverflow;displayBlueOverflow<=nextBlueOverflow;
+                    for(int i=0;i<16;i++)displayUiTags[i]<=nextUiTags[i];
+                    for(int row=0;row<14;row++)displayPanelSlots[row]<=nextPanelSlots[row];
                     for(int i=0;i<SLOTS;i++)displayRecords[i]<=publishedReady?publishedRecords[i]:80'd0;
                 end
                 if(pixelX==639)begin rasterX<=0;rasterY<=pixelY==479?9'd0:pixelY+9'd1;end

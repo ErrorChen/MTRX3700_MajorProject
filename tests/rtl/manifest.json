@@ -65,6 +65,7 @@
       "name": "memberBDebug_tb",
       "passMarker": "PASS memberBDebug_tb",
       "sources": [
+        "rtl/common/perception_pkg.sv",
         "rtl/debug/snapshot_probes.sv",
         "rtl/debug/memberBDebug.sv",
         "tests/rtl/memberBDebug_tb.sv"
@@ -388,6 +389,150 @@
       ],
       "timeoutSeconds": 180,
       "inputSource": "SYNTHETIC_DISPLAY_RGB_AND_BACKPRESSURE"
+    },
+    {
+      "name": "jtagInteraction_tb",
+      "passMarker": "PASS jtagInteraction_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/debug/snapshot_probes.sv",
+        "rtl/debug/memberBDebug.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "tests/rtl/jtagInteraction_tb.sv"
+      ],
+      "defines": [
+        "VERILATOR"
+      ],
+      "inputSource": "LINKED_JTAG_INTERACTION_PROTOCOL_INJECTION"
+    },
+    {
+      "name": "projectiveBypass_tb",
+      "passMarker": "PASS projectiveMarkerReader_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "tests/rtl/projectiveMarkerReader_tb.sv"
+      ],
+      "timeoutSeconds": 600,
+      "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_AXIS_ALIGNED_BASELINE",
+      "top": "projectiveMarkerReader_tb",
+      "plusargs": [
+        "+BYPASS"
+      ]
+    },
+    {
+      "name": "memberBVgaPipeline_tb",
+      "passMarker": "PASS memberBVgaPipeline_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaContour.sv",
+        "rtl/debug/memberBVgaLabels.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
+        "rtl/debug/memberBVgaOverlay.sv",
+        "tests/rtl/memberBVgaPipeline_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_LINKED_VGA_PACKET_BACKPRESSURE"
+    },
+    {
+      "name": "boundedCandidatesActive_tb",
+      "passMarker": "PASS boundedCandidatesActive_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "tests/rtl/boundedCandidatesActive_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_MASK_REPLAY"
+    },
+    {
+      "name": "boundedCandidatesCapacity15_tb",
+      "passMarker": "PASS boundedCandidatesCapacity15_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "tests/rtl/boundedCandidatesCapacity15_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_CAPACITY_BOUNDARIES_AND_RECORDED_CAMERA_MASK"
+    },
+    {
+      "name": "memberBVgaArithmetic_tb",
+      "passMarker": "PASS memberBVgaArithmetic_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
+        "tests/rtl/memberBVgaArithmetic_tb.sv"
+      ],
+      "inputSource": "EXHAUSTIVE_UNSIGNED_ARITHMETIC"
+    },
+    {
+      "name": "perceptionCorePause_tb",
+      "passMarker": "PASS perceptionCorePause_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCorePause_tb.sv"
+      ],
+      "timeoutSeconds": 60,
+      "inputSource": "PROTOCOL_PAUSE_CONFIG_AND_STALL_INJECTION"
+    },
+    {
+      "name": "memberBVgaModeSwitch_tb",
+      "passMarker": "PASS memberBVgaModeSwitch_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/debug/memberBVgaContour.sv",
+        "rtl/debug/memberBVgaLabels.sv",
+        "rtl/debug/memberBVgaHsv.sv",
+        "rtl/debug/memberBVgaDiagnostics.sv",
+        "rtl/debug/memberBVgaOverlay.sv",
+        "rtl/debug/memberBVgaModeSwitch.sv",
+        "tests/rtl/memberBVgaModeSwitch_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_FULL_FRAME_RAW_IDENTITY_AND_NORMAL_OVERLAY_EQUIVALENCE",
+      "timeoutSeconds": 300
+    },
+    {
+      "name": "boundedCandidatesCompleted16_tb",
+      "passMarker": "PASS boundedCandidatesCompleted16_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "tests/rtl/boundedCandidatesCompleted16_tb.sv"
+      ],
+      "timeoutSeconds": 240,
+      "inputSource": "RECORDED_CAMERA_AND_SYNTHETIC_MASK"
+    },
+    {
+      "name": "memberBDisplayCdc_tb",
+      "passMarker": "PASS memberBDisplayCdc_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "tests/rtl/memberBDisplayCdc_tb.sv"
+      ],
+      "inputSource": "SYNTHETIC_FULL_WIDTH_ASYNCHRONOUS_MAILBOX"
     }
   ]
 }

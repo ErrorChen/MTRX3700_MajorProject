@@ -58,7 +58,7 @@ def warpedCases():
 
 def recordedFrames():
     """Six actual acquisitions; all are now known regression/tuning inputs."""
-    index=json.loads((root/'evidence/reader_algorithm2_inputs/index.json').read_text())
+    index=json.loads((root/'tests/fixtures/camera/reader_algorithm2.json').read_text())
     for record in index['records']:yield record['frameId'],root/record['image']
 
 
@@ -88,7 +88,7 @@ def algorithm2Cases():
     for index,(name,image,orientation) in enumerate(cases()):
         expected=full if index<3 else ([('blue',2)] if name.startswith('orientation_') else [])
         yield name,image,orientation,expected,'SYNTHETIC_PDF_OR_PIXEL_COUNTERFACTUAL'
-    original=Image.open(root/'evidence/camera_counterexample_47630/frame.png').convert('RGB')
+    original=Image.open(root/'tests/fixtures/camera/frame47630/frame.png').convert('RGB')
     for name,roi,bay in [('erase_anchor2',(211,30,214,36),2),('erase_anchor4',(210,98,214,104),4),
                          ('erase_anchor6',(209,168,213,173),6),('erase_C6',(229,195,233,209),6)]:
         image=original.copy();ImageDraw.Draw(image).rectangle(roi,fill=(16,24,57))
@@ -101,7 +101,7 @@ def algorithm2Cases():
 def algorithm3Cases():
     """Append current real pixels and labelled edits; never replace old inputs."""
     yield from algorithm2Cases()
-    index=json.loads((root/'evidence/reader_algorithm3_inputs/index.json').read_text())
+    index=json.loads((root/'tests/fixtures/camera/reader_algorithm3.json').read_text())
     full=[('blue',i) for i in range(1,7)]+[('red',1),('red',2)]
     for record in index['records']:
         imagePath=root/record['image']
@@ -122,7 +122,7 @@ def algorithm4Cases():
     explicitly pixel counterfactuals; their expected labels never enter runtime.
     """
     yield from algorithm3Cases()
-    index=json.loads((root/'evidence/reader_algorithm4_inputs/index.json').read_text())
+    index=json.loads((root/'tests/fixtures/camera/reader_algorithm4.json').read_text())
     full=[('blue',i) for i in range(1,7)]+[('red',1),('red',2)]
     for record in index['records']:
         imagePath=root/record['image']
@@ -195,7 +195,7 @@ class ProjectiveTests(unittest.TestCase):
         records=[]
         for name,image,orientation,expected in warpedCases():
             with self.subTest(name=name):
-                result=recogniseProjective(image,orientation=orientation,inputSource='SYNTHETIC_INDEPENDENT_PERSPECTIVE')
+                result=recogniseProjective(image,orientation=orientation,inputSource='SYNTHETIC_INDEPENDENT_PERSPECTIVE',readerAlgorithm=4)
                 actual=sorted((marker['colour'],marker['digit']) for marker in result['markers'] if marker['accepted'])
                 records.append({'case':name,'actual':actual,'expected':expected,'pass':actual==expected,
                                 'markers':result['markers']})
@@ -206,7 +206,7 @@ class ProjectiveTests(unittest.TestCase):
         from export_vision_vectors import cases
         for name,image,orientation in list(cases())[:3]:
             with self.subTest(name=name):
-                result=recogniseProjective(image,orientation=orientation,inputSource='SYNTHETIC_PDF_COUNTERFACTUAL')
+                result=recogniseProjective(image,orientation=orientation,inputSource='SYNTHETIC_PDF_COUNTERFACTUAL',readerAlgorithm=4)
                 self.assertEqual(sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted']),
                                  [('blue',i) for i in range(1,7)]+[('red',1),('red',2)])
                 if name=='counterfactual_swapped':
@@ -217,7 +217,7 @@ class ProjectiveTests(unittest.TestCase):
         for frameId,path in recordedFrames():
             with self.subTest(frameId=frameId):
                 self.assertTrue(path.is_file(),'Recorded input must be supplied explicitly')
-                result=recogniseProjective(Image.open(path),inputSource='RECORDED_OV7670_PART_A')
+                result=recogniseProjective(Image.open(path),inputSource='RECORDED_OV7670_PART_A',readerAlgorithm=4)
                 self.assertEqual(sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted']),
                                  [('blue',i) for i in range(1,7)]+[('red',1),('red',2)])
                 for marker in result['markers']:
@@ -226,7 +226,7 @@ class ProjectiveTests(unittest.TestCase):
 
     def test_calibrated_hsv_and_historical_ratio(self):
         for frameId in (13139,13511,13675):
-            image=Image.open(root/f'evidence/real_inputs/frame{frameId}.png')
+            image=Image.open(root/f'tests/fixtures/camera/frame{frameId}/frame.png')
             for algorithm,redMin,blueMin in ((0,64,32),(1,37,30)):
                 result=recogniseProjective(image,redMin=redMin,blueMin=blueMin,colourAlgorithm=algorithm,
                     readerAlgorithm=1 if algorithm==0 else 2,inputSource='RECORDED_OV7670_PART_A')
@@ -251,7 +251,7 @@ class ProjectiveTests(unittest.TestCase):
 
     def test_native_anchor_ambiguity_overflow_and_retirement(self):
         for name,image,orientation,expected in nativeAnchorCases():
-            result=recogniseProjective(image,orientation=orientation)
+            result=recogniseProjective(image,orientation=orientation,readerAlgorithm=4)
             actual=sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted'])
             self.assertEqual(actual,expected,name)
             anchor=next(m['windowScores']['anchor'] for m in result['markers'] if 'anchor' in m['windowScores'])
@@ -307,7 +307,7 @@ class ProjectiveTests(unittest.TestCase):
             recogniseProjective(Image.new('RGB',(320,240),'white'),colourAlgorithm=0,readerAlgorithm=3)
 
     def test_algorithm3_preserves_strict_anchor_and_old_reader2_counterexample(self):
-        image=Image.open(root/'evidence/board_ab41e932_frame225/frame.png').convert('RGB')
+        image=Image.open(root/'tests/fixtures/camera/frame225/frame.png').convert('RGB')
         old=recogniseProjective(image,readerAlgorithm=2)
         current=recogniseProjective(image,readerAlgorithm=3)
         self.assertEqual(sum(m['accepted'] for m in old['markers']),7)
@@ -315,7 +315,7 @@ class ProjectiveTests(unittest.TestCase):
         marker=next(m for m in current['markers'] if m['accepted'] and m['colour']=='blue' and m['digit']==6)
         self.assertEqual(marker['windowScores']['C']['white'],6)
         self.assertEqual(marker['quality'],192)
-        legacyImage=Image.open(root/'evidence/camera_counterexample_47630/frame.png').convert('RGB')
+        legacyImage=Image.open(root/'tests/fixtures/camera/frame47630/frame.png').convert('RGB')
         old=recogniseProjective(legacyImage,readerAlgorithm=2)
         current=recogniseProjective(legacyImage,readerAlgorithm=3)
         for oldMarker in old['markers']:
@@ -333,7 +333,7 @@ class ProjectiveTests(unittest.TestCase):
         records=[]
         for name,image,orientation,expected,source in current:
             with self.subTest(case=name):
-                result=recogniseProjective(image,orientation=orientation,inputSource=source)
+                result=recogniseProjective(image,orientation=orientation,inputSource=source,readerAlgorithm=4)
                 actual=sorted((m['colour'],m['digit']) for m in result['markers'] if m['accepted'])
                 self.assertEqual(actual,expected)
                 self.assertEqual(result['readerAlgorithm'],4)

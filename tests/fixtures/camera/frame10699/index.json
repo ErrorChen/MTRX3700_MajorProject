@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "inputSource": "REAL_CAMERA_FRESH_CAPTURE",
+  "sourceBuildId": "0xab41e932",
+  "frameId": 10699,
+  "configVersion": 1,
+  "redMinimum": 32,
+  "blueMinimum": 28,
+  "readerAlgorithmAtCapture": 2,
+  "actualFrameGood": false,
+  "actualCandidateOverflow": true,
+  "crc": 5678,
+  "crcHex": "0x162e",
+  "dumpSha256": "30017cac7f049ffc26cc2f20aef1c434a87426ee613c61de094e1af4ed6d21fe",
+  "files": {
+    "frame.png": "344e6fc6487a956322fa4e6c10c1931d73dc42fc45da34e8f6117cdd58ce7d9c"
+  },
+  "sourceIndexSha256": "8cfe4edebe3dae1e142f51dd4058f29f1ea56f47516a029d48d6fd48709ab8fc"
+}

@@ -1,15 +1,11 @@
-// Accepted digit labels for the camera_display ROTATE_CCW_90 picture: the portrait
-// occupies display x=140..499 and scales native u=y,v=319-x by 3/2. Only actual
-// accepted markers are drawn. debugWords must already be delivered as one held
-// coherent transaction into this VGA clock domain by the top-level CDC.
-// A one-entry elastic output register preserves all Avalon-ST payload on stalls.
+// Accepted labels for the native320x240 -> upright640x480 display mapping.
+// Compact label geometry is frozen at the accepted SOP. Per-pixel selection
+// retains the original last-slot-wins priority, then uses one shared font.
 module memberBVgaLabels #(
-    // Additional protection if camera/debug updates stop entirely. This is a
-    // display-refresh budget, not an assertion about camera pipeline latency.
     parameter int MAX_HOLD_FRAMES=10
 ) (
     input logic clk, reset,
-    input logic [3071:0] debugWords,
+    input logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,
     input logic [29:0] inData,
     input logic inSop,inEop,inValid,
     output logic inReady,
@@ -17,19 +13,27 @@ module memberBVgaLabels #(
     output logic outSop,outEop,outValid,
     input logic outReady
 );
-    logic [31:0] markerWords[0:63];
+    import perception_pkg::*;
+    // x=143..501 and y=3..481 for valid native boxes; nine bits suffice.
+    // Original 64 full metadata words are not needed after the SOP boundary.
+    typedef struct packed {
+        logic valid, isBlue;
+        logic [6:0] segments;
+        logic [8:0] x,y;
+    } label_t;
+    label_t labels[0:DEBUG_MARKER_COUNT-1];
     logic [15:0] heldFrameId,heldConfigVersion;
     logic haveFrame,heldFrameGood;
     logic [7:0] unchangedFrames;
     logic [9:0] rasterX,pixelX;
     logic [8:0] rasterY,pixelY;
     logic [29:0] renderedData;
-    logic [31:0] markerHeader,xWord,yWord;
-    logic [6:0] digitSegments;
-    logic digitInk,labelRegion,typeInk;
-    integer uMin,uMax,vMin,vMax,labelX,labelY,glyphX,glyphY;
-    logic sourceFrameGood;
     logic [31:0] captureAge;
+    logic sourceFrameGood,sourceReferenceValid;
+    logic selectedValid,selectedBlue,typeInk,digitInk;
+    logic [6:0] selectedSegments;
+    logic [3:0] glyphX,glyphY;
+    logic [8:0] deltaX,deltaY;
 
     function automatic logic [6:0] segmentsForDigit(input logic [3:0] digit);
         case(digit)
@@ -42,77 +46,97 @@ module memberBVgaLabels #(
             default:segmentsForDigit=0;
         endcase
     endfunction
-    assign inReady=!outValid || outReady;
+
+    function automatic label_t labelFor(input logic [31:0] header,xWord,yWord,
+                                         input logic isReference);
+        label_t result;
+        logic [8:0] nativeLeft,nativeRight,nativeTop,nativeBottom,portraitTop;
+        logic [9:0] scaledX,scaledY;
+        begin
+            nativeLeft=xWord[24:16];nativeRight=xWord[8:0];
+            nativeTop={1'b0,yWord[23:16]};nativeBottom={1'b0,yWord[7:0]};
+            portraitTop=9'd319-nativeRight;
+            scaledX={1'b0,nativeTop}+{nativeTop,1'b0};
+            scaledY={1'b0,portraitTop}+{portraitTop,1'b0};
+            result='0;
+            result.valid=((header[31]&&header[27:24]>=1&&header[27:24]<=6)||isReference)&&
+                nativeLeft<=nativeRight&&nativeRight<320&&nativeTop<=nativeBottom&&nativeBottom<240;
+            result.isBlue=header[30]||isReference;
+            result.segments=isReference?7'b0011110:segmentsForDigit(header[27:24]);
+            result.x=9'd143+scaledX[9:1];result.y=9'd3+scaledY[9:1];
+            return result;
+        end
+    endfunction
+
+    assign inReady=!outValid||outReady;
     always_comb begin
         captureAge=debugWords[2*32+:32]-debugWords[4*32+:32];
-        sourceFrameGood=debugWords[91*32] && !captureAge[31] && captureAge<=32'd150000;
-        pixelX=inSop?10'd0:rasterX;
-        pixelY=inSop?9'd0:rasterY;
-        renderedData=inData;
-        markerHeader=0;xWord=0;yWord=0;digitSegments=0;
-        digitInk=0;labelRegion=0;typeInk=0;
-        uMin=0;uMax=0;vMin=0;vMax=0;
-        labelX=0;labelY=0;glyphX=0;glyphY=0;
-        if(heldFrameGood && haveFrame && pixelX>=140 && pixelX<500) begin
-            for(int markerIndex=0;markerIndex<16;markerIndex++) begin
-                markerHeader=markerWords[markerIndex*4];
-                xWord=markerWords[markerIndex*4+1];
-                yWord=markerWords[markerIndex*4+2];
-                uMin=int'(yWord[23:16]);uMax=int'(yWord[7:0]);
-                vMin=319-int'(xWord[8:0]);vMax=319-int'(xWord[24:16]);
-                digitInk=0;labelRegion=0;
-                if(markerHeader[31] && markerHeader[27:24]>=1 && markerHeader[27:24]<=6 &&
-                    uMin<=uMax && vMin<=vMax && uMax<240 && vMax<320 && vMin>=0) begin
-                    labelX=140+(uMin*3)/2+3;labelY=(vMin*3)/2+3;
-                    glyphX=int'(pixelX)-labelX;glyphY=int'(pixelY)-labelY;
-                    labelRegion=glyphX>=0 && glyphX<16 && glyphY>=0 && glyphY<12;
-                    digitSegments=segmentsForDigit(markerHeader[27:24]);
-                    if(labelRegion) begin
-                        // The type letter is independent of the recognised
-                        // numeral. Red/blue backgrounds provide a second cue.
-                        typeInk=(glyphX==0&&glyphY>=1&&glyphY<=10)||
-                            ((glyphY==0||glyphY==5)&&glyphX>=0&&glyphX<=4)||
-                            (glyphX==5&&glyphY>=1&&glyphY<=4);
-                        if(markerHeader[30])typeInk=typeInk||
-                            (glyphY==11&&glyphX<=4&&glyphX>=0)||(glyphX==5&&glyphY>=6&&glyphY<=10);
-                        else typeInk=typeInk||(glyphY>=6&&glyphY<=10&&glyphX==glyphY-5);
-                        digitInk=(digitSegments[0]&&glyphY==0&&glyphX>=9&&glyphX<=14)||
-                            (digitSegments[1]&&glyphX==15&&glyphY>=1&&glyphY<=4)||
-                            (digitSegments[2]&&glyphX==15&&glyphY>=6&&glyphY<=10)||
-                            (digitSegments[3]&&glyphY==11&&glyphX>=9&&glyphX<=14)||
-                            (digitSegments[4]&&glyphX==8&&glyphY>=6&&glyphY<=10)||
-                            (digitSegments[5]&&glyphX==8&&glyphY>=1&&glyphY<=4)||
-                            (digitSegments[6]&&glyphY==5&&glyphX>=9&&glyphX<=14);
-                        renderedData=(digitInk||typeInk)?{10'h3ff,10'h3ff,10'h3ff}:
-                            markerHeader[30]?{10'd0,10'd128,10'd512}:{10'd512,10'd0,10'd0};
-                    end
+        sourceFrameGood=debugWords[31:0]==32'h45425031&&
+            debugWords[1*32+16+:16]==16'(DEBUG_SCHEMA_VERSION)&&
+            debugWords[(DEBUG_TAIL_BASE+3)*32]&&!captureAge[31]&&captureAge<=32'd150000;
+        sourceReferenceValid=debugWords[31:0]==32'h45425031&&
+            debugWords[1*32+16+:16]==16'(DEBUG_SCHEMA_VERSION)&&
+            debugWords[(DEBUG_TAIL_BASE+2)*32+3]&&sourceFrameGood;
+        pixelX=inSop?10'd0:rasterX;pixelY=inSop?9'd0:rasterY;
+        selectedValid=0;selectedBlue=0;selectedSegments=0;glyphX=0;glyphY=0;
+        deltaX=0;deltaY=0;typeInk=0;digitInk=0;renderedData=inData;
+        if(heldFrameGood&&haveFrame&&pixelX>=140&&pixelX<500)begin
+            for(int index=0;index<DEBUG_MARKER_COUNT;index++)begin
+                // The outer x bound and valid-label bounds make every negative
+                // nine-bit wrapped delta >=31, so it cannot pass <16/<12.
+                deltaX=pixelX[8:0]-labels[index].x;
+                deltaY=pixelY-labels[index].y;
+                if(labels[index].valid&&deltaX<16&&deltaY<12)begin
+                    selectedValid=1;selectedBlue=labels[index].isBlue;
+                    selectedSegments=labels[index].segments;
+                    glyphX=deltaX[3:0];glyphY=deltaY[3:0];
                 end
             end
         end
+        if(selectedValid)begin
+            // The winning slot supplies only a 4-bit glyph coordinate. Share
+            // this font across all16 labels instead of replicating it16 times.
+            typeInk=(glyphX==0&&glyphY>=1&&glyphY<=10)||
+                ((glyphY==0||glyphY==5)&&glyphX<=4)||
+                (glyphX==5&&glyphY>=1&&glyphY<=4);
+            if(selectedBlue)typeInk=typeInk||(glyphY==11&&glyphX<=4)||
+                (glyphX==5&&glyphY>=6&&glyphY<=10);
+            else typeInk=typeInk||(glyphY>=6&&glyphY<=10&&glyphX==glyphY-4'd5);
+            digitInk=(selectedSegments[0]&&glyphY==0&&glyphX>=9&&glyphX<=14)||
+                (selectedSegments[1]&&glyphX==15&&glyphY>=1&&glyphY<=4)||
+                (selectedSegments[2]&&glyphX==15&&glyphY>=6&&glyphY<=10)||
+                (selectedSegments[3]&&glyphY==11&&glyphX>=9&&glyphX<=14)||
+                (selectedSegments[4]&&glyphX==8&&glyphY>=6&&glyphY<=10)||
+                (selectedSegments[5]&&glyphX==8&&glyphY>=1&&glyphY<=4)||
+                (selectedSegments[6]&&glyphY==5&&glyphX>=9&&glyphX<=14);
+            renderedData=(digitInk||typeInk)?{10'h3ff,10'h3ff,10'h3ff}:
+                selectedBlue?{10'd0,10'd128,10'd512}:{10'd512,10'd0,10'd0};
+        end
     end
 
-    always_ff @(posedge clk) begin
-        if(reset) begin
+    always_ff @(posedge clk)begin
+        if(reset)begin
             outData<=0;outSop<=0;outEop<=0;outValid<=0;
             rasterX<=0;rasterY<=0;heldFrameId<=0;heldConfigVersion<=0;
             haveFrame<=0;heldFrameGood<=0;unchangedFrames<=0;
-            for(int i=0;i<64;i++) markerWords[i]<=0;
-        end else if(inReady) begin
+            for(int index=0;index<DEBUG_MARKER_COUNT;index++)labels[index]<='0;
+        end else if(inReady)begin
             outValid<=inValid;
-            if(inValid) begin
+            if(inValid)begin
                 outData<=renderedData;outSop<=inSop;outEop<=inEop;
-                if(inSop) begin
+                if(inSop)begin
                     rasterX<=1;rasterY<=0;
-                    for(int i=0;i<64;i++) markerWords[i]<=debugWords[(24+i)*32+:32];
-                    heldFrameId<=debugWords[3*32+:16];
-                    heldConfigVersion<=debugWords[6*32+:16];haveFrame<=1;
-                    if(haveFrame && heldFrameId==debugWords[3*32+:16] && heldConfigVersion==debugWords[6*32+:16]) begin
+                    for(int index=0;index<DEBUG_MARKER_COUNT;index++)
+                        labels[index]<=labelFor(debugWords[(24+4*index)*32+:32],
+                            debugWords[(25+4*index)*32+:32],debugWords[(26+4*index)*32+:32],
+                            sourceReferenceValid&&index==int'(debugWords[(DEBUG_TAIL_BASE+2)*32+4+:4]));
+                    heldFrameId<=debugWords[3*32+:16];heldConfigVersion<=debugWords[6*32+:16];haveFrame<=1;
+                    if(haveFrame&&heldFrameId==debugWords[3*32+:16]&&heldConfigVersion==debugWords[6*32+:16])begin
                         if(unchangedFrames!=255)unchangedFrames<=unchangedFrames+8'd1;
-                        heldFrameGood<=sourceFrameGood && unchangedFrames<MAX_HOLD_FRAMES-1;
+                        heldFrameGood<=sourceFrameGood&&unchangedFrames<MAX_HOLD_FRAMES-1;
                     end else begin unchangedFrames<=0;heldFrameGood<=sourceFrameGood;end
-                end else if(rasterX==639) begin
-                    rasterX<=0;
-                    rasterY<=rasterY==479?9'd0:rasterY+9'd1;
+                end else if(rasterX==639)begin
+                    rasterX<=0;rasterY<=rasterY==479?9'd0:rasterY+9'd1;
                 end else rasterX<=rasterX+10'd1;
             end
         end

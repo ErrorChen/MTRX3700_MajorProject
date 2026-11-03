@@ -6,6 +6,27 @@
 // Run with +VECTORS=path if the simulator's cwd differs from the ECHOPHACE1 root.
 module boundedCandidates_tb;
     import candidate_pkg::*;
+    candidate_array_t red_candidates,blue_candidates;
+
+    // Legacy geometry oracles consume per-colour views. This adapter is test
+    // code only; the DUT has one physical completed pool and a colour bitmap.
+    candidate_array_t sharedCandidates,oldSharedCandidates;
+    logic [15:0] sharedColours,oldSharedColours;
+    logic [4:0] sharedCount;
+    function automatic candidate_array_t colourView(input candidate_array_t values,input logic [15:0] colours,input logic blue);
+        candidate_array_t result;
+        integer count;
+        result='0;count=0;
+        for(int slot=0;slot<16;slot++)if(values[slot].valid&&colours[slot]==blue)begin
+            result[count]=values[slot];count++;
+        end
+        return result;
+    endfunction
+    always_comb begin
+        red_candidates=colourView(sharedCandidates,sharedColours,0);
+        blue_candidates=colourView(sharedCandidates,sharedColours,1);
+    end
+
     localparam int W=320, H=240, PIX=W*H, CAP=8, CASES=26, WORDS=134;
     localparam int ROW_GAP=W+CAP, FINAL_LATENCY=ROW_GAP+1;
     logic clk=0;
@@ -14,12 +35,11 @@ module boundedCandidates_tb;
     logic [1:0] in_mask=0;
     logic [8:0] in_x=0;
     logic [7:0] in_y=0;
-    candidate_t [7:0] red_candidates,blue_candidates;
-    logic [3:0] red_count,blue_count;
+    logic [4:0] red_count,blue_count;
     logic [3:0] allocationPeakRed,allocationPeakBlue;
     logic out_valid,frame_valid,red_overflow,blue_overflow,overflow,frame_error,overrun,busy;
     logic [15:0] frame_id;
-    boundedCandidates #(.W(W),.H(H),.CAP(CAP),.MIN_AREA(3)) dut(.*);
+    boundedCandidates #(.SHARED_POOL(0),.W(W),.H(H),.CAP(CAP),.MIN_AREA(3)) dut(.*);
     logic [1:0] masks[0:CASES*PIX-1];
     logic [31:0] expected[0:CASES*WORDS-1];
     string vectors="work/part_a_reclaimed_vectors";

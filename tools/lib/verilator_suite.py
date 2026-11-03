@@ -114,22 +114,21 @@ def prepareVectors(outputDir):
     records = []
     for index, (name, original, orientation) in enumerate(itertools.islice(cases(), 2)):
         image = quantise565(original)
-        base = recognise(image, cleanup=True, redMin=48, blueMin=32, colourAlgorithm=1, pruneUnusable=True)
+        base = recognise(image, cleanup=True, redMin=48, blueMin=20, colourAlgorithm=2,
+                         pruneUnusable=True, activeCapacity=15, capacity=16, sharedCapacity=16)
         if base["overflow"]:
             raise RuntimeError(f"system fixture candidate overflow: {name}")
-        candidateWords, expectedWords = [0] * 16, [0x000f0001] * 16
-        counts = {"red": 0, "blue": 0}
+        candidateWords, expectedWords, candidateColours = [0] * 16, [0x000f0001] * 16, [0] * 16
         blueOne = []
-        for candidate in base["markers"]:
+        for slot, candidate in enumerate(base["markers"]):
             fields = {key: candidate[key] for key in ("colour", "bbox", "area")}
             colour = fields["colour"]
-            slot = counts[colour] + (8 if colour == "blue" else 0)
-            counts[colour] += 1
-            if counts[colour] > 8:
-                raise RuntimeError("system fixture exceeds CAP8")
+            if slot >= 16:
+                raise RuntimeError("system fixture exceeds shared total capacity16")
             candidateWords[slot] = packCandidate(fields)
-            marker = classifyProjective(image, fields, orientation=orientation, redMin=48, blueMin=32,
-                                        colourAlgorithm=1, readerAlgorithm=3)
+            candidateColours[slot] = int(colour == "blue")
+            marker = classifyProjective(image, fields, orientation=orientation, redMin=48, blueMin=20,
+                                        colourAlgorithm=2, readerAlgorithm=5)
             digit = marker["digit"] if marker["accepted"] else 15
             expectedWords[slot] = (int(marker["accepted"]) << 24) | (digit << 16) | \
                                  (marker["quality"] << 8) | marker["reasonCode"]
@@ -141,6 +140,7 @@ def prepareVectors(outputDir):
             "rgb565": "".join(f"{((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3):04x}\n"
                               for r, g, b in pixelsOf(image)),
             "candidates": "".join(f"{word:018x}\n" for word in candidateWords),
+            "candidate_colours": "".join(f"{colour:x}\n" for colour in candidateColours),
             "expected": "".join(f"{word:08x}\n" for word in expectedWords),
         }
         paths = {}
@@ -149,7 +149,8 @@ def prepareVectors(outputDir):
             path.write_text(text, encoding="ascii", newline="\n")
             paths[suffix] = {"file": path.name, "sha256": fileHash(path)}
         records.append({"name": name, "inputSource": "SYNTHETIC_PIXEL_COUNTERFACTUAL",
-                        "blueOneBbox": blueOne[0], "files": paths})
+                        "blueOneBbox": blueOne[0], "poolLayout": "SHARED_TOTAL",
+                        "candidateOrder": "MODEL_CANONICAL_GEOMETRY_NOT_RTL_RETIREMENT_ORDER", "files": paths})
     if len(records) != 2 or records[0]["blueOneBbox"] == records[1]["blueOneBbox"]:
         raise RuntimeError("system fixtures do not exercise pixel-dependent target movement")
     (outputDir / "fixtures.json").write_text(json.dumps(records, indent=2) + "\n", encoding="utf-8")
@@ -163,6 +164,10 @@ def main(argv=None):
     parser.add_argument("--out", type=Path, help="new result directory; existing directories are never reused/deleted")
     parser.add_argument("--prepare-vectors", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if os.name == "nt" and os.environ.get("VERILATOR_ROOT"):
+        # The native makefile is evaluated by Git's POSIX shell. Backslashes
+        # in the inherited Windows path otherwise become shell escapes.
+        os.environ["VERILATOR_ROOT"] = Path(os.environ["VERILATOR_ROOT"]).as_posix()
     if args.prepare_vectors:
         prepareVectors(args.prepare_vectors)
         return 0
@@ -187,6 +192,11 @@ def main(argv=None):
         result["toolchain"] = {"verilator": verilator, "version": version.strip(), "compiler": compiler}
         if record["returnCode"] or not exactVersion(version):
             raise EnvironmentBlocked("course R6 requires exactly Verilator 5.050; found " + version.strip())
+        record, compilerVersion = runProcess([compiler, "--version"], ROOT, outputDir / "compiler_version.log", deadline)
+        result["commands"].append(record)
+        if record["returnCode"]:
+            raise EnvironmentBlocked("C++ compiler cannot report its version")
+        result["toolchain"]["compilerVersion"] = compilerVersion.strip()
         try:
             import numpy
             import PIL
@@ -197,6 +207,7 @@ def main(argv=None):
         tests = selectTests(manifest)
         sourcePaths = {path for test in tests for path in test["sources"]}
         sourcePaths.update(("tests/rtl/manifest.json", "tools/lib/verilator_suite.py", "run_all_tests.sh",
+                            "tools/run_r6_windows.py",
                             "tools/lib/export_vision_vectors.py", "tools/lib/vision_reference.py",
                             "tools/lib/projective_reference.py", "tools/lib/candidates_reclaimed_model.py",
                             "tools/lib/candidates_model.py", "tests/python/test_vision.py",
@@ -227,6 +238,11 @@ def main(argv=None):
             defines = ["-D" + define for define in test.get("defines", []) if define != "VERILATOR"]
             command = [verilator, "--binary", "--timing", "--assert", "-Wno-fatal", "--top-module", top,
                        "--Mdir", folder / "obj", "-j", str(args.jobs), *defines, *sources]
+            if os.name == "nt":
+                # Git Bash and native MinGW may carry different C++/pthread
+                # DLLs. Bind the generated simulator to its compiler's static
+                # runtime; this changes no HDL semantics or assertion flags.
+                command[1:1] = ["-LDFLAGS", "-static", "-MAKEFLAGS", "PYTHON3=" + Path(sys.executable).as_posix()]
             record, _ = runProcess(command, folder, folder / "compile.log", deadline)
             result["commands"].append(record)
             if record["returnCode"] or record["timedOut"]:

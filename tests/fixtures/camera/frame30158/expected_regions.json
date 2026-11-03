@@ -1,0 +1,156 @@
+{
+  "schema": "echo7-test-only-printed-regions-v1",
+  "coordinateSystem": "native320x240",
+  "inputSource": "MANUAL_PIXEL_ANNOTATION_OF_RECORDED_CAMERA",
+  "frameId": 30158,
+  "sourceImage": "frame.png",
+  "sourcePngSha256": "6ea07cf32fa1fb2003c0e46d81412b3985563b6183a5342365a1197be2415847",
+  "runtimeUse": "Forbidden: labels are test expectations, never sent to FPGA. This truth is bound to frame30158 and its observed arrangement, not frame19645.",
+  "annotationMethod": "Independent view_image of frame30158. Labels assigned by visible white digit strokes and orientation anchors, without reading its recognition marker output.",
+  "orientationConvention": "nativeQuarterTurn is a visual clockwise quarter turn relative to the native image; perspective roll is not a measured continuous angle.",
+  "bboxConvention": "Manual inclusive regions surrounding visible coloured main areas; approximate annotation margins, not pixel-exact segmentation.",
+  "regions": [
+    {
+      "isBlue": false,
+      "digit": 1,
+      "bbox": [
+        33,
+        3,
+        113,
+        99
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": false,
+      "digit": 2,
+      "bbox": [
+        40,
+        150,
+        135,
+        239
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        165,
+        3,
+        222,
+        85
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        218,
+        9,
+        269,
+        86
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 3,
+      "bbox": [
+        172,
+        83,
+        232,
+        170
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 4,
+      "bbox": [
+        224,
+        79,
+        275,
+        158
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 5,
+      "bbox": [
+        178,
+        159,
+        241,
+        239
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 6,
+      "bbox": [
+        230,
+        148,
+        279,
+        234
+      ],
+      "nativeQuarterTurn": 0,
+      "anchorCorner": "upperLeft"
+    },
+    {
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        270,
+        16,
+        315,
+        80
+      ],
+      "nativeQuarterTurn": 1,
+      "anchorCorner": "upperRight"
+    },
+    {
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        273,
+        77,
+        315,
+        138
+      ],
+      "nativeQuarterTurn": 1,
+      "anchorCorner": "upperRight"
+    }
+  ],
+  "nonDigitRegions": [
+    {
+      "isBlue": true,
+      "digit": null,
+      "bbox": [
+        36,
+        95,
+        114,
+        121
+      ],
+      "kind": "CALIBRATION_REFERENCE",
+      "note": "Blue strip immediately below red1; no digit and not a bay."
+    }
+  ],
+  "edgeReview": [
+    "All ten printed digit identities remain visually legible: red1/2, blue1..6, and additional clockwise-quarter-turn blue1/2.",
+    "The red1 coloured area and its white upper-left anchor are now inside the top image boundary.",
+    "Red2 and blue5 still meet the bottom image boundary; the full external A4 edge is not visible.",
+    "A dark foreground object borders/obscures the right paper margin near blue6. The visible white strokes identify6, but the full main-area boundary is not established.",
+    "The extra rotated blue2 anchor is very small/faint at its upper-right corner; visible digit identity does not guarantee acceptance by the native-anchor predicate.",
+    "Paper placement differs from frame19645. No fixed-scene or no-motion claim is made between these two acquisitions."
+  ]
+}

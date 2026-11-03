@@ -2,3 +2,5 @@
 numpy==2.3.5
 Pillow==12.2.0
 pypdf==6.10.0
+# One-page course datasheet generation; not used by the FPGA runtime.
+reportlab==4.4.9

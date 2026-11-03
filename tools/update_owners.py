@@ -1,0 +1,76 @@
+#!/usr/bin/env python3
+"""Regenerate the reviewed R8 inventory; identities come from user confirmation.
+
+This assigns maintenance responsibility, not sole authorship or human sign-off.
+Original file notices override the coarse provenance category below.
+"""
+from pathlib import Path
+import json
+
+ROOT = Path(__file__).resolve().parents[1]
+TEAM_FILES = {
+    "rtl/capture/clock_divider.sv", "rtl/capture/i2c_master.sv",
+    "rtl/capture/ov7670_config.sv", "rtl/capture/ov7670_capture.sv",
+    "rtl/common/camera_pkg.sv", "rtl/common/video_pll.sv",
+    "rtl/display/frame_buffer.sv", "rtl/display/camera_display.sv",
+    "rtl/vision/boundedCandidates.sv", "rtl/vision/candidate_pkg.sv",
+    "rtl/vision/causalMaskCleanup.sv", "quartus/vga_sink.qsys",
+    "tools/lib/candidates_model.py", "tools/lib/candidates_reclaimed_model.py",
+}
+STAFF_FILES = {
+    "rtl/debug/frame_snap.sv", "rtl/debug/snapshot_ram.sv",
+    "rtl/debug/snapshot_probes.sv", "tools/capture/grab.py", "tools/tcl/grab_jtag.tcl",
+}
+
+
+def main():
+    manifest = json.loads((ROOT / "tests/rtl/manifest.json").read_text())
+    paths = []
+    for folder in ("rtl", "tools", "tests", "quartus", "assets/markers"):
+        paths += [p for p in (ROOT / folder).rglob("*") if p.is_file() and
+                  p.suffix in (".sv", ".svh", ".py", ".tcl", ".qpf", ".qsf", ".sdc", ".qsys", ".json")
+                  and "__pycache__" not in p.parts and not any(part in ("db", "incremental_db", "output_files", "vga_sink") for part in p.parts)]
+    paths += [ROOT / name for name in ("run_all_tests.sh", "requirements.txt", ".gitignore", ".gitattributes", ".editorconfig")]
+    paths += list((ROOT / "tests/fixtures/camera").rglob("*.png"))
+    lines = ["# Current Member B ownership and provenance", "",
+        "SID **540207680** is the user-confirmed Member B maintainer of the files below.",
+        "The preliminary repository was built by same-group students Hajin and Jiaze Sun;",
+        "Hajin mainly handles Member A. Their SIDs remain unknown and are not invented.",
+        "Origin is separate from maintenance responsibility. Original source/IP notices",
+        "remain applicable. B additions and adaptations are AI-assisted; named human",
+        "review/sign-off is **pending**, not certified by this generated inventory.", "",
+        "Source: user statement on 3 November 2026; original notices and",
+        "ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate with",
+        "`python tools/update_owners.py` after adding a maintained source or test.", "",
+        "| File | B SID | Origin / adaptation | Verification entry (not an execution claim) |",
+        "|---|---|---|---|"]
+    for path in sorted(set(paths)):
+        name = path.relative_to(ROOT).as_posix()
+        if name in TEAM_FILES:
+            origin = "Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation"
+        elif name in STAFF_FILES:
+            origin = "Course FrameGrab V2026.1; notices retained; B schema/control/decoder integration"
+        elif name.startswith("assets/"):
+            origin = "User-supplied one-page PDF; B geometry/template recovery and generation"
+        elif name.startswith("tests/fixtures/camera/"):
+            origin = "Same-team recorded OV7670 pixels of user-provided physical signs; B host-only annotations/profile metadata, AI-assisted; per-input origin and hashes in camera/manifest.json"
+        else:
+            origin = "Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim"
+        benches = [test["name"] for test in manifest["tests"] if name in test["sources"]]
+        if benches:
+            check = ", ".join(benches[:3]) + ("; full mapping: tests/rtl/manifest.json" if len(benches)>3 else "")
+        elif name.startswith("tests/python/"):
+            check = "python -m unittest discover -s tests/python"
+        elif name.startswith("tests/rtl/"):
+            check = "tests/rtl/manifest.json; standalone preview benches are not acceptance tests"
+        elif name.startswith("quartus/") or name.startswith("rtl/"):
+            check = "echo7.py build; post-fit timing/CDC/resource gate and board validation"
+        else:
+            check = "Python suite / check_repository.py; command execution evidence remains separate"
+        lines.append(f"| `{name}` | 540207680 | {origin} | {check} |")
+    (ROOT / "OWNERS.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
+    print(f"Updated OWNERS.md: {len(set(paths))} individual files; human review pending")
+
+
+if __name__ == "__main__":
+    main()

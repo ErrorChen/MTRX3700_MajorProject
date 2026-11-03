@@ -24,9 +24,9 @@ class CandidatePruningTests(unittest.TestCase):
         # camera, qualify reader IDs or turn the original bad frame into a
         # passing hardware result.
         from vision_reference import recognise
-        evidence = Path(__file__).resolve().parents[2] / "evidence/candidate_pruning_inputs"
+        evidence = Path(__file__).resolve().parents[2] / "tests/fixtures/camera/frame10699"
         index = json.loads((evidence / "index.json").read_text())
-        imagePath = evidence / "frame10699.png"
+        imagePath = evidence / "frame.png"
         self.assertEqual(hashlib.sha256(imagePath.read_bytes()).hexdigest(), index["files"][imagePath.name])
         self.assertEqual((index["configVersion"], index["redMinimum"], index["blueMinimum"]), (1, 32, 28))
         results = [recognise(Image.open(imagePath).convert("RGB"),redMin=index["redMinimum"],

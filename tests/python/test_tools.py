@@ -182,14 +182,42 @@ class ProcessTimeoutTests(unittest.TestCase):
         realRun = runner.run
         runner.target = lambda: {"cable": "RECORDED_HOST_FIXTURE", "device": "NO_HARDWARE"}
         runner.qt = lambda name: "NOT_EXECUTED"
-        runner.run = lambda label, args: realRun(label, [sys.executable, "-c",
-            f"import os,base64; os.write(1,base64.b64decode({encoded!r}))"])
+        runner.run = lambda label, args, **kwargs: realRun(label, [sys.executable, "-c",
+            f"import os,base64; os.write(1,base64.b64decode({encoded!r}))"], **kwargs)
         status = runner.control()
         self.assertEqual(status["buildId"], 0xab41e932)
         self.assertEqual(status["schema"], 2)
         self.assertEqual(status["words"], words)
         self.assertEqual(status["decoded"]["buildId"], 0xab41e932)
         self.assertTrue(Path(runner.result["steps"][0]["log"]).read_bytes().endswith(rawPayload))
+
+    def testSchemaThreeActionAcceptanceAndBusyFailure(self):
+        # Synthetic transport records exercise host failure propagation only.
+        # The linked Debug + interaction RTL bench covers real acceptance.
+        words = [0] * 96
+        words[0], words[1], words[92] = 0x45425031, 0x00030002, 0x12345678
+        header = f"{0x42444247:032b}{words[92]:032b}{0x03028060:032b}"
+        statusLines = [f"ECHO7_HEADER\t{header}"] + [
+            f"ECHO7_WORD\t{i}\t{word:032b}" for i, word in enumerate(words)]
+        for meta, opcode, code, expected in (
+                (0x03028060, 3, 0, None),
+                (0x0302e060, 3, 3, "BUSY_OR_DISABLED"),
+                (0x03028060, 4, 0, "requested opcode"),
+                (0x0302a060, 3, 0, "disagree"),
+                (None, 3, 0, "no action-level")):
+            with self.subTest(meta=meta, opcode=opcode):
+                runner = echo7.Runner(argparse.Namespace(command="action_parser_selftest", timeout=2))
+                runner.target = lambda: {"cable": "SYNTHETIC", "device": "NONE"}
+                runner.qt = lambda name: "NOT_EXECUTED"
+                action = [] if meta is None else [f"ECHO7_ACTION\t{opcode}\t{meta:032b}"]
+                runner.run = lambda *args, **kwargs: (code, "\n".join(action + statusLines))
+                if expected:
+                    with self.assertRaisesRegex(RuntimeError, expected):
+                        runner.control(3 << 24)
+                else:
+                    runner.control(3 << 24)
+                    self.assertTrue(runner.result["commandAcceptance"]["accepted"])
+                    self.assertFalse(runner.result["commandAcceptance"]["completed"])
 
     def testEqualWindowsTimestampsKeepEvidenceSeparate(self):
         args = argparse.Namespace(command="directory_selftest", timeout=1)
@@ -203,6 +231,36 @@ class ProcessTimeoutTests(unittest.TestCase):
                 self.assertNotEqual(first.out, second.out)
                 self.assertEqual(sentinel.read_text(), "original evidence")
                 self.assertTrue(second.out.name.endswith("_001"))
+
+    def testCalibrationTraceSeparatesAcceptedCompletedAndEvidenceLayer(self):
+        # HOST_PARSER_SYNTHETIC: no FPGA is accessed. The test verifies how the
+        # CLI labels a real trace; this fixture itself remains model evidence.
+        for samples, version, completed in ((8, 2, True), (7, 1, False)):
+            with self.subTest(samples=samples):
+                words = [0] * 96
+                words[0], words[1], words[92] = 0x45425031, 0x00040002, 0x12345678
+                words[6], words[12], words[89] = version, 308, samples
+                words[93] = (8 << 16) | (12 << 8)
+                header = f"{0x42444247:032b}{words[92]:032b}{0x04028060:032b}"
+                lines = [f"ECHO7_HEADER\t{header}", f"ECHO7_ACTION\t3\t{0x04028060:032b}",
+                         f"ECHO7_BUSY_ACTION\t{0x0402e060:032b}",
+                         "ECHO7_CAL_TRACE\t100\t1\t1\t20\t0",
+                         f"ECHO7_CAL_TRACE\t800100\t20\t{version}\t308\t{samples}"]
+                lines += [f"ECHO7_WORD\t{i}\t{word:032b}" for i, word in enumerate(words)]
+                runner = echo7.Runner(argparse.Namespace(command="calibration_parser_selftest", timeout=2))
+                runner.target = lambda: {"cable": "SYNTHETIC", "device": "NONE"}
+                runner.qt = lambda name: "NOT_EXECUTED"
+                runner.run = lambda *args, **kwargs: (0, "\n".join(lines))
+                if completed:
+                    runner.control(3 << 24, operation="calibration-check")
+                else:
+                    with self.assertRaisesRegex(RuntimeError, "real calibration acceptance failed"):
+                        runner.control(3 << 24, operation="calibration-check")
+                self.assertTrue(runner.result["commandAcceptance"]["accepted"])
+                self.assertEqual(runner.result["commandAcceptance"]["completed"], completed)
+                self.assertEqual(runner.result["level"], "CAMERA_HW")
+                self.assertEqual(runner.result["inputSource"], "LIVE_CAMERA_RAW_RGB_WITH_JTAG_REARM")
+                self.assertEqual(runner.result["calibrationAssessment"]["status"], "PASS" if completed else "FAIL")
 
     def testOwnedProcessTimeoutIsNonzeroAndRecorded(self):
         args = argparse.Namespace(command="timeout_selftest", timeout=1)
@@ -310,23 +368,32 @@ class DeferredAudioControlTests(unittest.TestCase):
 
 class HardwareDiagnosticGateTests(unittest.TestCase):
     def testDiscardBeforeCurrentTargetReportStillFails(self):
-        # Only the status transport is stubbed. This verifies the host refuses
-        # a new drop before it can qualify a target, not camera recognition.
-        runner = echo7.Runner(argparse.Namespace(command="test", timeout=1))
-        initial = {"bufferDropCount": 0, "completionDiscardCount": 17, "status": {"faultFlags": 0}}
-        responses = iter([initial, initial, {"completionDiscardCount": 18}])
-        runner.control = lambda command=0: {"decoded": next(responses)}
-        with self.assertRaisesRegex(RuntimeError, "completionDiscardCount changed"):
-            runner.hardware()
-        self.assertEqual(runner.result["initialDiagnostics"]["completionDiscardCount"], 17)
-        self.assertEqual(runner.result["hardwareFrames"], [])
+        # The default command now shares this assessor with formal trials.
+        # Keep a complete old-request observation in the failure denominator.
+        from hardware_measurement import measureTrials
+        from test_hardware_measurement import FixtureRunner
+        with tempfile.TemporaryDirectory() as folder:
+            runner = FixtureRunner(folder, transitionFrame=4)
+            original = runner.control
+            def withDiscard(command=0):
+                result = original(command)
+                result["decoded"]["completionDiscardCount"] = 18 if runner.frame >= 4 else 17
+                return result
+            runner.control = withDiscard
+            with self.assertRaisesRegex(RuntimeError, "no success-only filtering"):
+                measureTrials(runner, 1)
+            failed = next(row for row in runner.result["observations"] if row["status"]["frameId"] == 4)
+            self.assertFalse(failed["currentRequestSample"])
+            self.assertIn("completionDiscardCount", failed["issues"])
+            self.assertTrue(runner.cleared)
 
     def testSaturatedDiscardCounterCannotProveNoNewDrops(self):
+        from hardware_measurement import measureTrials
         runner = echo7.Runner(argparse.Namespace(command="test", timeout=1))
         runner.control = lambda command=0: {"decoded": {"bufferDropCount": 0,
             "completionDiscardCount": 0xffff, "status": {"faultFlags": 0}}}
         with self.assertRaisesRegex(RuntimeError, "saturated"):
-            runner.hardware()
+            measureTrials(runner, 1)
 
 
 class TclFailurePropagationTests(unittest.TestCase):

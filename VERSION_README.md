@@ -1,177 +1,254 @@
-﻿# ECHO-7 version and validation record
-
-This file records executed results and limits. [README.md](README.md) explains the current implementation, operation, requirements and student walkthrough. The only active command entry point is `python tools/echo7.py`; the only current Quartus revision is `quartus/PartBDebug.qpf`.
-
-## Current status: 3 November 2026 (Australia/Sydney)
-
-The source has been reorganised into `rtl`, `quartus`, `tests`, `tools`, `assets`, `docs`, `evidence` and ignored `build`. Obsolete demonstrations and generated files are removed from the active project under the user's cleanup instruction. Git retains the earlier source history. Historical evidence keeps its original contents/hashes; [relocation_index.json](evidence/relocation_index.json) explains former paths.
-
-The deletion audit and preserved differences are in [repository_cleanup.json](evidence/repository_cleanup.json) and [cleanup_reviewed_changes.patch](evidence/cleanup_reviewed_changes.patch). The active layout was committed as `c67b34e`; the user's subsequent commit `63bc383` includes the continuous-replay fixture update. UTF-8/LF rules, exact Python requirements and `tools/check_repository.py` now support repeatable operation. Layout checks remain STRUCTURAL evidence, separate from HDL and hardware checks.
-
-| Layer | Executed result | Boundary |
-|---|---|---|
-| STRUCTURAL, current layout | PASS: 37 project dependencies and 20 declared RTL benches | `tools/check_repository.py`; dependency checks do not execute those benches |
-| MODEL, current reader algorithm 2 | PASS: 64 unittest cases plus 11 vision scenario groups | `build/member_b/20261102T135442_888047Z_test/result.json`; includes fixture-binding and warning-retention tests; camera fixtures are known regression data |
-| MODEL, named fixture correction | PASS: nine projective Python tests; 528 existing vector files unchanged | Named aliases verify input source and distinguish original/swapped scenes; separate from full RTL acceptance |
-| MODEL_TOOLING, warning retention | PASS: 15 tooling tests | Actual map log now retains all 87 warnings, including two unnumbered PLL-reset warnings; the warnings remain engineering findings |
-| MODEL_TOOLING, isolated compilation | PASS: 20 tooling tests | Exact source-copy/hash checks, fixed child-process toolchain, missing companion-tool rejection and failed-build warning retention; no Quartus fit is implied |
-| MODEL_TOOLING, Windows BCTL parsing | PASS: 22 tooling tests and replay of the original failed readback log | The initial program command falsely failed on CRLF despite programmer exit 0; a later real program/readback passed |
-| ASSET_RECOVERY, current layout | PASS: formal PDF parsed and rendered; six templates regenerated | Same formal PDF hash and geometry; not camera acceptance |
-| RTL_SIM, HSV reader before relocation | PASS: 63 vectors, 153,600 exact sample coordinates, all decision/quality/reason fields | Four actual camera images replayed offline, each with eight accepted formal signs; relocated full RTL regression is a separate run |
-| RTL_SIM, prior integration revision | PASS: 43 synthetic core frames, late snapshot and 6 continuous alternating frames | Source hashes in retained unified results; later source changes require regression |
-| RTL_SIM, relocated short suite | PASS: 11 benches | `20261102T104803_176316Z_test`; includes colour/run filter, CDC, tracker, interaction and debug components |
-| RTL_SIM, relocated five-bench attempt | FAIL overall: first three benches PASS, continuous fixture FAIL, collision NOT_RUN | `20261102T104921_481664Z_test`; retain the aggregate failure |
-| RTL_SIM, continuous/collision rerun | PASS: both benches | `20261102T110912_418609Z_test`; corrected continuous fixture and explicit newer-drop/older-completion collision |
-| RTL_SIM, merged fixes | PASS: all five affected benches | `20261102T112953_869299Z_test`: flattened candidate labels, recorded replay, continuous input, collision and frame profile |
-| RTL_SIM, native synchroniser attributes | PASS: CDC transport regression | `20261102T112807_025408Z_test`; this does not replace fitted synchroniser/timing inspection |
-| RTL_SIM, VGA mapping | PASS: 307,200 pixels and 165,691 stall cycles | Preserved old/new equivalence and an independent production raster oracle |
-| RTL_SIM, native anchor | PASS: 188 ROIs; 166 valid, one ambiguous, one overflow | Portable production bench; maximum 3,697 cycles; this is one module, not the complete current system |
-| RTL_SIM, reader algorithm 2 isolated integration | PASS: 71+3 vectors, 239,360 exact grid addresses | Maximum 216,856 cycles; current unified 75-vector/full-core run remains separate |
-| RTL_SIM, pipelined native-anchor preparation | PASS: both focused benches; 188 ROIs and 75 reader vectors | 131,072 exact division inputs, 524,288 signed clipping checks and 240,640 exact grid coordinates; maximum reader workload 4.34064 ms |
-| RTL_SIM, unified 20-bench attempt | FAIL: shared `expected.hex` fixture collision stopped the first bench | `20261102T125848_299841Z_test`; this failed aggregate remains recorded |
-| RTL_SIM, fixture-collision correction | PASS: CCL and VGA contour benches together | `20261102T130527_555927Z_test`; this targeted pass does not replace the full suite |
-| RTL_SIM, later full-suite attempt | FAIL: first 11 benches passed, then recorded replay used the wrong positional fixture | `20261102T133108_837984Z_test`; old index 61 was a synthetic rejected-red-digit case, not a camera capture |
-| RTL_SIM, corrected full-suite rerun | PASS: all 20 benches, exit 0, suite source hashes unchanged | `20261102T135055_875419Z_test`, 13:50:55–14:03:58 UTC; named source-checked fixtures replace positional indices |
-| QUARTUS_FIT_TIMING, historical build | FAIL for projective build `0x77744a75`: routing congestion | Retained historical failure; later successful recovery is recorded separately |
-| QUARTUS_MAP, later build `0xd606e861` | PASS: 17 DSP blocks, 23,671 registers | Full compile was actively terminated; not a Fitter failure or completed timing result; source line-ending changes prevent current-source attribution |
-| POST_MAP diagnostic | Negative timing paths identified in an isolated mapped clone | VGA 71.080 ns / −31.361 ns slack and candidate path 44.603 ns / −24.884 ns slack; not final fitted timing |
-| Full build `0xfd9950d9` | TIMEOUT: exit 124 after 3,600 seconds | No completed fit or timing result; residual fitter process was cleaned up after approval review |
-| Prior source `0x9c0e0297` | MAP execution PASS; post-map timing diagnostic FAIL: 64.749 ns path, −45.030 ns slack | Retained diagnosis before native-anchor preparation was pipelined; this audit did not start a Fitter run |
-| Source `0xe943678b` | MAP execution PASS; preparation path 11.526 ns, remaining worst unrouted setup slack −0.723 ns | Full build `20261102T133904_630682Z_build` did not complete; retained 18.1 messages show successful placement followed by severe routing congestion |
-| Manual GUI compile | CRASH: actual Quartus 20.1 `quartus.exe`, faulting module `QtCore4.dll` | Windows event at 01:45:43 Sydney on 3 November; no separate `quartus_fit` crash or completed fit/timing result established |
-| Recovery source `0xab41e932` | PASS: complete isolated 18.1 fit, four-corner timing and extra CDC gate | `20261102T145606_162423Z_build`; 16:32 compile, setup +3.205 ns, hold +0.119 ns; exact held-payload bounds and Gray checks retained |
-| PROGRAMMED | PASS: `0xab41e932`, schema 2 read back from the actual Cyclone V target | `20261102T151459_112850Z_program`; same source-linked SOF and unique `DE-SoC [USB-1]` FPGA at index 2 |
-| CAMERA_HW, current B acquisition/agreement | PASS: fresh frame 225, CRC `0x7125`, ten candidate decisions match the same captured pixels | Actual FPGA accepted red 1/2 and blue 1–5; blue 6 rejected, calibrated=0, configVersion=0 |
-| CAMERA_HW, fixed-sheet acceptance | FAIL: all-eight-marker gate stopped the run after one sampled status frame | `20261102T151615_466076Z_test`; target 1 was locked in that sample, but no 30-frame or complete 1–6 target acceptance occurred |
-| CAMERA_HW_PIXELS_ONLY | Seven independent fresh CRC-checked camera inputs retained: 13139, 13511, 13675, 25046, 47630, 2462 and 43817 | Frame-ID wrap is legal; these prove baseline acquisition, while algorithm-2 recognition remains offline MODEL/RTL_SIM |
-| MIC_HW | DEFERRED_BY_USER | Direct target numbers exercise the C interface and are not speech recognition |
-
-The source-linked compilation, download and first fresh B capture now pass their own gates. [The retained board checkpoint](evidence/board_ab41e932_frame225/index.json) also preserves the failed full-sheet acceptance and the original host-parser failure. Complete recognition/calibration/stability remains open. No historical SOF or previous test is silently substituted. `python tools/lib/collect_evidence.py` produces a current file/run index without rewriting the historical records.
-
-[Reader-algorithm-2 validation](evidence/reader_algorithm2_inputs/validation.json) preserves the earlier 60-test MODEL checkpoint, native-anchor RTL result, raw measurements and byte-compatibility checks. Its then-running suite state is historical; [the later checkpoint](evidence/validation_checkpoint_131340.json) records the 61-test MODEL pass, aggregate fixture failure and current map boundary. Explicit reader-1 regeneration reproduces all 63 historical HSV fixtures: 441 binary vector files match byte for byte. The current exporter emits 75 reader fixtures and 188 native-anchor ROIs. Its first 74 cases match the isolated 71+3 set across 518 binary files; the added case tests retirement of more than eight sequential components.
-
-[The completed 20-bench regression](evidence/validation_e943678b_rtl20/index.json) retains the full result JSON, all 20 original simulation logs, exact PASS lines and hashes for 45 source/test files. Those hashes also match the current files at the evidence checkpoint. The same record retains the latest 64-test MODEL result and its 11 vision groups. The recorded-image integration bench passed 33 simulated frames using the source-checked `recorded_frame13675` alias: one actual acquisition replayed repeatedly, not 33 fresh camera captures. Historical failed aggregates remain unchanged.
-
-[validation_checkpoint_63bc383.json](evidence/validation_checkpoint_63bc383.json) links the exact short-suite, failed five-bench attempt, successful collision rerun, stopped build, source-byte comparison and isolated frame-profile proposal.
-
-That retained checkpoint predates the latest merged fixes. The subsequent run paths above are the newer evidence; historical indices are not rewritten to imply they tested later source. The final current-build index will be refreshed when build evidence is available.
-
-## Source and input audit
-
-The initial local baseline was clean on `main` at `1a46e9a49e8ec676cf14e998c04888c4705729bf`. Its configured remote was the user's V2 repository. The requested historical Part A anchor was not present in the local object database, so its ancestry was not invented or forced into the checkout. A 274-file SHA256 comparison found exact source/tool/project/document correspondence with the supplied snapshot. That provenance remains in [metadata.json](evidence/metadata.json); current operation does not depend on an archive or duplicate project tree.
-
-Supplied text inputs were read and retained under [docs/inputs](docs/inputs). The five required original lecture PDFs and formal Major Project Brief were absent. Course page references are therefore mapped from the supplied requirements text, not claimed as independently read primary PDFs. No rubric, required recognition rate, report length or exact deadline was fabricated.
-
-The supplied one-page formal marker PDF was parsed and visually rendered. Its SHA256 is `0162b5a7ada3c7d03dcf96baf5a8a5ce077ff8d165aaad8cc228947ff70436a0`. The original marker JSON/templates were missing; exact vector paths were recovered into the explicitly labelled DESIGN specification. The page remains landscape A4 with one fold, red 1/red 2, six blue digits, white ink and 54 × 60.75 mm main regions. No formal source was replaced with a guessed font or alternative layout.
-
-## Actual image findings and corrections
-
-The retained images came from the actual OV7670 chain, with fresh requests, frame IDs, PNG/dump hashes and CRC checks. [real_inputs/index.json](evidence/real_inputs/index.json) covers the first three complete-page captures; frame 25046 is retained under [hsv_audit](evidence/hsv_audit). All displayed numbers are upright in native coordinates, so the current orientation profile is 0. The external B/C 240 × 320 convention remains unchanged.
-
-The oblique paper produces blue main regions approximately 32–41 pixels wide and 62–71 pixels high. The thinnest measured stroke is about 2 pixels, with others about 3 pixels. The original axis-ratio gate rejected genuine cards; projective normalisation now uses measured colour corners. A direction anchor and exact pixel stroke pattern still determine the answer. Quality is based on measured edges, not an arbitrary cap on every blue sign.
-
-Independent unfiltered white-reference measurements contradicted the earlier floor of 160:
-
-| Raw reference | Samples | Retained at 160 | Retained at 112 |
-|---|---:|---:|---:|
-| Printed white anchors | 36 | 11.1% | 97.2% |
-| Printed white strokes | 316 | 48.7% | 94.9% |
-| Blank coloured backgrounds | 281 | 0% | 0% |
-
-The same maximum channel-spread condition of 64 applies. [white_sample_measurements.json](evidence/white_sample_measurements.json), [the selected ROIs](evidence/white_sample_rois.png) and [rectified crops](evidence/projective_contact_sheet.png) preserve the evidence. That correction established reader algorithm 1's minimum-channel floor of 112. It remains reproducible; the later algorithm-2 change below has different, explicitly versioned brightness semantics. Automatic calibration still changes only red/blue value floors.
-
-Two subsequently acquired frames, 47630 and 2462, exposed new failures: algorithm 1 accepted only five and four signs respectively. Real anchor pixels were present, but colour-mask corner shrinkage and normalised sampling missed them. Blue-6 vertical strokes were also only about two native pixels wide and mixed with blue ink. In frame 47630, an unfiltered 18-pixel C-stroke patch had minimum channel 99–107, so the old white predicate erased all 18 pixels. Frame 2462 supplied a separate, dimmer example with continuous stroke brightness around 98–104. [The original failed capture](evidence/camera_counterexample_47630/capture.json) remains unchanged.
-
-Algorithm 2 preserves the original quad, homography and stroke/hole tests. Its fixed white predicate is `R+2*G+B >=384` with channel spread at most 64. It evaluates the anchor as one closed four-connected native white component in a small geometrically derived neighbourhood. Boundary paper and multiple qualifying components reject; active-label overflow rejects; retired noise components do not consume permanent slots. Blind quad expansion was rejected after it falsely accepted missing-anchor and wrong-orientation signs using surrounding paper.
-
-The six independent recorded images each yield red 1/red 2 and blue 1–6 under algorithm 2 in MODEL. [The input index](evidence/reader_algorithm2_inputs/index.json), [raw measurements](evidence/reader_algorithm2_inputs/frame2462_raw_samples.json) and [model comparison](evidence/reader_algorithm2_inputs/algorithm2_model_comparison.png) show the input provenance and effect. All six are now tuning/regression inputs, not an unseen test set. No white auto-calibration or current B board recognition is implied. Native-anchor tests include ambiguity, boundary paper, a harmless isolated speck, ten simultaneous labels and more than eight sequential retired components.
-
-A seventh independent capture, frame 43817, completed a fresh GCTL transaction from count 7 to 8 with matching acknowledgement, stable pre/post snapshot state and CRC `0x1c09`. [Its original pixels, metadata and offline result](evidence/camera_frame43817/index.json) are retained separately. Reader algorithm 2 accepts all eight formal signs and rejects the blank blue strip without candidate overflow in this MODEL run. It has not been added to the frozen production vectors. The FPGA was still running the earlier camera baseline, so this is `CAMERA_HW_PIXELS_ONLY` plus MODEL, not B recognition on the board.
-
-Raw red-1 calibration ROIs contained 210/210/245 samples, with R=66–82; their own geometrically paired blue strip contained 396/396/432 samples, with B=57–66. Purity, range, count and previous-frame ROI stability checks passed in replay. The current formula `(minimum+maximum)>>2` predicts R37/B30. [calibration_profile_audit.json](evidence/calibration/calibration_profile_audit.json) is the historical RGB-mask diagnostic; it is not eight fresh hardware samples or a board commit.
-
-## Orange background, HSV and capacity
-
-The orange object satisfies the old RGB dominance rule. Manually selected raw ROIs from four real frames showed printed-red signed hue approximately −11.6° through 0°, while the orange patch was approximately −0.6° through +12°. Ideal print colour values cannot describe this camera's measured hue distribution.
-
-Current colour algorithm 1 uses red −24° through 0°, blue 200° through 250°, saturation at least 0.5 and boot value floors R48/B32. It uses the [OpenCV RGB-to-HSV definition](https://docs.opencv.org/4.x/de/d25/imgproc_color_conversions.html), with hue in degrees and exact signed cross-products instead of a divider. An independent floating-point HSV comparison covers all 65,536 native RGB565 encodings. Hue zero remains valid for ideal red.
-
-Hue restriction alone fragmented the background: R32/R40 overflowed CAP8 on one earlier frame. R48 with the old cleanup retained all eight signs in four frames, but reducing the floor during calibration could reintroduce that failure. AND-neighbour and 3-of-4 erosion alternatives lost true signs by shrinking corner/anchor evidence and were rejected.
-
-The implemented horizontal filter retains every pixel of a same-colour run of at least three pixels, suppresses shorter runs, then applies the original causal OR support rule. Only candidate extraction sees this filtering; the corner reader uses raw HSV foreground. On all four real inputs, both R48/B32 and calibrated R37/B30 preserve eight formal signs without overflow. At R37 the measured red active peaks are 5/6/6/4; blue peaks are 4/4/5/5. See [horizontal_run_support.json](evidence/hsv_audit/horizontal_run_support.json) and [hsv_model_update.json](evidence/hsv_model_update.json). Runtime algorithm IDs distinguish historical RGB ratio from current HSV replay.
-
-Lighting limits remain real. The historical reader-1 uniform RGB gain trial is labelled synthetic, not a physical lighting experiment: its recorded image retained eight signs at gains 1, 1.25, 1.5 and 2; gain 0.75 avoided overflow but yielded only one sign, and gain 0.5 exceeded blue active-label capacity. Those exact recognition counts have not been relabelled as algorithm-2 results. The new reader improves the measured thin-stroke and anchor failures; it still does not establish general lighting invariance.
-
-## Executed simulation and build failures
-
-Historical reader-1 vectors cover 1–6, red/blue types, unsupported 0/7/8/9, empty blocks, missing anchors, deleted strokes, swapped pixel identities, four orientations, independent perspective poses and four actual captured inputs. That 63-vector run passed 153,600 exact nearest-coordinate checks. Maximum reader time in that set is 198,484 CLOCK_50 cycles, 3,969.68 µs. The current reader-2 exporter has 75 cases, including six separate actual captures and native-anchor negative controls. Both its focused reader test and the complete 20-bench integration suite now pass. These reader-cycle counts exclude acquisition, candidate extraction, CDC, queueing and JTAG transfer.
-
-The completed-frame/drop collision fix gives the newer invalid observation priority over an older completion on the same cycle. It releases the older reader bank but suppresses its report, snapshot publication and calibration advancement. Debug schema 2 word 94 bits 31:16 expose a saturating `completionDiscardCount`; low fault bits retain their previous meanings. This is a counted discard, not a successful observation or a silent report replacement.
-
-Prior integration checks include a 33-frame simulation that repeatedly supplied one actual recorded image through the capture interface. It exercised calibration, version commit, red-2 arming and target 1–6 acquisition. That is explicitly one recorded image repeated, not 33 fresh camera frames. A later frozen unified run passed 43 synthetic frames, loss/recovery, late snapshot and continuous capture/processing with backpressure. Earlier 37/43-frame axis-reader results remain historical and cannot validate the HSV implementation.
-
-After merging flattened candidate aliases and frame-held configuration metadata, the five affected production RTL benches all passed. Candidate extraction checked 26 frames, 51,505 invariant observations, 39 nested merges and a maximum alias count of seven. Recorded replay passed 33 simulated frames using the same stored image; continuous replay passed six frames; collision replay passed two cases and 11 reports; frame-profile replay passed 15 checks and nine accepted completions. None of these counts represents new camera acquisition.
-
-Build `0x77744a75`, source SHA256 `77744a756271bf8182e53b37f6ef9c566e0ca9e122f2c719df050b478a2860ee`, failed routing with Critical Warning 188026 and Warning 16618. It did not exceed declared resource capacity: the failed Fitter reported 25,463/32,070 ALMs, 22,133 registers, 345/397 M10K blocks and 77/87 DSP blocks. Each two-bit glyph bank mapped to 19 M10K blocks. [revision_77744a75](evidence/revision_77744a75) preserves the failure and bounded report excerpts. The implementation now shares arithmetic and sequences reference pairing to reduce parallel routing; estimates or model tests are not a successful Fitter result.
-
-The same build exposed ineffective Gray-bus maximum-skew constraints. A [post-map CDC audit](evidence/cdc_constraint_audit.json) found that asynchronous clock-group cuts suppressed their timed paths and verified a replacement constraint approach in the installed analyser. This diagnostic does not substitute for the final fitted multi-corner setup/hold/recovery/removal review.
-
-The later `0xd606e861` synthesis mapped to 17 DSP blocks instead of the earlier 77. Its full compile was actively stopped, and the raw CLI result records exit 1; this must not be relabelled as a completed Fitter failure. CRLF-to-LF changes altered the source identity while that attempt was outstanding, so its results are not acceptance of the current bytes. [map_warning_audit_d606e861.json](evidence/map_warning_audit_d606e861.json) remains a dated read-only map-stage audit.
-
-An isolated clone of that mapped database identified two costly combinational paths at the slow 1100 mV, 0 °C corner: the VGA coordinate conversion's wide signed division contributes a 71.080 ns data path with −31.361 ns slack, and candidate-root/box logic has a 44.603 ns path with −24.884 ns slack. These are post-map diagnostic estimates, not final post-fit timing. Equivalent arithmetic and candidate-root changes have now been merged and functionally checked; a new full fit must establish timing.
-
-[vga_timing_optimisation.json](evidence/vga_timing_optimisation.json) records exact `(n*683)>>10 == floor(2*n/3)` checks for all 512 bounded inputs, plus old/new equivalence and an independent production raster test over 307,200 pixels with 165,691 stall cycles. The existing 11,200-pixel overlay regression also passed. Native synchroniser attributes were merged and the CDC transport bench passed separately. These checks establish functional behaviour, not post-fit delay or metastability performance.
-
-A separate negative-control bench exposed debug frame-profile mixing: completed frame 1 used config 0 and floors 48/32, while live config had advanced to 1 and floors 37/30; words 6/7 incorrectly exposed the live values. The merged correction stores the effective profile with each bank and publishes it alongside the accepted frame. Production RTL passed 15 profile checks and nine accepted completions; the uncorrected implementation failed the intended control. This is protocol/configuration injection evidence, not image-recognition or board evidence. Live public status keeps its separate `activeCfgVersion` semantics.
-
-Other concrete fixes include explicit enum widths after an actual synthesis error, reserved-identifier corrections after an HDL compiler failure, robust vector filenames, and automation that checks PASS/fatal text as well as exit status. Tests fail nonzero and retain their source hashes. A testbench changed during one earlier aggregate run; that run remains FAIL, and its affected benches were rerun with frozen source instead of relabelling it.
-
-The subsequent full build `0xfd9950d9` reached its 3,600-second timeout and returned 124. Available-memory observations were 495–838 MiB, with fitter private memory around 2,349 MiB. This demonstrates memory pressure but does not establish a sole cause or final timing outcome. The residual fitter process was terminated after approval review. [timeout_build_fd9950d9.json](evidence/timeout_build_fd9950d9.json) retains the source identity and surviving reports; there is no fitted result or downloaded bitstream from that attempt.
-
-The current QSF uses two parallel processors and `AUTO FIT` effort according to the installed Quartus 18.1 option help. Auto effort can reduce further effort after timing requirements are met; the SDC remains the acceptance boundary. The completed [0x9c0e0297 post-map diagnostic](evidence/post_map_9c0e0297.json) kept the same source identity before and after execution and did not start fitting. It exposed native-anchor ROI preparation at 64.749 ns with −45.030 ns setup slack at slow 1100 mV, 0 °C; an internal anchor path also had −0.024 ns slack.
-
-[The preparation correction](evidence/native_anchor_preparation_fix.json) registers the accepted quad, vertex arithmetic, balanced extrema and clipped ROI, with exact four-lane 17-step division by 40. The two focused RTL benches passed 188 ROIs, 75 reader cases and 240,640 exact homography-coordinate checks. Exhaustive checks covered all 131,072 unsigned 17-bit divider inputs and 524,288 signed clipping cases, together with start-input mutation and reset cases. Geometry and algorithm semantics remain unchanged. Preparation adds 22 cycles per candidate; the worst tested complete reader workload rose to 217,032 cycles, or 4.34064 ms at 50 MHz.
-
-[The subsequent 0xe943678b map diagnostic](evidence/post_map_e943678b.json) reduces the preparation path to 11.526 ns. The remaining overall unrouted setup slack is −0.723 ns on a candidate path, and an internal anchor path remains at −0.412 ns. These are diagnostic estimates, not fitted acceptance. The source-linked full build `20261102T133904_630682Z_build` did not complete. Its retained message database gives a more precise routing diagnosis than the buffered console log, as recorded below.
-
-The first unified 20-bench attempt stopped when the contour exporter overwrote the candidate bench's generic `expected.hex`. [The retained namespace regression](evidence/vector_namespace_regression.json) records the failure, separate contour filenames and the subsequent combined CCL/VGA RTL pass. A later attempt passed its first 11 benches but failed recorded replay: positional index 61 now referred to the synthetic `red_rejected_3_4_5_6` case. That attempt did not test the intended recorded camera input and remains FAIL.
-
-[The named-fixture correction](evidence/named_fixture_regression.json) checks source labels and PNG hashes, selects recorded frames by name, and makes continuous replay alternate the original and swapped-pixel scenes with different blue-1 positions. Nine projective Python tests passed; all 526 original projective hex files and both anchor files stayed byte-identical. Production RTL was unchanged. The corrected full 20-bench run `20261102T135055_875419Z_test` subsequently completed with exit 0 and every bench PASS. It includes 43 synthetic core frames, 33 repeated recorded frames, six alternating continuous frames, collision/profile checks, VGA stalls and both native-anchor/reader benches.
-
-[Host warning retention](evidence/host_warning_retention.json) passed 15 tooling tests. Re-reading the actual map log now preserves 87 warnings instead of 85, including two unnumbered warnings about the inherited VGA PLL reset connection. Retaining these messages is a tooling correction, not resolution of the hardware warnings or timing approval.
-
-The new VGA path separates raw HSV contours from accepted digit labels. Separate same-colour regions retain their pixel boundaries; the blank calibration strip receives a contour but no ID. [vga_contour_validation.json](evidence/vga_contour_validation.json) records 931,600 contour pixels, 395,588 stalled cycles, input bubbles, combined-label checks and isolated synchronous row-RAM inference. A real consecutive-SOP metadata-overwrite failure was reproduced and fixed. These are simulation/isolated-map results, not current physical VGA or complete fitted timing acceptance.
-
-## Compiler recovery: 3 November 2026
-
-[The compiler recovery record](evidence/compiler_recovery/index.json) retains the original Fitter messages, extracted timeline, Windows crash diagnosis, manual synthesis version, local constraint-command help and tool regression. The manual compile reported by the user as 18.1 actually ran Quartus 20.1.0 Build 711: its map report and the Windows faulting-application path independently identify that release. Windows recorded `quartus.exe` failing in `QtCore4.dll` with exception `0xc000041d` at 01:45:43 Australia/Sydney. The retained events do not establish a separate `quartus_fit` crash or that routing congestion caused the GUI exception.
-
-The earlier 18.1 run's `fit.qmsg` records successful placement followed by routing, although buffered `compile.log` stopped during register-packing output. Fitter message 170089 reports approximately 10,000 ns of **aggregate** added hold-routing delay, around 8.2% of available device routing delay. This is not a single 10,000 ns path. Average interconnect usage was 36%, with a peak of 88%; message 188005 reports hold-delay backoff and Warning 16684 predicts prolonged routing and possible setup/hold failures due to severe congestion. A separate 30-second process sample showed no new page faults or process I/O. Memory pressure was observed earlier, but it does not explain all of this later interval, and register packing was not the final recorded stage.
-
-The recovery constraint change applies only to the held payload of `resultToCamera` and `cameraBridge|requestCdc`. Their handshake holds the data until the capture acknowledgement crosses back through two source-clock stages. The artificial same-edge hold relationship between asynchronous clocks is therefore excluded for these exact payload endpoints; the 20 ns `set_max_delay` remains, and a 20 ns `set_net_delay -max` independently bounds physical propagation. Synchroniser stage-to-stage setup/hold and all Gray maximum-delay, minimum-delay and skew constraints remain unchanged. A diagnostic against the existing 20.1 post-map database checked exception coverage and report parsing across four corners, but still had unrouted timing failures and is explicitly not 18.1 fitted acceptance.
-
-The CLI now copies only the source identity's explicit dependency closure into `build/member_b/<run>/source/`, generates the build-ID header there and builds in the private `source/quartus` directory. It does not reuse the manually generated database or modify the original source header. A single selected installation supplies all Quartus tools and the child-process Quartus/Qsys environment; other installations are removed from that child's tool search path without changing the user's environment. Source hashes are checked during copying and again after compilation. RUNNING provenance is saved before compile, failed compiles retain warnings, and `program` obtains the SOF from the successful manifest. The expanded tool suite passed 20 tests, including mixed-installation and failed-build cases.
-
-Recovery build `20261102T145606_162423Z_build`, source ID `0xab41e932`, completed with the explicitly selected 18.1 installation. Placement took 1:33 and routing 3:15; the full compile took 16:32. The rounded aggregate hold-routing delay fell to approximately 3,000 ns / 1.6%, and estimated average/peak interconnect usage fell to 23%/49%. The final fit uses 17,519/32,070 ALMs, 347/397 M10K blocks and 29/87 DSP blocks. All four timing corners passed: worst setup +3.205 ns, hold +0.119 ns, recovery +28.275 ns, removal +0.390 ns and minimum pulse width +1.666 ns. The extra gate checked payload setup coverage, physical net bounds, Gray timing/skew, unconstrained paths and 57/57 synchroniser chains; numerical MTBF acceptance was not assessed. Production RTL was unchanged by this constraint/host recovery, so the earlier 20-bench RTL checkpoint remains separately attributable.
-
-The complete flow retained 96 warnings: 87 synthesis messages match the previous reviewed text, eight Fitter messages and one STA clock-redefinition message. [The warning audit](evidence/compiler_recovery/warning_review_ab41e932.json) explains every later-stage message. It records the fixed non-dedicated PCLK input route, automatic PLL compensation, intentional GPIO input/output enables, unavailable LogicLock feature and duplicate JTAG clock declaration. The I/O warning concerns drive/slew defaults, not missing pad locations. PLL reset remains tied low, so loss-of-lock recovery may require reconfiguration; ordinary output drive/slew values are not claimed as electrically optimised. None of these warnings was globally suppressed to manufacture a pass.
-
-The resulting SOF SHA256 is `70b1cb470f0aebf06630c03dc74ff27908614c9f72c3751f86a93302e0d65a23`. The first real download returned programmer exit 0 and the correct BCTL header, but the host parser rejected its Windows CRLF line ending and recorded FAIL. The corrected parser passed 22 tooling tests and replayed that original log. A subsequent real program/readback, `20261102T151459_112850Z_program`, passed on `DE-SoC [USB-1]`, FPGA index 2, with build `0xab41e932` and schema 2 verified. The original failure remains intact in [the board evidence](evidence/board_ab41e932_frame225/index.json).
-
-Fresh capture `20261102T151510_316808Z_capture` acquired actual frame 225 with CRC `0x7125`, a changed GCTL transaction count, stable pre/post read state and matching frame/build identity. Its ten candidate decisions agree exactly with the model using those same pixels. Actual accepted IDs were red 1/2 and blue 1–5. Blue 6 was rejected; its [RGB](evidence/board_ab41e932_frame225/blue6_rgb.png) and [white mask](evidence/board_ab41e932_frame225/blue6_white.png) are retained with the [original image](evidence/board_ab41e932_frame225/frame.png). Candidate counts were red=2/blue=8, active-label peaks 6/7, with no candidate overflow in that frame. Config version remained 0 and calibrated=0; historical bufferDropCount=2 and faultFlags=3 remain visible. Capture start 8,902,609 µs and completion 8,945,749 µs give 43,140 µs on the shared board timebase for this frame, including acquisition/pipeline. This is neither JTAG transfer time nor a general latency guarantee.
-
-The subsequent hardware test failed its all-eight-marker gate after one sampled status frame, native frame 1949. Target 1 was reported observed and locked in that sample; this does not establish a 30-frame sequence or a complete 1–6 target cycle. The new contour/label VGA logic is in the programmed image, but this checkpoint does not include visual confirmation of the physical monitor output.
-
-## Remaining acceptance and continuation
-
-The earlier `0xe943678b` checkpoint completed its full RTL and MODEL regressions; recovery checkpoint `0xab41e932` completed fit/timing, download and fresh same-frame capture/model agreement. The active failures are real blue-6 rejection, incomplete calibration and incomplete fixed-sheet stability/target acceptance. The fixed-sheet acceptance still needs at least 30 distinct new frames, configuration/overflow evidence and reports for targets 1–6. Thirty is an initial project debugging threshold, not a course rubric or generalised accuracy claim. Any further source correction requires the relevant regression and a new matching build/program/capture cycle.
-
-Physical occlusion/folding, different real illumination conditions and microphone words remain unexecuted or deferred unless later evidence explicitly records them. A person performs physical page changes. No hidden historical frame or held snapshot substitutes for a new observation.
-
-Continue from the repository root:
-
-```powershell
-& 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe' tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' capture --fresh
-```
-
-Use that command's JSON to identify the next actual failing layer. New source changes require the relevant regression and a new matching build/program/capture cycle before claiming hardware completion.
+# Version history and validation / 版本与验证记录
+
+This is the consolidated history of Member B. Entries below run from the earlier
+baseline to the latest work. Build identities, failed experiments and evidence
+levels are kept separate. README.md is the maintained bilingual development and
+B/C interface guide; OWNERS.md records individual-file responsibility and origin.
+
+这是按开发先后整理的版本记录。MODEL、RTL_SIM、拟合、下载、相机实测和用户确认的
+实体VGA分别记录；历史通过不能证明后续源码通过。课程要求、用户需求和设计选择也不混用。
+
+## 2026-10-22 to 2026-10-23: same-group predecessor
+
+The initial repository was paekinator/MTRX3700-Major-Project. The user confirmed
+that Hajin and Jiaze Sun developed this preliminary code in the same group;
+Hajin mainly handles Member A. Member B's confirmed SID is 540207680. The old
+starter package was reference material, never a replacement for that repository.
+
+Earlier AI-assisted work covered colour masks, display statistics, fixed-ROI
+diagnostics and counterclockwise VGA presentation. The retained native camera
+size is 320x240; display orientation is separate from recognition and B/C
+coordinates. Earlier safety/chassis work belongs to the predecessor and is not
+included in the current stationary Member B top. Early statements that the
+formal Brief or Verilator were unavailable describe that time only.
+
+## 2026-11-02: migrated repository and real-camera diagnosis
+
+The migrated tree was reorganised around rtl/, quartus/, tests/, tools/ and
+assets/. The layout commit was c67b34e; the subsequent user commit 63bc383 included
+continuous-replay fixture work. Current work continues from actual HEAD
+bfe9616139e88bc56c3f9798b21f49c044efc092 without reverting user changes. The inspected
+remote is ErrorChen/MTRX3700_MajorProject_V2; no push or force-push was performed
+by this continuation.
+
+Real captures established these separate failure classes:
+
+- Orange background entered the old red classifier. The production path moved
+  to integer HSV comparisons rather than claiming that PDF RGB values were
+  camera measurements. Hue/saturation gates remain fixed; calibration updates
+  two brightness floors only.
+- Aggregate per-colour boxes hid individual signs. Bounded connected components,
+  per-object contours and typed labels replaced that coarse display.
+- Oblique signs needed a measured quadrilateral and native anchor checks.
+  White strokes and direction anchors now use different, explicitly versioned
+  predicates. No digit is obtained from a sheet cell or candidate slot number.
+- Several initial replay failures were test-data mistakes: shared expected.hex
+  collisions and a positional vector index selecting a synthetic negative
+  instead of a recorded frame. Named, source-checked fixtures replaced them.
+
+The relocated 20-bench ModelSim suite eventually passed as one invocation
+20261102T135055_875419Z_test. Earlier partial runs and failed aggregate invocations
+were not relabelled PASS. Native preparation tests covered 131,072 division
+inputs and 524,288 signed clipping boundaries. MODEL checks remained separate
+from those executed HDL tests.
+
+## 2026-11-03: compiler recovery before the external review
+
+| Build or experiment | Actual result and consequence |
+|---|---|
+| 77744a75 | Fitter routing-congestion failure |
+| d606e861 | MAP passed; full compile deliberately terminated; no fitted result |
+| fd9950d9 | 3,600-second timeout; no completed fit/timing acceptance |
+| 9c0e0297 | Post-map diagnosis found a 64.749 ns path and -45.030 ns slack; not a fitted result |
+| e943678b | Pipelined preparation reduced that path to 11.526 ns; severe later routing congestion remained |
+| Manual GUI run | Windows recorded Quartus20.1 quartus.exe/QtCore4.dll crash at01:45:43 Sydney; this did not establish a separate quartus_fit crash |
+| ab41e932 | Isolated Quartus18.1 complete fit/timing passed; compile16m32s; worst setup+3.205 ns, hold+0.119 ns; programmed and read back schema2 |
+
+The ab41e932 baseline used17,519 ALMs,347/397 M10K and29/87 DSP. Its new frame225
+accepted red1/2 and blue1-5, rejected blue6, and had not yet calibrated. Later
+real frame31285 did commit eight samples/config1 (red32/blue28), but candidate
+overflow made that frame invalid. Therefore both "calibration never worked"
+and "calibration completed, so recognition is stable" were incorrect claims.
+
+Source-closure isolation, explicit tool paths, exact build/SOF hashes, full
+warning retention and the post-fit clock/CDC gate were retained in the CLI.
+Windows CRLF parsing initially made successful programming appear to fail;
+the parser was fixed and a subsequent real program/readback passed. Old SOFs
+were never promoted to products of failed builds.
+
+## 2026-11-03: supplied review and its disposition
+
+The supplied review checked HEAD bfe9616, source identity e1cd47da with41
+dependencies. It executed Python3.12.14/NumPy2.3.5/Pillow12.3.0:99 tests with9
+skips in266.328 seconds, not99 fully executed passes. Verilator was absent in
+that review environment, so its R6 result was ENVIRONMENT_BLOCKED. It did not
+run Quartus, ModelSim or the physical board. Its old-fit comparison found12
+changed and2 added dependencies; old20-bench evidence had19 changed source/TB
+hashes. The review's limitations were not treated as current local limitations.
+
+The final Major Project Brief was supplied,7 pages, SHA256
+`6c4311e60feb53cc1ec17c5d1f00c43baaf72788d73b166972d6b394eefa048c`.
+It is retained at docs/reference/Major_Project_Brief_2026.pdf. The three-person
+proposal is a separate reference, not a rubric. The five lecture PDFs remain
+under docs/reference with their original filenames and unchanged bytes.
+
+| Review finding | Implemented disposition |
+|---|---|
+| Busy JTAG calibration ACK could silently lose an arm pulse | Action-ready/BUSY rejection added; acceptance, start and terminal commit are distinct; real busy rejection subsequently tested |
+| R6 oracle still selected colour1/reader3 | Production/model/vector/debug profiles unified; historical profiles remain explicit replay choices |
+| Old calibration success followed by capacity overflow | Active and completed capacities measured independently; later shared16 design and real duplicate scene tested |
+| Current fit/program did not match source | Each frozen source obtained its own build identity, SOF digest, readback and new acquisition |
+| R6/R7/R8/R9 incomplete | Actual5.050 simulation/mutant detection, recorded-input RTL comparison, per-file SID provenance and physical algorithm comparison added |
+| SW0/SW1 display evidence missing | RTL pixel/stream checks and user-reported four-mode physical confirmation obtained; not described as a monitor photograph |
+
+The review's suggested SW2 and earlier SW9 comparison mapping were superseded
+by the user: SW8 is the algorithm comparison; SW9 is complete processing/overlay
+pause. Its request to show rejected SW0 slots was also superseded by recognised-
+only compact panels. Microphone input remains explicitly deferred; no ordinary
+UART or motion implementation was added.
+
+## 2026-11-03: active-label and timing corrections, 5633257e
+
+Build19b60d31/schema3 fitted and programmed. New frame343 recognised all eight
+formal signs, but later90-frame observations included9 red active-capacity
+overflows. A seven-sample calibration attempt failed without corrupting config1;
+its busy-request rejection alone was not called successful calibration.
+
+Real frame30507 needed nine temporary red labels although only two red and seven
+blue outputs survived. The active12/output8 revision7eec0ba4 recovered this
+geometry in MODEL/RTL but failed VGA setup at-0.291 ns. Exact reciprocal
+arithmetic in b6e89ca6 removed the37-level constant-division path, but an artificial
+Gray first-stage hold failure remained. A hold-only false-path experiment
+discarded required skew checks and was rejected. The final constrained design
+retained20 ns max/skew/net bounds, vendor-style asynchronous minimum delay and
+explicit Meta-to-Sync checks.
+
+The frozen5633257e source SHA256 was
+`5633257ec6022612b9b023a46902db3fe74763cedffc4b331756c1c2e8c574d3`;
+its SOF SHA256 was
+`11b555f7b06d863a7c8172417cb72d32f951f29f2da663e13153901cbdebefca`.
+
+| Layer | Executed result for5633257e |
+|---|---|
+| MODEL |136 host tests and11 counterfactual groups PASS |
+| RTL_SIM |30 ModelSim benches PASS; clean Verilator5.050 R6 in62.375s, intended early-lock mutant CAUGHT |
+| R7 | Recorded frame327 compared to model and normal/bbox RTL; both accepted8, so no perspective benefit demonstrated on that input |
+| QUARTUS_FIT_TIMING |899.968s compile+20.437s gate;23,433 ALMs,347M10K,47DSP; setup/hold/recovery/removal minima+3.430/+0.118/+28.081/+0.412ns |
+| CAMERA_HW calibration | Three8-sample commits; conservative board-time bounds557.651/622.279/554.597ms; busy arm explicitly rejected |
+| CAMERA_HW first trials |90 current reports plus3 retained old-request drains;744/744 labels over93 observations; maximum43.183ms |
+| VGA | Four SW0/SW1 combinations reported normal by user; no monitor photograph |
+
+Later physical algorithm comparison on the same5633257e image found actual
+failures: normal712/720 labels, bbox469/720; both strict runs FAIL. Normal
+frame16493 exhausted active12. Three apparent old-request failures were host
+assessment errors; their timestamp-based reassessment did not erase the real
+overflow. The cancelled3fcf96d3 active15/output8 build was never programmed.
+This old firmware used SW9 for the algorithm comparison, not pure-camera mode.
+
+## 2026-11-03: shared16, automatic orientation and a9caa52f
+
+User-added rotated duplicate blue1/2 created nine blue regions, exceeding the
+old output8. An interim split16-per-colour buildaf566fa1 failed resource limits
+(3,730LABs and36,364ALMs) and was not programmed. The final implementation has
+one16-slot completed pool with explicit colour bits,15 temporary labels per
+colour,335 invalid row cycles and a341-cycle core guard. Capacity exhaustion
+invalidates a whole frame; it never silently drops a numbered sign.
+
+Reader5 resolves the unique native direction anchor among four corner orders;
+ID still comes from pixels. Public B/C v2 is unchanged; private schema7 has96
+status words and16 shared marker records. SW0 panels are recognised-only,
+blue#0-#7/red#A-#F plus uniquely owned BJ. SW8 is perspective versus bbox; SW9
+pauses algorithms and removes all overlays while preserving camera/time/profile.
+
+Frozen source SHA256:
+`a9caa52ff9cb8ce06b69755ed3c398c1d9f23a7b7c727a82b13e5e9f0d90d44a`.
+SOF SHA256:
+`4be67b7f2c52e54a24bfbffed31e7ef9301f1605277bb74b136d8e2f5d8c679b`.
+Build20261102T232355_017699Z_build and program20261102T234304_659966Z_program
+used discovered DE-SoC[USB-1], FPGA chain index2, not an assumed HPS index.
+
+| Layer | Executed result for a9caa52f |
+|---|---|
+| MODEL |222 tests, no skips,130.525s; clean727-file export222 tests131.311s |
+| RTL_SIM |35-bench audited aggregate; original full run failed a missing negative-anchor fixture; exporter repaired,1,680 anchor ROIs plus all unchanged benches verified |
+| R6 |Verilator5.050 production-core suite PASS81.344s; clean export PASS60.171s; intended mutant CAUGHT |
+| QUARTUS_FIT_TIMING |17m36s compile+23s gate;72 timing/unconstrained checks PASS; setup/hold/recovery/removal+3.272/+0.119/+26.469/+0.409ns |
+| Resources |Adjusted ALMs26,537/32,070; actual placement31,478/32,070(98%), all3,207LABs occupied;36,427 registers;347/397M10K;47/87DSP;1PLL |
+| Warnings/CDC |114 warning occurrences reviewed; no unreviewed critical warning;63/63 synchroniser chains checked at four corners; numerical MTBF not assessed |
+
+The initial new frame312 and30-frame trial recognised all eight blue signs but
+missed red1's cropped top anchor:270/300 labels, overall FAIL, no calibration.
+After the user adjusted the view, frame19645 recognised10/10 numbered signs
+and paired BJ. Three real eight-sample calibrations committed config12/13/14;
+busy requests were rejected in all three. Conservative attempt-to-commit bounds
+were596.184/582.718/594.523ms, not precise internal red1-confirmation timestamps.
+
+The user confirmed a9 SW0/SW1=00/10/01/11 as normal ("能正常显示"). This is
+USER_REPORTED_PHYSICAL. RTL VGA previews are separately labelled, not photographs
+of the physical monitor.
+
+After a further small paper movement, frame30158 exposed a real limit: the
+rotated blue2 anchor was only1x3 strong-white pixels. It was correctly rejected
+by the current two-dimensional anchor rule. Its red1/reference pair had a3px
+centre shift but a5px left-edge shift, exceeding the old fixed4px tolerance.
+Raw sample purity itself passed (red252 samples, blue492); changing colour
+thresholds would not fix that geometric condition.
+
+The fixed-scene normal trial20261103T013437_754019Z_test used config18 and
+three30-frame runs:300/300 labels each,900/900 total, no wrong IDs/overflow/new
+drops, maximum46.322ms. SELECT1/2 gave30 expected zero-measurement ambiguous
+reports; SELECT3-6 gave48 locked plus12 expected acquiring reports. The user
+attested unchanged paper/camera/focus/lighting for the following comparison.
+SW8 up/config19 produced298/300,298/300,299/300 (895/900), five rejects and zero
+wrong IDs, maximum45.477ms; its strict development gate remains FAIL. Both modes
+meet the declared95% numerical accuracy threshold, so this shows only a small
+fixed-scene coverage difference, not a general perspective advantage.
+
+Separate fresh frame37621 immediately after normal trials exposed another limit:
+RUN3 horizontal support split a rotated blue1 into two components. Raw HSV and
+causal cleanup alone retained one component; RUN3 cut its narrow side connections.
+The90 sampled passes do not establish that every intervening frame passed.
+The1x3 anchor and RUN3 split are different unresolved pixel-resolution failure
+modes. Thin-anchor relaxation was explored and rejected because it introduced
+false accepts; no success was fabricated from a known digit/position.
+
+SW9 was physically tested with SW0/SW1 both on. The user confirmed
+"确认只剩相机图像". Fresh raw frames45271/45502 advanced normally, config20->21,
+all three raw-mode flags1, no candidates/observations/readiness, reasonFRAME_BAD,
+same target request and committed colour floors. Down again produced frame47787,
+config22 and the same tag46/blue3 locked; the sparse snapshots do not prove the
+first two reacquisition cycles, which are covered in RTL.
+
+The comparison helper's old fixed720 denominator was repaired to use verified
+region/sample counts. Ten signs now correctly mean900 opportunities. Four new
+negative/population cases and68 related tests passed; differing denominators
+are rejected. This host-only change did not change the programmed FPGA.
+
+## 2026-11-03: scale-aware pairing and documentation consolidation
+
+The user requested removal of evidence/, member_b_review_pack/ and duplicate
+docs Markdown, with a detailed bilingual README for future developers. The
+maintained documents are now README.md, VERSION_README.md and OWNERS.md.
+Reference PDFs remain under docs/reference; formal marker artwork remains under
+assets/markers. Required camera regression inputs and host-only truth annotations
+move to tests/fixtures with byte hashes/provenance. Reproducible generated logs,
+images, simulations and build databases belong in ignored build/.
+
+Historical raw evidence directories are deliberately removed after extracting
+their relevant findings here. This file records what was executed; it does not
+pretend all old uncommitted raw logs remain distributable after removal. Prior
+committed history remains in Git. Current-run originals remain in ignored build/.
+
+The new pairing change replaces fixed endpoint tolerance with scale-aware
+centre displacement, minimum overlap and existing width/height/gap ratios.
+Unique red1 ownership and raw-RGB purity/stability checks stay intact. This is
+configured-orientation bbox pairing, not an unlimited-angle calibration claim.
+Its source, tests, fitted result and new board measurements are recorded below
+only when executed; a9caa52f results above do not certify that new source.
+
+### Current-source completion record
+
+IN_PROGRESS: append final source/SOF identity, executed tests, fit/program and
+new-camera results here before delivery. Microphone input remains deferred by
+the user. Human ownership/sign-off, new physical occlusion/lighting-range tests
+and whole-team integration remain separate responsibilities.

@@ -35,12 +35,16 @@ foreach_in_collection corner [get_available_operating_conditions] {
             set sourceCount [get_collection_size $fromRegs]
             set destinationCount [get_collection_size $toRegs]
             set timedCount [get_collection_size [get_timing_paths -setup -from $fromRegs -to $toRegs -npaths 100]]
-            set falseCount [get_collection_size [get_timing_paths -false_path -from $fromRegs -to $toRegs -npaths 100]]
-            if {$sourceCount != $expected || $destinationCount != $expected || $timedCount != $expected || $falseCount != 0} {
+            set falseCount [get_collection_size [get_timing_paths -setup -false_path -from $fromRegs -to $toRegs -npaths 100]]
+            set firstStageHold [get_collection_size [get_timing_paths -hold -from $fromRegs -to $toRegs -npaths 100]]
+            set syncRegs [get_registers [format {*cameraBridge*|%sSync[*]} $stem]]
+            set syncSetup [get_collection_size [get_timing_paths -setup -from $toRegs -to $syncRegs -npaths 100]]
+            set syncHold [get_collection_size [get_timing_paths -hold -from $toRegs -to $syncRegs -npaths 100]]
+            if {$sourceCount != $expected || $destinationCount != $expected || $timedCount != $expected || $falseCount != 0 || $firstStageHold != $expected || $syncSetup != $expected || $syncHold != $expected} {
                 set fail 1
-                post_message -type error "Gray CDC mapping mismatch $stem: expected=$expected source=$sourceCount destination=$destinationCount timed=$timedCount false=$falseCount"
+                post_message -type error "Gray CDC mapping mismatch $stem: expected=$expected source=$sourceCount destination=$destinationCount timed=$timedCount cutSetup=$falseCount asyncHold=$firstStageHold syncSetup=$syncSetup syncHold=$syncHold"
             }
-            lappend grayRecords "{\"corner\":\"$corner\",\"name\":\"$stem\",\"expected\":$expected,\"sourceCount\":$sourceCount,\"destinationCount\":$destinationCount,\"timedPathCount\":$timedCount,\"falsePathCount\":$falseCount}"
+            lappend grayRecords "{\"corner\":\"$corner\",\"name\":\"$stem\",\"expected\":$expected,\"sourceCount\":$sourceCount,\"destinationCount\":$destinationCount,\"timedPathCount\":$timedCount,\"falsePathCount\":$falseCount,\"relaxedAsyncHoldCount\":$firstStageHold,\"synchroniserSetupCount\":$syncSetup,\"synchroniserHoldCount\":$syncHold}"
         }
     }
     if {$project eq "PartBDebug"} {
@@ -50,31 +54,91 @@ foreach_in_collection corner [get_available_operating_conditions] {
             set fromRegs [get_registers "${instance}|heldData\[*\]"]
             set toRegs [get_registers "${instance}|destinationData\[*\]"]
             set expected [get_collection_size $toRegs]
-            set timed [get_collection_size [get_timing_paths -setup -from $fromRegs -to $toRegs -npaths 4096]]
-            set cutSetup [get_collection_size [get_timing_paths -setup -false_path -from $fromRegs -to $toRegs -npaths 4096]]
-            set hold [get_collection_size [get_timing_paths -hold -from $fromRegs -to $toRegs -npaths 4096]]
+            # Schema6 has5120 payload bits before constant pruning. The query
+            # cap must exceed that width or a valid mapping can look truncated.
+            set timed [get_collection_size [get_timing_paths -setup -from $fromRegs -to $toRegs -npaths 8192]]
+            set cutSetup [get_collection_size [get_timing_paths -setup -false_path -from $fromRegs -to $toRegs -npaths 8192]]
+            set hold [get_collection_size [get_timing_paths -hold -from $fromRegs -to $toRegs -npaths 8192]]
             if {$expected == 0 || $timed != $expected || $cutSetup != 0 || $hold != 0} {
                 set fail 1
                 post_message -type error "Payload CDC coverage failed $instance: expected=$expected setup=$timed cutSetup=$cutSetup hold=$hold"
             }
             lappend payloadRecords "{\"corner\":\"$corner\",\"instance\":\"$instance\",\"destinationCount\":$expected,\"setupPathCount\":$timed,\"cutSetupCount\":$cutSetup,\"sameEdgeHoldCount\":$hold}"
         }
+        # The display mailbox is intentionally in the PLL asynchronous clock
+        # group. Prove its actual mapped endpoints are cut from ordinary setup,
+        # then require every endpoint in the independent physical net report.
+        # Do not compare the nominal5120 bits: synthesis prunes unused/constant
+        # fields and may duplicate launching registers for fanout.
+        set displayFrom [get_registers {resultToDisplay|heldData[*]}]
+        set displayTo [get_registers {resultToDisplay|destinationData[*]}]
+        set displayExpected [get_collection_size $displayTo]
+        set displayTimed [get_collection_size [get_timing_paths -setup -from $displayFrom -to $displayTo -npaths 8192]]
+        set displayCutPaths [get_timing_paths -setup -false_path -from $displayFrom -to $displayTo -npaths 8192]
+        set displayCut [get_collection_size $displayCutPaths]
+        set displayExpectedNames {}
+        foreach_in_collection node $displayTo {lappend displayExpectedNames [get_node_info $node -name]}
+        set displayExpectedNames [lsort -unique $displayExpectedNames]
+        set displayCutNames {}
+        foreach_in_collection path $displayCutPaths {lappend displayCutNames [get_node_info [get_path_info $path -to] -name]}
+        set displayCutNames [lsort -unique $displayCutNames]
+        if {$displayExpected == 0 || $displayExpected >= 8192 || $displayTimed != 0 ||
+            $displayCut != $displayExpected || $displayCutNames ne $displayExpectedNames} {
+            set fail 1
+            post_message -type error "Display CDC mapping mismatch: expected=$displayExpected setup=$displayTimed cutSetup=$displayCut"
+        }
         set netFile [file join [file dirname $output] "net_delay_$corner.txt"]
-        report_net_delay -nworst 1 -file $netFile
+        report_net_delay -nworst 8192 -file $netFile
         # Standard Edition writes a table but does not return the path/slack
-        # pair returned by report_max_skew. Check both constraint summary rows.
+        # pair returned by report_max_skew. Check all three Gray and three
+        # bundled-payload physical delay bounds independently of clock phase.
         set netHandle [open $netFile r]
         set netText [read $netHandle]
         close $netHandle
-        set rows [regexp -all -inline {;\s*set_net_delay\s*;\s*([-+0-9.]+)\s*;\s*([-+0-9.]+)\s*;\s*([-+0-9.]+)\s*;} $netText]
         set netCount 0
         set netSlack 1e9
-        foreach {whole slack required actual} $rows {
-            incr netCount
-            if {$required != 20.0 || $slack < 0 || $actual > 20.0} {set fail 1}
-            if {$slack < $netSlack} {set netSlack $slack}
+        set activeNetGroup ""
+        set netGroups [dict create writeGray 0 readGray 0 timeGray 0 resultToCamera 0 requestCdc 0 resultToDisplay 0]
+        set displayNetNames {}
+        foreach line [split $netText "\n"] {
+            set fields [split $line ";"]
+            if {[llength $fields] != 9} {continue}
+            set rowName [string trim [lindex $fields 1]]
+            if {$rowName ne "set_net_delay" && $rowName ne "--"} {continue}
+            set slack [string trim [lindex $fields 2]]
+            set required [string trim [lindex $fields 3]]
+            set actual [string trim [lindex $fields 4]]
+            set fromName [string trim [lindex $fields 5]]
+            set toName [string trim [lindex $fields 6]]
+            if {![string is double -strict $slack] || ![string is double -strict $required] ||
+                ![string is double -strict $actual]} {error "Non-numeric net-delay result: $line"}
+            if {$required != 20.0 || $slack < 0 || $actual > 20.0 || [string trim [lindex $fields 7]] ne "max"} {set fail 1}
+            if {$rowName eq "set_net_delay"} {
+                incr netCount
+                set activeNetGroup ""
+                foreach spec {{writeGray {|writeGray[*]}} {readGray {|readGray[*]}} {timeGray {|timeGray[*]}}
+                              {resultToCamera {resultToCamera|heldData[*]}} {requestCdc {requestCdc|heldData[*]}}
+                              {resultToDisplay {resultToDisplay|heldData[*]}}} {
+                    if {[string first [lindex $spec 1] $fromName] >= 0} {set activeNetGroup [lindex $spec 0]}
+                }
+                if {$activeNetGroup eq ""} {error "Unexpected net-delay constraint: $line"}
+                dict incr netGroups $activeNetGroup
+                if {$slack < $netSlack} {set netSlack $slack}
+            } elseif {$activeNetGroup eq "resultToDisplay"} {
+                lappend displayNetNames $toName
+            }
         }
-        if {$netCount != 2} {error "Expected two payload net bound summaries; found $netCount"}
+        if {$netCount != 6} {error "Expected three Gray and three payload net bound summaries; found $netCount"}
+        dict for {group count} $netGroups {
+            if {$count != 1} {error "Expected exactly one net-delay constraint for $group; found $count"}
+        }
+        set displayNetNames [lsort -unique $displayNetNames]
+        set displayNetCount [llength $displayNetNames]
+        if {$displayNetNames ne $displayExpectedNames} {
+            set fail 1
+            post_message -type error "Display net constraint missed/misidentified endpoints: expected=$displayExpected reported=$displayNetCount"
+        }
+        lappend payloadRecords "{\"corner\":\"$corner\",\"instance\":\"resultToDisplay\",\"destinationCount\":$displayExpected,\"setupPathCount\":$displayTimed,\"cutSetupCount\":$displayCut,\"physicalNetEndpointCount\":$displayNetCount,\"physicalNetCoverageComplete\":[expr {$displayNetNames eq $displayExpectedNames ? "true" : "false"}]}"
         lappend netRecords "{\"corner\":\"$corner\",\"pathCount\":$netCount,\"worstSlackNs\":$netSlack}"
     }
     foreach check {setup hold recovery removal} {

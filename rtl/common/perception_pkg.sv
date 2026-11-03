@@ -1,7 +1,14 @@
 // Member B/C contract v2. All public fields are unsigned and sampled on CLOCK_50.
-// Layout follows docs/MEMBER_C_INTERFACE.md, most significant field first.
+// Layout follows the root README.md B/C contract, most significant field first.
 package perception_pkg;
     localparam int unsigned PERCEPTION_CONTRACT_VERSION = 2;
+    // Private schema7 uses sixteen dynamically allocated completed slots shared
+    // by red and blue. Each marker carries its actual colour, including rejects.
+    // These constants do not alter the three public B/C transaction layouts.
+    localparam int unsigned DEBUG_SCHEMA_VERSION = 7;
+    localparam int unsigned DEBUG_WORD_COUNT = 96;
+    localparam int unsigned DEBUG_MARKER_COUNT = 16;
+    localparam int unsigned DEBUG_TAIL_BASE = 88;
     localparam logic [9:0] DEFAULT_ACTIVE_BAY_MASK = 10'h07e;
     localparam logic [3:0] INVALID_BAY_ID = 4'hf;
     typedef enum logic [1:0] {TARGET_CLEAR=2'd0, TARGET_SELECT=2'd1} targetOperation_t;

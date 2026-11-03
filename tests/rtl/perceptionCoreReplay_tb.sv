@@ -4,6 +4,8 @@
 // fixture is expanded to even 640x480 coordinates with sensor-like idle cycles.
 // This does not exercise a live OV7670 byte stream or microphone chain.
 module perceptionCoreReplay_tb;
+    logic bypassPerspective=0;
+    logic processingEnable=1;
     import perception_pkg::*;
     logic clk=0,pclk=0,reset=1,resetPclk=1;
     always #10 clk=~clk;
@@ -20,9 +22,10 @@ module perceptionCoreReplay_tb;
     targetReport_t targetReport,lastReport;
     logic targetReportValid,targetReportReady=1;
     userEvent_t userEvent;
+    userEvent_t consumedEvent;
     logic userEventValid,userEventReady=1;
     perceptionStatus_t status;
-    logic [3071:0] debugWords;
+    logic [DEBUG_WORD_COUNT*32-1:0] debugWords;
     logic completedFrame;
     logic [15:0] completedFrameId;
     logic [15:0] pixels[0:76799];
@@ -35,9 +38,11 @@ module perceptionCoreReplay_tb;
     candidate_pkg::candidate_t expectedBlueBoxes[0:1],continuousExpectedBox;
     logic [68:0] continuousCandidateWords[0:15];
     logic [31:0] continuousExpectedWords[0:15];
+    logic continuousCandidateColours[0:15];
     integer continuousObserved=0,overlapCycles=0,totalCycles=0,continuousStart=0;
     frameObservation_t collisionGood,collisionDrop;
     string vectorDir,sceneFile;
+    logic debugInteractionArmReady;
     perceptionCore dut(.*);
     always @(posedge clk) begin
         if(reset) begin microDivider<=0;timeUs<=0;end
@@ -53,6 +58,7 @@ module perceptionCoreReplay_tb;
                     dut.sampleCount,status.state);
             end
             if(userEventValid&&userEventReady)begin
+                consumedEvent=userEvent;
                 eventCount++;
                 if(userEvent.eventType!=EVENT_CALIBRATION_DONE)
                     $fatal(1,"full sheet calibration failed event=%0d reason=%0d samples=%0d",userEvent.eventType,userEvent.reason,dut.sampleCount);
@@ -179,7 +185,7 @@ module perceptionCoreReplay_tb;
     task automatic injectCompletionDropCollision(input integer oldId,input bit truncated,input integer discarded);
         integer wantedCount;
         logic [15:0] previouslyCompleted;
-        logic [3071:0] previousDebug;
+        logic [DEBUG_WORD_COUNT*32-1:0] previousDebug;
         begin
             wantedCount=reportCount+1;previouslyCompleted=completedFrameId;previousDebug=debugWords;
             @(negedge clk);prepareInjectedGood(oldId);
@@ -200,7 +206,7 @@ module perceptionCoreReplay_tb;
             if(debugWords[3*32+:32]!==previousDebug[3*32+:32]||
                debugWords[24*32+:2048]!==previousDebug[24*32+:2048])
                 $fatal(1,"Discarded completion replaced snapshot frame identity/marker words");
-            if(dut.completionDiscardCount!=discarded||debugWords[94*32+16+:16]!=discarded)
+            if(dut.completionDiscardCount!=discarded||debugWords[(DEBUG_TAIL_BASE+6)*32+16+:16]!=discarded)
                 $fatal(1,"Completion-discard diagnostic missing");
             @(negedge clk);
             force dut.aggregateDone=1'b0;force dut.sof=1'b0;
@@ -257,7 +263,8 @@ module perceptionCoreReplay_tb;
                 blueOneCount=0;
                 $readmemh($sformatf("%s/continuous_%0d_candidates.hex",vectorDir,fixture),continuousCandidateWords);
                 $readmemh($sformatf("%s/continuous_%0d_expected.hex",vectorDir,fixture),continuousExpectedWords);
-                for(int slot=8;slot<16;slot++)if(continuousExpectedWords[slot][24]&&continuousExpectedWords[slot][19:16]==1)begin
+                $readmemh($sformatf("%s/continuous_%0d_candidate_colours.hex",vectorDir,fixture),continuousCandidateColours);
+                for(int slot=0;slot<16;slot++)if(continuousCandidateColours[slot]&&continuousExpectedWords[slot][24]&&continuousExpectedWords[slot][19:16]==1)begin
                     expectedBlueBoxes[fixture]=continuousCandidateWords[slot];blueOneCount++;
                 end
                 if(blueOneCount!=1||!expectedBlueBoxes[fixture].valid)
@@ -315,6 +322,8 @@ module perceptionCoreReplay_tb;
         if(!status.calibrated||!status.speechArmed||status.interactionBusy||eventCount!=1||status.activeCfgVersion!=1)
             $fatal(1,"fixed unfolded sheet did not calibrate once then arm: cfg=%0d calibrated=%0d armed=%0d events=%0d",
                 status.activeCfgVersion,status.calibrated,status.speechArmed,eventCount);
+        if(userEventValid||!debugWords[(DEBUG_TAIL_BASE+2)*32+2]||debugWords[18*32+:104]!==consumedEvent)
+            $fatal(1,"Consumed terminal event was not retained for JTAG diagnosis");
         for(int bay=1;bay<=6;bay++)begin
             selectBay(bay,10+bay);
             for(int n=1;n<=3;n++)begin

@@ -361,7 +361,8 @@ class Runner:
         self.result["pythonDependencies"] = {n: importlib.util.find_spec(n) is not None for n in ("numpy", "PIL")}
         self.result["pythonVersion"] = sys.version
         self.result["taskInputs"] = {name: (ROOT / name).is_file() for name in (
-            "docs/inputs/COURSE_REQUIREMENTS.md", "docs/inputs/SOURCE_NOTES.md", "docs/inputs/ARCHITECTURE.md", "docs/MEMBER_C_INTERFACE.md",
+            "README.md", "VERSION_README.md", "OWNERS.md", "docs/reference/Major_Project_Brief_2026.pdf",
+            "tests/fixtures/camera/manifest.json",
             "assets/markers/marker_spec.json", "assets/markers/scene_manifest.json", "assets/markers/ECHO7_All_Markers_A4_v2.pdf")}
         if self.result["projects"]["PartBDebug"]:
             self.result["sourceDiscovery"] = sourceIdentity()
@@ -419,6 +420,13 @@ class Runner:
             if requested - available:
                 raise RuntimeError("unknown RTL test names: " + repr(sorted(requested - available)))
             config["tests"] = [test for test in config["tests"] if test["name"] in requested]
+        captureArgs=[]
+        if getattr(self.args,"capture_result",None):
+            if any(test["name"] not in {"projectiveMarkerReader_tb","projectiveBypass_tb"} for test in config["tests"]):
+                raise RuntimeError("--capture-result requires --only projectiveMarkerReader_tb projectiveBypass_tb (or a subset)")
+            captureArgs=["--capture-result",self.args.capture_result.resolve()]
+            self.result["recordedCaptureInput"] = {"path": str(self.args.capture_result.resolve()),
+                                                    "sha256": digest(self.args.capture_result)}
         self.result["rtlTests"] = []
         # Attribute the complete suite to one source snapshot. Per-test checks
         # alone miss an early bench's source changing while later benches run.
@@ -427,14 +435,21 @@ class Runner:
         vectors = self.out / "vectors"
         self.run("candidate_vectors", [sys.executable, ROOT / "tools/lib/candidates_reclaimed_model.py",
                                     "--write-vectors", vectors])
+        if any(test["name"] in ("boundedCandidatesActive_tb", "boundedCandidatesCapacity15_tb") for test in config["tests"]):
+            self.run("capacity_vectors", [sys.executable, HERE / "export_capacity_vectors.py", "--out", vectors])
+        if any(test["name"] == "boundedCandidatesCompleted16_tb" for test in config["tests"]):
+            self.run("completed16_vectors", [sys.executable, HERE / "export_completed16_vectors.py", "--output-dir", vectors])
         if (HERE / "export_vision_vectors.py").exists():
             self.run("vision_vectors", [sys.executable, HERE / "export_vision_vectors.py", "--out", vectors])
         if any("memberBVgaContour.sv" in path for test in config["tests"] for path in test["sources"]):
             self.run("contour_vectors", [sys.executable, HERE / "export_contour_vectors.py", "--out", vectors])
         if any(Path(path).name in ("projectiveMarkerReader.sv", "nativeAnchorReader.sv")
                for test in config["tests"] for path in test["sources"]):
-            self.run("projective_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors])
-            self.result["inputSource"] = "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY"
+            self.run("projective_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors,*captureArgs])
+            if any(test['name']=='projectiveBypass_tb' for test in config['tests']):
+                self.run("bypass_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors / "bypass", "--bypass-perspective",*captureArgs])
+            self.result["inputSource"] = ("RECORDED_CAMERA_RTL_REPLAY" if captureArgs else
+                                          "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY")
         for test in config["tests"]:
             name = test["name"]
             folder = self.out / name
@@ -444,7 +459,8 @@ class Runner:
             sources = [ROOT / p for p in test["sources"]]
             sourceHashes = {str(p.relative_to(ROOT)): digest(p) for p in sources}
             testResult = {"name": name, "status": "RUNNING", "sourceSha256": sourceHashes,
-                          "inputSource": test.get("inputSource", "SYNTHETIC_RTL_VECTORS"),
+                          "inputSource": ("RECORDED_CAMERA_RTL_REPLAY" if captureArgs else
+                                          test.get("inputSource", "SYNTHETIC_RTL_VECTORS")),
                           "simulationModelDefines": test.get("defines", [])}
             self.result["rtlTests"].append(testResult)
             # The course FrameGrab names its portable RAM/probe behavioural
@@ -526,23 +542,46 @@ class Runner:
         self.result["status"] = "PASS"
         (WORK / "last_build.json").write_text(json.dumps(self.result, indent=2))
 
-    def control(self, command=0):
+    def control(self, command=0, operation="control"):
+        from debug_decode import schemaLayout
         # Reading the loaded design or sending an interface stimulus verifies
         # board communication. Camera recognition is a separate capture/test.
         self.result.setdefault("level", "PROGRAMMED")
         target = self.target()
-        _, output = self.run("bctl", [self.qt("quartus_stp"), "-t", ROOT / "tools/tcl/jtag_control.tcl", "control",
-                                      target["cable"], target["device"], str(command)])
+        code, output = self.run("bctl", [self.qt("quartus_stp"), "-t", ROOT / "tools/tcl/jtag_control.tcl", operation,
+                                      target["cable"], target["device"], str(command)], checked=False)
+        if operation == "calibration-check":
+            trace = re.findall(r"^ECHO7_CAL_TRACE\t(\d+)\t(\d+)\t(\d+)\t(\d+)\t(\d+)$", output, re.M)
+            self.result["calibrationTrace"] = [dict(zip(("boardTimeUs", "frameId", "configVersion", "statusUpper", "sampleWord"), map(int, row))) for row in trace]
+            busyMatch = re.search(r"^ECHO7_BUSY_ACTION\t([01]{32})$", output, re.M)
+            self.result["busyActionMeta"] = int(busyMatch.group(1), 2) if busyMatch else None
+        actionMatch = re.search(r"^ECHO7_ACTION\t(\d+)\t([01]{32})$", output, re.M)
+        if command and actionMatch:
+            actionMeta = int(actionMatch.group(2), 2)
+            reasonCode = (actionMeta >> 12) & 3
+            if int(actionMatch.group(1)) != (command >> 24) or (actionMeta >> 24) not in (1, 2, 3, 4, 5, 6, 7) or \
+                    ((actionMeta >> 16) & 255) != 2 or (actionMeta & 255) != schemaLayout(actionMeta >> 24)["wordCount"]:
+                raise RuntimeError("BCTL action acknowledgement does not match the requested opcode/schema")
+            if (actionMeta >> 24) >= 3 and bool(actionMeta & (1 << 14)) != (reasonCode != 0):
+                raise RuntimeError("BCTL action error flag and rejection reason disagree")
+            self.result["commandAcceptance"] = {
+                "opcode": int(actionMatch.group(1)), "transportAcknowledged": True,
+                "accepted": not bool(actionMeta & (1 << 14)),
+                "reason": {0: "ACCEPTED", 1: "INVALID_COMMAND", 2: "BUSY_OR_DISABLED"}.get(reasonCode, "RESERVED"),
+                "completed": False,
+                "meaning": "Action acceptance only; interaction completion requires its terminal event and configuration version."}
+        if code and (code != 3 or not actionMatch):
+            raise RuntimeError(f"BCTL transport failed with exit {code}; see bctl log")
         match = re.search(r"^ECHO7_HEADER\t([01]{96})$", output, re.M)
         if not match:
             raise RuntimeError("BCTL did not return its versioned status header")
         bits = match.group(1)
         magic, buildId, meta = (int(bits[i:i+32], 2) for i in (0, 32, 64))
         debugSchema = meta >> 24
-        if magic != 0x42444247 or debugSchema not in (1, 2) or (meta >> 16) & 255 != 2 or meta & 255 != 96:
+        if magic != 0x42444247 or debugSchema not in (1, 2, 3, 4, 5, 6, 7) or (meta >> 16) & 255 != 2 or meta & 255 != schemaLayout(debugSchema)["wordCount"]:
             raise RuntimeError(f"unsupported BCTL header magic={magic:08x}, meta={meta:08x}")
         words = re.findall(r"^ECHO7_WORD\t(\d+)\t([01]{32})$", output, re.M)
-        if [int(n) for n, _ in words] != list(range(96)):
+        if [int(n) for n, _ in words] != list(range(schemaLayout(debugSchema)["wordCount"])):
             raise RuntimeError("BCTL frozen word sequence is incomplete or reordered")
         status = {"magic": hex(magic), "schema": debugSchema, "contract": 2, "buildId": buildId,
                   "words": [int(word, 2) for _, word in words]}
@@ -554,6 +593,20 @@ class Runner:
             raise RuntimeError("BCTL header and frozen status have different build IDs")
         self.result["boardStatus"] = status
         self.result["inputSource"] = "JTAG_INTERFACE_STIMULUS" if command else "LIVE_JTAG_STATUS"
+        if code == 3 or (command and actionMatch and not self.result["commandAcceptance"]["accepted"]):
+            raise RuntimeError("BCTL action rejected: " + self.result["commandAcceptance"]["reason"])
+        if command and debugSchema >= 3 and not actionMatch:
+            raise RuntimeError("schema3 command has no action-level acceptance record")
+        if operation == "calibration-check":
+            from calibration_measurement import evaluateCalibration
+            self.result["level"] = "CAMERA_HW"
+            self.result["inputSource"] = "LIVE_CAMERA_RAW_RGB_WITH_JTAG_REARM"
+            assessment = evaluateCalibration(self.result["calibrationTrace"], status["decoded"], self.result["busyActionMeta"])
+            self.result["calibrationAssessment"] = assessment
+            self.result["commandAcceptance"]["completed"] = bool(
+                assessment["configurationCommitted"] and assessment["validSampleFrames"] == 8)
+            if assessment["status"] != "PASS":
+                raise RuntimeError("real calibration acceptance failed: " + assessment["reason"])
         return status
 
     def program(self):
@@ -599,12 +652,17 @@ class Runner:
         transaction = validateSnapshotTransaction(metadata, target, held, dump.stat().st_size)
         self.result["snapshotTransaction"] = metadata
         self.result["snapshotTransactionValidation"] = transaction
-        decoded = module.decode(dump.read_bytes())
+        try:
+            decoded = module.decode(dump.read_bytes())
+        except module.DumpError as exc:
+            # Keep the independent decoder failure inside the CLI's structured
+            # nonzero-result path, even if the transport process returned zero.
+            raise RuntimeError("GRAB decode/CRC failed: " + str(exc)) from exc
         if decoded["offset"] != 0 or decoded["bytes"] != dump.stat().st_size:
             raise RuntimeError("snapshot has prefix/trailing bytes; exact GRAB framing is required")
         self.result["snapshot"] = {k: decoded[k] for k in ("width", "height", "n_results", "crc", "results")}
         self.result["dumpSha256"] = digest(dump)
-        from debug_decode import checkGrabSchema, decodeGrabWords, compareMarkerPixels
+        from debug_decode import checkGrabSchema, decodeGrabWords
         checkGrabSchema(decoded["results"])
         buildPath = WORK / "last_build.json"
         if not buildPath.exists():
@@ -612,23 +670,9 @@ class Runner:
         expectedBuildId = json.loads(buildPath.read_text())["source"]["buildId"]
         self.result["packetType"] = "MEMBER_B"
         self.result["recognition"] = decodeGrabWords(decoded["results"], expectedBuildId)
-        self.result["frameId"] = decoded["results"][96]
+        self.result["frameId"] = self.result["recognition"]["frameId"]
         self.result["fresh"] = transaction["fresh"]
-        comparison = compareMarkerPixels(self.out / "capture/frame.png", self.result["recognition"], self.out / "glyph_check")
-        self.result["glyphAgreement"] = comparison
-        recognition = self.result["recognition"]
-        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2, 3, 4) else "vision_reference.py"
-        profileArgs = (["--white-min", str(recognition["whiteMinimum"]), "--max-spread", str(recognition["whiteMaxSpread"]),
-                        "--colour-algorithm", str(recognition["colourAlgorithm"]),
-                        "--reader-algorithm", str(recognition["readerAlgorithm"])]
-                       if recognition["readerAlgorithm"] in (1, 2, 3, 4) else ["--cleanup"])
-        self.run("pixel_reference", [sys.executable, HERE / script, self.out / "capture/frame.png",
-                 "--orientation", str(recognition["orientationProfile"]),
-                 "--red-min", str(recognition["redMinimum"]),
-                 "--blue-min", str(recognition["blueMinimum"]), *profileArgs,
-                 "--source", "RECORDED_CAMERA", "--out", self.out / "pixel_reference"])
-        if comparison["status"] != "PASS":
-            raise RuntimeError("captured glyph pixels disagree with the FPGA same-frame marker decisions")
+        self.assessCapturedPixels()
         contextPath = STATE
         context = json.loads(contextPath.read_text()) if contextPath.exists() else {}
         self.result["programmingContext"] = str(contextPath) if context else None
@@ -643,61 +687,51 @@ class Runner:
                                                "hostObservedMs": transaction["hostObservedMs"],
                                                "snapshotCount": transaction["snapshotCount"]}))
 
+    def assessCapturedPixels(self):
+        """Classify only processed captures after the packet/frame/CRC gates.
+
+        Raw mode still exports and validates the actual RGB capture. An empty
+        marker list must never yield a vacuous glyph-agreement PASS or be called
+        recognition success. Live request/display bits can differ from this
+        frame-bound mode during transitions, so only rawCameraMode decides here.
+        """
+        recognition = self.result["recognition"]
+        if recognition.get("rawCameraMode", False):
+            assessment = {"status": "NOT_APPLICABLE_RAW_CAMERA_MODE",
+                          "level": "CAMERA_HW_CAPTURE_ONLY", "comparedCandidateCount": 0,
+                          "frameId": recognition["frameId"],
+                          "reason": "Algorithms were disabled for this captured frame; RGB/CRC/schema/build/frame checks remain applicable."}
+            self.result["glyphAgreement"] = assessment
+            self.result["recognitionAssessment"] = dict(assessment)
+            self.result["captureMeaning"] = "Verified raw RGB camera snapshot only; not recognition or target acceptance."
+            return
+        from debug_decode import compareMarkerPixels
+        comparison = compareMarkerPixels(self.out / "capture/frame.png", recognition, self.out / "glyph_check")
+        self.result["glyphAgreement"] = comparison
+        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5) else "vision_reference.py"
+        profileArgs = (["--white-min", str(recognition["whiteMinimum"]), "--max-spread", str(recognition["whiteMaxSpread"]),
+                        "--colour-algorithm", str(recognition["colourAlgorithm"]),
+                        "--reader-algorithm", str(recognition["readerAlgorithm"]),
+                        "--active-capacity", str(recognition["activeCandidateCapacity"]),
+                        "--output-capacity", str(recognition["outputCandidateCapacity"])]
+                       if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5) else ["--cleanup"])
+        if recognition["readerAlgorithm"] == 5:
+            profileArgs.append("--shared-pool" if recognition.get("sharedCandidatePool", False) else "--split-pool")
+        if recognition.get('bypassPerspective',False):profileArgs.append('--bypass-perspective')
+        self.run("pixel_reference", [sys.executable, HERE / script, self.out / "capture/frame.png",
+                 "--orientation", str(recognition["orientationProfile"]),
+                 "--red-min", str(recognition["redMinimum"]),
+                 "--blue-min", str(recognition["blueMinimum"]), *profileArgs,
+                 "--source", "RECORDED_CAMERA", "--out", self.out / "pixel_reference"])
+        if comparison["status"] != "PASS":
+            raise RuntimeError("captured glyph pixels disagree with the FPGA same-frame marker decisions")
+
     def hardware(self):
-        self.result["level"] = "CAMERA_HW"
-        self.result["inputSource"] = "LIVE_CAMERA_STATUS_WITH_JTAG_TARGET_REQUESTS"
-        records = []
-        self.result["hardwareFrames"] = records
-        initial = self.control()["decoded"]
-        initialDropCount = initial["bufferDropCount"]
-        initialCompletionDiscardCount = initial["completionDiscardCount"]
-        initialFaultFlags = initial["status"]["faultFlags"]
-        self.result["initialDiagnostics"] = {"bufferDropCount": initialDropCount, "faultFlags": initialFaultFlags,
-                                             "completionDiscardCount": initialCompletionDiscardCount}
-        if initialCompletionDiscardCount == 0xffff:
-            raise RuntimeError("completion discard counter is saturated; reset the loaded design before measuring new hardware stability")
-        lastFrame = None
-        deadline = time.monotonic() + self.args.timeout
-        for bay in range(1, 7):
-            self.control((1 << 24) | bay)
-            collected = 0
-            while collected < 5:
-                if time.monotonic() >= deadline:
-                    raise RuntimeError(f"hardware acceptance timed out: bay{bay} collected {collected}/5 distinct locked frames")
-                state = self.control()["decoded"]
-                # Check every live snapshot, including a bad frame or a report
-                # still carrying the previous target request. Such a discarded
-                # completion must not disappear while waiting for a lock.
-                if state["completionDiscardCount"] != initialCompletionDiscardCount:
-                    raise RuntimeError("completionDiscardCount changed during hardware acceptance; an older completed observation was discarded")
-                frameId = state["frameId"]
-                if lastFrame is not None:
-                    delta = (frameId - lastFrame) & 0xffff
-                    if delta == 0:
-                        continue
-                    if delta >= 0x8000:
-                        raise RuntimeError("hardware frame sequence moved backwards; repeated/old frames cannot confirm lock")
-                lastFrame = frameId
-                records.append(state)
-                (self.out / "hardware_frames.json").write_text(json.dumps(records, indent=2))
-                report, request, status = state["targetReport"], state["activeRequest"], state["status"]
-                if report["frameId"] != frameId or report["requestTag"] != request["requestTag"] or report["bayId"] != bay:
-                    continue
-                acceptedBlue = sorted(m["digit"] for m in state["markers"] if m["accepted"] and m["isBlue"])
-                acceptedRed = sorted(m["digit"] for m in state["markers"] if m["accepted"] and not m["isBlue"])
-                if acceptedBlue != [1, 2, 3, 4, 5, 6] or acceptedRed != [1, 2]:
-                    raise RuntimeError("fixed full-sheet acceptance failed: actual accepted pixel IDs=" + repr((acceptedRed, acceptedBlue)))
-                if (status["faultFlags"] & ~initialFaultFlags & 7) or state["bufferDropCount"] != initialDropCount:
-                    raise RuntimeError("camera/candidate/buffer diagnostics indicate dropped or corrupted observations")
-                if not all(report[name] for name in ("targetSelected", "frameGood", "observed", "locked")) or report["ambiguous"]:
-                    continue
-                if report["configVersion"] != status["activeCfgVersion"] or not state["freshAtSnapshot"]:
-                    raise RuntimeError("hardware target report has stale configuration or capture age")
-                if not status["perceptionReady"] or status["interactionBusy"] or not status["calibrated"]:
-                    continue
-                collected += 1
-        self.result["lockedFramesPerBay"] = 5
-        self.result["acceptanceScope"] = "30 distinct current fixed-sheet observations; initial project gate, not course rubric or general accuracy"
+        # Default/autodebug acceptance uses the same finite, loss-preserving
+        # assessor as formal multi-trial runs. Do not wait for success-only
+        # frames or silently omit failed observations from the denominator.
+        from trial_stream import measureLiveTrials
+        measureLiveTrials(self, getattr(self.args, "trials", 0) or 1, sourceIdentity()["buildId"])
 
     def execute(self):
         c = self.args.command
@@ -715,8 +749,11 @@ class Runner:
             self.result["operationMeaning"] = "C simulator SELECT transaction; not microphone or digit-recognition evidence"
         elif c == "clear": self.control(2 << 24)
         elif c == "calibrate":
-            self.control(3 << 24)
-            self.result["operationMeaning"] = "one real-pixel calibration attempt armed; completion is reported by status and userEvent"
+            self.control(3 << 24, operation="calibration-check" if getattr(self.args, "verify_busy", False) else "control")
+            self.result["operationMeaning"] = (
+                "Real-red1 calibration completion assessed from eight valid samples and one configuration increment; see calibrationAssessment for the separately measured timing target."
+                if getattr(self.args, "verify_busy", False) else
+                "real-red1 workflow rearm accepted; not yet started or completed. Read interactionId, terminal userEvent and configVersion via status.")
         elif c == "orientation":
             state = self.control((6 << 24) | self.args.profile)
             deadline = time.monotonic() + self.args.timeout
@@ -748,10 +785,19 @@ def main(argv=None):
     parser.add_argument("--device")
     parser.add_argument("--timeout", type=int, default=300)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "build", "program", "status", "clear", "autodebug"):
+    for name in ("doctor", "build", "program", "status", "clear"):
         commands.add_parser(name)
+    autodebug = commands.add_parser("autodebug")
     test = commands.add_parser("test")
+    # Both entry points use the same loss-preserving assessor. A truth file
+    # changes host scoring only; it never enters the build or FPGA commands.
+    for command in (test, autodebug):
+        command.add_argument("--trials", type=int, choices=(1, 2, 3), default=0,
+                             help="hardware only: retain all observations in 30-sample trials, including failures (default: one trial)")
+        command.add_argument("--truth-regions", type=Path,
+                             help="Test-only printed-digit regions for a fixed photographed scene; never supplied to FPGA; requires --trials")
     test.add_argument("--only", nargs="+", help="run the named RTL benches when narrowing a regression")
+    test.add_argument("--capture-result",type=Path,help="R7: replay one verified camera result/profile through reader/anchor RTL")
     group = test.add_mutually_exclusive_group(required=True)
     for name in ("rtl", "replay", "hardware"):
         group.add_argument("--" + name, action="store_true")
@@ -761,7 +807,9 @@ def main(argv=None):
     group.add_argument("--held", action="store_true")
     select = commands.add_parser("select")
     select.add_argument("--bay", type=int, choices=range(1, 7), required=True)
-    commands.add_parser("calibrate").add_argument("--arm", action="store_true", required=True)
+    calibration = commands.add_parser("calibrate")
+    calibration.add_argument("--arm", action="store_true", required=True)
+    calibration.add_argument("--verify-busy", action="store_true", help="trace real sampling and verify a second arm is rejected while busy")
     commands.add_parser("orientation").add_argument("--profile", type=int, choices=range(4), required=True)
     speech = commands.add_parser("speech")
     group = speech.add_mutually_exclusive_group(required=True)
@@ -770,6 +818,13 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
+    hardwareCommand = args.command == "autodebug" or (args.command == "test" and args.hardware)
+    if getattr(args, "trials", 0) and not hardwareCommand:
+        parser.error("--trials requires test --hardware or autodebug")
+    if getattr(args, "capture_result", None) and not args.rtl:
+        parser.error("--capture-result requires test --rtl")
+    if getattr(args,"truth_regions",None) and (not hardwareCommand or not args.trials):
+        parser.error("--truth-regions requires test --hardware --trials 1..3 or autodebug --trials 1..3")
     runner = Runner(args)
     code = 0
     try:

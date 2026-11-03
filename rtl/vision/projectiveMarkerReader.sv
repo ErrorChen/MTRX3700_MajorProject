@@ -10,8 +10,12 @@ module projectiveMarkerReader #(
     parameter int MIN_QUAD_AREA=400
 ) (
     input logic clk,reset,start,
-    input candidate_pkg::candidate_array_t redCandidates,blueCandidates,
+    // Dense shared completed pool. The independent colour bit is metadata;
+    // slot order never supplies a marker type or a recognised digit.
+    input candidate_pkg::candidate_array_t sharedCandidates,
+    input logic [15:0] sharedColours,
     input logic [1:0] orientationProfile,
+    input logic bypassPerspective,
     output logic busy,done,
     output logic [16:0] readAddress,
     input logic readWhite,readStrongWhite,readColour,
@@ -20,23 +24,40 @@ module projectiveMarkerReader #(
 );
     import candidate_pkg::*;
     import vision_pkg::*;
-    typedef enum logic [4:0] {
+    typedef enum logic [5:0] {
         IDLE,SETUP,SCAN_INIT,SCAN_WAIT,SCAN_SAMPLE,CORNER_PREP,GEOMETRY,
         HOMO_DELTAS,HOMO_PRODUCTS,HOMO_SIGN,HOMO_COEFF,GRID_NUM,GRID_PREP,
-        DIVIDE,MAP_ADDRESS,GRID_WAIT,GRID_SAMPLE,DECIDE,NEXT,MULTIPLY_WAIT,GRID_INIT,ANCHOR_START,ANCHOR_WAIT
+        DIVIDE,MAP_ADDRESS,GRID_WAIT,GRID_SAMPLE,DECIDE,NEXT,MULTIPLY_WAIT,GRID_INIT,ANCHOR_START,ANCHOR_WAIT,
+        DIAMETER_INIT,DIAMETER_START,DIAMETER_WAIT,DIAMETER_NEXT,
+        CROSS_INIT,CROSS_START,CROSS_WAIT,CROSS_NEXT,QUAD_SELECT,QUAD_CANON,ORIENTATION_FINISH
     } state_t;
     state_t state;
-    candidate_array_t heldRed,heldBlue;
+    candidate_array_t heldCandidates;
+    logic [15:0] heldColours;
     candidate_t box;
     logic [3:0] index;
-    logic [1:0] orientation;
+    logic [1:0] orientation,orientationHint,hypothesisIndex,selectedOrientation,cornerBaseIndex;
+    logic [1:0] anchorMatches;
+    logic orientationResolved,orientationRejected;
+    logic heldBypassPerspective;
     logic [8:0] scanX;
     logic [7:0] scanY;
     logic [9:0] boxWidth,boxHeight;
-    logic signed [20:0] scorePlus,scoreMinus,minPlus,maxPlus,minMinus,maxMinus;
-    logic [8:0] relativeX;
-    logic [7:0] relativeY;
-    logic [18:0] scaledX,scaledY;
+    // Sixteen fixed directions use additions and shifts only. Native x/y make
+    // every signed score fit eleven bits (largest magnitude 2*319+239=877).
+    // Fixed directions avoid the duplicate weighted extrema seen at 45deg.
+    logic signed [10:0] supportScore[0:15],supportMaximum[0:15];
+    logic [8:0] supportX[0:15];
+    logic [7:0] supportY[0:15];
+    logic [3:0] pairA,pairB,diameterA,diameterB,crossIndex,crossLowIndex,crossHighIndex;
+    logic geometryProductPhase;
+    logic [18:0] diameterSquared;
+    logic signed [19:0] crossLow,crossHigh;
+    logic signed [36:0] geometryFirstProduct,geometryCombinedProduct;
+    logic signed [10:0] geometryDx,geometryDy,probeDx,probeDy;
+    logic [10:0] cornerSumX;
+    logic [9:0] cornerSumY;
+    logic [1:0] nativeBaseIndex;
     logic [8:0] cornerX[0:3];
     logic [7:0] cornerY[0:3];
     // Signed half-pixel units. Raw contour corners are expanded by half a pixel
@@ -70,9 +91,9 @@ module projectiveMarkerReader #(
     logic [3:0] divisionBit;
     logic [7:0] strokeProjection[0:6];
     // Algorithm 2 counts one closed native component, not repeated grid taps.
-    logic [16:0] anchorCount,anchorReadAddress;
-    logic [8:0] anchorWidth;
-    logic [7:0] anchorHeight;
+    logic [16:0] anchorCount,anchorReadAddress,selectedAnchorCount;
+    logic [8:0] anchorWidth,selectedAnchorWidth;
+    logic [7:0] anchorHeight,selectedAnchorHeight;
     logic anchorDone;
     logic [5:0] holeUpperWhite,holeLowerWhite;
     logic [6:0] segmentBits;
@@ -85,7 +106,7 @@ module projectiveMarkerReader #(
         .anchorCount(anchorCount),.anchorWidth(anchorWidth),.anchorHeight(anchorHeight),
         .ambiguous(),.overflow(),.allocationPeak(),.componentCount());
     projectiveSerialMultiply coefficientMultiplier(.clk(clk),.reset(reset),
-        .start(state==HOMO_PRODUCTS),.operandA(multiplyA),.operandB(multiplyB),
+        .start(state==HOMO_PRODUCTS||state==DIAMETER_START||state==CROSS_START),.operandA(multiplyA),.operandB(multiplyB),
         .result(multiplyResult),.done(multiplyDone));
 
     function automatic integer population(input logic [7:0] value);
@@ -93,14 +114,48 @@ module projectiveMarkerReader #(
         begin total=0;for(int bitIndex=0;bitIndex<8;bitIndex++)total=total+int'(value[bitIndex]);population=total;end
     endfunction
 
+    function automatic logic signed [10:0] directionScore(input integer direction,
+        input logic [8:0] nativeX,input logic [7:0] nativeY);
+        logic signed [10:0] sx,sy;
+        begin
+            sx=$signed({2'b0,nativeX});sy=$signed({3'b0,nativeY});
+            case(direction)
+                0:directionScore=sx;1:directionScore=(sx<<<1)+sy;
+                2:directionScore=sx+sy;3:directionScore=sx+(sy<<<1);
+                4:directionScore=sy;5:directionScore=-sx+(sy<<<1);
+                6:directionScore=-sx+sy;7:directionScore=-(sx<<<1)+sy;
+                8:directionScore=-sx;9:directionScore=-(sx<<<1)-sy;
+                10:directionScore=-sx-sy;11:directionScore=-sx-(sy<<<1);
+                12:directionScore=-sy;13:directionScore=sx-(sy<<<1);
+                14:directionScore=sx-sy;default:directionScore=(sx<<<1)-sy;
+            endcase
+        end
+    endfunction
+
     always_comb begin
         boxWidth={1'b0,box.xmax}-{1'b0,box.xmin}+10'd1;
         boxHeight={2'b0,box.ymax}-{2'b0,box.ymin}+10'd1;
-        // Products normalise x/y by the candidate dimensions without division.
-        relativeX=scanX-box.xmin;relativeY=scanY-box.ymin;
-        scaledX=relativeX*boxHeight;scaledY=relativeY*boxWidth;
-        scorePlus=$signed({2'b0,scaledX})+$signed({2'b0,scaledY});
-        scoreMinus=$signed({2'b0,scaledX})-$signed({2'b0,scaledY});
+        for(int direction=0;direction<16;direction++)supportScore[direction]=directionScore(direction,scanX,scanY);
+        // Search only the sixteen measured supports. Reuse the existing serial
+        // multiplier for 120 diameter pairs and sixteen signed cross products.
+        geometryDx=$signed({2'b0,supportX[pairB]})-$signed({2'b0,supportX[pairA]});
+        geometryDy=$signed({3'b0,supportY[pairB]})-$signed({3'b0,supportY[pairA]});
+        probeDx=$signed({2'b0,supportX[crossIndex]})-$signed({2'b0,supportX[diameterA]});
+        probeDy=$signed({3'b0,supportY[crossIndex]})-$signed({3'b0,supportY[diameterA]});
+        geometryCombinedProduct=state==CROSS_WAIT?geometryFirstProduct-multiplyResult:geometryFirstProduct+multiplyResult;
+        // Stable native corner naming: min(x+y), then smaller y, then x. The
+        // selected marker orientation is a cyclic offset from this corner; it
+        // does not rotate the external native bbox or B/C coordinates.
+        nativeBaseIndex=0;
+        for(int corner=1;corner<4;corner++)begin
+            if(({1'b0,cornerX[corner]}+{2'b0,cornerY[corner]} <
+                {1'b0,cornerX[nativeBaseIndex]}+{2'b0,cornerY[nativeBaseIndex]})||
+               (({1'b0,cornerX[corner]}+{2'b0,cornerY[corner]} ==
+                 {1'b0,cornerX[nativeBaseIndex]}+{2'b0,cornerY[nativeBaseIndex]})&&
+                (cornerY[corner]<cornerY[nativeBaseIndex]||
+                 (cornerY[corner]==cornerY[nativeBaseIndex]&&cornerX[corner]<cornerX[nativeBaseIndex]))))
+                nativeBaseIndex=2'(corner);
+        end
         areaTwice=0;quadrilateralGood=foregroundCount>=32;highResolutionQuad=1;
         for(int i=0;i<4;i++)begin
             edgeDx[i]=pointX[(i+1)%4]-pointX[i];
@@ -140,6 +195,15 @@ module projectiveMarkerReader #(
             14:begin multiplyA=hNorm;multiplyB=pointY[3];end
             default:begin multiplyA=dNorm;multiplyB=pointY[0];end
         endcase
+        if(state==DIAMETER_START||state==DIAMETER_WAIT)begin
+            multiplyA=geometryProductPhase?geometryDy:geometryDx;
+            multiplyB=geometryProductPhase?geometryDy:geometryDx;
+        end else if(state==CROSS_START||state==CROSS_WAIT)begin
+            multiplyA=geometryProductPhase?
+                $signed({3'b0,supportY[diameterB]})-$signed({3'b0,supportY[diameterA]}):
+                $signed({2'b0,supportX[diameterB]})-$signed({2'b0,supportX[diameterA]});
+            multiplyB=geometryProductPhase?probeDx:probeDy;
+        end
         if(state==ANCHOR_START||state==ANCHOR_WAIT)readAddress=anchorReadAddress;
         else if(state==SCAN_INIT||state==SCAN_WAIT||state==SCAN_SAMPLE)
             readAddress=17'(scanY)*17'd320+17'(scanX);
@@ -147,7 +211,7 @@ module projectiveMarkerReader #(
         segmentBits=0;uncertain=0;
         // A two-pixel stroke can classify consistently yet does not justify the
         // strongest quality tier. Every quadrilateral edge must span >=40 px.
-        strongEvidence=anchorCount>=4&&highResolutionQuad;
+        strongEvidence=selectedAnchorCount>=4&&highResolutionQuad;
         for(int i=0;i<7;i++)begin
             // Horizontal strokes cover eight independent canonical columns;
             // vertical strokes cover seven rows. Middle evidence is rejected.
@@ -156,7 +220,7 @@ module projectiveMarkerReader #(
                 if(population(strokeProjection[i]) < ((i==0||i==3||i==6)?7:6))strongEvidence=0;
             end else if(population(strokeProjection[i])>2)uncertain=1;
         end
-        shapeGood=anchorCount>=3&&anchorWidth>=2&&anchorHeight>=2&&
+        shapeGood=selectedAnchorCount>=3&&selectedAnchorWidth>=2&&selectedAnchorHeight>=2&&
             holeUpperWhite<=4&&holeLowerWhite<=4;
         decodedDigit=15;
         case(segmentBits)
@@ -168,14 +232,15 @@ module projectiveMarkerReader #(
             7'b1111101:decodedDigit=6;
             default:decodedDigit=15;
         endcase
-        decision='0;decision.isBlue=index[3];decision.digit=15;
+        decision='0;decision.isBlue=heldColours[index];decision.digit=15;
         decision.xMin=box.xmin;decision.xMax=box.xmax;decision.yMin=box.ymin;decision.yMax=box.ymax;
         decision.orientation=orientation;decision.segments=segmentBits;
         if(geometryRejected)decision.reason=1;
         else if(mapRejected)decision.reason=6;
+        else if(orientationRejected)decision.reason=4;
         else if(uncertain)decision.reason=3;
         else if(!shapeGood)decision.reason=4;
-        else if(decodedDigit==15||(!index[3]&&decodedDigit>2))decision.reason=5;
+        else if(decodedDigit==15||(!heldColours[index]&&decodedDigit>2))decision.reason=5;
         else begin decision.accepted=1;decision.digit=decodedDigit;decision.quality=strongEvidence?8'd255:8'd192;end
     end
     assign busy=state!=IDLE;
@@ -183,9 +248,17 @@ module projectiveMarkerReader #(
     always_ff @(posedge clk)begin
         if(reset)begin
             state<=IDLE;done<=0;markers<='0;acceptedCount<=0;
-            heldRed<='0;heldBlue<='0;box<='0;index<=0;orientation<=0;
+            heldCandidates<='0;heldColours<=0;box<='0;index<=0;orientation<=0;orientationHint<=0;heldBypassPerspective<=0;
             scanX<=0;scanY<=0;foregroundCount<=0;geometryRejected<=0;mapRejected<=0;
-            minPlus<=0;maxPlus<=0;minMinus<=0;maxMinus<=0;
+            hypothesisIndex<=0;selectedOrientation<=0;cornerBaseIndex<=0;anchorMatches<=0;
+            orientationResolved<=0;orientationRejected<=0;
+            pairA<=0;pairB<=1;diameterA<=0;diameterB<=0;crossIndex<=0;crossLowIndex<=0;crossHighIndex<=0;
+            geometryProductPhase<=0;diameterSquared<=0;crossLow<=0;crossHigh<=0;geometryFirstProduct<=0;
+            cornerSumX<=0;cornerSumY<=0;
+            selectedAnchorCount<=0;selectedAnchorWidth<=0;selectedAnchorHeight<=0;
+            for(int direction=0;direction<16;direction++)begin
+                supportMaximum[direction]<=0;supportX[direction]<=0;supportY[direction]<=0;
+            end
             dx1<=0;dx2<=0;dx3<=0;dy1<=0;dy2<=0;dy3<=0;
             determinant<=0;gNumerator<=0;hNumerator<=0;dNorm<=0;gNorm<=0;hNorm<=0;
             ax<=0;bx<=0;cx<=0;ay<=0;by<=0;cy<=0;
@@ -200,15 +273,18 @@ module projectiveMarkerReader #(
             done<=0;
             case(state)
                 IDLE:if(start)begin
-                    heldRed<=redCandidates;heldBlue<=blueCandidates;orientation<=orientationProfile;
+                    heldCandidates<=sharedCandidates;heldColours<=sharedColours;orientationHint<=orientationProfile;
+                    heldBypassPerspective<=bypassPerspective;
                     index<=0;markers<='0;acceptedCount<=0;state<=SETUP;
                 end
                 SETUP:begin
-                    box<=index[3]?heldBlue[index[2:0]]:heldRed[index[2:0]];
-                    // Both sentinels are representable signed 21-bit literals;
-                    // valid native-image scores lie strictly inside this range.
-                    minPlus<=21'sd1048575;maxPlus<=-21'sd1048575;
-                    minMinus<=21'sd1048575;maxMinus<=-21'sd1048575;
+                    box<=heldCandidates[index];
+                    for(int direction=0;direction<16;direction++)begin
+                        supportMaximum[direction]<=-11'sd1024;supportX[direction]<=0;supportY[direction]<=0;
+                    end
+                    orientation<=orientationHint;hypothesisIndex<=0;selectedOrientation<=0;
+                    anchorMatches<=0;orientationResolved<=0;orientationRejected<=0;
+                    selectedAnchorCount<=0;selectedAnchorWidth<=0;selectedAnchorHeight<=0;
                     foregroundCount<=0;geometryRejected<=0;mapRejected<=0;
                     holeUpperWhite<=0;holeLowerWhite<=0;
                     for(int i=0;i<4;i++)begin cornerX[i]<=0;cornerY[i]<=0;end
@@ -225,30 +301,109 @@ module projectiveMarkerReader #(
                 SCAN_SAMPLE:begin
                     if(readColour)begin
                         foregroundCount<=foregroundCount+17'd1;
-                        if(scorePlus<minPlus)begin minPlus<=scorePlus;cornerX[0]<=scanX;cornerY[0]<=scanY;end
-                        if(scoreMinus>maxMinus)begin maxMinus<=scoreMinus;cornerX[1]<=scanX;cornerY[1]<=scanY;end
-                        if(scorePlus>maxPlus)begin maxPlus<=scorePlus;cornerX[2]<=scanX;cornerY[2]<=scanY;end
-                        if(scoreMinus<minMinus)begin minMinus<=scoreMinus;cornerX[3]<=scanX;cornerY[3]<=scanY;end
+                        for(int direction=0;direction<16;direction++)begin
+                            if(supportScore[direction]>supportMaximum[direction])begin
+                                supportMaximum[direction]<=supportScore[direction];
+                                supportX[direction]<=scanX;supportY[direction]<=scanY;
+                            end
+                        end
                     end
                     if(scanX==box.xmax)begin
                         scanX<=box.xmin;
-                        if(scanY==box.ymax)state<=CORNER_PREP;
+                        if(scanY==box.ymax)state<=DIAMETER_INIT;
                         else begin scanY<=scanY+8'd1;state<=SCAN_WAIT;end
                     end else begin scanX<=scanX+9'd1;state<=SCAN_WAIT;end
                 end
+                DIAMETER_INIT:begin
+                    pairA<=0;pairB<=1;diameterA<=0;diameterB<=0;diameterSquared<=0;
+                    geometryProductPhase<=0;state<=heldBypassPerspective?QUAD_SELECT:DIAMETER_START;
+                end
+                DIAMETER_START:state<=DIAMETER_WAIT;
+                DIAMETER_WAIT:if(multiplyDone)begin
+                    if(!geometryProductPhase)begin
+                        geometryFirstProduct<=multiplyResult;geometryProductPhase<=1;state<=DIAMETER_START;
+                    end else begin
+                        if(geometryCombinedProduct>$signed({18'd0,diameterSquared}))begin
+                            diameterSquared<=19'(geometryCombinedProduct);diameterA<=pairA;diameterB<=pairB;
+                        end
+                        state<=DIAMETER_NEXT;
+                    end
+                end
+                DIAMETER_NEXT:begin
+                    geometryProductPhase<=0;
+                    if(pairB==15)begin
+                        if(pairA==14)state<=CROSS_INIT;
+                        else begin pairA<=pairA+4'd1;pairB<=pairA+4'd2;state<=DIAMETER_START;end
+                    end else begin pairB<=pairB+4'd1;state<=DIAMETER_START;end
+                end
+                CROSS_INIT:begin
+                    crossIndex<=0;crossLow<=0;crossHigh<=0;crossLowIndex<=diameterA;crossHighIndex<=diameterA;
+                    geometryProductPhase<=0;state<=CROSS_START;
+                end
+                CROSS_START:state<=CROSS_WAIT;
+                CROSS_WAIT:if(multiplyDone)begin
+                    if(!geometryProductPhase)begin
+                        geometryFirstProduct<=multiplyResult;geometryProductPhase<=1;state<=CROSS_START;
+                    end else begin
+                        if(geometryCombinedProduct<crossLow)begin crossLow<=20'(geometryCombinedProduct);crossLowIndex<=crossIndex;end
+                        if(geometryCombinedProduct>crossHigh)begin crossHigh<=20'(geometryCombinedProduct);crossHighIndex<=crossIndex;end
+                        state<=CROSS_NEXT;
+                    end
+                end
+                CROSS_NEXT:begin
+                    geometryProductPhase<=0;
+                    if(crossIndex==15)state<=QUAD_SELECT;
+                    else begin crossIndex<=crossIndex+4'd1;state<=CROSS_START;end
+                end
+                QUAD_SELECT:begin
+                    if(heldBypassPerspective)begin
+                        cornerX[0]<=box.xmin;cornerY[0]<=box.ymin;cornerX[1]<=box.xmax;cornerY[1]<=box.ymin;
+                        cornerX[2]<=box.xmax;cornerY[2]<=box.ymax;cornerX[3]<=box.xmin;cornerY[3]<=box.ymax;
+                    end else begin
+                        cornerX[0]<=supportX[diameterA];cornerY[0]<=supportY[diameterA];
+                        cornerX[1]<=supportX[crossLowIndex];cornerY[1]<=supportY[crossLowIndex];
+                        cornerX[2]<=supportX[diameterB];cornerY[2]<=supportY[diameterB];
+                        cornerX[3]<=supportX[crossHighIndex];cornerY[3]<=supportY[crossHighIndex];
+                    end
+                    state<=QUAD_CANON;
+                end
+                QUAD_CANON:begin
+                    cornerBaseIndex<=nativeBaseIndex;
+                    cornerSumX<={2'b0,cornerX[0]}+{2'b0,cornerX[1]}+{2'b0,cornerX[2]}+{2'b0,cornerX[3]};
+                    cornerSumY<={2'b0,cornerY[0]}+{2'b0,cornerY[1]}+{2'b0,cornerY[2]}+{2'b0,cornerY[3]};
+                    state<=CORNER_PREP;
+                end
                 CORNER_PREP:begin
                     for(int i=0;i<4;i++)begin
-                        pointX[i]<=11'({1'b0,cornerX[(i+int'(orientation))%4],1'b0})+
-                            (((i+int'(orientation))%4==0||(i+int'(orientation))%4==3)?-11'sd1:11'sd1);
-                        pointY[i]<=11'({2'b0,cornerY[(i+int'(orientation))%4],1'b0})+
-                            (((i+int'(orientation))%4<2)?-11'sd1:11'sd1);
+                        // R9 baseline: use the axis-aligned colour bbox, while
+                        // retaining actual same-frame glyph pixels, anchor and
+                        // all rejection rules. It removes perspective recovery
+                        // rather than fabricating a failure or changing an ID.
+                        pointX[i]<=11'({1'b0,cornerX[(i+int'(orientation)+int'(cornerBaseIndex))%4],1'b0})+
+                            ({cornerX[(i+int'(orientation)+int'(cornerBaseIndex))%4],2'b0}>cornerSumX?11'sd1:
+                             {cornerX[(i+int'(orientation)+int'(cornerBaseIndex))%4],2'b0}<cornerSumX?-11'sd1:11'sd0);
+                        pointY[i]<=11'({2'b0,cornerY[(i+int'(orientation)+int'(cornerBaseIndex))%4],1'b0})+
+                            ({cornerY[(i+int'(orientation)+int'(cornerBaseIndex))%4],2'b0}>cornerSumY?11'sd1:
+                             {cornerY[(i+int'(orientation)+int'(cornerBaseIndex))%4],2'b0}<cornerSumY?-11'sd1:11'sd0);
                     end
                     state<=GEOMETRY;
                 end
                 GEOMETRY:if(!quadrilateralGood)begin geometryRejected<=1;state<=DECIDE;end
-                    else state<=ANCHOR_START;
+                    else state<=orientationResolved?HOMO_DELTAS:ANCHOR_START;
                 ANCHOR_START:state<=ANCHOR_WAIT;
-                ANCHOR_WAIT:if(anchorDone)state<=HOMO_DELTAS;
+                ANCHOR_WAIT:if(anchorDone)begin
+                    if(anchorCount>=3&&anchorWidth>=2&&anchorHeight>=2)begin
+                        if(anchorMatches<2)anchorMatches<=anchorMatches+2'd1;
+                        selectedOrientation<=orientation;selectedAnchorCount<=anchorCount;
+                        selectedAnchorWidth<=anchorWidth;selectedAnchorHeight<=anchorHeight;
+                    end
+                    if(hypothesisIndex==3)state<=ORIENTATION_FINISH;
+                    else begin hypothesisIndex<=hypothesisIndex+2'd1;orientation<=orientation+2'd1;state<=CORNER_PREP;end
+                end
+                ORIENTATION_FINISH:begin
+                    if(anchorMatches==1)begin orientation<=selectedOrientation;orientationResolved<=1;state<=CORNER_PREP;end
+                    else begin orientation<=orientationHint;orientationRejected<=1;state<=DECIDE;end
+                end
                 HOMO_DELTAS:begin
                     dx1<=pointX[1]-pointX[2];dx2<=pointX[3]-pointX[2];dx3<=pointX[0]-pointX[1]+pointX[2]-pointX[3];
                     dy1<=pointY[1]-pointY[2];dy2<=pointY[3]-pointY[2];dy3<=pointY[0]-pointY[1]+pointY[2]-pointY[3];
