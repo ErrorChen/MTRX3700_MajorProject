@@ -6,13 +6,13 @@ module cdcTransport_tb;
     logic clk=0,pclk=0,reset=1;
     always #10 clk=~clk;
     initial begin #7; forever #17 pclk=~pclk; end
-    logic [21:0] sourceData=0,destinationData;
+    logic [23:0] sourceData=0,destinationData;
     logic destinationValid;
     // These resets model the same external reset reaching two clock-domain
     // synchronisers on different edges. The FIFO/bridge keep their original
     // reset, so the mailbox recovery exercise cannot restart their scoreboards.
     logic mailboxSourceReset=1,mailboxDestinationReset=1;
-    heldBusCdc #(.WIDTH(22)) mailbox(clk,mailboxSourceReset,sourceData,
+    heldBusCdc #(.WIDTH(24)) mailbox(clk,mailboxSourceReset,sourceData,
         pclk,mailboxDestinationReset,destinationData,destinationValid);
     logic writeValid=0,readEnable=0,full,empty,readValid;
     logic [15:0] writeData=0,readData;
@@ -35,7 +35,7 @@ module cdcTransport_tb;
     logic [79:0] streamRecords[0:1023];
     logic mailboxChecking=0;
     integer mailboxAcceptedWords=0,mailboxHeldChecks=0,mailboxResetCases=0;
-    logic [21:0] mailboxPreviousHeld;
+    logic [23:0] mailboxPreviousHeld;
     logic mailboxWasPending;
 
     // Sample the condition used by the source FSM before its nonblocking
@@ -55,7 +55,7 @@ module cdcTransport_tb;
     always @(posedge pclk) begin
         #1;
         if(mailboxChecking && !mailboxSourceReset && !mailboxDestinationReset && destinationValid) begin
-            if(destinationData[10:0] !== (destinationData[21:11] ^ 11'h5a5))
+            if(destinationData[11:0] !== (destinationData[23:12] ^ 12'h5a5))
                 $fatal(1,"held-bus word tore across clock domains");
             mailboxAcceptedWords++;
         end
@@ -96,7 +96,7 @@ module cdcTransport_tb;
         integer acceptedBefore;
         // Interrupt a real launched transaction before its acknowledgement.
         // The phase sweep moves the shared reset request around both clocks.
-        @(negedge clk);sourceData={11'(100+caseNumber),11'((100+caseNumber)^11'h5a5)};
+        @(negedge clk);sourceData={12'(100+caseNumber),12'((100+caseNumber)^12'h5a5)};
         @(posedge clk);#1;
         if(mailbox.acknowledgeSync[1]==mailbox.requestToggle)
             $fatal(1,"reset test did not start with an outstanding word");
@@ -122,7 +122,7 @@ module cdcTransport_tb;
         if(destinationData!==0 || destinationValid!==0 || mailbox.requestToggle!==mailbox.acknowledgeSync[1])
             $fatal(1,"mailbox failed reset quiescence, case=%0d",caseNumber);
         mailboxChecking=1;acceptedBefore=mailboxAcceptedWords;
-        @(negedge clk);sourceData={11'(1000+caseNumber),11'((1000+caseNumber)^11'h5a5)};
+        @(negedge clk);sourceData={12'(1000+caseNumber),12'((1000+caseNumber)^12'h5a5)};
         repeat(12) @(negedge pclk);
         if(destinationData!==sourceData || mailboxAcceptedWords!=acceptedBefore+1)
             $fatal(1,"fresh post-reset word not delivered exactly once, case=%0d",caseNumber);
@@ -136,7 +136,7 @@ module cdcTransport_tb;
         // received word must be one complete source word and final value arrives.
         mailboxChecking=1;
         for(int n=1;n<=40;n++) begin
-            @(negedge clk);sourceData={11'(n),11'(n^11'h5a5)};
+            @(negedge clk);sourceData={12'(n),12'(n^12'h5a5)};
         end
         repeat(20) @(negedge pclk);
         if(destinationData!==sourceData) $fatal(1,"mailbox failed eventual delivery");
@@ -165,25 +165,25 @@ module cdcTransport_tb;
         repeat(20) @(negedge clk);
         if(written!=received || !empty) $fatal(1,"FIFO concurrent ordering/drain");
         // The bridge snapshots the held request at SOF, not at pixel completion.
-        activeRequest.operation=TARGET_SELECT;activeRequest.requestTag=16'h1234;activeRequest.bayId=3;
+        activeRequest.operation=TARGET_SELECT;activeRequest.markerType=MARKER_BAY;activeRequest.requestTag=16'h1234;activeRequest.digit=3;
         streamReady=1;
         repeat(20) @(negedge pclk);
         sourceFrame();
-        activeRequest.requestTag=16'h5678;activeRequest.bayId=6;
+        activeRequest.requestTag=16'h5678;activeRequest.markerType=MARKER_FUNCTION;activeRequest.digit=2;
         sourcePixel(20,40,16'hf81f);
         sourcePixel(21,40,16'hffff); // odd X is excluded by the native reduction
         sourcePixel(22,41,16'hffff); // odd Y is excluded
         sourcePixel(22,40,16'h1234);
         repeat(20) @(negedge clk);
         if(streamCount!=3 || sofCount!=1 || pixelCount!=2) $fatal(1,"bridge token count");
-        if(streamRecords[0][71:50]!=={TARGET_SELECT,16'h1234,4'd3} || streamRecords[0][49:34]!=1)
+        if(streamRecords[0][73:50]!=={TARGET_SELECT,16'h1234,MARKER_BAY,4'd3} || streamRecords[0][49:34]!=1)
             $fatal(1,"SOF request ownership");
         if(streamRecords[1][32:24]!=10 || streamRecords[1][23:16]!=20 || streamRecords[1][15:0]!=16'hf81f)
             $fatal(1,"native pixel mapping");
         repeat(15) @(negedge pclk);
         sourceFrame();
         repeat(20) @(negedge clk);
-        if(streamRecords[3][71:50]!=={TARGET_SELECT,16'h5678,4'd6} || streamRecords[3][49:34]!=2)
+        if(streamRecords[3][73:50]!=={TARGET_SELECT,16'h5678,MARKER_FUNCTION,4'd2} || streamRecords[3][49:34]!=2)
             $fatal(1,"next SOF did not use coherent updated request");
         if(streamRecords[3][33:2]<=streamRecords[0][33:2] || streamRecords[3][33:2]>timeUs)
             $fatal(1,"capture timestamp order");

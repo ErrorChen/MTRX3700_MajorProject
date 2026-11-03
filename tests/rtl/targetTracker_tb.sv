@@ -26,11 +26,18 @@ module targetTracker_tb;
         @(negedge clk); reset=0;
         tick();
     endtask
-    task automatic request(input targetOperation_t op,input integer bay,input integer tag);
-        @(negedge clk); targetRequest.operation=op; targetRequest.bayId=bay;
+    task automatic request(input targetOperation_t op,input integer digit,input integer tag,
+                           input markerType_t markerType=MARKER_BAY);
+        targetRequest_t beforeRequest;
+        beforeRequest=activeRequest;
+        @(negedge clk); targetRequest.operation=op; targetRequest.digit=4'(digit);
+        targetRequest.markerType=markerType;
         targetRequest.requestTag=tag; targetRequestValid=1;
         tick();
-        if (!targetRequestReady || activeRequest!=targetRequest) $fatal(1,"request acceptance");
+        if (!targetRequestReady) $fatal(1,"request readiness");
+        if (op==TARGET_LIST || op==TARGET_GET) begin
+            if(activeRequest!==beforeRequest) $fatal(1,"query changed tracker identity");
+        end else if(activeRequest!=targetRequest) $fatal(1,"request acceptance");
         @(negedge clk); targetRequestValid=0;
     endtask
     task automatic frame(input integer id,input integer count,input bit good);
@@ -57,20 +64,40 @@ module targetTracker_tb;
     endtask
     initial begin
         targetRequest='0; frameObservation='0;
-        if ($bits(targetRequest_t)!=22 || $bits(targetReport_t)!=139 ||
-            $bits(userEvent_t)!=104 || $bits(perceptionStatus_t)!=76) $fatal(1,"v2 widths");
-        if (DEFAULT_ACTIVE_BAY_MASK!=10'h07e || INTERACTION_SPEECH_ARMED!=9) $fatal(1,"v2 constants");
+        if ($bits(targetRequest_t)!=24 || $bits(targetReport_t)!=141 || $bits(queryResult_t)!=141 ||
+            $bits(userEvent_t)!=104 || $bits(perceptionStatus_t)!=76) $fatal(1,"v3 widths");
+        if (DEFAULT_ACTIVE_BAY_MASK!=10'h07e || INTERACTION_SPEECH_ARMED!=9) $fatal(1,"v3 constants");
         restart();
         for (int bay=1;bay<=6;bay++) begin
             request(TARGET_SELECT,bay,bay);
             for(int n=1;n<=3;n++) begin
                 frame(nextFrame,1,1); nextFrame++;
-                if (!targetReport.observed || targetReport.locked!=(n==3) || targetReport.bayId!=bay)
+                if (!targetReport.observed || targetReport.locked!=(n==3) || targetReport.digit!=bay || targetReport.markerType!=MARKER_BAY)
                     $fatal(1,"three-frame lock bay=%0d n=%0d",bay,n);
                 if(targetReport.centreU!=22 || targetReport.centreV!=307 ||
                    targetReport.boxWidth!=5 || targetReport.boxHeight!=4) $fatal(1,"bbox-before-centre rotation");
             end
         end
+        // The same tracker supports red function signs and the actual paired
+        // blue reference. Their match counts originate in the typed core scan.
+        for(int typed=1;typed<=3;typed++) begin
+            request(TARGET_SELECT,typed==3?15:typed,200+typed,
+                    typed==3?MARKER_REFERENCE:MARKER_FUNCTION);
+            for(int n=1;n<=3;n++) begin
+                frame(nextFrame,1,1);nextFrame++;
+                if(!targetReport.observed || targetReport.locked!=(n==3) ||
+                   targetReport.markerType!=activeRequest.markerType || targetReport.digit!=activeRequest.digit)
+                    $fatal(1,"typed red/reference tracking");
+            end
+        end
+        request(TARGET_SELECT,1,210,MARKER_FUNCTION);
+        frame(nextFrame,1,1);nextFrame++;
+        frame(nextFrame,1,1);nextFrame++;
+        request(TARGET_GET,1,211,MARKER_BAY);
+        request(TARGET_LIST,15,212,MARKER_NONE);
+        frame(nextFrame,1,1);nextFrame++;
+        if(!targetReport.locked || targetReport.requestTag!=210 || requestInvalidFault)
+            $fatal(1,"queries changed three-frame continuity/tag/fault");
         frame(nextFrame,0,1); nextFrame++;
         checkNoMeasurement();
         if(targetReport.reason!=REPORT_NOT_FOUND) $fatal(1,"missing reason");
@@ -98,7 +125,8 @@ module targetTracker_tb;
         savedReport=targetReport;
         request(TARGET_SELECT,3,100);
         @(negedge clk);
-        frameObservation.boundRequest.requestTag=6; frameObservation.boundRequest.bayId=6;
+        frameObservation.boundRequest.requestTag=6; frameObservation.boundRequest.digit=6;
+        frameObservation.boundRequest.markerType=MARKER_BAY;
         frameObservation.frameId=nextFrame; nextFrame++; frameValid=1;
         tick();
         if(targetReport.requestTag!=6 || targetReport.reason!=REPORT_REQUEST_CHANGED) $fatal(1,"old frame was relabelled");
@@ -107,7 +135,7 @@ module targetTracker_tb;
         request(TARGET_CLEAR,0,101);
         frame(nextFrame,1,1); nextFrame++;
         checkNoMeasurement();
-        if(targetReport.bayId!=15 || targetReport.targetSelected || targetReport.reason!=REPORT_NO_SELECTION)
+        if(targetReport.markerType!=MARKER_NONE || targetReport.digit!=15 || targetReport.targetSelected || targetReport.reason!=REPORT_NO_SELECTION)
             $fatal(1,"CLEAR is independent from zero");
         for(int invalidBay=0;invalidBay<=9;invalidBay++) begin
             if(invalidBay==0 || invalidBay>=7) begin
@@ -118,6 +146,24 @@ module targetTracker_tb;
                     $fatal(1,"disabled bay accepted");
             end
         end
+        request(TARGET_SELECT,3,220,MARKER_FUNCTION);
+        frame(nextFrame,1,1);nextFrame++;
+        if(targetReport.reason!=REPORT_INVALID_REQUEST || targetReport.markerType!=MARKER_NONE)
+            $fatal(1,"unsupported red function digit accepted");
+        request(TARGET_SELECT,1,221,MARKER_REFERENCE);
+        frame(nextFrame,1,1);nextFrame++;
+        if(targetReport.reason!=REPORT_INVALID_REQUEST || targetReport.targetSelected)
+            $fatal(1,"reference must use digit F");
+        // Identity remains frame-bound even if a malformed peer reuses a tag.
+        request(TARGET_SELECT,1,222,MARKER_BAY);
+        @(negedge clk);frameObservation.boundRequest=activeRequest;
+        frameObservation.boundRequest.markerType=MARKER_FUNCTION;
+        frameObservation.frameId=nextFrame;nextFrame++;
+        frameObservation.matchCount=1;frameValid=1;
+        tick();checkNoMeasurement();
+        if(targetReport.reason!=REPORT_REQUEST_CHANGED || targetReport.markerType!=MARKER_FUNCTION)
+            $fatal(1,"red1 was relabelled blue1");
+        @(negedge clk);frameValid=0;
         restart(); activeCfgVersion=0;
         request(TARGET_SELECT,1,65535);
         frame(65534,1,1); frame(65535,1,1); frame(0,1,1);

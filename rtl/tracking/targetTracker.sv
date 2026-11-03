@@ -30,9 +30,12 @@ module targetTracker (
     logic [9:0] sumV;
 
     always_comb begin
-        requestAccepted = targetRequestValid && targetRequestReady;
+        // Queries are routed away by perceptionCore. Keep this guard so a
+        // direct integration cannot replace the selected target with LIST/GET.
+        requestAccepted = targetRequestValid && targetRequestReady &&
+            (targetRequest.operation == TARGET_SELECT || targetRequest.operation == TARGET_CLEAR);
         validSelection = frameObservation.boundRequest.operation == TARGET_SELECT &&
-            bayEnabled(frameObservation.boundRequest.bayId);
+            markerEnabled(frameObservation.boundRequest.markerType, frameObservation.boundRequest.digit);
         currentRequest = frameObservation.boundRequest == activeRequest;
         currentConfig = frameObservation.configVersion == activeCfgVersion;
         frameDelta = frameObservation.frameId - lastFrameId;
@@ -53,7 +56,8 @@ module targetTracker (
         newReport.frameId = frameObservation.frameId;
         newReport.captureStartUs = frameObservation.captureStartUs;
         newReport.configVersion = frameObservation.configVersion;
-        newReport.bayId = validSelection ? frameObservation.boundRequest.bayId : INVALID_BAY_ID;
+        newReport.markerType = validSelection ? frameObservation.boundRequest.markerType : MARKER_NONE;
+        newReport.digit = validSelection ? frameObservation.boundRequest.digit : INVALID_BAY_ID;
         newReport.targetSelected = validSelection;
         newReport.frameGood = frameObservation.frameGood && !frameObservation.resourceDrop && newSequence;
         newReport.reason = REPORT_NOT_FOUND;
@@ -96,7 +100,7 @@ module targetTracker (
         if (reset) begin
             targetRequestReady <= 0;
             activeRequest <= '0;
-            activeRequest.bayId <= INVALID_BAY_ID;
+            activeRequest.digit <= INVALID_BAY_ID;
             targetReport <= '0;
             targetReportValid <= 0;
             pendingReport <= '0;
@@ -123,7 +127,7 @@ module targetTracker (
                 activeRequest <= targetRequest;
                 confirmationCount <= 0;
                 if (targetRequest.operation != TARGET_CLEAR &&
-                    !(targetRequest.operation == TARGET_SELECT && bayEnabled(targetRequest.bayId)))
+                    !(targetRequest.operation == TARGET_SELECT && markerEnabled(targetRequest.markerType,targetRequest.digit)))
                     requestInvalidFault <= 1;
             end
             if (!perceptionReady || (!frameValid && lastConfigVersion != activeCfgVersion))

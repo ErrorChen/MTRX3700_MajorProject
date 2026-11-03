@@ -26,6 +26,9 @@ class HsvTests(unittest.TestCase):
         image=Image.new('RGB',(256,256));image.putdata(pixels)
         self.assertEqual(colourMask(image,48,32,colourAlgorithm=1),expected)
         self.assertEqual(colourMask(image,48,20,colourAlgorithm=2),expectedNew)
+        # Algorithm3 changes candidate support only, not any RGB565 hue/value
+        # decision. Keep the independent floating-point oracle for all65536codes.
+        self.assertEqual(colourMask(image,48,20,colourAlgorithm=3),expectedNew)
 
     def test_run_support_keeps_complete_runs_and_row_boundary(self):
         rows=np.array([[1,1,1,0,2,2,0,1,0,2,2,2],

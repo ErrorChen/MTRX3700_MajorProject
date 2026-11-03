@@ -81,8 +81,12 @@ proc unsignedBinary {bits} {
     return $value
 }
 proc schemaWordCount {schema} {
-    if {$schema ni {1 2 3 4 5 6 7}} { error "unsupported BCTL schema" }
+    if {$schema ni {1 2 3 4 5 6 7 8}} { error "unsupported BCTL schema" }
     return [expr {$schema == 6 ? 160 : 96}]
+}
+proc schemaContractVersion {schema} {
+    schemaWordCount $schema
+    return [expr {$schema == 8 ? 3 : 2}]
 }
 proc frozenWord {heldSource address} {
     write_source_data -instance_index $::instance -value [binary32 [expr {($heldSource & 0xffff00ff) | ($address << 8)}]]
@@ -101,7 +105,7 @@ proc trialFrozenStatus {} {
     set schema [expr {$meta >> 24}]
     set wordCount [schemaWordCount $schema]
     if {$magic != 0x42444247 ||
-        (($meta >> 16) & 255) != 2 || ($meta & 255) != $wordCount || ($meta & 0x4000)} {
+        (($meta >> 16) & 255) != [schemaContractVersion $schema] || ($meta & 255) != $wordCount || ($meta & 0x4000)} {
         error "trial-stream unsupported or rejected BCTL frozen header"
     }
     set identity [list $magic $build $schema]
@@ -122,7 +126,7 @@ proc trialFrozenStatus {} {
         if {[string range $value 0 95] ne $header} { error "BCTL header changed during frozen status read" }
         lappend words [unsignedBinary [string range $value 96 127]]
     }
-    if {[lindex $words 0] != 0x45425031 || [lindex $words 1] != (($schema << 16) | 2) ||
+    if {[lindex $words 0] != 0x45425031 || [lindex $words 1] != (($schema << 16) | [schemaContractVersion $schema]) ||
         [lindex $words [expr {$wordCount-4}]] != $build} { error "trial-stream frozen payload/header identity mismatch" }
     return [list $header $words]
 }
@@ -164,10 +168,12 @@ proc streamTrials {trials deadlineSeconds} {
         set initialOk 1
         for {set trial 1} {$trial <= $trials} {incr trial} {
             for {set bay 1} {$bay <= 6} {incr bay} {
-                set selected [trialRecord SELECT $trial $bay [expr {(1 << 24) | $bay}]]
+                set selected [trialRecord SELECT $trial $bay [expr {(1 << 24) | (1 << 4) | $bay}]]
                 set request [lindex $selected end-7]
-                set tag [expr {($request >> 4) & 65535}]
-                if {($request >> 20) != 1 || ($request & 15) != $bay} {
+                set typed [expr {([lindex $selected 1] & 65535) == 3}]
+                set tag [expr {($request >> ($typed ? 6 : 4)) & 65535}]
+                if {($request >> ($typed ? 22 : 20)) != 1 || ($request & 15) != $bay ||
+                    ($typed && (($request >> 4) & 3) != 1)} {
                     error "trial-stream SELECT was acknowledged but active request differs"
                 }
                 set collected 0
@@ -185,15 +191,16 @@ proc streamTrials {trials deadlineSeconds} {
                         if {$delta >= 32768} { error "trial-stream native frame moved backwards" }
                     }
                     set lastFrame $frame
-                    # Contract v2 targetReport is 139 bits, low word first.
+                    # Contract v2 targetReport is139 bits; v3 adds a2-bit type.
                     # Only tag/bay/frame choose the denominator. Bad, unlocked,
                     # ambiguous and stale results still count and stay emitted.
                     set report 0
                     for {set word 0} {$word < 5} {incr word} {
                         set report [expr {$report | ([lindex $words [expr {13+$word}]] << (32*$word))}]
                     }
-                    if {(($report >> 123) & 65535) == $tag &&
-                        (($report >> 107) & 65535) == $frame && (($report >> 55) & 15) == $bay} {
+                    if {(($report >> ($typed ? 125 : 123)) & 65535) == $tag &&
+                        (($report >> ($typed ? 109 : 107)) & 65535) == $frame && (($report >> 55) & 15) == $bay &&
+                        (!$typed || (($report >> 59) & 3) == 1)} {
                         incr collected
                     }
                 }
@@ -222,8 +229,11 @@ if {$command != 0} {
     set before [stableProbe]
     set schema 0
     foreach bit [split [string range $before 64 71] ""] { set schema [expr {($schema << 1) | $bit}] }
-    if {$schema ni {1 2 3 4 5 6 7}} { error "unsupported BCTL schema before action; no command issued" }
+    if {$schema ni {1 2 3 4 5 6 7 8}} { error "unsupported BCTL schema before action; no command issued" }
     set opcode [expr {($command >> 24) & 15}]
+    if {$schema < 8 && (($opcode == 1 && (($command >> 4) & 3) > 1) || $opcode in {8 9 10})} {
+        error "typed non-bay targets and query operations require BCTL schema8/public3; no command issued"
+    }
     if {$opcode in {3 4} && $schema < 3} {
         error "interaction arming requires BCTL schema3 action acceptance; rebuild/program current source"
     }
@@ -271,7 +281,7 @@ set header [stableProbe]
 set frozenMeta [unsignedBinary [string range $header 64 95]]
 set wordCount [schemaWordCount [expr {$frozenMeta >> 24}]]
 if {[unsignedBinary [string range $header 0 31]] != 0x42444247 ||
-    (($frozenMeta >> 16) & 255) != 2 || ($frozenMeta & 255) != $wordCount} {
+    (($frozenMeta >> 16) & 255) != [schemaContractVersion [expr {$frozenMeta >> 24}]] || ($frozenMeta & 255) != $wordCount} {
     error "unsupported BCTL frozen header magic/schema/contract/length"
 }
 puts "ECHO7_HEADER\t[string range $header 0 95]"

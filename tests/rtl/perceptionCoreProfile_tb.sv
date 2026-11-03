@@ -32,6 +32,8 @@ module perceptionCoreProfile_tb;
     frameObservation_t completionDrive;
     integer capturedBank=0,checks=0,completions=0,reusedBank;
     logic debugInteractionArmReady;
+    queryResult_t queryResult;
+    logic queryResultValid,queryResultReady=1,queryBusy;
     perceptionCore dut(.*);
     always @(posedge clk) if(!reset)timeUs<=timeUs+1;
 

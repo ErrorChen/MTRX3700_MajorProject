@@ -318,6 +318,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/capture/cameraStreamBridge
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/glyphBanks.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/nativeAnchorReader.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/projectiveMarkerReader.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/markerQueryStore.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/tracking/targetTracker.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/interaction/colourSampler.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/interaction/fixedSheetInteraction.sv

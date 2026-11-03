@@ -114,7 +114,7 @@ def prepareVectors(outputDir):
     records = []
     for index, (name, original, orientation) in enumerate(itertools.islice(cases(), 2)):
         image = quantise565(original)
-        base = recognise(image, cleanup=True, redMin=48, blueMin=20, colourAlgorithm=2,
+        base = recognise(image, cleanup=True, redMin=48, blueMin=20, colourAlgorithm=3,
                          pruneUnusable=True, activeCapacity=15, capacity=16, sharedCapacity=16)
         if base["overflow"]:
             raise RuntimeError(f"system fixture candidate overflow: {name}")
@@ -128,7 +128,7 @@ def prepareVectors(outputDir):
             candidateWords[slot] = packCandidate(fields)
             candidateColours[slot] = int(colour == "blue")
             marker = classifyProjective(image, fields, orientation=orientation, redMin=48, blueMin=20,
-                                        colourAlgorithm=2, readerAlgorithm=5)
+                                        colourAlgorithm=3, readerAlgorithm=5)
             digit = marker["digit"] if marker["accepted"] else 15
             expectedWords[slot] = (int(marker["accepted"]) << 24) | (digit << 16) | \
                                  (marker["quality"] << 8) | marker["reasonCode"]

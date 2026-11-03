@@ -55,7 +55,7 @@ def colourMask(image, redMin=64, blueMin=32, numerator=3, denominator=2, colourA
     The latter preserves measured dark blue gutters after RGB565 quantisation.
     All comparisons use signed integer products; calibrated V is independent.
     """
-    if colourAlgorithm not in (0,1,2):raise ValueError('colourAlgorithm must be 0, 1 or 2')
+    if colourAlgorithm not in (0,1,2,3):raise ValueError('colourAlgorithm must be 0, 1, 2 or 3')
     values = []
     for red, green, blue in pixelsOf(image):
         if colourAlgorithm==0:
@@ -71,14 +71,21 @@ def colourMask(image, redMin=64, blueMin=32, numerator=3, denominator=2, colourA
     return values
 
 
-def horizontalRunSupport(mask):
-    """Preserve an entire same-colour horizontal run iff its length is >=3.
+def horizontalRunSupport(mask,minimumLength=3):
+    """Preserve complete same-colour runs of at least two or three pixels.
 
     The mask is a 2-D uint8 array. No row boundary wraps and both ends of a
     qualifying run remain, unlike erosion. Only CCL sees this support filter;
     the raw mask remains the reader's same-frame corner foreground.
+    Historical default3 is immutable; colour algorithm3 explicitly selects2.
     """
     import numpy as np
+    if minimumLength not in (2,3):raise ValueError('minimumLength must be 2 or 3')
+    if minimumLength==2:
+        pairs=(mask[:,:-1]!=0)&(mask[:,:-1]==mask[:,1:])
+        keep=np.zeros_like(mask,dtype=bool)
+        keep[:,:-1]|=pairs;keep[:,1:]|=pairs
+        return np.where(keep,mask,0).astype(np.uint8)
     triples=(mask[:,:-2]!=0)&(mask[:,:-2]==mask[:,1:-1])&(mask[:,:-2]==mask[:,2:])
     keep=np.zeros_like(mask,dtype=bool)
     keep[:,:-2]|=triples;keep[:,1:-1]|=triples;keep[:,2:]|=triples
@@ -211,7 +218,8 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
         from analyse_capture import cleanup as partACleanup
         from candidates_reclaimed_model import candidates_reclaimed
         candidateInput=np.array(rawMask,dtype=np.uint8).reshape(height,width)
-        if colourAlgorithm in (1,2):candidateInput=horizontalRunSupport(candidateInput)
+        if colourAlgorithm in (1,2,3):
+            candidateInput=horizontalRunSupport(candidateInput,2 if colourAlgorithm==3 else 3)
         cleaned = partACleanup(candidateInput)
         mask = cleaned.reshape(-1).tolist()
         boundedOracle = candidates_reclaimed(cleaned.tolist(),cap=capacity,min_area=32,prune_unusable=pruneUnusable,
@@ -233,9 +241,9 @@ def recognise(image, orientation=0, capacity=8, output=None, inputSource="UNSPEC
               "imageSize":[width,height],"orientationProfile":orientation,"capacityPerColour":capacity,"activeCapacityPerColour":capacity if activeCapacity is None else activeCapacity,
               "colourProfile":{"redMin":redMin,"blueMin":blueMin,"colourAlgorithm":colourAlgorithm,
                    **({'ratioNumerator':3,'ratioDenominator':2} if colourAlgorithm==0 else
-                      {'redSignedHueDegrees':[-24,0],'blueHueDegrees':[200,250 if colourAlgorithm==1 else 260],'minimumSaturation':0.5,'horizontalRunSupport':3})},
+                      {'redSignedHueDegrees':[-24,0],'blueHueDegrees':[200,250 if colourAlgorithm==1 else 260],'minimumSaturation':0.5,'horizontalRunSupport':2 if colourAlgorithm==3 else 3})},
               "whiteProfile":{"minimum":whiteMin,"maximumChannelSpread":64,"source":"FIXED_MODEL_PARAMETER_NOT_AUTOMATIC_COLOUR_CALIBRATION"},
-              "cleanup":("RUN3_THEN_PART_A_CAUSAL_LEFT_OR_UPPER" if colourAlgorithm in (1,2) else "PART_A_CAUSAL_RAW_LEFT_OR_UPPER") if cleanup else "NONE",
+              "cleanup":("RUN2_THEN_PART_A_CAUSAL_LEFT_OR_UPPER" if colourAlgorithm==3 else "RUN3_THEN_PART_A_CAUSAL_LEFT_OR_UPPER" if colourAlgorithm in (1,2) else "PART_A_CAUSAL_RAW_LEFT_OR_UPPER") if cleanup else "NONE",
               "boundedCandidateOracle":boundedOracle,
               "candidateCounts":counts,"allComponentsBeforeAreaGate":{"red":allCounts[1],"blue":allCounts[2]},
               "modelPeakOverlappingBboxes":peak,"overflow":overflow,"frameGood":not overflow,

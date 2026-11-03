@@ -15,7 +15,3 @@
 *.pdf binary
 *.bin binary
 *.sof binary
-# Captured evidence and supplied input documents retain their exact recorded
-# bytes; do not normalise logs whose SHA256 is part of the provenance chain.
-evidence/** -text -whitespace
-docs/inputs/** -text -whitespace

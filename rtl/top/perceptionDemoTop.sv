@@ -139,12 +139,20 @@ module perceptionDemoTop #(
     end
     targetRequest_t targetRequest,currentRequest;
     targetReport_t targetReport,cachedReport;
+    queryResult_t queryResult;
     userEvent_t userEvent;
     perceptionStatus_t status;
     logic requestValid,requestReady,reportValid,reportReady,eventValid,eventReady;
-    logic commandValid,commandReady,commandClear,calibrateArm,speechArm,autoCycle,measurementUsable;
+    logic commandValid,commandReady,calibrateArm,speechArm,autoCycle,measurementUsable;
+    targetOperation_t commandOperation;
+    markerType_t commandMarkerType;
+    logic queryResultValid,queryResultReady,queryBusy;
+    // Include an accepted but not yet forwarded C-simulator query. This closes
+    // the one-cycle queue-to-core gap in the JTAG drain/busy handshake.
+    wire debugQueryBusy=queryBusy||(requestValid&&
+        (targetRequest.operation==TARGET_LIST||targetRequest.operation==TARGET_GET));
     logic debugInteractionArmReady;
-    logic [3:0] commandBayId;
+    logic [3:0] commandDigit;
     logic [1:0] orientationProfile;
     logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] coreWords,debugWords,completedWords,cameraWords,displayWords;
     logic completedFrame;
@@ -166,11 +174,12 @@ module perceptionDemoTop #(
         .bypassPerspective(bypassSync),.processingEnable(!rawProcessingSync),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),
+        .queryResult(queryResult),.queryResultValid(queryResultValid),.queryResultReady(queryResultReady),.queryBusy(queryBusy),
         .userEvent(userEvent),.userEventValid(eventValid),.userEventReady(eventReady),.status(status),
         .debugWords(coreWords),.completedFrame(completedFrame),.completedFrameId(completedFrameId));
     memberCSimulator cModel (
         .clk(CLOCK_50),.reset(reset50),.timeUs(timeUs),.commandValid(commandValid),.commandReady(commandReady),
-        .commandClear(commandClear),.commandBayId(commandBayId),.autoCycle(autoCycle),
+        .commandOperation(commandOperation),.commandMarkerType(commandMarkerType),.commandDigit(commandDigit),.autoCycle(autoCycle),
         .interactionEnable(1'b1),.interactionPermit(1'b1),.status(status),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),
@@ -179,7 +188,9 @@ module perceptionDemoTop #(
         .acceptedEventPulse(),.rejectedEventPulse());
     memberBDebug #(.BUILD_ID(`MEMBER_B_BUILD_ID)) debugControl (
         .clk(CLOCK_50),.reset(reset50),.debugWords(debugWords),.commandValid(commandValid),.commandReady(commandReady),
-        .commandClear(commandClear),.commandBayId(commandBayId),.calibrateArm(calibrateArm),.speechArm(speechArm),
+        .commandOperation(commandOperation),.commandMarkerType(commandMarkerType),.commandDigit(commandDigit),
+        .queryResult(queryResult),.queryResultValid(queryResultValid),.queryResultReady(queryResultReady),.queryBusy(debugQueryBusy),
+        .calibrateArm(calibrateArm),.speechArm(speechArm),
         .interactionArmReady(debugInteractionArmReady),
         .orientationProfile(orientationProfile),.autoCycle(autoCycle));
     // Wait until the tracker has consumed the completed observation. Freeze a

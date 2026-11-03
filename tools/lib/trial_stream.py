@@ -9,7 +9,7 @@ import json
 import re
 
 from debug_decode import decodeWords, schemaLayout
-from hardware_measurement import measureTrials
+from hardware_measurement import measureTrials, baySelectCommand
 
 
 def parseTrialStream(output, expectedBuildId):
@@ -57,7 +57,7 @@ def parseTrialStream(output, expectedBuildId):
                     raise ValueError("trial frozen snapshot is incomplete")
                 decoded = decodeWords(current["words"])
                 if (magic != 0x42444247 or buildId != expectedBuildId or decoded["buildId"] != buildId
-                        or meta >> 24 != decoded["debugSchemaVersion"] or (meta >> 16) & 255 != 2
+                        or meta >> 24 != decoded["debugSchemaVersion"] or (meta >> 16) & 255 != decoded["contractVersion"]
                         or meta & 255 != wordCount):
                     raise ValueError("trial source/schema/header identity mismatch")
                 action = current.get("action")
@@ -66,7 +66,7 @@ def parseTrialStream(output, expectedBuildId):
                     if action is None or action["opcode"] != opcode:
                         raise ValueError("trial command has no matching action acceptance")
                     actionMeta = action["meta"]
-                    if actionMeta >> 24 != meta >> 24 or (actionMeta >> 16) & 255 != 2 or actionMeta & 255 != wordCount:
+                    if actionMeta >> 24 != meta >> 24 or (actionMeta >> 16) & 255 != decoded["contractVersion"] or actionMeta & 255 != wordCount:
                         raise ValueError("trial action has incompatible schema")
                     if actionMeta & 0x7000:
                         raise ValueError("trial SELECT/CLEAR was rejected")
@@ -95,7 +95,7 @@ class TrialRecordReader:
         if self.position >= len(self.records):
             raise RuntimeError("JTAG trial stream ended before all required observations")
         record = self.records[self.position]
-        expected = ((1 << 24) | record["bay"] if record["phase"] == "SELECT" else
+        expected = (baySelectCommand(record["bay"], record["decoded"]["contractVersion"]) if record["phase"] == "SELECT" else
                     2 << 24 if record["phase"] == "CLEAR" else 0)
         if command != expected:
             raise RuntimeError("JTAG record sequence differs from the independent host trial assessor")

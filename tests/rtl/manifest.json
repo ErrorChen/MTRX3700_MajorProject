@@ -110,6 +110,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -165,6 +166,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -197,6 +199,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -245,6 +248,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -276,6 +280,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreProfile_tb.sv"
       ],
@@ -361,6 +366,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreCalibration_tb.sv"
       ],
@@ -490,6 +496,7 @@
         "rtl/interaction/fixedSheetInteraction.sv",
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCorePause_tb.sv"
       ],
@@ -533,6 +540,15 @@
         "tests/rtl/memberBDisplayCdc_tb.sv"
       ],
       "inputSource": "SYNTHETIC_FULL_WIDTH_ASYNCHRONOUS_MAILBOX"
+    },
+    {
+      "name": "markerQueryStore_tb",
+      "passMarker": "PASS markerQueryStore_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/vision/markerQueryStore.sv",
+        "tests/rtl/markerQueryStore_tb.sv"
+      ]
     }
   ]
 }

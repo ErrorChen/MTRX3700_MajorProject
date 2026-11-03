@@ -21,6 +21,12 @@ module perceptionCore (
     output perception_pkg::targetReport_t targetReport,
     output logic targetReportValid,
     input logic targetReportReady,
+    // LIST/GET use this independent response stream. Holding a query result
+    // never stalls capture or replaces the separately selected tracking target.
+    output perception_pkg::queryResult_t queryResult,
+    output logic queryResultValid,
+    input logic queryResultReady,
+    output logic queryBusy,
     output perception_pkg::userEvent_t userEvent,
     output logic userEventValid,
     input logic userEventReady,
@@ -101,10 +107,12 @@ module perceptionCore (
     logic [8:0] runX;
     logic [7:0] runY;
     logic [1:0] runMask;
-    // Keep complete >=3-pixel horizontal runs, including their first/last
+    // Keep complete >=2-pixel horizontal runs, including their first/last
     // pixels. This removes quantised orange speckles without eroding card
     // corners. The reader's foreground bank deliberately retains raw HSV bits.
-    horizontalRunFilter runFilter (.clk(clk),.reset(processingReset||abandonAtSof),
+    // Colour algorithm3 retains measured two-pixel side connections in rotated
+    // signs. The filter keeps its two-token latency and row-flush schedule.
+    horizontalRunFilter #(.MIN_RUN_LENGTH(2)) runFilter (.clk(clk),.reset(processingReset||abandonAtSof),
         .in_valid(processingPixelValid),.in_sop(pixelSop),.in_eop(pixelEop),.in_x(x),.in_y(y),.in_mask(colourMask),
         .out_valid(runValid),.out_sop(runSop),.out_eop(runEop),.out_x(runX),.out_y(runY),.out_mask(runMask));
     causalMaskCleanup cleanup (.clk(clk),.reset(processingReset||abandonAtSof),.in_valid(runValid),.in_sop(runSop),.in_eop(runEop),
@@ -159,9 +167,12 @@ module perceptionCore (
         .done(readerDone),.readAddress(glyphAddress),.readWhite(glyphWhite),
         .readStrongWhite(glyphStrongWhite),.readColour(glyphColour),
         .markers(markers),.acceptedCount(acceptedCount));
+    logic trackerRequestReady,queryRequestReady;
+    wire requestIsQuery=targetRequest.operation==TARGET_LIST||targetRequest.operation==TARGET_GET;
+    assign targetRequestReady=requestIsQuery?queryRequestReady:trackerRequestReady;
     targetTracker tracker (.clk(clk),.reset(reset),.timeUs(timeUs),.activeCfgVersion(configVersion),
-        .perceptionReady(status.perceptionReady),.targetRequest(targetRequest),.targetRequestValid(targetRequestValid),
-        .targetRequestReady(targetRequestReady),.frameObservation(observation),.frameValid(observationValid),
+        .perceptionReady(status.perceptionReady),.targetRequest(targetRequest),.targetRequestValid(targetRequestValid&&!requestIsQuery),
+        .targetRequestReady(trackerRequestReady),.frameObservation(observation),.frameValid(observationValid),
         .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),
         .activeRequest(activeRequest),.reportDropCount(reportDropCount),.requestInvalidFault(requestInvalidFault));
 
@@ -213,6 +224,7 @@ module perceptionCore (
     logic red1Paired,red2Seen,roiValid;
     logic [4:0] pairCount,red2Count;
     logic [3:0] pairReferenceIndex,lastCalibrationReferenceIndex;
+    logic [7:0] pairQuality,lastCalibrationReferenceQuality;
     logic lastCalibrationReferenceValid;
     // One geometric comparator is shared across candidate pairs. The former
     // combinational 16x8 loop duplicated 128 arithmetic/priority paths and was
@@ -223,6 +235,10 @@ module perceptionCore (
     logic [3:0] markerIndex;
     logic [3:0] referenceIndex;
     wire aggregateDone=aggregateState==AG_DONE;
+    // Share the existing indexed marker bus with the descriptor writer. This
+    // adds only 48 small RAM entries; it does not duplicate a frame buffer.
+    marker_t aggregateMarker;
+    assign aggregateMarker=markers[markerIndex];
     // Capture can report a newer truncated/dropped frame on the same clock as
     // an older owned bank finishes classification. The newer bad observation
     // must win: publishing the old good result would hide immediate lock loss.
@@ -231,20 +247,44 @@ module perceptionCore (
     logic [15:0] completionDiscardCount;
     assign red1Paired=pairCount==1;
     assign red2Seen=red2Count==1;
+    wire referencePatch=aggregateAccepted&&red1Paired&&processedObservation.frameGood;
+    wire queryPublishBad=captureDropNow||(!activeProcessing&&rawFrameOpen&&pixelEop);
+    markerQueryStore queryStore (
+        .clk(clk),.reset(reset),.timeUs(timeUs),.activeConfigVersion(configVersion),
+        .perceptionReady(status.perceptionReady),
+        .beginFrame(readerDone&&activeProcessing&&processingEnable&&!processingModeChange),
+        .inputFrameId(bankMeta[readBank].frameId),.inputCaptureStartUs(bankMeta[readBank].captureStartUs),
+        .inputConfigVersion(bankMeta[readBank].configVersion),.inputFrameGood(bankMeta[readBank].frameGood),
+        .writeValid((aggregateState==AG_MARKER&&!processingReset)||referencePatch),
+        .writeIndex(referencePatch?pairReferenceIndex:markerIndex),
+        .writeAccepted(referencePatch||aggregateMarker.accepted),
+        .writeType(referencePatch?MARKER_REFERENCE:(aggregateMarker.isBlue?MARKER_BAY:MARKER_FUNCTION)),
+        .writeDigit(referencePatch?4'hf:aggregateMarker.digit),
+        .writeQuality(referencePatch?pairQuality:aggregateMarker.quality),
+        .writeXMin(referencePatch?pairBlue.xmin:aggregateMarker.xMin),
+        .writeXMax(referencePatch?pairBlue.xmax:aggregateMarker.xMax),
+        .writeYMin(referencePatch?pairBlue.ymin:aggregateMarker.yMin),
+        .writeYMax(referencePatch?pairBlue.ymax:aggregateMarker.yMax),
+        .commitFrame(aggregateAccepted),.cancelFrame(processingModeChange||!processingEnable),
+        .publishBad(queryPublishBad),.badFrameId(captureMeta.frameId),
+        .badCaptureStartUs(captureMeta.captureStartUs),.badConfigVersion(captureMeta.configVersion),
+        .queryRequest(targetRequest),.queryRequestValid(targetRequestValid&&requestIsQuery),
+        .queryRequestReady(queryRequestReady),.queryResult(queryResult),
+        .queryResultValid(queryResultValid),.queryResultReady(queryResultReady),.queryBusy(queryBusy));
     always_ff @(posedge clk) begin
         if(processingReset) begin
             aggregateState<=AG_IDLE;markerIndex<=0;referenceIndex<=0;
-            processedObservation<='0;pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;
+            processedObservation<='0;pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;pairQuality<=0;
         end else case(aggregateState)
             AG_IDLE: if(readerDone) begin
                 processedObservation<=bankMeta[readBank];processedObservation.matchCount<=0;
-                pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;
+                pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;pairQuality<=0;
                 markerIndex<=0;referenceIndex<=0;aggregateState<=AG_MARKER;
             end
             AG_MARKER: begin
                 if(markers[markerIndex].accepted) begin
-                    if(markers[markerIndex].isBlue &&
-                        markers[markerIndex].digit==bankMeta[readBank].boundRequest.bayId) begin
+                    if((markers[markerIndex].isBlue?MARKER_BAY:MARKER_FUNCTION)==bankMeta[readBank].boundRequest.markerType &&
+                        markers[markerIndex].digit==bankMeta[readBank].boundRequest.digit) begin
                         processedObservation.matchCount<=processedObservation.matchCount+5'd1;
                         processedObservation.xMin<=markers[markerIndex].xMin;
                         processedObservation.xMax<=markers[markerIndex].xMax;
@@ -273,6 +313,7 @@ module perceptionCore (
                     pairRed.ymin<=markers[markerIndex].yMin;pairRed.ymax<=markers[markerIndex].yMax;
                     pairBlue<=bankCandidates[readBank][referenceIndex];
                     pairReferenceIndex<=referenceIndex;
+                    pairQuality<=markers[markerIndex].quality;
                 end
                 if(referenceIndex==15) begin
                     if(markerIndex==15) aggregateState<=AG_DONE;
@@ -358,7 +399,7 @@ module perceptionCore (
             lastSampleRedCount<=0;lastSampleBlueCount<=0;lastSampleFrameId<=0;lastSampleChecks<=0;
             activeOrientation<=0;activeBypass<=0;lastFrameBypass<=0;configVersion<=0;commitAck<=0;commitConsumed<=0;writeBank<=0;haveWriteBank<=0;readBank<=0;readerStart<=0;
             activeProcessing<=1;rawFrameOpen<=0;lastFrameRaw<=0;
-            lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;
+            lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;lastCalibrationReferenceQuality<=0;
             observationValid<=0;observation<='0;captureMeta<='0;bufferDropCount<=0;faults<=0;haveFrame<=0;lastCompletionUs<=0;
             lastMarkers<='0;lastFrameId<=0;lastCaptureUs<=0;lastRedCount<=0;lastBlueCount<=0;roiValid<=0;
             lastPairRed<='0;lastPairBlue<='0;completedFrame<=0;completedFrameId<=0;lastFrameGood<=0;
@@ -408,7 +449,7 @@ module perceptionCore (
                 activeProcessing<=processingEnable;rawFrameOpen<=!processingEnable;
                 activeBypass<=bypassPerspective;
                 activeOrientation<=orientationProfile;captureMeta<='0;
-                captureMeta.boundRequest<=targetRequest_t'(streamData[71:50]);captureMeta.frameId<=streamData[49:34];
+                captureMeta.boundRequest<=targetRequest_t'(streamData[50+:$bits(targetRequest_t)]);captureMeta.frameId<=streamData[49:34];
                 captureMeta.captureStartUs<=streamData[33:2];
                 captureMeta.configVersion<=configVersion+16'(applyCommit||activeOrientation!=orientationProfile||
                     activeBypass!=bypassPerspective||processingModeChange);
@@ -492,6 +533,14 @@ module perceptionCore (
             end
             if(aggregateAccepted)begin
                 observation<=processedObservation;observationValid<=1;
+                // The reference is recognised by unique ownership/geometry,
+                // not by inventing a seventh digit. Its confidence is the
+                // associated red1 digit confidence, explicitly documented.
+                if(processedObservation.boundRequest.markerType==MARKER_REFERENCE&&
+                   processedObservation.boundRequest.digit==4'hf&&red1Paired)begin
+                    observation.matchCount<=1;observation.xMin<=pairBlue.xmin;observation.xMax<=pairBlue.xmax;
+                    observation.yMin<=pairBlue.ymin;observation.yMax<=pairBlue.ymax;observation.quality<=pairQuality;
+                end
                 lastMarkers<=markers;lastFrameId<=processedObservation.frameId;lastCaptureUs<=processedObservation.captureStartUs;
                 lastCompletionUs<=timeUs;haveFrame<=1;completedFrame<=1;completedFrameId<=processedObservation.frameId;
                 lastFrameGood<=processedObservation.frameGood;
@@ -501,6 +550,7 @@ module perceptionCore (
                 lastFrameRaw<=0;
                 lastCalibrationReferenceValid<=red1Paired&&processedObservation.frameGood;
                 lastCalibrationReferenceIndex<=red1Paired&&processedObservation.frameGood?pairReferenceIndex:4'd0;
+                lastCalibrationReferenceQuality<=red1Paired&&processedObservation.frameGood?pairQuality:8'd0;
                 lastFrameRedMinimum<=bankRedMinimum[readBank];lastFrameBlueMinimum<=bankBlueMinimum[readBank];
                 lastRedCount<=bankRedCount[readBank];lastBlueCount<=bankBlueCount[readBank];
                 lastPeakRed<=bankPeakRed[readBank];lastPeakBlue<=bankPeakBlue[readBank];
@@ -516,7 +566,7 @@ module perceptionCore (
                 observation.frameGood<=0;observation.matchCount<=0;
                 lastMarkers<='0;lastRedCount<=0;lastBlueCount<=0;lastPeakRed<=0;lastPeakBlue<=0;
                 lastCandidateFaults<=0;lastFrameGood<=0;lastFrameRaw<=1;
-                lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;
+                lastCalibrationReferenceValid<=0;lastCalibrationReferenceIndex<=0;lastCalibrationReferenceQuality<=0;
                 lastFrameId<=captureMeta.frameId;lastCaptureUs<=captureMeta.captureStartUs;
                 lastFrameConfigVersion<=captureMeta.configVersion;
                 lastFrameOrientation<=activeOrientation;lastFrameBypass<=activeBypass;
@@ -538,7 +588,7 @@ module perceptionCore (
         debugWords[5*32+:32]=lastCompletionUs;debugWords[6*32+:32]={16'd0,lastFrameConfigVersion};
         debugWords[7*32+:32]={10'd0,lastFrameRaw,lastFrameBypass,lastFrameOrientation,2'd0,lastFrameRedMinimum,lastFrameBlueMinimum};
         debugWords[8*32+:32]={16'd0,bufferDropCount};debugWords[9*32+:32]={22'd0,lastBlueCount,lastRedCount};
-        debugWords[10*32+:76]=status;debugWords[13*32+:139]=targetReport;debugWords[18*32+:104]=userEventValid?userEvent:lastConsumedEvent;
+        debugWords[10*32+:76]=status;debugWords[13*32+:$bits(targetReport_t)]=targetReport;debugWords[18*32+:104]=userEventValid?userEvent:lastConsumedEvent;
         debugWords[22*32+:32]={15'd0,lastSampleRedCount};debugWords[23*32+:32]={15'd0,lastSampleBlueCount};
         for(int i=0;i<DEBUG_MARKER_COUNT;i++)begin
             debugWords[(24+i*4)*32+:32]={lastMarkers[i].accepted,lastMarkers[i].isBlue,lastMarkers[i].orientation,
@@ -546,15 +596,15 @@ module perceptionCore (
             debugWords[(25+i*4)*32+:32]={7'd0,lastMarkers[i].xMin,7'd0,lastMarkers[i].xMax};
             debugWords[(26+i*4)*32+:32]={8'd0,lastMarkers[i].yMin,8'd0,lastMarkers[i].yMax};
         end
-        debugWords[(DEBUG_TAIL_BASE+0)*32+:32]={10'd0,activeRequest};
+        debugWords[(DEBUG_TAIL_BASE+0)*32+:32]={8'd0,activeRequest};
         debugWords[(DEBUG_TAIL_BASE+1)*32+:32]={lastSampleFrameId,3'd0,lastSampleChecks,4'd0,sampleCount};
-        debugWords[(DEBUG_TAIL_BASE+2)*32+:32]={24'd0,lastCalibrationReferenceIndex,lastCalibrationReferenceValid,
+        debugWords[(DEBUG_TAIL_BASE+2)*32+:32]={15'd0,queryBusy,lastCalibrationReferenceQuality,lastCalibrationReferenceIndex,lastCalibrationReferenceValid,
             haveConsumedEvent&&!userEventValid,targetReportValid,userEventValid};
         debugWords[(DEBUG_TAIL_BASE+3)*32+:32]={31'd0,lastFrameGood};
         // Schema7 high byte1 identifies a total shared pool, not per-colour
         // capacity. Counts and each marker's explicit isBlue remain separate.
         debugWords[(DEBUG_TAIL_BASE+5)*32+:32]={8'd1,8'(OUTPUT_CAPACITY),8'(ACTIVE_CAPACITY),lastPeakBlue,lastPeakRed};
         debugWords[(DEBUG_TAIL_BASE+6)*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
-        debugWords[(DEBUG_TAIL_BASE+7)*32+:32]={8'd2,8'd5,8'(WHITE_LUMA_QUARTER),8'd64};
+        debugWords[(DEBUG_TAIL_BASE+7)*32+:32]={8'd3,8'd5,8'(WHITE_LUMA_QUARTER),8'd64};
     end
 endmodule

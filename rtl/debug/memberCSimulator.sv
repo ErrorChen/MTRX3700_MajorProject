@@ -9,8 +9,9 @@ module memberCSimulator #(
     input logic [31:0] timeUs,
     input logic commandValid,
     output logic commandReady,
-    input logic commandClear,
-    input logic [3:0] commandBayId,
+    input perception_pkg::targetOperation_t commandOperation,
+    input perception_pkg::markerType_t commandMarkerType,
+    input logic [3:0] commandDigit,
     input logic autoCycle, interactionEnable, interactionPermit,
     input perception_pkg::perceptionStatus_t status,
     output perception_pkg::targetRequest_t targetRequest,
@@ -63,9 +64,10 @@ module memberCSimulator #(
         // Re-evaluate age every clock: an absence of new packets never extends a
         // measurement's lifetime. Initial 150 ms is a budget, not measured latency.
         measurementUsable = running && !reset && haveMeasurement &&
-            currentRequest.operation == TARGET_SELECT && bayEnabled(currentRequest.bayId) &&
+            currentRequest.operation == TARGET_SELECT && markerEnabled(currentRequest.markerType,currentRequest.digit) &&
             cachedReport.requestTag == currentRequest.requestTag &&
-            cachedReport.bayId == currentRequest.bayId &&
+            cachedReport.markerType == currentRequest.markerType &&
+            cachedReport.digit == currentRequest.digit &&
             cachedReport.configVersion == status.activeCfgVersion &&
             cachedReport.targetSelected && cachedReport.frameGood && cachedReport.observed &&
             cachedReport.locked && !cachedReport.ambiguous &&
@@ -79,7 +81,7 @@ module memberCSimulator #(
             targetRequest <= '0;
             targetRequestValid <= 0;
             currentRequest <= '0;
-            currentRequest.bayId <= INVALID_BAY_ID;
+            currentRequest.digit <= INVALID_BAY_ID;
             cachedReport <= '0;
             haveMeasurement <= 0;
             haveReportSequence <= 0;
@@ -122,6 +124,8 @@ module memberCSimulator #(
             if (targetReportValid && targetReportReady &&
                 targetReport.requestTag == currentRequest.requestTag &&
                 targetReport.configVersion == status.activeCfgVersion &&
+                (!markerEnabled(currentRequest.markerType,currentRequest.digit) ||
+                 (targetReport.markerType == currentRequest.markerType && targetReport.digit == currentRequest.digit)) &&
                 (!haveReportSequence || newerSequence(targetReport.frameId,lastReportId))) begin
                 cachedReport <= targetReport;
                 lastReportId <= targetReport.frameId;
@@ -134,10 +138,14 @@ module memberCSimulator #(
                 haveReportSequence <= 0;
             end
             if (targetRequestValid && targetRequestReady) begin
-                currentRequest <= targetRequest;
                 targetRequestValid <= 0;
-                haveMeasurement <= 0;
-                haveReportSequence <= 0;
+                // LIST/GET have their own response stream and tag. Taking a
+                // query must not clear or relabel the live tracking cache.
+                if (targetRequest.operation == TARGET_SELECT || targetRequest.operation == TARGET_CLEAR) begin
+                    currentRequest <= targetRequest;
+                    haveMeasurement <= 0;
+                    haveReportSequence <= 0;
+                end
             end
             if (userEventValid && userEventReady) begin
                 if (!haveEventSequence || newerSequence(userEvent.eventId,lastEventId)) begin
@@ -150,22 +158,25 @@ module memberCSimulator #(
             // Presented request payload remains immutable while !ready. Debug
             // requests and speech proposals share exactly this same transaction path.
             if (commandValid && commandReady) begin
-                targetRequest.operation <= commandClear ? TARGET_CLEAR : TARGET_SELECT;
+                targetRequest.operation <= commandOperation;
                 targetRequest.requestTag <= nextRequestTag;
-                targetRequest.bayId <= commandClear ? INVALID_BAY_ID : commandBayId;
+                targetRequest.markerType <= commandOperation == TARGET_CLEAR ? MARKER_NONE : commandMarkerType;
+                targetRequest.digit <= commandOperation == TARGET_CLEAR ? INVALID_BAY_ID : commandDigit;
                 targetRequestValid <= 1;
                 nextRequestTag <= nextRequestTag + 16'd1;
             end else if (userEventValid && userEventReady && acceptedProposal) begin
                 targetRequest.operation <= TARGET_SELECT;
                 targetRequest.requestTag <= nextRequestTag;
-                targetRequest.bayId <= userEvent.bayId;
+                targetRequest.markerType <= MARKER_BAY;
+                targetRequest.digit <= userEvent.bayId;
                 targetRequestValid <= 1;
                 nextRequestTag <= nextRequestTag + 16'd1;
             end else if (running && autoCycle && requestSlotAvailable &&
                          !sinceCycleUs[31] && sinceCycleUs >= CYCLE_PERIOD_US) begin
                 targetRequest.operation <= TARGET_SELECT;
                 targetRequest.requestTag <= nextRequestTag;
-                targetRequest.bayId <= nextCycleBay;
+                targetRequest.markerType <= MARKER_BAY;
+                targetRequest.digit <= nextCycleBay;
                 targetRequestValid <= 1;
                 nextRequestTag <= nextRequestTag + 16'd1;
                 nextCycleBay <= nextCycleBay == 6 ? 4'd1 : nextCycleBay + 4'd1;

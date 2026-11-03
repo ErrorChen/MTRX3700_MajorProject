@@ -41,6 +41,8 @@ module perceptionCoreCalibration_tb;
     integer checks=0,acceptedSamples=0,rejectedSamples=0,ignoredSamples=0;
     integer expectedRedMin=255,expectedBlueMin=255,expectedRedMax=0,expectedBlueMax=0;
     logic debugInteractionArmReady;
+    queryResult_t queryResult;
+    logic queryResultValid,queryResultReady=1,queryBusy;
     perceptionCore dut(.*);
     always @(posedge clk) if(!reset)timeUs<=timeUs+1;
 
@@ -125,7 +127,7 @@ module perceptionCoreCalibration_tb;
     endtask
     task automatic checkFullMarkerCapacity(input bit blue);
         bit seen;
-        @(negedge clk);targetRequest.operation=TARGET_SELECT;targetRequest.bayId=1;
+        @(negedge clk);targetRequest.operation=TARGET_SELECT;targetRequest.markerType=MARKER_BAY;targetRequest.digit=1;
         targetRequest.requestTag=16'h3210;targetRequestValid=1;
         tick();@(negedge clk);targetRequestValid=0;
         pairingMarkers='0;
@@ -147,7 +149,7 @@ module perceptionCoreCalibration_tb;
            debugWords[9*32+:5]!=(blue?0:16)||debugWords[9*32+5+:5]!=(blue?16:0)||
            !debugWords[(24+15*4)*32+31]||debugWords[(24+15*4)*32+30]!==blue||
            debugWords[(24+15*4)*32+24+:4]!=(blue?1:2)||
-           debugWords[DEBUG_TAIL_BASE*32+:22]!==dut.activeRequest||
+           debugWords[DEBUG_TAIL_BASE*32+:24]!==dut.activeRequest||
            debugWords[1*32+16+:16]!=DEBUG_SCHEMA_VERSION||
            debugWords[(DEBUG_TAIL_BASE+5)*32+8+:24]!=24'h01100f)
             $fatal(1,"Shared16-marker/count16/debug-tail packing lost an upper slot");

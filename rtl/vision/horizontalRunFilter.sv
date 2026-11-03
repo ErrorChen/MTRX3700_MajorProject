@@ -1,5 +1,7 @@
-// Streaming horizontal run opening of length three, retaining the complete run.
-// A pixel survives when ANY length-three same-colour interval contains it.
+// Streaming horizontal support, retaining the complete same-colour run.
+// MIN_RUN_LENGTH=3 preserves the historical algorithm; production colour3 uses
+// 2 to retain the measured two-pixel connections on a rotated number-one sign.
+// Both settings retain exactly the same accepted-token delay and row flush.
 // Four raw history masks plus the incoming mask provide two pixels on either
 // side of the output target. Two metadata tokens delay coordinates and SOP/EOP
 // by accepted pixels; blank input clocks do not advance either history.
@@ -7,7 +9,8 @@
 // guarantees at least two idle clocks before the next row. A fresh SOP or x=0
 // aborts any pending old row, so truncated frames cannot contaminate a new row.
 module horizontalRunFilter #(
-    parameter int WIDTH=320
+    parameter int WIDTH=320,
+    parameter int MIN_RUN_LENGTH=3
 ) (
     input logic clk,reset,
     input logic in_valid,in_sop,in_eop,
@@ -34,11 +37,20 @@ module horizontalRunFilter #(
         newMask=2'd0;
         if(realPixel&&(in_mask==2'd1||in_mask==2'd2)) newMask=in_mask;
         filteredMask=2'd0;
-        if((history1==2'd1||history1==2'd2)&&
-            ((history3==history1&&history2==history1)||
-             (history2==history1&&history0==history1)||
-             (history0==history1&&newMask==history1)))
-            filteredMask=history1;
+        if(history1==2'd1||history1==2'd2) begin
+            // history1 is the output target, history2 its left neighbour and
+            // history0 its right neighbour. Only the predicate changes: do not
+            // advance metadata sooner or remove either end-of-row padding step.
+            if(MIN_RUN_LENGTH==2) begin
+                if(history2==history1||history0==history1)
+                    filteredMask=history1;
+            end else if(MIN_RUN_LENGTH==3) begin
+                if((history3==history1&&history2==history1)||
+                   (history2==history1&&history0==history1)||
+                   (history0==history1&&newMask==history1))
+                    filteredMask=history1;
+            end
+        end
     end
 
     always_ff @(posedge clk) begin

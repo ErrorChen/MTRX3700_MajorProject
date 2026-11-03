@@ -7,17 +7,21 @@ interface perceptionLink(input logic CLOCK_50, input logic reset);
     logic targetRequestValid, targetRequestReady;
     targetReport_t targetReport;
     logic targetReportValid, targetReportReady;
+    queryResult_t queryResult;
+    logic queryResultValid, queryResultReady;
     userEvent_t userEvent;
     logic userEventValid, userEventReady;
     perceptionStatus_t status;
     modport perception(input CLOCK_50, reset, timeUs, interactionEnable, interactionPermit,
-        targetRequest, targetRequestValid, targetReportReady, userEventReady,
-        output targetRequestReady, targetReport, targetReportValid, userEvent, userEventValid, status);
+        targetRequest, targetRequestValid, targetReportReady, queryResultReady, userEventReady,
+        output targetRequestReady, targetReport, targetReportValid, queryResult, queryResultValid,
+        userEvent, userEventValid, status);
     modport controller(input CLOCK_50, reset, timeUs, targetRequestReady,
-        targetReport, targetReportValid, userEvent, userEventValid, status,
+        targetReport, targetReportValid, queryResult, queryResultValid, userEvent, userEventValid, status,
         output interactionEnable, interactionPermit, targetRequest, targetRequestValid,
-        targetReportReady, userEventReady);
+        targetReportReady, queryResultReady, userEventReady);
     modport monitor(input CLOCK_50, reset, timeUs, interactionEnable, interactionPermit,
         targetRequest, targetRequestValid, targetRequestReady, targetReport, targetReportValid,
-        targetReportReady, userEvent, userEventValid, userEventReady, status);
+        targetReportReady, queryResult, queryResultValid, queryResultReady,
+        userEvent, userEventValid, userEventReady, status);
 endinterface

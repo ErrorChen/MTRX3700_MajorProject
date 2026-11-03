@@ -88,9 +88,9 @@ hashes. The review's limitations were not treated as current local limitations.
 
 The final Major Project Brief was supplied,7 pages, SHA256
 `6c4311e60feb53cc1ec17c5d1f00c43baaf72788d73b166972d6b394eefa048c`.
-It is retained at docs/reference/Major_Project_Brief_2026.pdf. The three-person
+It is retained at docs/Major_Project_Brief_2026.pdf. The three-person
 proposal is a separate reference, not a rubric. The five lecture PDFs remain
-under docs/reference with their original filenames and unchanged bytes.
+under docs with their original filenames and unchanged bytes.
 
 | Review finding | Implemented disposition |
 |---|---|
@@ -229,7 +229,7 @@ are rejected. This host-only change did not change the programmed FPGA.
 The user requested removal of evidence/, member_b_review_pack/ and duplicate
 docs Markdown, with a detailed bilingual README for future developers. The
 maintained documents are now README.md, VERSION_README.md and OWNERS.md.
-Reference PDFs remain under docs/reference; formal marker artwork remains under
+Reference PDFs remain under docs; formal marker artwork remains under
 assets/markers. Required camera regression inputs and host-only truth annotations
 move to tests/fixtures with byte hashes/provenance. Reproducible generated logs,
 images, simulations and build databases belong in ignored build/.

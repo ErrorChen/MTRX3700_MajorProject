@@ -1,4 +1,4 @@
-"""Decode the exact EBP1/contract-v2 words emitted by perceptionCore.
+"""Decode versioned EBP1 status and separate QRP3 query packets.
 
 Words are low-word-first for packed structures. A frozen status is a coherent
 board observation; a GRAB image requires the additional native frame binding.
@@ -7,20 +7,21 @@ from contract_model import FIELD_LAYOUTS, unpackPayload, freshTime
 
 
 def schemaLayout(debugSchema):
-    """Private packet geometry; the public contract remains version 2.
+    """Private packet geometry and its exact public contract version.
 
     Schemas 1..5 retain eight candidates per colour; schema6 retains16 per
     colour. Schema7 has16 total shared slots. Four-bit active labels remain
     separate from these completed stores, and the public contract stays v2.
     """
-    if debugSchema not in (1, 2, 3, 4, 5, 6, 7):
+    if debugSchema not in (1, 2, 3, 4, 5, 6, 7, 8):
         raise ValueError("unsupported EBP1 schema")
     capacity = 16 if debugSchema >= 6 else 8
     markerCount = capacity if debugSchema >= 7 else 2 * capacity
     return {"wordCount": 24 + 4 * markerCount + 8, "tailBase": 24 + 4 * markerCount,
             "capacity": capacity, "markerCount": markerCount, "sharedPool": debugSchema >= 7,
             "poolLayout": "SHARED_TOTAL" if debugSchema >= 7 else "SPLIT_PER_COLOUR",
-            "countBits": 5 if debugSchema >= 6 else 4}
+            "countBits": 5 if debugSchema >= 6 else 4,
+            "contractVersion": 3 if debugSchema == 8 else 2}
 
 
 def requireAlgorithmMode(decoded):
@@ -43,7 +44,8 @@ def decodeWords(words):
     layout = schemaLayout(debugSchema)
     if len(words) != layout["wordCount"]:
         raise ValueError(f"EBP1 schema{debugSchema} requires exactly {layout['wordCount']} unsigned 32-bit words")
-    if words[0] != 0x45425031 or words[1] & 0xffff != 2:
+    contractVersion = layout["contractVersion"]
+    if words[0] != 0x45425031 or words[1] & 0xffff != contractVersion:
         raise ValueError("unsupported EBP1 magic/schema/contract")
     tail, capacity, countBits = layout["tailBase"], layout["capacity"], layout["countBits"]
     countMask = (1 << countBits) - 1
@@ -55,12 +57,12 @@ def decodeWords(words):
 
     def payload(name, first, count):
         value = sum(words[first + i] << (32 * i) for i in range(count))
-        return unpackPayload(name, value)
+        return unpackPayload(name, value, contractVersion=contractVersion)
 
     status = payload("status", 10, 3)
     report = payload("targetReport", 13, 5)
     event = payload("userEvent", 18, 4)
-    request = unpackPayload("targetRequest", words[tail])
+    request = unpackPayload("targetRequest", words[tail], contractVersion=contractVersion)
     markers = []
     for index in range(layout["markerCount"]):
         at = 24 + 4 * index
@@ -97,7 +99,7 @@ def decodeWords(words):
     if (words[3] >> 16 or words[6] >> 16 or words[tail+3] >> 1
             or (words[tail+5] >> 24 != 1 if debugSchema >= 7 else words[tail+5] >> (24 if debugSchema >= 4 else 8)) or diagnosticReserved
             or words[7] & ~allowedProfileBits
-            or words[tail+2] >> (8 if debugSchema >= 6 else 7 if debugSchema >= 5 else 3 if debugSchema >= 4 else 2)):
+            or words[tail+2] >> (17 if debugSchema >= 8 else 8 if debugSchema >= 6 else 7 if debugSchema >= 5 else 3 if debugSchema >= 4 else 2)):
         raise ValueError("EBP1 reserved fields are nonzero")
     rawCameraMode = bool(words[7] & (1 << 21)) if debugSchema >= 5 else False
     calibrationReferenceValid = bool(words[tail+2] & 8) if debugSchema >= 5 else False
@@ -124,12 +126,20 @@ def decodeWords(words):
     colourAlgorithm = 0 if debugSchema == 1 else words[tail+7] >> 24
     if readerAlgorithm not in ((0, 1) if debugSchema == 1 else range(6) if debugSchema >= 6 else range(5)):
         raise ValueError("unsupported EBP1 reader algorithm")
-    if colourAlgorithm not in (0, 1, 2):
+    if colourAlgorithm not in (0, 1, 2, 3):
         raise ValueError("unsupported EBP1 colour algorithm")
+    # Colour3 changes horizontal run support from three pixels to two while
+    # retaining colour2's HSV gate and the subsequent causal cleanup. It was
+    # introduced only for the shared-pool schema7/reader5 implementation. Keep
+    # historical colour2 packets explicit: their pixels still require RUN3.
+    if colourAlgorithm == 3 and (debugSchema not in (7, 8) or readerAlgorithm != 5):
+        raise ValueError("colour algorithm 3 requires schema7/8 and reader algorithm 5")
     if readerAlgorithm == 3 and colourAlgorithm != 1:
         raise ValueError("reader algorithm 3 requires HSV colour algorithm 1")
-    if readerAlgorithm in (4, 5) and colourAlgorithm != 2:
-        raise ValueError(f"reader algorithm {readerAlgorithm} requires HSV colour algorithm 2")
+    if readerAlgorithm == 4 and colourAlgorithm != 2:
+        raise ValueError("reader algorithm 4 requires HSV colour algorithm 2")
+    if readerAlgorithm == 5 and colourAlgorithm not in (2, 3):
+        raise ValueError("reader algorithm 5 requires HSV colour algorithm 2 or 3")
     whiteMinimum, whiteSpread = (words[tail+7] >> 8) & 255, words[tail+7] & 255
     if readerAlgorithm in (2, 3) and (whiteMinimum != 96 or whiteSpread != 64):
         raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor96 and spread64")
@@ -141,7 +151,7 @@ def decodeWords(words):
         raise ValueError("unsupported active/output candidate capacity")
     captureAge = (words[2] - words[4]) & 0xffffffff
     return {"schema": "EBP1", "debugSchemaVersion": debugSchema, "statusWordCount": layout["wordCount"],
-            "contractVersion": 2, "timeUs": words[2], "frameId": words[3],
+            "contractVersion": contractVersion, "timeUs": words[2], "frameId": words[3],
             "captureStartUs": words[4], "completionUs": words[5], "configVersion": words[6],
             "orientationProfile": (words[7] >> 18) & 3, "redMinimum": (words[7] >> 8) & 255,
             "bypassPerspective": bool(words[7] & (1 << 20)) if debugSchema >= 3 else False,
@@ -151,6 +161,8 @@ def decodeWords(words):
             "calibrationReferenceValid": calibrationReferenceValid,
             "calibrationReferenceIndex": calibrationReferenceIndex,
             "calibrationReferenceMarkerIndex": calibrationReferenceMarkerIndex,
+            **({"calibrationReferenceQuality": (words[tail+2] >> 8) & 255,
+                "queryBusy": bool(words[tail+2] & (1 << 16))} if debugSchema >= 8 else {}),
             **({"calibrationReferenceBlueIndex": calibrationReferenceIndex} if not layout["sharedPool"] else {}),
             "blueMinimum": words[7] & 255, "bufferDropCount": words[8],
             "redCandidateCount": redCount, "blueCandidateCount": blueCount,
@@ -185,6 +197,45 @@ def decodeWords(words):
             "userEventValid": bool(words[tail+2] & 1), "captureAgeAtSnapshotUs": captureAge,
             "processingLatencyUs": (words[5] - words[4]) & 0xffffffff,
             "freshAtSnapshot": freshTime(words[2], words[4], 150000)}
+
+
+def decodeQueryWords(words, expectedBuildId=None):
+    """Decode one independently framed QRP3 record, never an EBP1 snapshot.
+
+    The five payload words are low-word-first. An empty/error transaction has
+    one explicit terminal record; an accepted query may contain up to sixteen
+    actual observations, including duplicate identities at different positions.
+    Cross-record tag/frame/config/count and ordering are checked by the stream
+    parser, rather than treating each structurally valid packet as a full list.
+    """
+    from contract_model import markerEnabled
+    if len(words) != 8 or any(type(word) is not int or not 0 <= word <= 0xffffffff for word in words):
+        raise ValueError("QRP3 requires exactly eight unsigned 32-bit words")
+    if words[0] != 0x51525033 or words[7] != 0x00000308:
+        raise ValueError("unsupported QRP3 magic/schema/contract")
+    if expectedBuildId is not None and words[6] != expectedBuildId:
+        raise ValueError("QRP3 buildId differs from expected board identity")
+    payload = sum(words[index+1] << (32*index) for index in range(5))
+    result = unpackPayload("queryResult", payload, contractVersion=3)
+    count, index, reason = result["count"], result["index"], result["reason"]
+    if count > 16 or reason == 7:
+        raise ValueError("QRP3 count/reason is outside the public contract")
+    geometry = ("centreU", "centreV", "boxWidth", "boxHeight", "quality")
+    if count == 0:
+        if (index != 0 or result["last"] != 1 or reason not in range(2, 7)
+                or result["markerType"] != 0 or result["digit"] != 15
+                or any(result[field] for field in geometry)):
+            raise ValueError("QRP3 empty/error result must have terminal NONE/F and zero measurement")
+    else:
+        if (index >= count or bool(result["last"]) != (index == count-1)
+                or reason not in (0, 1) or (reason == 1 and count < 2)
+                or not markerEnabled(result["markerType"], result["digit"])):
+            raise ValueError("QRP3 item identity/count/index/last/reason is inconsistent")
+        if (result["centreU"] >= 240 or result["centreV"] >= 320
+                or not 1 <= result["boxWidth"] <= 240 or not 1 <= result["boxHeight"] <= 320):
+            raise ValueError("QRP3 geometry is outside public 240x320 coordinates")
+    return {"schema": "QRP3", "debugSchemaVersion": 8, "contractVersion": 3,
+            "buildId": words[6], **result}
 
 
 def checkGrabSchema(words):

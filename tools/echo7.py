@@ -361,7 +361,7 @@ class Runner:
         self.result["pythonDependencies"] = {n: importlib.util.find_spec(n) is not None for n in ("numpy", "PIL")}
         self.result["pythonVersion"] = sys.version
         self.result["taskInputs"] = {name: (ROOT / name).is_file() for name in (
-            "README.md", "VERSION_README.md", "OWNERS.md", "docs/reference/Major_Project_Brief_2026.pdf",
+            "README.md", "VERSION_README.md", "OWNERS.md", "docs/Major_Project_Brief_2026.pdf",
             "tests/fixtures/camera/manifest.json",
             "assets/markers/marker_spec.json", "assets/markers/scene_manifest.json", "assets/markers/ECHO7_All_Markers_A4_v2.pdf")}
         if self.result["projects"]["PartBDebug"]:
@@ -559,8 +559,9 @@ class Runner:
         if command and actionMatch:
             actionMeta = int(actionMatch.group(2), 2)
             reasonCode = (actionMeta >> 12) & 3
-            if int(actionMatch.group(1)) != (command >> 24) or (actionMeta >> 24) not in (1, 2, 3, 4, 5, 6, 7) or \
-                    ((actionMeta >> 16) & 255) != 2 or (actionMeta & 255) != schemaLayout(actionMeta >> 24)["wordCount"]:
+            actionLayout = schemaLayout(actionMeta >> 24)
+            if int(actionMatch.group(1)) != (command >> 24) or \
+                    ((actionMeta >> 16) & 255) != actionLayout["contractVersion"] or (actionMeta & 255) != actionLayout["wordCount"]:
                 raise RuntimeError("BCTL action acknowledgement does not match the requested opcode/schema")
             if (actionMeta >> 24) >= 3 and bool(actionMeta & (1 << 14)) != (reasonCode != 0):
                 raise RuntimeError("BCTL action error flag and rejection reason disagree")
@@ -578,12 +579,13 @@ class Runner:
         bits = match.group(1)
         magic, buildId, meta = (int(bits[i:i+32], 2) for i in (0, 32, 64))
         debugSchema = meta >> 24
-        if magic != 0x42444247 or debugSchema not in (1, 2, 3, 4, 5, 6, 7) or (meta >> 16) & 255 != 2 or meta & 255 != schemaLayout(debugSchema)["wordCount"]:
+        layout = schemaLayout(debugSchema)
+        if magic != 0x42444247 or (meta >> 16) & 255 != layout["contractVersion"] or meta & 255 != layout["wordCount"]:
             raise RuntimeError(f"unsupported BCTL header magic={magic:08x}, meta={meta:08x}")
         words = re.findall(r"^ECHO7_WORD\t(\d+)\t([01]{32})$", output, re.M)
         if [int(n) for n, _ in words] != list(range(schemaLayout(debugSchema)["wordCount"])):
             raise RuntimeError("BCTL frozen word sequence is incomplete or reordered")
-        status = {"magic": hex(magic), "schema": debugSchema, "contract": 2, "buildId": buildId,
+        status = {"magic": hex(magic), "schema": debugSchema, "contract": layout["contractVersion"], "buildId": buildId,
                   "words": [int(word, 2) for _, word in words]}
         from debug_decode import decodeWords
         status["decoded"] = decodeWords(status["words"])

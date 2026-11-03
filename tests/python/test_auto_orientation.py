@@ -94,6 +94,15 @@ def algorithm5Cases():
     if hashlib.sha256((recording/'frame.png').read_bytes()).hexdigest()!=metadata['files']['frame.png']:
         raise ValueError('Recorded frame16351 PNG changed')
     yield 'recorded_duplicate_frame16351_default_profile',Image.open(recording/'frame.png').convert('RGB'),0,None,'RECORDED_CAMERA_PIXELS_DEFAULT_PROFILE_REPLAY'
+    # New real counterexamples retain their original colour2 acquisition
+    # metadata. These current-source vectors explicitly replay the same pixels
+    # with the selected exporter profile; no recorded result is rewritten.
+    for frameId in (30158,37621):
+        recording=root/f'tests/fixtures/camera/frame{frameId}'
+        metadata=json.loads((recording/'index.json').read_text(encoding='utf-8'))
+        if hashlib.sha256((recording/'frame.png').read_bytes()).hexdigest()!=metadata['files']['frame.png']:
+            raise ValueError(f'Recorded frame{frameId} PNG changed')
+        yield f'recorded_frame{frameId}_support_counterexample',Image.open(recording/'frame.png').convert('RGB'),0,None,'RECORDED_CAMERA_PIXELS_DEFAULT_PROFILE_REPLAY'
     for name,identities in (
         ('shared_all_blue16',[('blue',index%6+1) for index in range(16)]),
         ('shared_red14_blue2',[('red',index%2+1) for index in range(14)]+[('blue',5),('blue',6)])):

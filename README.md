@@ -35,7 +35,7 @@ The current calibration-pair refinement is not included in `a9caa52f` fit/progra
 | `tests/fixtures/camera/` | Small genuine camera regression PNGs with manifest, origin and hashes / 小型真实相机回归输入、来源与哈希 |
 | `tools/echo7.py`, `tools/lib/`, `tools/tcl/` | Supported CLI, models/exporters and JTAG transport / CLI、模型/向量导出与 JTAG 传输 |
 | `assets/markers/` | Single-page artwork, recovered geometry and synthetic templates / 单页标牌、恢复的几何与合成模板 |
-| `docs/reference/` | Original Brief, lecture and proposal PDFs / 原始Brief、讲义与提案PDF |
+| `docs/` | Original Brief, lecture and proposal PDFs / 原始Brief、讲义与提案PDF |
 | `build/` | Ignored private build copies, IP, SOF, captures, vectors and run logs / 忽略的私有构建副本、IP、SOF、抓帧、向量与日志 |
 
 The three root Markdown documents are this development/contract README, the version record and OWNERS. Generated databases, simulator outputs, personal toolchains and large captures do not belong in the tracked tree. Required small regression inputs are intentionally tracked; deleting them breaks reproducibility. `.gitignore`, `.gitattributes` and `.editorconfig` define exclusion, UTF-8 and line-ending conventions. Do not use destructive Git cleanup to hide uncommitted work.
@@ -517,7 +517,7 @@ White automatic calibration, exposure freeze/readback, arbitrary-angle calibrati
 
 ## 11. Course traceability / 课程需求追踪
 
-COURSE means an explicit supplied source; USER means the requested project scope; DESIGN means our chosen implementation/acceptance rule. The supplied final [Major Project Brief](docs/reference/Major_Project_Brief_2026.pdf) takes precedence over earlier taskpack statements that the Brief was absent. The [three-person proposal](docs/reference/ECHO-7_Three-Person_Proposal.pdf) is not a replacement rubric. Source page numbers below are PDF pages unless a footer is specified. The original lectures are [L1 introduction](docs/reference/01-L1_introduction-1.pdf), [Digital Programming](docs/reference/02-L1_introduction2digitalProgramming.pdf), [HDL](docs/reference/03-L2_HDL_coloured-1.pdf), [FPGA Design](docs/reference/04-L4_FPGA_Design-1.pdf) and [Modular/Testbench](docs/reference/05-L3_Modular_Testbench_Hardware-2.pdf).
+COURSE means an explicit supplied source; USER means the requested project scope; DESIGN means our chosen implementation/acceptance rule. The supplied final [Major Project Brief](docs/Major_Project_Brief_2026.pdf) takes precedence over earlier taskpack statements that the Brief was absent. The [three-person proposal](docs/ECHO-7_Three-Person_Proposal.pdf) is not a replacement rubric. Source page numbers below are PDF pages unless a footer is specified. The original lectures are [L1 introduction](docs/01-L1_introduction-1.pdf), [Digital Programming](docs/02-L1_introduction2digitalProgramming.pdf), [HDL](docs/03-L2_HDL_coloured-1.pdf), [FPGA Design](docs/04-L4_FPGA_Design-1.pdf) and [Modular/Testbench](docs/05-L3_Modular_Testbench_Hardware-2.pdf).
 
 COURSE为可定位课程来源，USER为用户范围，DESIGN为实现/验收选择。已提供正式Brief，因此旧输入“Brief未提供”的说法只是历史状态；提案不是正式评分替代品。以下页码为PDF页，特别说明时才指页脚。
 

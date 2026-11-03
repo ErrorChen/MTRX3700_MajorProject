@@ -1,17 +1,27 @@
-// Member B/C contract v2. All public fields are unsigned and sampled on CLOCK_50.
+// Member B/C contract v3. All public fields are unsigned and sampled on CLOCK_50.
 // Layout follows the root README.md B/C contract, most significant field first.
 package perception_pkg;
-    localparam int unsigned PERCEPTION_CONTRACT_VERSION = 2;
-    // Private schema7 uses sixteen dynamically allocated completed slots shared
-    // by red and blue. Each marker carries its actual colour, including rejects.
-    // These constants do not alter the three public B/C transaction layouts.
-    localparam int unsigned DEBUG_SCHEMA_VERSION = 7;
+    localparam int unsigned PERCEPTION_CONTRACT_VERSION = 3;
+    // Private schema8 retains the shared16 status layout, but versions the typed
+    // public request/report and the separate, on-demand query-result transaction.
+    localparam int unsigned DEBUG_SCHEMA_VERSION = 8;
     localparam int unsigned DEBUG_WORD_COUNT = 96;
     localparam int unsigned DEBUG_MARKER_COUNT = 16;
     localparam int unsigned DEBUG_TAIL_BASE = 88;
     localparam logic [9:0] DEFAULT_ACTIVE_BAY_MASK = 10'h07e;
     localparam logic [3:0] INVALID_BAY_ID = 4'hf;
-    typedef enum logic [1:0] {TARGET_CLEAR=2'd0, TARGET_SELECT=2'd1} targetOperation_t;
+    typedef enum logic [1:0] {
+        TARGET_CLEAR=2'd0, TARGET_SELECT=2'd1, TARGET_LIST=2'd2, TARGET_GET=2'd3
+    } targetOperation_t;
+    typedef enum logic [1:0] {
+        MARKER_NONE=2'd0, MARKER_BAY=2'd1,
+        MARKER_FUNCTION=2'd2, MARKER_REFERENCE=2'd3
+    } markerType_t;
+    typedef enum logic [2:0] {
+        QUERY_OK=3'd0, QUERY_MULTIPLE=3'd1, QUERY_NOT_FOUND=3'd2,
+        QUERY_FRAME_BAD=3'd3, QUERY_NOT_READY=3'd4,
+        QUERY_INVALID_REQUEST=3'd5, QUERY_STALE=3'd6
+    } queryReason_t;
     typedef enum logic [1:0] {KIND_NONE=2'd0, KIND_CALIBRATION=2'd1, KIND_SPEECH=2'd2} interactionKind_t;
     typedef enum logic [3:0] {
         INTERACTION_IDLE=4'd0, INTERACTION_WAIT_PERMIT=4'd1, INTERACTION_CAL_COLLECT=4'd2,
@@ -43,14 +53,16 @@ package perception_pkg;
     typedef struct packed {
         targetOperation_t operation;
         logic [15:0] requestTag;
-        logic [3:0] bayId;
+        markerType_t markerType;
+        logic [3:0] digit;
     } targetRequest_t;
     typedef struct packed {
         logic [15:0] requestTag;
         logic [15:0] frameId;
         logic [31:0] captureStartUs;
         logic [15:0] configVersion;
-        logic [3:0] bayId;
+        markerType_t markerType;
+        logic [3:0] digit;
         logic frameGood, observed, locked, ambiguous, targetSelected;
         logic [7:0] centreU;
         logic [8:0] centreV;
@@ -59,6 +71,26 @@ package perception_pkg;
         logic [7:0] quality;
         reportReason_t reason;
     } targetReport_t;
+    // One query has one immutable source frame. LIST/GET return count items,
+    // index0..count-1; an empty/error response is count0,index0,last1 with zero
+    // measurement. Querying never changes the independently tracked request.
+    typedef struct packed {
+        logic [15:0] requestTag;
+        logic [15:0] frameId;
+        logic [31:0] captureStartUs;
+        logic [15:0] configVersion;
+        queryReason_t reason;
+        logic [4:0] count;
+        logic [3:0] index;
+        logic last;
+        markerType_t markerType;
+        logic [3:0] digit;
+        logic [7:0] centreU;
+        logic [8:0] centreV;
+        logic [7:0] boxWidth;
+        logic [8:0] boxHeight;
+        logic [7:0] quality;
+    } queryResult_t;
     typedef struct packed {
         logic [15:0] eventId;
         eventType_t eventType;
@@ -84,7 +116,8 @@ package perception_pkg;
 
     // Private completed-frame input to targetTracker. boundRequest MUST be latched
     // at camera SOF together with the timestamp, version and glyph-bank ownership.
-    // matchCount counts only accepted BLUE digits matching boundRequest.bayId.
+    // matchCount counts accepted observations of the exact bound type/digit.
+    // REFERENCE is supplied only by the unique same-frame red1/reference pair.
     typedef struct packed {
         targetRequest_t boundRequest;
         logic [15:0] frameId;
@@ -99,6 +132,15 @@ package perception_pkg;
 
     function automatic logic bayEnabled(input logic [3:0] bayId);
         bayEnabled = (bayId >= 1 && bayId <= 6);
+    endfunction
+    function automatic logic markerEnabled(input markerType_t markerType,
+                                           input logic [3:0] digit);
+        case(markerType)
+            MARKER_BAY: markerEnabled=bayEnabled(digit);
+            MARKER_FUNCTION: markerEnabled=(digit==1 || digit==2);
+            MARKER_REFERENCE: markerEnabled=(digit==4'hf);
+            default: markerEnabled=1'b0;
+        endcase
     endfunction
     function automatic logic freshTime(input logic [31:0] nowUs,
             input logic [31:0] stampUs, input logic [31:0] maxAgeUs);

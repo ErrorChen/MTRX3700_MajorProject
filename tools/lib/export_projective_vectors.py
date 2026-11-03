@@ -96,7 +96,7 @@ def writeNamedAliases(outputDir,vectorCases,readerAlgorithm=5,sharedPool=None):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--out',required=True,type=Path)
-    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2))
+    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2,3))
     parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4,5),default=5)
     parser.add_argument('--capture-result',type=Path,help='One actual verified GRAB result and its recorded profile; no synthetic substitutions')
     parser.add_argument('--bypass-perspective',action='store_true')
@@ -106,7 +106,8 @@ def main():
     parser.add_argument('--case',action='append',dest='caseNames',help='Export only named cases for an attributable targeted RTL replay')
     parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int)
     args=parser.parse_args();args.out.mkdir(parents=True,exist_ok=True)
-    if args.colour_algorithm is None:args.colour_algorithm=2 if args.reader_algorithm>=4 else 1
+    if args.colour_algorithm is None:
+        args.colour_algorithm=3 if args.reader_algorithm==5 else 2 if args.reader_algorithm==4 else 1
     if args.blue_min is None:args.blue_min=20 if args.reader_algorithm>=4 else 32
     captureBinding=None
     activeCapacity=15 if args.reader_algorithm>=4 else 8

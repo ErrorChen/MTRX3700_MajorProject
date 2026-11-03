@@ -1,4 +1,4 @@
-"""Member C contract v2 reference: integer geometry, wire layout and consumers.
+"""Member C contract v3 reference: integer geometry, wire layout and consumers.
 
 This model consumes reported observations. It never infers a bay from a scene slot
 and does not constitute RTL or hardware evidence. All ages use the shared board
@@ -8,9 +8,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-CONTRACT_VERSION = 2
+CONTRACT_VERSION = 3
+MARKER_NONE, MARKER_BAY, MARKER_FUNCTION, MARKER_REFERENCE = range(4)
+TARGET_CLEAR, TARGET_SELECT, TARGET_LIST, TARGET_GET = range(4)
 ACTIVE_BAY_MASK = 0x07E
-FIELD_LAYOUTS = {
+LEGACY_V2_FIELD_LAYOUTS = {
     "targetRequest": (("operation", 2), ("requestTag", 16), ("bayId", 4)),
     "targetReport": (
         ("requestTag", 16), ("frameId", 16), ("captureStartUs", 32),
@@ -31,12 +33,46 @@ FIELD_LAYOUTS = {
     ),
 }
 
+# Historical debug schema1..7 remains v2. Callers must explicitly request v2;
+# a v3 identity is never silently squeezed into a legacy bay-only payload.
+FIELD_LAYOUTS = {
+    **LEGACY_V2_FIELD_LAYOUTS,
+    "targetRequest": (("operation", 2), ("requestTag", 16), ("markerType", 2), ("digit", 4)),
+    "targetReport": tuple(
+        field
+        for name, width in LEGACY_V2_FIELD_LAYOUTS["targetReport"]
+        for field in ((("markerType", 2), ("digit", 4)) if name == "bayId" else ((name, width),))
+    ),
+    "queryResult": (
+        ("requestTag", 16), ("frameId", 16), ("captureStartUs", 32),
+        ("configVersion", 16), ("reason", 3), ("count", 5), ("index", 4),
+        ("last", 1), ("markerType", 2), ("digit", 4),
+        ("centreU", 8), ("centreV", 9), ("boxWidth", 8), ("boxHeight", 9), ("quality", 8),
+    ),
+}
 
-def packPayload(kind: str, fields: dict[str, int]) -> int:
+
+def payloadLayout(kind: str, contractVersion: int = CONTRACT_VERSION):
+    if contractVersion == 2:
+        return LEGACY_V2_FIELD_LAYOUTS[kind]
+    if contractVersion == CONTRACT_VERSION:
+        return FIELD_LAYOUTS[kind]
+    raise ValueError(f"unsupported public contract version {contractVersion}")
+
+
+def markerEnabled(markerType: int, digit: int) -> bool:
+    """Formal typed identities only; BJ is a reference, never a bay digit."""
+    return ((markerType == MARKER_BAY and 1 <= digit <= 6)
+            or (markerType == MARKER_FUNCTION and digit in (1, 2))
+            or (markerType == MARKER_REFERENCE and digit == 15))
+
+
+
+def packPayload(kind: str, fields: dict[str, int], *, contractVersion: int = CONTRACT_VERSION) -> int:
     """Strict unsigned packing; reject unknown/missing fields and overflow."""
-    layout = FIELD_LAYOUTS[kind]
+    layout = payloadLayout(kind, contractVersion)
     if set(fields) != {name for name, _ in layout}:
-        raise ValueError(f"{kind}: fields differ from contract v2")
+        raise ValueError(f"{kind}: fields differ from contract v{contractVersion}")
     value = 0
     for name, width in layout:
         field = fields[name]
@@ -46,8 +82,8 @@ def packPayload(kind: str, fields: dict[str, int]) -> int:
     return value
 
 
-def unpackPayload(kind: str, value: int) -> dict[str, int]:
-    layout = FIELD_LAYOUTS[kind]
+def unpackPayload(kind: str, value: int, *, contractVersion: int = CONTRACT_VERSION) -> dict[str, int]:
+    layout = payloadLayout(kind, contractVersion)
     width = sum(bits for _, bits in layout)
     if not 0 <= value < (1 << width):
         raise ValueError(f"{kind}: does not fit {width} bits")
@@ -91,6 +127,8 @@ class ReferenceConsumer:
 
     def requestAccepted(self, request: dict) -> None:
         packPayload("targetRequest", request)
+        if request["operation"] in (TARGET_LIST, TARGET_GET):
+            return
         self.currentRequest = request.copy()
         self.cachedReport = None
         self.lastFrame = None
@@ -108,6 +146,10 @@ class ReferenceConsumer:
             return False
         if report["configVersion"] != self.configVersion:
             return False
+        if markerEnabled(request["markerType"], request["digit"]) and (
+            report["markerType"] != request["markerType"] or report["digit"] != request["digit"]
+        ):
+            return False
         if self.lastFrame is not None and not newerSequence(report["frameId"], self.lastFrame):
             return False
         self.lastFrame = report["frameId"]
@@ -120,9 +162,10 @@ class ReferenceConsumer:
         if request is None or report is None:
             return False
         return bool(
-            request["operation"] == 1 and 1 <= request["bayId"] <= 6
+            request["operation"] == TARGET_SELECT and markerEnabled(request["markerType"], request["digit"])
             and report["requestTag"] == request["requestTag"]
-            and report["bayId"] == request["bayId"]
+            and report["markerType"] == request["markerType"]
+            and report["digit"] == request["digit"]
             and report["configVersion"] == self.configVersion
             and report["targetSelected"] and report["frameGood"]
             and report["observed"] and report["locked"] and not report["ambiguous"]

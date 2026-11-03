@@ -43,6 +43,8 @@ module perceptionCoreReplay_tb;
     frameObservation_t collisionGood,collisionDrop;
     string vectorDir,sceneFile;
     logic debugInteractionArmReady;
+    queryResult_t queryResult;
+    logic queryResultValid,queryResultReady=1,queryBusy;
     perceptionCore dut(.*);
     always @(posedge clk) begin
         if(reset) begin microDivider<=0;timeUs<=0;end
@@ -75,7 +77,7 @@ module perceptionCoreReplay_tb;
                 if(dut.observationValid)begin
                     continuousObserved++;
                     if(dut.observation.frameId!=continuousObserved||dut.observation.boundRequest.requestTag!=1||
-                       dut.observation.boundRequest.bayId!=1||!dut.observation.frameGood||dut.observation.matchCount!=1)
+                       dut.observation.boundRequest.digit!=1||!dut.observation.frameGood||dut.observation.matchCount!=1)
                         $fatal(1,"Continuous frame identity/observation mismatch id=%0d",dut.observation.frameId);
                     continuousExpectedBox=expectedBlueBoxes[dut.observation.frameId[0]?0:1];
                     if({dut.observation.xMin,dut.observation.xMax,dut.observation.yMin,dut.observation.yMax}!==
@@ -88,7 +90,7 @@ module perceptionCoreReplay_tb;
         end
     end
     task automatic selectBay(input integer bay,input integer tag);
-        @(negedge clk);targetRequest.operation=TARGET_SELECT;targetRequest.bayId=bay;
+        @(negedge clk);targetRequest.operation=TARGET_SELECT;targetRequest.markerType=MARKER_BAY;targetRequest.digit=bay;
         targetRequest.requestTag=tag;targetRequestValid=1;
         do @(posedge clk);while(!targetRequestReady);
         @(negedge clk);targetRequestValid=0;
@@ -328,7 +330,7 @@ module perceptionCoreReplay_tb;
             selectBay(bay,10+bay);
             for(int n=1;n<=3;n++)begin
                 frame();
-                if(!lastReport.observed||lastReport.bayId!=bay||lastReport.requestTag!=10+bay||lastReport.locked!=(n==3))
+                if(!lastReport.observed||lastReport.digit!=bay||lastReport.requestTag!=10+bay||lastReport.locked!=(n==3))
                     $fatal(1,"pixel-to-report select bay=%0d n=%0d",bay,n);
             end
             normalU[bay]=lastReport.centreU;normalV[bay]=lastReport.centreV;

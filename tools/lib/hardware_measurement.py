@@ -16,6 +16,23 @@ CAPTURE_LATENCY_THRESHOLD_US = 150_000
 CAPTURE_LATENCY_GOAL_US = 100_000
 
 
+def markerIdentity(payload, contractVersion=2):
+    """Read exact versioned fields without rewriting archived public-v2 data."""
+    if contractVersion == 2:
+        return (1, payload.get("bayId"))
+    if contractVersion == 3:
+        if "markerType" not in payload or "digit" not in payload or "bayId" in payload:
+            raise ValueError("public v3 marker identity requires markerType/digit, not legacy bayId")
+        return (payload["markerType"], payload["digit"])
+    raise ValueError(f"unsupported public contract version {contractVersion}")
+
+
+def baySelectCommand(bay, contractVersion):
+    if contractVersion not in (2, 3) or not 1 <= bay <= 6:
+        raise ValueError("bay trial requires contract v2/v3 and a bay digit1..6")
+    return (1 << 24) | ((1 << 4) if contractVersion == 3 else 0) | bay
+
+
 class TrackingAcquisition:
     """Allow only the specified first two native frames after a new request.
 
@@ -37,7 +54,9 @@ class TrackingAcquisition:
 
     def observe(self, state):
         report, status = state["targetReport"], state["status"]
-        current = (report["requestTag"] == self.tag and report["bayId"] == self.bay
+        contractVersion = state.get("contractVersion", 2)
+        reportIdentity = markerIdentity(report, contractVersion)
+        current = (report["requestTag"] == self.tag and reportIdentity == (1, self.bay)
                    and report["frameId"] == state["frameId"])
         if current and self.firstFrame is None:
             self.firstFrame = state["frameId"]
@@ -60,7 +79,9 @@ class TrackingAcquisition:
         selectionOffset = selectionElapsed = captureAgeAtSelection = None
         if self.selection is not None and not current and self.firstFrame is None:
             previous = self.selection["targetReport"]
+            previousIdentity = markerIdentity(previous, self.selection.get("contractVersion", 2))
             active = state.get("activeRequest", {})
+            activeIdentity = markerIdentity(active, contractVersion)
             selectionOffset = (state["frameId"] - self.selection["frameId"]) & 0xffff
             if "timeUs" in state and "timeUs" in self.selection:
                 selectionElapsed = (state["timeUs"] - self.selection["timeUs"]) & 0xffffffff
@@ -78,8 +99,8 @@ class TrackingAcquisition:
                 and captureAgeAtSelection <= CAPTURE_LATENCY_THRESHOLD_US
                 and report.get("captureStartUs") == state.get("captureStartUs"))
             boundedPrevious = (report["requestTag"] != self.tag
-                and (report["requestTag"],report["bayId"]) == (previous["requestTag"],previous["bayId"])
-                and active.get("requestTag") == self.tag and active.get("bayId") == self.bay
+                and (report["requestTag"],reportIdentity) == (previous["requestTag"],previousIdentity)
+                and active.get("requestTag") == self.tag and activeIdentity == (1, self.bay)
                 and active.get("operation") == 1 and capturedBeforeSelection
                 and selectionElapsed is not None and selectionElapsed <= CAPTURE_LATENCY_THRESHOLD_US
                 and report["frameId"] == state["frameId"] and report["frameGood"]
@@ -94,7 +115,7 @@ class TrackingAcquisition:
                 and report.get("quality",0) > 0)
             previousAmbiguous = bool(boundedPrevious and report.get("reason") == 4
                 and report["ambiguous"] and report["targetSelected"] and publicZero
-                and self.sceneBlueCounts.get(previous["bayId"], 1) > 1)
+                and previousIdentity[0] == 1 and self.sceneBlueCounts.get(previousIdentity[1], 1) > 1)
         return {"expectedAcquiring": acquiring, "firstCurrentFrameId": self.firstFrame,
                 "nativeFrameOffset": offset, "lockPreviouslyObserved": self.seenLocked,
                 "expectedOldRequestDrain": oldDrain, "expectedPreviousLockedReport": previousLocked,
@@ -196,7 +217,7 @@ def measureTrials(runner, trials):
         trialRecords = []
         allTrialRecords = []
         for bay in range(1, 7):
-            selected = runner.control((1 << 24) | bay)["decoded"]
+            selected = runner.control(baySelectCommand(bay, initial.get("contractVersion", 2)))["decoded"]
             checkAlgorithmState(selected, "SELECT", trial, bay)
             tag = selected["activeRequest"]["requestTag"]
             acquisition = TrackingAcquisition(tag, bay, selected["status"]["activeCfgVersion"], selected,
@@ -224,7 +245,8 @@ def measureTrials(runner, trials):
                 issues = []
                 if state["processingLatencyUs"] > CAPTURE_LATENCY_THRESHOLD_US:
                     issues.append("capture_to_completion_latency")
-                current = report["requestTag"] == tag and report["bayId"] == bay and report["frameId"] == frameId
+                current = (report["requestTag"] == tag and markerIdentity(report, state.get("contractVersion", 2)) == (1, bay)
+                           and report["frameId"] == frameId)
                 tracking = acquisition.observe(state)
                 # Old reports are retained as transition observations. Current
                 # rejected/unlocked/bad observations count towards the five.

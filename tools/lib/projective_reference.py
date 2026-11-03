@@ -242,7 +242,7 @@ def classifyAutomatic(image,candidate,orientation,redMin,blueMin,whiteMin,maxSpr
     """
     image=quantise565(image);profile=whiteProfileFor(5,whiteMin,maxSpread)
     if image.size!=(320,240) or orientation not in range(4):raise ValueError('Invalid native image/orientation hint')
-    if colourAlgorithm!=2:raise ValueError('Reader5 requires HSV colour algorithm2')
+    if colourAlgorithm not in (2,3):raise ValueError('Reader5 requires HSV colour algorithm2 or 3')
     bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
     result={**candidate,'readerAlgorithm':5,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,
         'kind':'UNKNOWN','quality':0,'orientationProfile':orientation,'reasonCode':1,'reasonName':'GEOMETRY',
@@ -289,7 +289,7 @@ def classifyAutomatic(image,candidate,orientation,redMin,blueMin,whiteMin,maxSpr
 def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whiteMin=None,maxSpread=64,output=None,colourAlgorithm=None,readerAlgorithm=5,bypassPerspective=False,activeCapacity=None,_automaticHypothesis=False,_corners=None):
     if activeCapacity is None:activeCapacity=15 if readerAlgorithm>=4 else 8
     if blueMin is None:blueMin=20 if readerAlgorithm>=4 else 32
-    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm>=4 else 1
+    if colourAlgorithm is None:colourAlgorithm=3 if readerAlgorithm==5 else 2 if readerAlgorithm==4 else 1
     if readerAlgorithm==5 and not _automaticHypothesis:
         return classifyAutomatic(image,candidate,orientation,redMin,blueMin,whiteMin,maxSpread,output,colourAlgorithm,bypassPerspective,activeCapacity)
     image=quantise565(image)
@@ -298,8 +298,12 @@ def classifyProjective(image,candidate,orientation=0,redMin=48,blueMin=None,whit
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
     if readerAlgorithm==3 and colourAlgorithm!=1:
         raise ValueError('Reader algorithm 3 packed glyph classes require HSV colour algorithm 1')
-    if readerAlgorithm>=4 and colourAlgorithm!=2:
-        raise ValueError('Reader algorithms 4/5 packed glyph classes require HSV colour algorithm 2')
+    if readerAlgorithm==4 and colourAlgorithm!=2:
+        raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
+    if readerAlgorithm==5 and colourAlgorithm not in (2,3):
+        raise ValueError('Reader algorithm 5 requires HSV colour algorithm 2 or 3')
+    if readerAlgorithm!=5 and colourAlgorithm==3:
+        raise ValueError('Colour algorithm 3 requires reader algorithm 5')
     if any(not 0<=value<=255 for value in (redMin,blueMin)):raise ValueError('Thresholds must be unsigned 8-bit')
     bbox=list(map(int,candidate['bbox']));x0,y0,x1,y1=bbox
     result={**candidate,'readerAlgorithm':readerAlgorithm,'colourAlgorithm':colourAlgorithm,'accepted':False,'digit':None,'kind':'UNKNOWN','quality':0,
@@ -382,13 +386,17 @@ def recogniseProjective(image,orientation=0,redMin=48,blueMin=None,whiteMin=None
     if sharedPool and readerAlgorithm!=5:
         raise ValueError('Shared completed candidates require reader5; historical readers retain split pools')
     if blueMin is None:blueMin=20 if readerAlgorithm>=4 else 32
-    if colourAlgorithm is None:colourAlgorithm=2 if readerAlgorithm>=4 else 1
+    if colourAlgorithm is None:colourAlgorithm=3 if readerAlgorithm==5 else 2 if readerAlgorithm==4 else 1
     image=quantise565(image)
     profile=whiteProfileFor(readerAlgorithm,whiteMin,maxSpread)
     if readerAlgorithm==3 and colourAlgorithm!=1:
         raise ValueError('Reader algorithm 3 packed glyph classes require HSV colour algorithm 1')
     if readerAlgorithm==4 and colourAlgorithm!=2:
         raise ValueError('Reader algorithm 4 packed glyph classes require HSV colour algorithm 2')
+    if readerAlgorithm==5 and colourAlgorithm not in (2,3):
+        raise ValueError('Reader algorithm 5 requires HSV colour algorithm 2 or 3')
+    if readerAlgorithm!=5 and colourAlgorithm==3:
+        raise ValueError('Colour algorithm 3 requires reader algorithm 5')
     base=recognise(image,orientation=orientation,redMin=redMin,blueMin=blueMin,cleanup=cleanup,inputSource=inputSource,
                    colourAlgorithm=colourAlgorithm,pruneUnusable=readerAlgorithm>=3,activeCapacity=activeCapacity,capacity=outputCapacity,
                    sharedCapacity=outputCapacity if sharedPool else None)
@@ -414,7 +422,7 @@ def main():
     parser.add_argument('--source',required=True,choices=('SYNTHETIC_REPLAY','RECORDED_CAMERA','PIXEL_COUNTERFACTUAL'))
     parser.add_argument('--orientation',type=int,choices=range(4),default=0)
     parser.add_argument('--red-min',type=int,default=48);parser.add_argument('--blue-min',type=int,help='Default: 20 for reader4; 32 for historical readers')
-    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2),help='Default: HSV2 for reader4; historical HSV1 for readers1-3')
+    parser.add_argument('--colour-algorithm',type=int,choices=(0,1,2,3),help='Default: HSV3/RUN2 for reader5; HSV2/RUN3 for reader4; historical HSV1 for readers1-3')
     parser.add_argument('--reader-algorithm',type=int,choices=(1,2,3,4,5),default=5)
     parser.add_argument('--output-capacity',type=int,choices=(8,16),help='Completed pool capacity; shared16 for reader5, per-colour8 for historical readers')
     poolGroup=parser.add_mutually_exclusive_group()

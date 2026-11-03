@@ -1,4 +1,4 @@
-"""MODEL evidence for C v2. Actual RTL benches are separate CLI manifest entries."""
+"""MODEL evidence for C v3. Actual RTL benches are separate CLI manifest entries."""
 from __future__ import annotations
 import sys as _sys
 from pathlib import Path as _Path
@@ -9,7 +9,8 @@ from pathlib import Path
 import unittest
 
 from contract_model import (
-    ACTIVE_BAY_MASK, CONTRACT_VERSION, FIELD_LAYOUTS, ReferenceConsumer,
+    ACTIVE_BAY_MASK, CONTRACT_VERSION, FIELD_LAYOUTS, LEGACY_V2_FIELD_LAYOUTS, ReferenceConsumer,
+    MARKER_BAY, MARKER_FUNCTION, MARKER_REFERENCE, markerEnabled,
     freshTime, newerSequence, packPayload, rotateBbox, unpackPayload,
 )
 
@@ -24,11 +25,11 @@ class ContractModelTests(unittest.TestCase):
             self.assertEqual(sum(width for _, width in layout), VECTORS["widths"][kind])
             fields = {name: (1 << width) - 1 for name, width in layout}
             self.assertEqual(unpackPayload(kind, packPayload(kind, fields)), fields)
-        self.assertEqual(packPayload("targetRequest", {"operation": 1, "requestTag": 0x1234, "bayId": 6}), 0x112346)
+        self.assertEqual(packPayload("targetRequest", {"operation": 1, "requestTag": 0x1234, "markerType": 1, "digit": 6}), 0x448D16)
 
     def test_no_silent_truncation(self):
         with self.assertRaises(ValueError):
-            packPayload("targetRequest", {"operation": 1, "requestTag": 65536, "bayId": 1})
+            packPayload("targetRequest", {"operation": 1, "requestTag": 65536, "markerType": 1, "digit": 1})
         with self.assertRaises(ValueError):
             packPayload("targetRequest", {"operation": 1, "requestTag": 0})
         with self.assertRaises(ValueError):
@@ -51,10 +52,10 @@ class ContractModelTests(unittest.TestCase):
 
     def test_consumer_current_real_observations_only(self):
         consumer = ReferenceConsumer(maxAgeUs=100)
-        consumer.requestAccepted(dict(operation=1, requestTag=7, bayId=3))
+        consumer.requestAccepted(dict(operation=1, requestTag=7, markerType=1, digit=3))
         report = {name: 0 for name, _ in FIELD_LAYOUTS["targetReport"]}
         report.update(requestTag=7, frameId=65535, captureStartUs=0xFFFFFFF0,
-                      bayId=3, frameGood=1, observed=1, locked=1, targetSelected=1,
+                      markerType=1, digit=3, frameGood=1, observed=1, locked=1, targetSelected=1,
                       centreU=22, centreV=307, boxWidth=5, boxHeight=4, quality=220)
         self.assertTrue(consumer.reportAccepted(report))
         self.assertTrue(consumer.usable(32))
@@ -69,9 +70,69 @@ class ContractModelTests(unittest.TestCase):
         consumer.configChanged(1)
         self.assertIsNone(consumer.cachedReport)
         for bayId in (0, 7, 8, 9):
-            consumer.requestAccepted(dict(operation=1, requestTag=7, bayId=bayId))
-            self.assertTrue(consumer.reportAccepted(report | dict(configVersion=1, bayId=bayId)))
+            consumer.requestAccepted(dict(operation=1, requestTag=7, markerType=1, digit=bayId))
+            self.assertTrue(consumer.reportAccepted(report | dict(configVersion=1, digit=bayId)))
             self.assertFalse(consumer.usable(32))
+
+
+    def test_explicit_legacy_layout_does_not_relabel_history(self):
+        fields = {"operation": 1, "requestTag": 0x1234, "bayId": 6}
+        value = packPayload("targetRequest", fields, contractVersion=2)
+        self.assertEqual(value, 0x112346)
+        self.assertEqual(unpackPayload("targetRequest", value, contractVersion=2), fields)
+        self.assertEqual(sum(bits for _, bits in LEGACY_V2_FIELD_LAYOUTS["targetReport"]), 139)
+        with self.assertRaises(ValueError):
+            packPayload("targetRequest", fields)
+        with self.assertRaises(ValueError):
+            packPayload("targetRequest", fields, contractVersion=4)
+        with self.assertRaises(ValueError):
+            unpackPayload("targetReport", 0, contractVersion=1)
+
+    def test_exact_typed_identity_domain(self):
+        for vector in VECTORS["identity"]:
+            with self.subTest(vector=vector):
+                self.assertEqual(markerEnabled(vector["markerType"], vector["digit"]), vector["enabled"])
+        self.assertNotEqual(packPayload("targetRequest", dict(operation=1, requestTag=1, markerType=1, digit=1)),
+                            packPayload("targetRequest", dict(operation=1, requestTag=1, markerType=2, digit=1)))
+
+    def test_red_and_reference_tracking_queries_preserve_cache(self):
+        for markerType, digit in ((MARKER_FUNCTION, 1), (MARKER_FUNCTION, 2), (MARKER_REFERENCE, 15)):
+            with self.subTest(markerType=markerType, digit=digit):
+                consumer = ReferenceConsumer(maxAgeUs=100)
+                request = dict(operation=1, requestTag=8, markerType=markerType, digit=digit)
+                consumer.requestAccepted(request)
+                report = {name: 0 for name, _ in FIELD_LAYOUTS["targetReport"]}
+                report.update(requestTag=8, frameId=1, captureStartUs=100, markerType=markerType,
+                              digit=digit, frameGood=1, observed=1, locked=1, targetSelected=1,
+                              centreU=22, centreV=307, boxWidth=5, boxHeight=4, quality=220)
+                self.assertTrue(consumer.reportAccepted(report))
+                for operation in (2, 3):
+                    consumer.requestAccepted(dict(operation=operation, requestTag=90 + operation,
+                                                  markerType=MARKER_BAY, digit=1))
+                    self.assertEqual(consumer.currentRequest, request)
+                    self.assertEqual(consumer.cachedReport, report)
+                    self.assertEqual(consumer.lastFrame, 1)
+                    self.assertTrue(consumer.usable(120))
+                self.assertFalse(consumer.reportAccepted(report | dict(frameId=2, markerType=MARKER_BAY)))
+                self.assertTrue(consumer.usable(120))
+                self.assertTrue(consumer.reportAccepted(report | dict(frameId=2, observed=0, locked=0,
+                    ambiguous=1, centreU=0, centreV=0, boxWidth=0, boxHeight=0, quality=0, reason=4)))
+                self.assertFalse(consumer.usable(120))
+                consumer.requestAccepted(dict(operation=0, requestTag=100, markerType=0, digit=15))
+                self.assertIsNone(consumer.cachedReport)
+                self.assertFalse(consumer.usable(120))
+
+    def test_query_result_layout_and_strict_unsigned_boundaries(self):
+        fields = {name: 0 for name, _ in FIELD_LAYOUTS["queryResult"]}
+        fields.update(requestTag=0x1234, frameId=65535, captureStartUs=0xFFFFFFFE,
+                      configVersion=65535, reason=1, count=16, index=15, last=1,
+                      markerType=MARKER_FUNCTION, digit=1, centreU=239, centreV=319,
+                      boxWidth=240, boxHeight=320, quality=220)
+        self.assertEqual(unpackPayload("queryResult", packPayload("queryResult", fields)), fields)
+        with self.assertRaises(ValueError):
+            packPayload("queryResult", fields | dict(index=16))
+        with self.assertRaises(ValueError):
+            packPayload("targetReport", {name: -1 for name, _ in FIELD_LAYOUTS["targetReport"]})
 
 
 if __name__ == "__main__":

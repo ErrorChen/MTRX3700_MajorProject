@@ -1,6 +1,7 @@
 `timescale 1ns/1ps
 // Independent whole-row oracle: identify maximal equal-colour runs, then retain
-// all pixels of runs at least three long. It does not copy the streaming window.
+// all pixels of runs at least two/three long. It does not copy either streaming
+// predicate. Both DUTs must preserve identical metadata latency and flushing.
 module horizontalRunFilter_tb;
     logic clk=0;
     always #5 clk=~clk;
@@ -12,15 +13,27 @@ module horizontalRunFilter_tb;
     logic [8:0] out_x;
     logic [7:0] out_y;
     logic [1:0] out_mask;
-    logic [1:0] rowPixels[0:319],expectedPixels[0:319];
+    logic outValid2,outSop2,outEop2;
+    logic [8:0] outX2;
+    logic [7:0] outY2;
+    logic [1:0] outMask2;
+    logic [1:0] rowPixels[0:319],expectedPixels[0:319],expectedPixels2[0:319];
     logic scoreboardActive=0;
     integer outputCount=0,rowCount=0,totalPixels=0,currentY=0;
     logic [31:0] randomState=32'h7b6e3a51;
-    horizontalRunFilter dut(.*);
+    horizontalRunFilter #(.MIN_RUN_LENGTH(3)) dut(.*);
+    horizontalRunFilter #(.MIN_RUN_LENGTH(2)) dut2(
+        .clk(clk),.reset(reset),.in_valid(in_valid),.in_sop(in_sop),.in_eop(in_eop),
+        .in_x(in_x),.in_y(in_y),.in_mask(in_mask),
+        .out_valid(outValid2),.out_sop(outSop2),.out_eop(outEop2),
+        .out_x(outX2),.out_y(outY2),.out_mask(outMask2));
 
     always @(posedge clk) begin
         #1;
         if(!reset) begin
+            if({outValid2,outSop2,outEop2,outX2,outY2}!==
+               {out_valid,out_sop,out_eop,out_x,out_y})
+                $fatal(1,"RUN2/RUN3 token latency, order or flush mismatch");
             if((out_sop||out_eop)&&!out_valid)
                 $fatal(1,"Frame marker asserted without output pixel");
             if(out_valid) begin
@@ -32,6 +45,9 @@ module horizontalRunFilter_tb;
                 if(out_mask!==expectedPixels[outputCount])
                     $fatal(1,"Run filter mismatch row=%0d x=%0d actual=%0d expected=%0d",
                         rowCount,outputCount,out_mask,expectedPixels[outputCount]);
+                if(outMask2!==expectedPixels2[outputCount])
+                    $fatal(1,"RUN2 mismatch row=%0d x=%0d actual=%0d expected=%0d",
+                        rowCount,outputCount,outMask2,expectedPixels2[outputCount]);
                 if(out_sop!==(currentY==0&&outputCount==0)||
                     out_eop!==(currentY==239&&outputCount==319))
                     $fatal(1,"SOP/EOP metadata mismatch y=%0d x=%0d",currentY,outputCount);
@@ -51,12 +67,16 @@ module horizontalRunFilter_tb;
             currentY=rowY;
             outputCount=0;
             first=0;
-            for(integer x=0;x<320;x++) expectedPixels[x]=0;
+            for(integer x=0;x<320;x++) begin
+                expectedPixels[x]=0;expectedPixels2[x]=0;
+            end
             while(first<320) begin
                 last=first+1;
                 while(last<320&&rowPixels[last]==rowPixels[first]) last++;
                 if((rowPixels[first]==1||rowPixels[first]==2)&&(last-first>=3))
                     for(integer x=first;x<last;x++) expectedPixels[x]=rowPixels[first];
+                if((rowPixels[first]==1||rowPixels[first]==2)&&(last-first>=2))
+                    for(integer x=first;x<last;x++) expectedPixels2[x]=rowPixels[first];
                 first=last;
             end
             scoreboardActive=1;
@@ -139,11 +159,12 @@ module horizontalRunFilter_tb;
         sendPartialTwo();
         reset=1;
         repeat(2) @(negedge clk);
-        if(out_valid||out_sop||out_eop) $fatal(1,"Reset did not discard pending pixels");
+        if(out_valid||out_sop||out_eop||outValid2||outSop2||outEop2)
+            $fatal(1,"Reset did not discard pending pixels");
         reset=0;
         clearRow();rowPixels[317]=2'd1;rowPixels[318]=2'd1;rowPixels[319]=2'd1;
         runRow(239,1);
-        $display("PASS horizontalRunFilter_tb rows=%0d orderedPixels=%0d exhaustiveLocalPatterns=243",rowCount,totalPixels);
+        $display("PASS horizontalRunFilter_tb rows=%0d orderedPixels=%0d exhaustiveLocalPatterns=243 minimumRuns=2,3 equalTokenLatency=1",rowCount,totalPixels);
         $finish;
     end
     initial begin

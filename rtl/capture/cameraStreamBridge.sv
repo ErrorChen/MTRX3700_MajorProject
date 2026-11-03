@@ -21,14 +21,14 @@ module cameraStreamBridge (
     logic [15:0] frameId;
     logic sourceFault,frameDrop;
     (* altera_attribute = "-name SYNCHRONIZER_IDENTIFICATION FORCED_IF_ASYNCHRONOUS; -name DONT_MERGE_REGISTER ON; -name PRESERVE_REGISTER ON" *) logic [1:0] faultSync;
-    logic [21:0] cameraRequest;
+    logic [$bits(perception_pkg::targetRequest_t)-1:0] cameraRequest;
     wire kept=pixelValid && !pixelX[0] && !pixelY[0] && pixelX<640 && pixelY<480;
     logic [79:0] fifoData;
     wire fifoFull, fifoEmpty;
     // No request is issued while a previous registered FIFO read is in flight.
     logic readPending;
     wire pop=streamReady && !readPending && !fifoEmpty;
-    heldBusCdc #(.WIDTH(22)) requestCdc (
+    heldBusCdc #(.WIDTH($bits(perception_pkg::targetRequest_t))) requestCdc (
         .sourceClk(clk),.sourceReset(reset),.sourceData(activeRequest),
         .destinationClk(pclk),.destinationReset(resetPclk),
         .destinationData(cameraRequest),.destinationValid());
@@ -50,7 +50,8 @@ module cameraStreamBridge (
             // A loss invalidates the next delivered SOF conservatively. The
             // sticky diagnostic is separate, so later complete frames recover.
             fifoData[78]=frameDrop;
-            fifoData[71:50]=cameraRequest;
+            // v3 occupies two formerly spare SOF bits; pixel FIFO stays80bits.
+            fifoData[50+:$bits(perception_pkg::targetRequest_t)]=cameraRequest;
             fifoData[49:34]=frameId+16'd1;
             fifoData[33:2]=cameraTime;
         end else begin
