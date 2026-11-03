@@ -1,0 +1,31 @@
+{
+  "buildId": 3395143293,
+  "frameId": 270,
+  "configVersion": 1,
+  "colourAlgorithm": 3,
+  "readerAlgorithm": 5,
+  "redMinimum": 48,
+  "blueMinimum": 20,
+  "whiteMinimum": 84,
+  "orientationProfile": 0,
+  "bypassPerspective": true,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "captureStartUs": 10701889,
+  "schema": "member-b-recorded-regression-profile-v2",
+  "hardwareDebugSchemaVersion": 8,
+  "publicContractVersion": 3,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "originalCaptureResult": "build/member_b/20261103T031731_104872Z_capture/result.json",
+  "originalCaptureResultSha256": "78c9fa58806268846f97e067e7edb715d3608958fd6b78c505fa9b14bcfac45a",
+  "fresh": true,
+  "sameFrameVerified": true,
+  "files": {
+    "frame.png": "da7b0c928a35830bb4ab6c4d55e7a4a34d30c19777886d4846e04a99557f6e32"
+  },
+  "use": "One actual OV7670 capture preserved as a known regression/tuning input. The board used reader5 and SW8 perspective bypass. Replaying these same pixels with reader6 or normal perspective is MODEL/RTL replay, not a new acquisition, independent test sample, or generalised recognition-rate evidence.",
+  "whiteMaxSpread": 64
+}

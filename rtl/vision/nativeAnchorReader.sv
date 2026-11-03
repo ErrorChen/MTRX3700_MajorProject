@@ -1,22 +1,46 @@
-// Reader algorithm 2: one closed native-white component in a local anchor ROI.
+// Readers6..8 retain the original strict scan. Reader9 may request one separate
+// weak-support scan after its caller has completed all four strict hypotheses.
+// The weak scan proves the full component around an already measured thin
+// strong seed; it never lowers the strong threshold or invents white pixels.
 // CLOCK_50 only. readWhite has one synchronous RAM cycle of latency.
 // The caller supplies the original, orientation-ordered half-pixel quad.
 // CAP bounds active labels INCLUDING aliases; any exhaustion rejects the anchor.
 // The single previous-row label RAM is not reset: row zero ignores and replaces
 // all entries used by this ROI. Components retire after a full canonical pass.
-module nativeAnchorReader #(parameter int CAP=8)(
+module nativeAnchorReader #(
+    parameter int CAP=8,
+    // Disable only for explicitly labelled historical reader1..5 RTL replay.
+    parameter bit ENFORCE_OWNER_BOUNDS=1'b1
+)(
     input logic clk,reset,start,
     input logic signed [10:0] pointX[0:3],pointY[0:3],
+    // Original measured colour-candidate bbox, native inclusive pixel centres.
+    // This is independent of the approximate rectification quad and is held
+    // atomically with that quad on start; no scene positions/IDs are involved.
+    input logic [8:0] ownerXMin,ownerXMax,
+    input logic [7:0] ownerYMin,ownerYMax,
     output wire busy,
     output logic done,
     output logic [16:0] readAddress,
     input logic readWhite,
+    // Both planes have the same synchronous read latency. readWhite remains
+    // the strict plane for all historical callers; strong must be a subset of
+    // readWeakWhite. All mode/seed inputs are captured on idle start.
+    input logic weakSupportMode,readWeakWhite,
+    input logic [8:0] seedXMin,seedXMax,
+    input logic [7:0] seedYMin,seedYMax,
+    input logic [16:0] seedStrongCount,
     output logic [16:0] anchorCount,
     output logic [8:0] anchorWidth,
     output logic [7:0] anchorHeight,
     output logic ambiguous,overflow,
     output logic [3:0] allocationPeak,
-    output logic [15:0] componentCount
+    output logic [15:0] componentCount,
+    output logic [1:0] thinSeedCount,
+    output logic [8:0] thinSeedXMin,thinSeedXMax,
+    output logic [7:0] thinSeedYMin,thinSeedYMax,
+    output logic [16:0] thinSeedStrongCount,
+    output logic thinSeedHazard,supportAccepted
 );
     typedef enum logic [3:0] {
         IDLE,PREP_VERTEX,PREP_EXTREMA,DIV_INIT,DIV_WAIT,ROI_BIND,
@@ -27,6 +51,7 @@ module nativeAnchorReader #(parameter int CAP=8)(
         logic [7:0] yMin,yMax;
         logic [16:0] area;
         logic touchesBorder;
+        logic containsSeed,foreignStrong;
     } component_t;
     state_t state;
     logic [8:0] roiXMin,roiXMax,localX,canonIndex;
@@ -36,6 +61,8 @@ module nativeAnchorReader #(parameter int CAP=8)(
     logic [10:0] spanHalfX,spanHalfY;
     // Capture the entire quad on start. Preparation never rereads caller ports.
     logic signed [10:0] heldPointX[0:3],heldPointY[0:3];
+    logic [8:0] heldOwnerXMin,heldOwnerXMax;
+    logic [7:0] heldOwnerYMin,heldOwnerYMax;
     logic signed [16:0] vertexX[0:3],vertexY[0:3];
     logic signed [16:0] minNumeratorX,maxNumeratorX,minNumeratorY,maxNumeratorY;
     logic signed [10:0] minPointX,maxPointX,minPointY,maxPointY;
@@ -56,6 +83,21 @@ module nativeAnchorReader #(parameter int CAP=8)(
     logic [7:0] firstEligibleHeight,retiringHeight;
     logic [24:0] componentAreaTimes200;
     logic [21:0] spanArea;
+    logic [9:0] componentCentreX2;
+    logic [8:0] componentCentreY2;
+    logic componentOwned;
+    logic heldWeakSupportMode,selectedWhite,componentBaseEligible,thinEligible;
+    logic [8:0] heldSeedXMin,heldSeedXMax,firstThinXMin,firstThinXMax;
+    logic [7:0] heldSeedYMin,heldSeedYMax,firstThinYMin,firstThinYMax;
+    logic [16:0] heldSeedStrongCount,seenSeedCount,firstThinStrongCount;
+    logic [1:0] thinCandidateCount;
+    logic [9:0] globalPixelX,seedWidth,seedCentreX2;
+    logic [8:0] globalPixelY,seedHeight,seedCentreY2;
+    logic inSeedBox,seedDescriptorGood,planeMismatch;
+    logic checkingSeed,checkTouchesBorder;
+    logic [8:0] checkWidth;
+    logic [7:0] checkHeight;
+    logic [16:0] checkArea;
 
     nativeAnchorDivide40 roiDivider(.clk(clk),.reset(reset),.start(state==DIV_INIT),
         .numerator(divisionInput),.quotient(divisionQuotient),.done(divisionDone));
@@ -106,6 +148,11 @@ module nativeAnchorReader #(parameter int CAP=8)(
         roiWidth={1'b0,roiXMax}-{1'b0,roiXMin}+10'd1;
         roiHeight={1'b0,roiYMax}-{1'b0,roiYMin}+9'd1;
         readAddress=17'(roiYMin+localY)*17'd320+17'(roiXMin+localX);
+        selectedWhite=heldWeakSupportMode?readWeakWhite:readWhite;
+        globalPixelX={1'b0,roiXMin}+{1'b0,localX};
+        globalPixelY={1'b0,roiYMin}+{1'b0,localY};
+        inSeedBox=globalPixelX>={1'b0,heldSeedXMin}&&globalPixelX<={1'b0,heldSeedXMax}&&
+            globalPixelY>={1'b0,heldSeedYMin}&&globalPixelY<={1'b0,heldSeedYMax};
         lineAddress=(state==CANON_READ||state==CANON_SAMPLE)?canonIndex:localX;
         lineReadEnable=!reset&&(state==READ_WAIT||state==CANON_READ);
         lineWriteEnable=!reset&&(state==SAMPLE||state==CANON_SAMPLE);
@@ -116,7 +163,7 @@ module nativeAnchorReader #(parameter int CAP=8)(
         chosenLabel=0;mergedLabel=0;updatedComponent='0;allocatePixel=0;capacityHit=0;
         usedPlusOne=4'd1;
         for(int i=0;i<CAP;i++)if(!freeSlots[i])usedPlusOne=usedPlusOne+4'd1;
-        if(readWhite)begin
+        if(selectedWhite)begin
             if(leftRoot==0&&upRoot==0)begin
                 for(int i=0;i<CAP;i++)if(chosenLabel==0&&freeSlots[i])chosenLabel=4'(i+1);
                 if(chosenLabel==0)capacityHit=1;
@@ -137,6 +184,8 @@ module nativeAnchorReader #(parameter int CAP=8)(
                     if(components[int'(mergedLabel)-1].yMin<updatedComponent.yMin)updatedComponent.yMin=components[int'(mergedLabel)-1].yMin;
                     if(components[int'(mergedLabel)-1].yMax>updatedComponent.yMax)updatedComponent.yMax=components[int'(mergedLabel)-1].yMax;
                     updatedComponent.touchesBorder=updatedComponent.touchesBorder||components[int'(mergedLabel)-1].touchesBorder;
+                    updatedComponent.containsSeed=updatedComponent.containsSeed||components[int'(mergedLabel)-1].containsSeed;
+                    updatedComponent.foreignStrong=updatedComponent.foreignStrong||components[int'(mergedLabel)-1].foreignStrong;
                 end
                 updatedComponent.area=updatedComponent.area+17'd1;
                 if(localX<updatedComponent.xMin)updatedComponent.xMin=localX;
@@ -145,18 +194,55 @@ module nativeAnchorReader #(parameter int CAP=8)(
                 if(localY>updatedComponent.yMax)updatedComponent.yMax=localY;
                 updatedComponent.touchesBorder=updatedComponent.touchesBorder||pixelBorder;
             end
+            // A four-connected single-row/column seed occupies every pixel of
+            // its bbox. Two flags therefore prove seed membership/exclusion;
+            // no per-component second17-bit area accumulator is required.
+            updatedComponent.containsSeed=updatedComponent.containsSeed||(heldWeakSupportMode&&readWhite&&inSeedBox);
+            updatedComponent.foreignStrong=updatedComponent.foreignStrong||(heldWeakSupportMode&&readWhite&&!inSeedBox);
         end
-        lineWriteData=state==CANON_SAMPLE?canonicalLabel:(readWhite?chosenLabel:4'd0);
+        lineWriteData=state==CANON_SAMPLE?canonicalLabel:(selectedWhite?chosenLabel:4'd0);
         retiringComponent='0;
         if(int'(scanIndex)<CAP)retiringComponent=components[scanIndex];
         retiringWidth=retiringComponent.xMax-retiringComponent.xMin+9'd1;
         retiringHeight=retiringComponent.yMax-retiringComponent.yMin+8'd1;
-        componentAreaTimes200=25'(retiringComponent.area)*25'd200;
+        seedWidth={1'b0,heldSeedXMax}-{1'b0,heldSeedXMin}+10'd1;
+        seedHeight={1'b0,heldSeedYMax}-{1'b0,heldSeedYMin}+9'd1;
+        seedCentreX2={1'b0,heldSeedXMin}+{1'b0,heldSeedXMax};
+        seedCentreY2={1'b0,heldSeedYMin}+{1'b0,heldSeedYMax};
+        // FINISH reuses the component eligibility arithmetic to validate the
+        // seed descriptor. There is no second parallel set of multipliers.
+        // Range/order checks below precede acceptance of the narrowed widths.
+        checkingSeed=state==FINISH&&heldWeakSupportMode;
+        checkWidth=checkingSeed?9'(seedWidth):retiringWidth;
+        checkHeight=checkingSeed?8'(seedHeight):retiringHeight;
+        checkArea=checkingSeed?heldSeedStrongCount:retiringComponent.area;
+        checkTouchesBorder=checkingSeed?(heldSeedXMin<=roiXMin||heldSeedXMax>=roiXMax||
+            heldSeedYMin<=roiYMin||heldSeedYMax>=roiYMax):retiringComponent.touchesBorder;
+        componentAreaTimes200=25'(checkArea)*25'd200;
         spanArea=spanHalfX*spanHalfY;
-        eligible=!retiringComponent.touchesBorder&&retiringComponent.area>=3&&retiringWidth>=2&&retiringHeight>=2&&
-            20'(retiringWidth)*20'd100<=20'(spanHalfX)*20'd11&&
-            20'(retiringHeight)*20'd100<=20'(spanHalfY)*20'd11&&
+        // Compare doubled global centres before rounding. Extending each term
+        // before adding preserves x=319 (638 doubled) and y=239 (478 doubled).
+        // Only the small retiring descriptor is inspected, adding no DSP or
+        // pixel RAM access and preserving the existing row retirement schedule.
+        componentCentreX2=checkingSeed?seedCentreX2:({roiXMin,1'b0}+{1'b0,retiringComponent.xMin}+{1'b0,retiringComponent.xMax});
+        componentCentreY2=checkingSeed?seedCentreY2:({roiYMin,1'b0}+{1'b0,retiringComponent.yMin}+{1'b0,retiringComponent.yMax});
+        componentOwned=!ENFORCE_OWNER_BOUNDS||(
+            componentCentreX2>={heldOwnerXMin,1'b0}&&componentCentreX2<={heldOwnerXMax,1'b0}&&
+            componentCentreY2>={heldOwnerYMin,1'b0}&&componentCentreY2<={heldOwnerYMax,1'b0});
+        componentBaseEligible=componentOwned&&!checkTouchesBorder&&checkArea>=3&&
+            20'(checkWidth)*20'd100<=20'(spanHalfX)*20'd11&&
+            20'(checkHeight)*20'd100<=20'(spanHalfY)*20'd11&&
             componentAreaTimes200<=25'(spanArea);
+        eligible=componentBaseEligible&&retiringWidth>=2&&retiringHeight>=2&&
+            (!heldWeakSupportMode||(retiringComponent.containsSeed&&!retiringComponent.foreignStrong));
+        thinEligible=componentBaseEligible&&((retiringWidth==1)^(retiringHeight==1));
+        // Revalidate the caller's descriptor. Counting all strong seed pixels
+        // during this scan additionally rejects missing/split or stale seeds.
+        seedDescriptorGood=heldSeedXMin<=heldSeedXMax&&heldSeedYMin<=heldSeedYMax&&
+            heldSeedXMax<320&&heldSeedYMax<240&&heldSeedStrongCount>=3&&
+            ((seedWidth==1)^(seedHeight==1))&&
+            heldSeedStrongCount==(seedWidth==1?17'(seedHeight):17'(seedWidth))&&
+            checkingSeed&&componentBaseEligible;
     end
     assign busy=state!=IDLE;
     // Synchronous old-data read/write. There is one access address per cycle;
@@ -169,10 +255,16 @@ module nativeAnchorReader #(parameter int CAP=8)(
         if(reset)begin
             state<=IDLE;done<=0;anchorCount<=0;anchorWidth<=0;anchorHeight<=0;
             ambiguous<=0;overflow<=0;allocationPeak<=0;componentCount<=0;
+            heldWeakSupportMode<=0;heldSeedXMin<=0;heldSeedXMax<=0;heldSeedYMin<=0;heldSeedYMax<=0;
+            heldSeedStrongCount<=0;seenSeedCount<=0;planeMismatch<=0;
+            thinCandidateCount<=0;firstThinXMin<=0;firstThinXMax<=0;firstThinYMin<=0;firstThinYMax<=0;firstThinStrongCount<=0;
+            thinSeedCount<=0;thinSeedXMin<=0;thinSeedXMax<=0;thinSeedYMin<=0;thinSeedYMax<=0;thinSeedStrongCount<=0;
+            thinSeedHazard<=0;supportAccepted<=0;
             roiXMin<=0;roiXMax<=0;roiYMin<=0;roiYMax<=0;localX<=0;localY<=0;canonIndex<=0;
             spanHalfX<=0;spanHalfY<=0;leftLabel<=0;scanIndex<=0;freeSlots<='1;liveRoots<='0;
             eligibleCount<=0;firstEligibleCount<=0;firstEligibleWidth<=0;firstEligibleHeight<=0;
             minPointX<=0;maxPointX<=0;minPointY<=0;maxPointY<=0;
+            heldOwnerXMin<=0;heldOwnerXMax<=0;heldOwnerYMin<=0;heldOwnerYMax<=0;
             minNumeratorX<=0;maxNumeratorX<=0;minNumeratorY<=0;maxNumeratorY<=0;
             for(int i=0;i<4;i++)begin heldPointX[i]<=0;heldPointY[i]<=0;vertexX[i]<=0;vertexY[i]<=0;end
             for(int i=0;i<CAP;i++)begin parents[i]<=4'(i+1);components[i]<='0;end
@@ -181,6 +273,14 @@ module nativeAnchorReader #(parameter int CAP=8)(
             case(state)
                 IDLE:if(start)begin
                     for(int i=0;i<4;i++)begin heldPointX[i]<=pointX[i];heldPointY[i]<=pointY[i];end
+                    heldOwnerXMin<=ownerXMin;heldOwnerXMax<=ownerXMax;
+                    heldOwnerYMin<=ownerYMin;heldOwnerYMax<=ownerYMax;
+                    heldWeakSupportMode<=weakSupportMode;heldSeedXMin<=seedXMin;heldSeedXMax<=seedXMax;
+                    heldSeedYMin<=seedYMin;heldSeedYMax<=seedYMax;heldSeedStrongCount<=seedStrongCount;
+                    seenSeedCount<=0;planeMismatch<=0;thinCandidateCount<=0;
+                    firstThinXMin<=0;firstThinXMax<=0;firstThinYMin<=0;firstThinYMax<=0;firstThinStrongCount<=0;
+                    thinSeedCount<=0;thinSeedXMin<=0;thinSeedXMax<=0;thinSeedYMin<=0;thinSeedYMax<=0;thinSeedStrongCount<=0;
+                    thinSeedHazard<=0;supportAccepted<=0;
                     localX<=0;localY<=0;leftLabel<=0;freeSlots<='1;liveRoots<='0;
                     eligibleCount<=0;firstEligibleCount<=0;firstEligibleWidth<=0;firstEligibleHeight<=0;
                     anchorCount<=0;anchorWidth<=0;anchorHeight<=0;ambiguous<=0;overflow<=0;allocationPeak<=0;componentCount<=0;
@@ -225,8 +325,12 @@ module nativeAnchorReader #(parameter int CAP=8)(
                 end
                 READ_WAIT:state<=SAMPLE;
                 SAMPLE:begin
-                    leftLabel<=readWhite?chosenLabel:4'd0;
-                    if(readWhite)begin
+                    leftLabel<=selectedWhite?chosenLabel:4'd0;
+                    if(heldWeakSupportMode)begin
+                        if(readWhite&&!readWeakWhite)planeMismatch<=1;
+                        if(readWhite&&inSeedBox)seenSeedCount<=seenSeedCount+17'd1;
+                    end
+                    if(selectedWhite)begin
                         if(capacityHit)overflow<=1;
                         if(chosenLabel!=0)components[int'(chosenLabel)-1]<=updatedComponent;
                         if(allocatePixel)begin
@@ -260,6 +364,14 @@ module nativeAnchorReader #(parameter int CAP=8)(
                                     firstEligibleCount<=retiringComponent.area;firstEligibleWidth<=retiringWidth;firstEligibleHeight<=retiringHeight;
                                 end
                             end
+                            if(!heldWeakSupportMode&&thinEligible)begin
+                                if(thinCandidateCount<2)thinCandidateCount<=thinCandidateCount+2'd1;
+                                if(thinCandidateCount==0)begin
+                                    firstThinXMin<=roiXMin+retiringComponent.xMin;firstThinXMax<=roiXMin+retiringComponent.xMax;
+                                    firstThinYMin<=roiYMin+retiringComponent.yMin;firstThinYMax<=roiYMin+retiringComponent.yMax;
+                                    firstThinStrongCount<=retiringComponent.area;
+                                end
+                            end
                         end
                     end
                     if(scanIndex==4'(CAP-1))begin
@@ -268,8 +380,18 @@ module nativeAnchorReader #(parameter int CAP=8)(
                     end else scanIndex<=scanIndex+4'd1;
                 end
                 FINISH:begin
-                    if(!overflow&&eligibleCount==1)begin
-                        anchorCount<=firstEligibleCount;anchorWidth<=firstEligibleWidth;anchorHeight<=firstEligibleHeight;
+                    if(!heldWeakSupportMode)begin
+                        thinSeedCount<=thinCandidateCount;thinSeedHazard<=overflow||eligibleCount==2;
+                        if(!overflow&&eligibleCount!=2&&thinCandidateCount==1)begin
+                            thinSeedXMin<=firstThinXMin;thinSeedXMax<=firstThinXMax;
+                            thinSeedYMin<=firstThinYMin;thinSeedYMax<=firstThinYMax;thinSeedStrongCount<=firstThinStrongCount;
+                        end
+                        if(!overflow&&eligibleCount==1)begin
+                            anchorCount<=firstEligibleCount;anchorWidth<=firstEligibleWidth;anchorHeight<=firstEligibleHeight;
+                        end
+                    end else if(!overflow&&eligibleCount==1&&seedDescriptorGood&&!planeMismatch&&seenSeedCount==heldSeedStrongCount)begin
+                        anchorCount<=heldSeedStrongCount;anchorWidth<=firstEligibleWidth;anchorHeight<=firstEligibleHeight;
+                        supportAccepted<=1;
                     end
                     ambiguous<=eligibleCount==2;done<=1;state<=IDLE;
                 end

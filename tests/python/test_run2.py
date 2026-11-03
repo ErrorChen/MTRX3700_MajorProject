@@ -47,6 +47,7 @@ class RunTwoTests(unittest.TestCase):
         oldFive=recogniseProjective(blank,readerAlgorithm=5,colourAlgorithm=2)
         oldFour=recogniseProjective(blank,readerAlgorithm=4)
         self.assertEqual(current['colourAlgorithm'],3)
+        self.assertEqual(current['readerAlgorithm'],9)
         self.assertEqual(current['cleanup'],'RUN2_THEN_PART_A_CAUSAL_LEFT_OR_UPPER')
         self.assertEqual(current['colourProfile']['horizontalRunSupport'],2)
         for historical in (oldFive,oldFour):
@@ -61,8 +62,8 @@ class RunTwoTests(unittest.TestCase):
         expected=Counter([('red',1),('red',2),('blue',1),('blue',1),('blue',2),('blue',2),
                           ('blue',3),('blue',4),('blue',5),('blue',6)])
         for redMinimum,blueMinimum in ((48,20),(33,28)):
-            old=recogniseProjective(image,redMin=redMinimum,blueMin=blueMinimum,colourAlgorithm=2)
-            new=recogniseProjective(image,redMin=redMinimum,blueMin=blueMinimum,colourAlgorithm=3)
+            old=recogniseProjective(image,redMin=redMinimum,blueMin=blueMinimum,colourAlgorithm=2,readerAlgorithm=5)
+            new=recogniseProjective(image,redMin=redMinimum,blueMin=blueMinimum,colourAlgorithm=3,readerAlgorithm=5)
             self.assertFalse(old['overflow']);self.assertFalse(new['overflow'])
             self.assertEqual(accepted(old),expected-Counter([('blue',1)]))
             self.assertEqual(accepted(new),expected)
@@ -77,7 +78,7 @@ class RunTwoTests(unittest.TestCase):
     def testThinNativeAnchorRemainsRejected(self):
         image,index=recordedImage(30158)
         for algorithm in (2,3):
-            result=recogniseProjective(image,redMin=index['redMinimum'],blueMin=index['blueMinimum'],colourAlgorithm=algorithm)
+            result=recogniseProjective(image,redMin=index['redMinimum'],blueMin=index['blueMinimum'],colourAlgorithm=algorithm,readerAlgorithm=5)
             self.assertFalse(result['overflow'])
             self.assertEqual(sum(accepted(result).values()),9)
             extra=[m for m in result['markers'] if m['colour']=='blue' and m['bbox'][0]>=273 and 70<m['bbox'][1]<105]
@@ -92,7 +93,7 @@ class RunTwoTests(unittest.TestCase):
             for width in (1,2):
                 image=original.copy();draw=ImageDraw.Draw(image)
                 for index in range(16):draw.rectangle((5+index*5,122,5+index*5+width-1,126),fill=colour)
-                result=recogniseProjective(image,redMin=33,blueMin=28,colourAlgorithm=3)
+                result=recogniseProjective(image,redMin=33,blueMin=28,colourAlgorithm=3,readerAlgorithm=5)
                 self.assertEqual(result['overflow'],width==2)
                 if width==2:
                     self.assertEqual(accepted(result),Counter())
@@ -103,7 +104,7 @@ class RunTwoTests(unittest.TestCase):
         for explicit,expectedAlgorithm,expectedCount in ((False,3,10),(True,2,9)):
             with tempfile.TemporaryDirectory() as directory:
                 command=[sys.executable,str(root/'tools/lib/export_projective_vectors.py'),'--out',directory,
-                         '--case','recorded_frame37621_support_counterexample']
+                         '--reader-algorithm','5','--case','recorded_frame37621_support_counterexample']
                 if explicit:command.extend(('--colour-algorithm','2'))
                 completed=subprocess.run(command,cwd=root,capture_output=True,text=True,timeout=45)
                 self.assertEqual(completed.returncode,0,completed.stdout+completed.stderr)

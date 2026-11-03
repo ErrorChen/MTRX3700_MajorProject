@@ -22,7 +22,8 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent / "lib"))
-from hardware_measurement import CAPTURE_LATENCY_THRESHOLD_US, scoreRegions, sceneExpectations
+from hardware_measurement import CAPTURE_LATENCY_THRESHOLD_US, scoreRegions, sceneExpectations, markerIdentity
+from debug_decode import schemaLayout
 
 
 PROFILE_FIELDS = (
@@ -45,10 +46,13 @@ def require(condition, message):
 def profileFor(state):
     # Legacy stored JSON predates this explicit field; the version fixes its
     # meaning. A shared total16 pool is never interchangeable with split16/colour.
-    expectedLayout = "SHARED_TOTAL" if state["debugSchemaVersion"] >= 7 else "SPLIT_PER_COLOUR"
+    layout = schemaLayout(state["debugSchemaVersion"])
+    expectedLayout = layout["poolLayout"]
+    require(state.get("contractVersion", 2) == layout["contractVersion"],
+            "public contract version conflicts with private schema")
     require(state.get("poolLayout", expectedLayout) == expectedLayout, "pool profile conflicts with private schema")
     return {key: (state.get(key, expectedLayout)
-                  if key == "poolLayout" else state[key]) for key in PROFILE_FIELDS}
+                  if key == "poolLayout" else state.get(key, 2) if key == "contractVersion" else state[key]) for key in PROFILE_FIELDS}
 
 
 def latencySummary(records):
@@ -154,7 +158,8 @@ def assessMode(data, expectedMode):
         lastFrame = frame
         report = state["targetReport"]
         current = (report["requestTag"] == record["requestTag"]
-                   and report["bayId"] == record["requestedBay"] and report["frameId"] == frame)
+                   and markerIdentity(report,state.get("contractVersion",2)) == (1,record["requestedBay"])
+                   and report["frameId"] == frame)
         require(record["currentRequestSample"] == current, "incorrect current-request label")
         elapsed = (state["completionUs"] - state["captureStartUs"]) & 0xffffffff
         require(state["processingLatencyUs"] == elapsed, "latency differs from board timestamps")

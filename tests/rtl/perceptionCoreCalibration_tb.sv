@@ -35,6 +35,7 @@ module perceptionCoreCalibration_tb;
     logic [3:0] sampleCountDrive=0;
     frameObservation_t completionDrive;
     candidate_t redBoxDrive,blueBoxDrive;
+    samplePolygon_t redPolygonDrive,bluePolygonDrive;
     markerArray_t pairingMarkers;
     logic pairingReaderDone=0;
     integer pairingFrame=100;
@@ -49,6 +50,17 @@ module perceptionCoreCalibration_tb;
     task automatic tick;
         @(posedge clk);#1;
     endtask
+    function automatic samplePolygon_t polygonFromBox(input candidate_t boxValue);
+        samplePolygon_t value;
+        begin
+            value='0;value.valid=boxValue.valid;
+            value.x[0]={boxValue.xmin,4'b0};value.y[0]={1'b0,boxValue.ymin,4'b0};
+            value.x[1]={boxValue.xmax,4'b0};value.y[1]=value.y[0];
+            value.x[2]=value.x[1];value.y[2]={1'b0,boxValue.ymax,4'b0};
+            value.x[3]=value.x[0];value.y[3]=value.y[2];
+            return value;
+        end
+    endfunction
     // Geometric unit vectors call the production function directly. The
     // controlled translations below keep all four configured rotations inside
     // native320x240; they are test geometry, never runtime sheet coordinates.
@@ -228,7 +240,9 @@ module perceptionCoreCalibration_tb;
         pairingMarkers[redIndex].accepted=1;pairingMarkers[redIndex].digit=1;
         pairingMarkers[redIndex].xMin=redBoxDrive.xmin;pairingMarkers[redIndex].xMax=redBoxDrive.xmax;
         pairingMarkers[redIndex].yMin=redBoxDrive.ymin;pairingMarkers[redIndex].yMax=redBoxDrive.ymax;
-        dut.bankCandidates[0]='0;dut.bankColours[0]=0;dut.bankOrientation[0]=0;
+        // These existing bbox-only vectors exercise the documented SW8 path.
+        // Normal projective geometry has separate mapper/full-pixel tests.
+        dut.bankCandidates[0]='0;dut.bankColours[0]=0;dut.bankOrientation[0]=0;dut.bankBypass[0]=1;
         if(firstIndex>=0)begin
             dut.bankCandidates[0][firstIndex]=blueBoxDrive;dut.bankColours[0][firstIndex]=1;
             if(acceptedBlueBay)begin
@@ -265,6 +279,7 @@ module perceptionCoreCalibration_tb;
         redBoxDrive='0;redBoxDrive.valid=1;redBoxDrive.xmin=20;redBoxDrive.xmax=80;
         redBoxDrive.ymin=30;redBoxDrive.ymax=100;
         blueBoxDrive=redBoxDrive;blueBoxDrive.ymin=105;blueBoxDrive.ymax=120;
+        redPolygonDrive=polygonFromBox(redBoxDrive);bluePolygonDrive=polygonFromBox(blueBoxDrive);
         checkPairingBoundaries();
         repeat(5)@(negedge clk);reset=0;resetPclk=0;
         force dut.streamData=sofDrive;
@@ -282,9 +297,12 @@ module perceptionCoreCalibration_tb;
         force dut.red1Paired=pairedDrive;
         force dut.pairRed=redBoxDrive;
         force dut.pairBlue=blueBoxDrive;
+        force dut.pairRedPolygon=redPolygonDrive;
+        force dut.pairBluePolygon=bluePolygonDrive;
         @(negedge clk);
         dut.bankSampling[0]=1;dut.bankInteractionId[0]=1;dut.bankSampleGood[0]=1;
         dut.bankSampleRed[0]=redBoxDrive;dut.bankSampleBlue[0]=blueBoxDrive;
+        dut.bankSampleProjective[0]=1;dut.bankRedPolygon[0]=redPolygonDrive;dut.bankBluePolygon[0]=bluePolygonDrive;
         checkWindow();
 
         // The full-window maximum prevents a gradual downward ratchet from
@@ -315,6 +333,17 @@ module perceptionCoreCalibration_tb;
         @(negedge clk);dut.bankSampleRed[0]=redBoxDrive;dut.bankSampleBlue[0].ymax=124;
         sample(78,68,1,0);
         @(negedge clk);dut.bankSampleBlue[0]=blueBoxDrive;
+        // A matching bbox cannot hide different sampled projective geometry.
+        // Native Q4 displacement48 is the inclusive3px bound;49 is outside.
+        dut.bankRedPolygon[0].x[0]=redPolygonDrive.x[0]+13'd48;
+        sample(78,68,1,1);
+        @(negedge clk);dut.bankRedPolygon[0].x[0]=redPolygonDrive.x[0]+13'd49;
+        sample(78,68,1,0);
+        @(negedge clk);dut.bankRedPolygon[0]=redPolygonDrive;dut.bankBluePolygon[0].valid=0;
+        sample(78,68,1,0);
+        @(negedge clk);dut.bankBluePolygon[0]=bluePolygonDrive;dut.bankSampleProjective[0]=0;
+        sample(78,68,1,0);
+        @(negedge clk);dut.bankSampleProjective[0]=1;
 
         // A reset pulse for a new attempt wins over even an otherwise eligible
         // completion on that edge; no stale minimum survives the reset.
@@ -356,11 +385,33 @@ module perceptionCoreCalibration_tb;
         if(dut.bankInteractionId[dut.writeBank]!=4)
             $fatal(1,"reclaimed capture retained previous attempt identity");
 
+        // PROTOCOL_CONFIG_INJECTION: a pending commit and physical mode change
+        // reach the same SOF. Mode ownership wins, config advances only once,
+        // and the complete old active threshold pair is preserved without ACK.
+        // The real interaction FSM removes its obsolete request after the new
+        // version becomes visible; lower this forced boundary request likewise.
+        @(negedge clk);sofDrive=0;commitDrive=0;collectDrive=0;tick();
+        @(negedge clk);commitDrive=1;bypassPerspective=1;#1;
+        if(dut.applyCommit)$fatal(1,"pending SW8 change did not suppress commit before SOF");
+        sof(8);checkActive(3,40,30,0);
+        if(!dut.activeBypass || !dut.bankBypass[dut.writeBank] || dut.commitConsumed)
+            $fatal(1,"same-SOF SW8 did not own the new frame or consumed obsolete commit");
+        @(negedge clk);sofDrive=0;commitDrive=0;bypassPerspective=0;
+        sof(9);checkActive(4,40,30,0);
+        @(negedge clk);sofDrive=0;commitDrive=1;orientationProfile=1;#1;
+        if(dut.applyCommit)$fatal(1,"pending orientation change did not suppress commit before SOF");
+        sof(10);checkActive(5,40,30,0);
+        if(dut.activeOrientation!=1 || dut.bankOrientation[dut.writeBank]!=1 || dut.commitConsumed)
+            $fatal(1,"same-SOF orientation did not own frame or consumed obsolete commit");
+        @(negedge clk);sofDrive=0;commitDrive=0;orientationProfile=0;
+        sof(11);checkActive(6,40,30,0);
+
         // Exercise the actual bounded AG_REFERENCE geometry scan. These inputs
         // are candidate/reader boundary injections, not forced pair outcomes.
         @(negedge clk);sofDrive=0;commitDrive=0;collectDrive=0;aggregateDrive=0;
         release dut.aggregateDone;release dut.processedObservation;
         release dut.red1Paired;release dut.pairRed;release dut.pairBlue;
+        release dut.pairRedPolygon;release dut.pairBluePolygon;
         release dut.readerDone;
         force dut.readerDone=pairingReaderDone;force dut.markers=pairingMarkers;
         force dut.candidateValid=1'b0;

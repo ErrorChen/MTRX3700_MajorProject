@@ -421,6 +421,14 @@ class Runner:
                 raise RuntimeError("unknown RTL test names: " + repr(sorted(requested - available)))
             config["tests"] = [test for test in config["tests"] if test["name"] in requested]
         captureArgs=[]
+        caseArgs=[]
+        if getattr(self.args,"vector_case",None):
+            if getattr(self.args,"capture_result",None):
+                raise RuntimeError("--vector-case and --capture-result select different evidence sources; choose one")
+            if any(test["name"] not in {"projectiveMarkerReader_tb","projectiveBypass_tb"} for test in config["tests"]):
+                raise RuntimeError("--vector-case requires --only projectiveMarkerReader_tb projectiveBypass_tb (or a subset)")
+            caseArgs=[part for name in self.args.vector_case for part in ("--case",name)]
+            self.result["selectedVectorCases"]=self.args.vector_case
         if getattr(self.args,"capture_result",None):
             if any(test["name"] not in {"projectiveMarkerReader_tb","projectiveBypass_tb"} for test in config["tests"]):
                 raise RuntimeError("--capture-result requires --only projectiveMarkerReader_tb projectiveBypass_tb (or a subset)")
@@ -439,17 +447,46 @@ class Runner:
             self.run("capacity_vectors", [sys.executable, HERE / "export_capacity_vectors.py", "--out", vectors])
         if any(test["name"] == "boundedCandidatesCompleted16_tb" for test in config["tests"]):
             self.run("completed16_vectors", [sys.executable, HERE / "export_completed16_vectors.py", "--output-dir", vectors])
+        if any(test["name"] == "mainColourSupportReader_tb" for test in config["tests"]):
+            self.run("main_colour_vectors", [sys.executable, HERE / "export_main_colour_vectors.py", "--out", vectors])
+        for name, exporter in (("calibrationPointMapper_tb", "export_calibration_mapper_vectors.py"),
+                               ("calibrationGeometry_tb", "export_calibration_geometry_vectors.py"),
+                               ("nativeAnchorSupport_tb", "export_native_anchor_support_vectors.py"),
+                               ("perceptionCalibration_tb", "export_calibration_scene.py")):
+            if any(test["name"] == name for test in config["tests"]):
+                self.run(name + "_vectors", [sys.executable, HERE / exporter, "--out", vectors])
         if (HERE / "export_vision_vectors.py").exists():
             self.run("vision_vectors", [sys.executable, HERE / "export_vision_vectors.py", "--out", vectors])
         if any("memberBVgaContour.sv" in path for test in config["tests"] for path in test["sources"]):
             self.run("contour_vectors", [sys.executable, HERE / "export_contour_vectors.py", "--out", vectors])
-        if any(Path(path).name in ("projectiveMarkerReader.sv", "nativeAnchorReader.sv")
+        if any(Path(path).name in ("projectiveMarkerReader.sv", "nativeAnchorReader.sv", "mainColourSupportReader.sv")
                for test in config["tests"] for path in test["sources"]):
-            self.run("projective_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors,*captureArgs])
+            self.run("projective_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors,*captureArgs,*caseArgs])
             if any(test['name']=='projectiveBypass_tb' for test in config['tests']):
-                self.run("bypass_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors / "bypass", "--bypass-perspective",*captureArgs])
+                self.run("bypass_vectors", [sys.executable, HERE / "export_projective_vectors.py", "--out", vectors / "bypass", "--bypass-perspective",*captureArgs,*caseArgs])
             self.result["inputSource"] = ("RECORDED_CAMERA_RTL_REPLAY" if captureArgs else
                                           "MIXED_SYNTHETIC_AND_RECORDED_CAMERA_RTL_REPLAY")
+        # The current reader can reproduce reader5 by disabling only the new
+        # owner-centre predicate. Bind that choice to the exported source
+        # profile, rather than silently running historical pixels as reader6.
+        # Earlier readers changed more than this predicate and need their
+        # corresponding historical RTL; do not claim equivalence here.
+        projectiveParameters = {}
+        projectiveManifest = vectors / "projective_manifest.json"
+        if projectiveManifest.exists():
+            vectorProfile = json.loads(projectiveManifest.read_text(encoding="utf-8"))
+            readerAlgorithm = vectorProfile["readerAlgorithm"]
+            if readerAlgorithm not in (5, 6, 7, 8, 9) or vectorProfile["candidatePoolMode"] != "SHARED":
+                raise RuntimeError("current reader RTL replay supports shared-pool reader5/6/7/8/9 only; use matching historical RTL for older captures")
+            projectiveParameters = {"ENFORCE_OWNER_BOUNDS": int(readerAlgorithm >= 6),
+                                    "ENFORCE_MAIN_COMPONENT": int(readerAlgorithm >= 7),
+                                    "EMIT_CALIBRATION_QUADS": int(readerAlgorithm >= 8),
+                                    "ENABLE_THIN_ANCHOR_SUPPORT": int(readerAlgorithm >= 9)}
+            self.result["projectiveReplayProfile"] = {
+                "readerAlgorithm": readerAlgorithm,
+                "colourAlgorithm": vectorProfile["colourAlgorithm"],
+                "manifestSha256": digest(projectiveManifest),
+                "simulationParameters": projectiveParameters}
         for test in config["tests"]:
             name = test["name"]
             folder = self.out / name
@@ -469,8 +506,12 @@ class Runner:
             defines = ["+define+" + d for d in test.get("defines", [])]
             self.run(name + "_compile", [binDir / ("vlog" + suffix), "-sv", *defines, "-work", library, *sources], cwd=folder)
             plusargs = [value.replace("{vectors}", vectors.as_posix()) for value in test.get("plusargs", [])]
+            simulationParameters = (projectiveParameters if
+                test.get("top", name) == "projectiveMarkerReader_tb" else {})
+            testResult["simulationParameters"] = simulationParameters
+            parameterArgs = [f"-g{key}={value}" for key, value in simulationParameters.items()]
             command = [vsim, "-c", "-onfinish", "exit", "-lib", library, test.get("top", name),
-                       "+VECTORS=" + vectors.as_posix(), "+VECTOR_DIR=" + vectors.as_posix(), *plusargs, "-do",
+                       *parameterArgs, "+VECTORS=" + vectors.as_posix(), "+VECTOR_DIR=" + vectors.as_posix(), *plusargs, "-do",
                        "onerror {quit -code 1}; onbreak {quit -code 1}; run -all; quit -code 0"]
             _, output = self.run(name + "_simulation", command, cwd=folder,
                                  timeout=max(self.args.timeout, test.get("timeoutSeconds", 0)))
@@ -732,14 +773,14 @@ class Runner:
         from debug_decode import compareMarkerPixels
         comparison = compareMarkerPixels(self.out / "capture/frame.png", recognition, self.out / "glyph_check")
         self.result["glyphAgreement"] = comparison
-        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5) else "vision_reference.py"
+        script = "projective_reference.py" if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5, 6, 7, 8, 9) else "vision_reference.py"
         profileArgs = (["--white-min", str(recognition["whiteMinimum"]), "--max-spread", str(recognition["whiteMaxSpread"]),
                         "--colour-algorithm", str(recognition["colourAlgorithm"]),
                         "--reader-algorithm", str(recognition["readerAlgorithm"]),
                         "--active-capacity", str(recognition["activeCandidateCapacity"]),
                         "--output-capacity", str(recognition["outputCandidateCapacity"])]
-                       if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5) else ["--cleanup"])
-        if recognition["readerAlgorithm"] == 5:
+                       if recognition["readerAlgorithm"] in (1, 2, 3, 4, 5, 6, 7, 8, 9) else ["--cleanup"])
+        if recognition["readerAlgorithm"] >= 5:
             profileArgs.append("--shared-pool" if recognition.get("sharedCandidatePool", False) else "--split-pool")
         if recognition.get('bypassPerspective',False):profileArgs.append('--bypass-perspective')
         self.run("pixel_reference", [sys.executable, HERE / script, self.out / "capture/frame.png",
@@ -795,7 +836,7 @@ class Runner:
                 if time.monotonic() >= deadline:
                     raise RuntimeError("orientation command acknowledged but no frame boundary applied the requested profile")
                 state = self.control()
-            self.result["operationMeaning"] = "explicit debug orientation applied at a frame boundary; B/C coordinates retain contract v2"
+            self.result["operationMeaning"] = "explicit debug orientation applied at a frame boundary; B/C coordinates remain upright240x320"
         elif c == "speech":
             if self.args.arm:
                 state = self.control(4 << 24)
@@ -832,6 +873,7 @@ def main(argv=None):
                              help="Test-only printed-digit regions for a fixed photographed scene; never supplied to FPGA; requires --trials")
     test.add_argument("--only", nargs="+", help="run the named RTL benches when narrowing a regression")
     test.add_argument("--capture-result",type=Path,help="R7: replay one verified camera result/profile through reader/anchor RTL")
+    test.add_argument("--vector-case",action="append",help="named current-algorithm reader regression; repeat for multiple cases (historical capture profile uses --capture-result)")
     group = test.add_mutually_exclusive_group(required=True)
     for name in ("rtl", "replay", "hardware"):
         group.add_argument("--" + name, action="store_true")
@@ -864,6 +906,8 @@ def main(argv=None):
         parser.error("--trials requires test --hardware or autodebug")
     if getattr(args, "capture_result", None) and not args.rtl:
         parser.error("--capture-result requires test --rtl")
+    if getattr(args, "vector_case", None) and not args.rtl:
+        parser.error("--vector-case requires test --rtl")
     if getattr(args,"truth_regions",None) and (not hardwareCommand or not args.trials):
         parser.error("--truth-regions requires test --hardware --trials 1..3 or autodebug --trials 1..3")
     runner = Runner(args)

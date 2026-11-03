@@ -1,0 +1,55 @@
+{
+  "buildId": 1946722349,
+  "frameId": 45625,
+  "configVersion": 9,
+  "captureStartUs": 149600337,
+  "completionUs": 149658527,
+  "readerAlgorithm": 7,
+  "colourAlgorithm": 3,
+  "redMinimum": 41,
+  "blueMinimum": 33,
+  "whiteMinimum": 84,
+  "whiteMaxSpread": 64,
+  "orientationProfile": 0,
+  "bypassPerspective": false,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "frameGood": true,
+  "candidateOverflow": false,
+  "redCandidateCount": 2,
+  "blueCandidateCount": 7,
+  "calibrationReferenceValid": false,
+  "schema": "member-b-recorded-regression-profile-v2",
+  "hardwareDebugSchemaVersion": 8,
+  "publicContractVersion": 3,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "originalCaptureResult": "build/member_b/20261103T055719_167964Z_capture/result.json",
+  "originalCaptureResultSha256": "5fae6e243007f3aa466f316b6bf174e58672ae947bb09480943e009817727b36",
+  "fresh": true,
+  "sameFrameVerified": true,
+  "files": {
+    "frame.png": "aa08297df6abeba63768a7d32b4f336b2708e737d595ea877080aae6b653203f"
+  },
+  "use": "Actual blue6 anchor refusal captured during bounded fresh acquisition; preserve as a failing regression, not a successful new-reader result.",
+  "recordedFailure": {
+    "isBlue": true,
+    "printedDigit": 6,
+    "nativeBox": [
+      264,
+      176,
+      296,
+      236
+    ],
+    "hardwareReason": 4,
+    "hardwareAccepted": false,
+    "printedLabelSource": "Manual visual reading of exact camera PNG; never supplied to production recognition."
+  },
+  "limitations": [
+    "This is the same held rotated pose as15078, with frame-dependent sensor pixels; paper boundaries remain clipped.",
+    "Earlier reader7 trial had UNCERTAIN_STROKE/split-component refusals. This new frame instead has reason4; do not assume identical cause.",
+    "The printed digit is visually6, but hardware rejected. A model rejection matching hardware proves implementation agreement only."
+  ]
+}

@@ -29,6 +29,7 @@ module memberBDebug #(
     logic [1:0] rejectionReason; // 0 accepted, 1 invalid opcode/ID, 2 busy/disabled
     logic queryBusyAtAction;
     logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] frozenWords;
+    logic queryFrozen;
     logic [31:0] selectedWord, metaWord;
     logic [127:0] probeWord;
     snapshot_probes #(.ID("BCTL"),.SW(32),.PW(128)) probes (
@@ -36,7 +37,10 @@ module memberBDebug #(
 
     always_comb begin
         selectedWord=32'd0;
-        if(stableSource[15:8]<8'(perception_pkg::DEBUG_WORD_COUNT))
+        // QRP3 defines only eight words. Mask its zero tail on this32-bit
+        // read port rather than adding a query clear input to88 stored words.
+        if(stableSource[15:8]<8'(perception_pkg::DEBUG_WORD_COUNT)&&
+           (!queryFrozen||stableSource[15:8]<8'd8))
             selectedWord=frozenWords[stableSource[15:8]*32+:32];
         metaWord={8'(perception_pkg::DEBUG_SCHEMA_VERSION),8'(perception_pkg::PERCEPTION_CONTRACT_VERSION),
             ackToggle,commandError,rejectionReason,3'd0,queryBusyAtAction,8'(perception_pkg::DEBUG_WORD_COUNT)};
@@ -47,6 +51,7 @@ module memberBDebug #(
         if(reset) begin
             previousSource<=0;stableSource<=0;stableCount<=0;
             ackToggle<=0;pendingToggle<=0;commandError<=0;frozenWords<=0;haveBaseline<=0;
+            queryFrozen<=0;
             commandValid<=0;commandOperation<=perception_pkg::TARGET_CLEAR;
             commandMarkerType<=perception_pkg::MARKER_NONE;commandDigit<=4'hf;
             queryResultReady<=0;queryBusyAtAction<=0;
@@ -74,7 +79,7 @@ module memberBDebug #(
                 // existing frozen bank, then acknowledge exactly this item.
                 // Address-only reads never consume another query result.
                 queryResultReady<=0;
-                frozenWords<='0;
+                queryFrozen<=1;
                 frozenWords[0+:32]<=32'h51525033;
                 frozenWords[32+:160]<={19'd0,queryResult};
                 frozenWords[192+:32]<=BUILD_ID;
@@ -110,7 +115,7 @@ module memberBDebug #(
                                 commandMarkerType<=perception_pkg::MARKER_NONE;commandDigit<=4'hf;end
                             4'd3: calibrateArm<=1;
                             4'd4: speechArm<=1;
-                            4'd5: begin frozenWords<=debugWords;ackToggle<=sourceWord[31];end
+                            4'd5: begin frozenWords<=debugWords;queryFrozen<=0;ackToggle<=sourceWord[31];end
                             4'd6: begin orientationProfile<=sourceWord[1:0];ackToggle<=sourceWord[31];end
                             4'd7: begin autoCycle<=sourceWord[0];ackToggle<=sourceWord[31];end
                             4'd8,4'd9: begin

@@ -317,7 +317,10 @@ set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/common/asyncPixelFifo.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/capture/cameraStreamBridge.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/glyphBanks.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/nativeAnchorReader.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/mainColourSupportReader.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/projectiveMarkerReader.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/interaction/calibrationPointMapper.sv
+set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/interaction/calibrationGeometry.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/vision/markerQueryStore.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/tracking/targetTracker.sv
 set_global_assignment -name SYSTEMVERILOG_FILE ../rtl/interaction/colourSampler.sv

@@ -1,0 +1,66 @@
+{
+  "buildId": 1946722349,
+  "frameId": 63647,
+  "configVersion": 9,
+  "captureStartUs": 870191985,
+  "completionUs": 870250079,
+  "readerAlgorithm": 7,
+  "colourAlgorithm": 3,
+  "redMinimum": 41,
+  "blueMinimum": 33,
+  "whiteMinimum": 84,
+  "whiteMaxSpread": 64,
+  "orientationProfile": 0,
+  "bypassPerspective": false,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "frameGood": true,
+  "candidateOverflow": false,
+  "redCandidateCount": 2,
+  "blueCandidateCount": 8,
+  "calibrationReferenceValid": false,
+  "schema": "EBP1",
+  "hardwareDebugSchemaVersion": 8,
+  "publicContractVersion": 3,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "originalCaptureResult": "build/member_b/20261103T060920_641543Z_capture/result.json",
+  "originalCaptureResultSha256": "b884f44e5603f50760d8ad1b84efa456d07c557abeed969e6f417f6dc649d724",
+  "fresh": true,
+  "sameFrameVerified": true,
+  "files": {
+    "frame.png": "7b92662617cc954ebbc1772bf658658e39f30c73625147eafa398bdfe2dde675"
+  },
+  "use": "Second actual full-box blue6 anchor refusal, with one extra blue component inside the digit hole; not proof of the earlier split-card or uncertain-stroke failure.",
+  "recordedFailure": {
+    "isBlue": true,
+    "printedDigit": 6,
+    "nativeBox": [
+      264,
+      176,
+      296,
+      236
+    ],
+    "hardwareReason": 4,
+    "hardwareAccepted": false,
+    "printedLabelSource": "Manual visual reading of exact camera PNG; never supplied to production recognition."
+  },
+  "limitations": [
+    "This is the same held rotated pose as15078, with frame-dependent sensor pixels; paper boundaries remain clipped.",
+    "Earlier reader7 trial had UNCERTAIN_STROKE/split-component refusals. This new frame instead has reason4; do not assume identical cause.",
+    "The printed digit is visually6, but hardware rejected. A model rejection matching hardware proves implementation agreement only."
+  ],
+  "additionalCandidate": {
+    "nativeBox": [
+      274,
+      208,
+      293,
+      225
+    ],
+    "reason": 1,
+    "accepted": false,
+    "meaning": "Internal blue island smaller than digit geometry minimum. Main blue6 box remains intact."
+  }
+}

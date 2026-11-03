@@ -37,8 +37,9 @@ def main():
         raise RuntimeError("preview input has prefix/trailing GRAB bytes")
     from debug_decode import decodeGrabWords
     decoded=decodeGrabWords(decoder["results"],record["recognition"]["buildId"])
-    if decoded["debugSchemaVersion"]!=7 or decoded["statusWordCount"]!=96:
-        raise RuntimeError("current VGA RTL preview requires schema7; historical previews retain their original source")
+    if (decoded["debugSchemaVersion"]!=8 or decoded["contractVersion"]!=3 or
+            decoded["statusWordCount"]!=96):
+        raise RuntimeError("current VGA RTL preview requires schema8/public3; historical previews retain their original source")
     if decoded["frameId"]!=record["frameId"] or decoded["configVersion"]!=record["recognition"]["configVersion"]:
         raise RuntimeError("preview record and binary describe different frames/configurations")
     if not np.array_equal(np.asarray(image),grab.frame_rgb(decoder["pixels"])):

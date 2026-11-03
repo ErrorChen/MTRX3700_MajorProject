@@ -70,6 +70,8 @@ module perceptionCore (
     logic [1:0] activeOrientation;
     logic activeBypass,bankBypass[0:1],lastFrameBypass;
     logic [15:0] configVersion;
+    logic [15:0] lastFrameConfigVersion;
+    logic [1:0] lastFrameOrientation;
     wire [1:0] colourMask;
     hsvColourGate #(.BLUE_HUE_UPPER(260)) colourGate (.rgb(rgb),.redMinimum(activeRedMinimum),
         .blueMinimum(activeBlueMinimum),.colourMask(colourMask));
@@ -152,6 +154,8 @@ module perceptionCore (
     logic [16:0] glyphAddress;
     logic glyphWhite,glyphStrongWhite,glyphColour;
     markerArray_t markers,lastMarkers;
+    logic [3:0] geometryReadIndex;
+    colourQuad_t geometryReadQuad,aggregateRedQuad,aggregateBlueQuad;
     logic [4:0] acceptedCount;
     logic observationValid;
     logic [15:0] bufferDropCount,reportDropCount;
@@ -166,7 +170,8 @@ module perceptionCore (
         .bypassPerspective(bankBypass[readBank]),
         .done(readerDone),.readAddress(glyphAddress),.readWhite(glyphWhite),
         .readStrongWhite(glyphStrongWhite),.readColour(glyphColour),
-        .markers(markers),.acceptedCount(acceptedCount));
+        .markers(markers),.acceptedCount(acceptedCount),
+        .geometryReadIndex(geometryReadIndex),.geometryReadQuad(geometryReadQuad));
     logic trackerRequestReady,queryRequestReady;
     wire requestIsQuery=targetRequest.operation==TARGET_LIST||targetRequest.operation==TARGET_GET;
     assign targetRequestReady=requestIsQuery?queryRequestReady:trackerRequestReady;
@@ -221,6 +226,25 @@ module perceptionCore (
     endfunction
     candidate_t pairRed,pairBlue,lastPairRed,lastPairBlue,sampledRed,sampledBlue;
     candidate_t bankSampleRed[0:1],bankSampleBlue[0:1];
+    samplePolygon_t pairRedPolygon,pairBluePolygon,lastRedPolygon,lastBluePolygon;
+    samplePolygon_t sampledRedPolygon,sampledBluePolygon;
+    samplePolygon_t bankRedPolygon[0:1],bankBluePolygon[0:1];
+    logic sampledProjective,bankSampleProjective[0:1];
+    // Blue polygon corners are ordered relative to the matched red1 anchor,
+    // not the contour scanner's cyclic start. Compare actual sampled geometry
+    // with this frame's independently remeasured quad before accepting RGB.
+    function automatic logic polygonStationary(input samplePolygon_t a,input samplePolygon_t c);
+        logic signed [13:0] dx,dy;
+        begin
+            polygonStationary=a.valid&&c.valid;
+            for(int i=0;i<4;i++)begin
+                dx=$signed({1'b0,a.x[i]})-$signed({1'b0,c.x[i]});
+                dy=$signed({1'b0,a.y[i]})-$signed({1'b0,c.y[i]});
+                if(dx < -14'sd48 || dx > 14'sd48 || dy < -14'sd48 || dy > 14'sd48)
+                    polygonStationary=0;
+            end
+        end
+    endfunction
     logic red1Paired,red2Seen,roiValid;
     logic [4:0] pairCount,red2Count;
     logic [3:0] pairReferenceIndex,lastCalibrationReferenceIndex;
@@ -230,10 +254,22 @@ module perceptionCore (
     // combinational 16x8 loop duplicated 128 arithmetic/priority paths and was
     // the largest contributor to the failed fit. Keep the READING bank owned
     // until this bounded scan completes, so all data still belongs to one frame.
-    typedef enum logic [1:0] {AG_IDLE,AG_MARKER,AG_REFERENCE,AG_DONE} aggregateState_t;
+    typedef enum logic [3:0] {AG_IDLE,AG_MARKER,AG_RED_READ,AG_RED_WAIT,
+        AG_REFERENCE,AG_BLUE_READ,AG_BLUE_WAIT,AG_GEOMETRY_START,AG_GEOMETRY_WAIT,
+        AG_PAIR,AG_NEXT_REFERENCE,AG_DONE} aggregateState_t;
     aggregateState_t aggregateState;
     logic [3:0] markerIndex;
     logic [3:0] referenceIndex;
+    logic geometryBusy,geometryDone,geometryPairValid;
+    logic [3:0] geometryReason;
+    samplePolygon_t geometryRedPolygon,geometryBluePolygon;
+    assign geometryReadIndex=(aggregateState==AG_RED_READ||aggregateState==AG_RED_WAIT)?markerIndex:referenceIndex;
+    calibrationGeometry calibrationPair (
+        .clk(clk),.reset(processingReset),.start(aggregateState==AG_GEOMETRY_START),
+        .redQuad(aggregateRedQuad),.blueQuad(aggregateBlueQuad),
+        .redBox(bankCandidates[readBank][markerIndex]),.blueIsBay(markers[referenceIndex].accepted),
+        .busy(geometryBusy),.done(geometryDone),.pairValid(geometryPairValid),.reason(geometryReason),
+        .redPolygon(geometryRedPolygon),.bluePolygon(geometryBluePolygon));
     wire aggregateDone=aggregateState==AG_DONE;
     // Share the existing indexed marker bus with the descriptor writer. This
     // adds only 48 small RAM entries; it does not duplicate a frame buffer.
@@ -275,10 +311,12 @@ module perceptionCore (
         if(processingReset) begin
             aggregateState<=AG_IDLE;markerIndex<=0;referenceIndex<=0;
             processedObservation<='0;pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;pairQuality<=0;
+            aggregateRedQuad<='0;aggregateBlueQuad<='0;pairRedPolygon<='0;pairBluePolygon<='0;
         end else case(aggregateState)
             AG_IDLE: if(readerDone) begin
                 processedObservation<=bankMeta[readBank];processedObservation.matchCount<=0;
                 pairRed<='0;pairBlue<='0;pairCount<=0;red2Count<=0;pairReferenceIndex<=0;pairQuality<=0;
+                pairRedPolygon<='0;pairBluePolygon<='0;
                 markerIndex<=0;referenceIndex<=0;aggregateState<=AG_MARKER;
             end
             AG_MARKER: begin
@@ -296,16 +334,29 @@ module perceptionCore (
                         red2Count<=red2Count+5'd1;
                 end
                 if(markers[markerIndex].accepted && !markers[markerIndex].isBlue && markers[markerIndex].digit==1) begin
-                    referenceIndex<=0;aggregateState<=AG_REFERENCE;
+                    referenceIndex<=0;aggregateState<=bankBypass[readBank]?AG_REFERENCE:AG_RED_READ;
                 end else if(markerIndex==15) aggregateState<=AG_DONE;
                 else markerIndex<=markerIndex+4'd1;
             end
+            AG_RED_READ:aggregateState<=AG_RED_WAIT;
+            AG_RED_WAIT:begin aggregateRedQuad<=geometryReadQuad;aggregateState<=AG_REFERENCE;end
             AG_REFERENCE: begin
                 // A recognised blue bay cannot double as the red-1 reference,
                 // even if an unusual scene makes its bbox match the geometry.
                 // Only this actual unique pairing may receive the BJ label.
                 if(bankColours[readBank][referenceIndex]&&!markers[referenceIndex].accepted&&
-                    referencePaired(markers[markerIndex],bankCandidates[readBank][referenceIndex],bankOrientation[readBank])) begin
+                   bankCandidates[readBank][referenceIndex].valid)begin
+                    if(!bankBypass[readBank])aggregateState<=AG_BLUE_READ;
+                    else if(referencePaired(markers[markerIndex],bankCandidates[readBank][referenceIndex],bankOrientation[readBank]))
+                        aggregateState<=AG_PAIR;
+                    else aggregateState<=AG_NEXT_REFERENCE;
+                end else aggregateState<=AG_NEXT_REFERENCE;
+            end
+            AG_BLUE_READ:aggregateState<=AG_BLUE_WAIT;
+            AG_BLUE_WAIT:begin aggregateBlueQuad<=geometryReadQuad;aggregateState<=AG_GEOMETRY_START;end
+            AG_GEOMETRY_START:aggregateState<=AG_GEOMETRY_WAIT;
+            AG_GEOMETRY_WAIT:if(geometryDone)aggregateState<=geometryPairValid?AG_PAIR:AG_NEXT_REFERENCE;
+            AG_PAIR:begin
                     // Saturating uniqueness must not wrap back to one.
                     if(pairCount<2) pairCount<=pairCount+5'd1;
                     pairRed.valid<=1;
@@ -314,11 +365,15 @@ module perceptionCore (
                     pairBlue<=bankCandidates[readBank][referenceIndex];
                     pairReferenceIndex<=referenceIndex;
                     pairQuality<=markers[markerIndex].quality;
-                end
+                    pairRedPolygon<=bankBypass[readBank]?'0:geometryRedPolygon;
+                    pairBluePolygon<=bankBypass[readBank]?'0:geometryBluePolygon;
+                    aggregateState<=AG_NEXT_REFERENCE;
+            end
+            AG_NEXT_REFERENCE:begin
                 if(referenceIndex==15) begin
                     if(markerIndex==15) aggregateState<=AG_DONE;
                     else begin markerIndex<=markerIndex+4'd1;aggregateState<=AG_MARKER;end
-                end else referenceIndex<=referenceIndex+4'd1;
+                end else begin referenceIndex<=referenceIndex+4'd1;aggregateState<=AG_REFERENCE;end
             end
             AG_DONE: aggregateState<=AG_IDLE;
             default: aggregateState<=AG_IDLE;
@@ -327,7 +382,7 @@ module perceptionCore (
     logic collectEnable,calibrationAttempt,commitRequest,commitAck,calibrated,speechArmed,interactionBusy;
     logic commitConsumed;
     wire applyCommit=commitRequest&&!commitConsumed&&interactionEnable&&interactionPermit&&
-        processingEnable&&activeProcessing;
+        processingEnable&&activeProcessing&&activeBypass==bypassPerspective&&activeOrientation==orientationProfile;
     logic [3:0] sampleCount;
     logic [15:0] interactionId;
     interactionKind_t interactionKind;
@@ -360,7 +415,10 @@ module perceptionCore (
     wire currentSample=aggregateAccepted&&bankSampling[readBank]&&collectEnable&&
         bankInteractionId[readBank]==interactionId&&
         processedObservation.configVersion==configVersion;
-    wire sampleGeometryGood=stationary(pairRed,bankSampleRed[readBank])&&stationary(pairBlue,bankSampleBlue[readBank]);
+    wire sampleGeometryGood=stationary(pairRed,bankSampleRed[readBank])&&stationary(pairBlue,bankSampleBlue[readBank])&&
+        bankSampleProjective[readBank]==!bankBypass[readBank]&&
+        (bankBypass[readBank]||(polygonStationary(pairRedPolygon,bankRedPolygon[readBank])&&
+                              polygonStationary(pairBluePolygon,bankBluePolygon[readBank])));
     wire sampleWindowGood=sampleCount==0||(
         int'(bankSampleRedMin[readBank])-int'(shadowRedMinimum)<=24&&
         int'(windowRedMaximum)-int'(bankSampleRedMin[readBank])<=24&&
@@ -368,11 +426,20 @@ module perceptionCore (
         int'(windowBlueMaximum)-int'(bankSampleBlueMin[readBank])<=24);
     wire sampleGood=bankSampleGood[readBank]&&red1Paired&&processedObservation.frameGood&&
         sampleGeometryGood&&sampleWindowGood;
+    // At SOF the active profile registers still contain the preceding frame.
+    // A switch or commit must therefore suppress sampling explicitly; never
+    // label old geometry with the newly committed configuration version.
+    wire sampleRoiAvailable=roiValid&&lastFrameConfigVersion==configVersion&&!applyCommit&&
+        activeBypass==bypassPerspective&&lastFrameBypass==bypassPerspective&&
+        activeOrientation==orientationProfile&&lastFrameOrientation==orientationProfile;
     colourSampler sampler (.clk(clk),.reset(processingReset),.sof(sof),.pixelValid(processingPixelValid),.eop(pixelEop),
-        .collectEnable(collectEnable),.roiValid(roiValid),.x(x),.y(y),.rgb(rgb),.orientation(activeOrientation),
+        .collectEnable(collectEnable),.roiValid(sampleRoiAvailable),.x(x),.y(y),.rgb(rgb),.orientation(activeOrientation),
         .redBox(lastPairRed),.blueBox(lastPairBlue),.frameSampleGood(samplerGood),.redMinimum(sampleRedMinimum),
         .blueMinimum(sampleBlueMinimum),.redSamples(redSamples),.blueSamples(blueSamples),
-        .sampledRedBox(sampledRed),.sampledBlueBox(sampledBlue));
+        .sampledRedBox(sampledRed),.sampledBlueBox(sampledBlue),
+        .useProjective(!lastFrameBypass),.redPolygon(lastRedPolygon),.bluePolygon(lastBluePolygon),
+        .sampledRedPolygon(sampledRedPolygon),.sampledBluePolygon(sampledBluePolygon),
+        .sampledUseProjective(sampledProjective));
     fixedSheetInteraction interaction (.clk(clk),.reset(reset),.timeUs(timeUs),
         .enable(interactionEnable&&processingEnable&&activeProcessing),
         .permit(interactionPermit),.debugCalArm(debugCalArm&&debugInteractionArmReady),
@@ -384,8 +451,7 @@ module perceptionCore (
         .calibrationAttempt(calibrationAttempt),.sampleCount(sampleCount),.calibrated(calibrated),.speechArmed(speechArmed),
         .busy(interactionBusy),.kind(interactionKind),.state(interactionState),.interactionId(interactionId),
         .userEvent(userEvent),.userEventValid(userEventValid),.userEventReady(userEventReady),.eventOverflow(eventOverflow));
-    logic [15:0] faults,lastFrameId,lastFrameConfigVersion;
-    logic [1:0] lastFrameOrientation;
+    logic [15:0] faults,lastFrameId;
     logic [7:0] lastFrameRedMinimum,lastFrameBlueMinimum;
     logic haveFrame,lastFrameGood;
     logic [31:0] lastCompletionUs,lastCaptureUs;
@@ -403,6 +469,7 @@ module perceptionCore (
             observationValid<=0;observation<='0;captureMeta<='0;bufferDropCount<=0;faults<=0;haveFrame<=0;lastCompletionUs<=0;
             lastMarkers<='0;lastFrameId<=0;lastCaptureUs<=0;lastRedCount<=0;lastBlueCount<=0;roiValid<=0;
             lastPairRed<='0;lastPairBlue<='0;completedFrame<=0;completedFrameId<=0;lastFrameGood<=0;
+            lastRedPolygon<='0;lastBluePolygon<='0;
             lastPeakRed<=0;lastPeakBlue<=0;lastCandidateFaults<=0;
             lastFrameConfigVersion<=0;lastFrameOrientation<=0;
             lastFrameRedMinimum<=48;lastFrameBlueMinimum<=20;
@@ -415,6 +482,7 @@ module perceptionCore (
                 bankSampling[i]<=0;bankSampleGood[i]<=0;bankSampleRedMin[i]<=0;bankSampleBlueMin[i]<=0;
                 bankInteractionId[i]<=0;bankRedSamples[i]<=0;bankBlueSamples[i]<=0;
                 bankSampleRed[i]<='0;bankSampleBlue[i]<='0;
+                bankRedPolygon[i]<='0;bankBluePolygon[i]<='0;bankSampleProjective[i]<=0;
             end
         end else begin
             readerStart<=0;observationValid<=0;commitAck<=0;completedFrame<=0;
@@ -514,6 +582,8 @@ module perceptionCore (
                     bankRedSamples[writeBank]<=redSamples;bankBlueSamples[writeBank]<=blueSamples;
                     bankSampleGood[writeBank]<=samplerGood;bankSampleRedMin[writeBank]<=sampleRedMinimum;
                     bankSampleBlueMin[writeBank]<=sampleBlueMinimum;bankSampleRed[writeBank]<=sampledRed;bankSampleBlue[writeBank]<=sampledBlue;
+                    bankRedPolygon[writeBank]<=sampledRedPolygon;bankBluePolygon[writeBank]<=sampledBluePolygon;
+                    bankSampleProjective[writeBank]<=sampledProjective;
                 end else begin
                     observation<=captureMeta;observation.resourceDrop<=1;observation.frameGood<=0;observationValid<=1;
                 end
@@ -556,6 +626,7 @@ module perceptionCore (
                 lastPeakRed<=bankPeakRed[readBank];lastPeakBlue<=bankPeakBlue[readBank];
                 lastCandidateFaults<=bankCandidateFaults[readBank];
                 roiValid<=red1Paired&&processedObservation.frameGood;lastPairRed<=pairRed;lastPairBlue<=pairBlue;
+                lastRedPolygon<=pairRedPolygon;lastBluePolygon<=pairBluePolygon;
             end
             if(!activeProcessing&&rawFrameOpen&&pixelEop)begin
                 // GRAB still receives a new, immutable result token for each
@@ -605,6 +676,6 @@ module perceptionCore (
         // capacity. Counts and each marker's explicit isBlue remain separate.
         debugWords[(DEBUG_TAIL_BASE+5)*32+:32]={8'd1,8'(OUTPUT_CAPACITY),8'(ACTIVE_CAPACITY),lastPeakBlue,lastPeakRed};
         debugWords[(DEBUG_TAIL_BASE+6)*32+:32]={completionDiscardCount,12'd0,transportFault,lastCandidateFaults};
-        debugWords[(DEBUG_TAIL_BASE+7)*32+:32]={8'd3,8'd5,8'(WHITE_LUMA_QUARTER),8'd64};
+        debugWords[(DEBUG_TAIL_BASE+7)*32+:32]={8'd3,8'd9,8'(WHITE_LUMA_QUARTER),8'd64};
     end
 endmodule

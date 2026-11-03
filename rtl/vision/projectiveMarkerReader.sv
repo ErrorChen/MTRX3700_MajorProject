@@ -7,7 +7,18 @@
 // or candidate index supplies a digit answer.
 module projectiveMarkerReader #(
     parameter int MIN_EDGE_PIXELS=24,
-    parameter int MIN_QUAD_AREA=400
+    parameter int MIN_QUAD_AREA=400,
+    // Reader8 adds same-frame colour quads for projective calibration, while
+    // preserving reader7's digit gates. Historical reader7 disables QUADS.
+    // Reader6 replay disables only MAIN_COMPONENT;
+    // reader5 replay disables both flags. These are compile-time identities,
+    // never an automatic reinterpretation of an older recorded image.
+    parameter bit ENFORCE_OWNER_BOUNDS=1'b1,
+    parameter bit ENFORCE_MAIN_COMPONENT=1'b1,
+    parameter bit EMIT_CALIBRATION_QUADS=1'b1,
+    // Reader9 preserves every strict reader8 decision. Only a globally unique
+    // thin strong-white seed may request one additional weak-support scan.
+    parameter bit ENABLE_THIN_ANCHOR_SUPPORT=1'b1
 ) (
     input logic clk,reset,start,
     // Dense shared completed pool. The independent colour bit is metadata;
@@ -20,6 +31,11 @@ module projectiveMarkerReader #(
     output logic [16:0] readAddress,
     input logic readWhite,readStrongWhite,readColour,
     output vision_pkg::markerArray_t markers,
+    // One-cycle synchronous port. The caller may inspect geometry after done
+    // and must finish before the next start. Only the 16 validity bits reset;
+    // the completed-frame quad words are stored in M10K, not a register mux.
+    input logic [3:0] geometryReadIndex,
+    output vision_pkg::colourQuad_t geometryReadQuad,
     output logic [4:0] acceptedCount
 );
     import candidate_pkg::*;
@@ -29,7 +45,8 @@ module projectiveMarkerReader #(
         HOMO_DELTAS,HOMO_PRODUCTS,HOMO_SIGN,HOMO_COEFF,GRID_NUM,GRID_PREP,
         DIVIDE,MAP_ADDRESS,GRID_WAIT,GRID_SAMPLE,DECIDE,NEXT,MULTIPLY_WAIT,GRID_INIT,ANCHOR_START,ANCHOR_WAIT,
         DIAMETER_INIT,DIAMETER_START,DIAMETER_WAIT,DIAMETER_NEXT,
-        CROSS_INIT,CROSS_START,CROSS_WAIT,CROSS_NEXT,QUAD_SELECT,QUAD_CANON,ORIENTATION_FINISH
+        CROSS_INIT,CROSS_START,CROSS_WAIT,CROSS_NEXT,QUAD_SELECT,QUAD_CANON,ORIENTATION_FINISH,
+        MAIN_START,MAIN_WAIT
     } state_t;
     state_t state;
     candidate_array_t heldCandidates;
@@ -72,7 +89,37 @@ module projectiveMarkerReader #(
     logic signed [10:0] edgeDx[0:3],edgeDy[0:3];
     logic signed [22:0] crossProduct[0:3],areaTerm[0:3];
     logic [22:0] edgeSquared[0:3];
-    logic quadrilateralGood;
+    logic quadrilateralGood,calibrationQuadGood;
+    logic digitSizeGood;
+    (* ramstyle="M10K" *) logic [87:0] geometryMemory[0:15];
+    logic [15:0] geometryValid;
+    logic [87:0] geometryWriteData,geometryReadData;
+    logic geometryReadValid;
+    wire geometryWrite=EMIT_CALIBRATION_QUADS&&state==GEOMETRY&&
+        !heldBypassPerspective&&calibrationQuadGood;
+    always_comb begin
+        geometryWriteData='0;
+        for(int corner=0;corner<4;corner++)begin
+            geometryWriteData[corner*11+:11]=pointX[corner];
+            geometryWriteData[44+corner*11+:11]=pointY[corner];
+        end
+        geometryReadQuad='0;
+        if(geometryReadValid)begin
+            geometryReadQuad.valid=1;
+            geometryReadQuad.x=geometryReadData[43:0];
+            geometryReadQuad.y=geometryReadData[87:44];
+        end
+    end
+    always_ff @(posedge clk)begin
+        if(geometryWrite)geometryMemory[index]<=geometryWriteData;
+        geometryReadData<=geometryMemory[geometryReadIndex];
+        if(reset)begin geometryValid<=0;geometryReadValid<=0;end
+        else begin
+            geometryReadValid<=geometryValid[geometryReadIndex];
+            if(state==IDLE&&start)begin geometryValid<=0;geometryReadValid<=0;end
+            else if(geometryWrite)geometryValid[index]<=1;
+        end
+    end
     logic signed [11:0] dx1,dx2,dx3,dy1,dy2,dy3;
     logic signed [24:0] determinant,gNumerator,hNumerator,dNorm,gNorm,hNorm;
     logic signed [35:0] ax,bx,cx,ay,by,cy;
@@ -95,14 +142,45 @@ module projectiveMarkerReader #(
     logic [8:0] anchorWidth,selectedAnchorWidth;
     logic [7:0] anchorHeight,selectedAnchorHeight;
     logic anchorDone;
+    logic [1:0] anchorThinCount,totalThinSeeds,thinOrientation;
+    logic anchorHazard,anchorSupportAccepted,fallbackHazard,fallbackScan,selectedFallback;
+    logic [8:0] anchorThinXMin,anchorThinXMax,thinXMin,thinXMax;
+    logic [7:0] anchorThinYMin,anchorThinYMax,thinYMin,thinYMax;
+    logic [16:0] anchorThinStrongCount,thinStrongCount;
+    logic [16:0] mainReadAddress,mainForegroundCount,mainComponentCount;
+    logic [8:0] mainSupportX[0:15];
+    logic [7:0] mainSupportY[0:15];
+    logic [3:0] mainAllocationPeak;
+    logic mainBusy,mainDone,mainGeometryValid,mainOverflow;
     logic [5:0] holeUpperWhite,holeLowerWhite;
     logic [6:0] segmentBits;
     logic uncertain,strongEvidence,shapeGood,highResolutionQuad;
     logic [3:0] decodedDigit;
     marker_t decision;
-    nativeAnchorReader anchorReader(.clk(clk),.reset(reset),.start(state==ANCHOR_START),
+    // This bounded local CCL reads the same owned glyph bank as the rest of
+    // the reader. It may pause at any native pixel while updating synchronous
+    // support RAM; it does not stall the camera or introduce a new frame RAM.
+    // Area selects a unique geometry component only. Digits still come from
+    // the existing anchor, homography, stroke and hole checks below.
+    mainColourSupportReader mainGeometry(
+        .clk(clk),.reset(reset),.start(state==MAIN_START),
+        .ownerXMin(box.xmin),.ownerXMax(box.xmax),.ownerYMin(box.ymin),.ownerYMax(box.ymax),
+        .readAddress(mainReadAddress),.readColour(readColour),.busy(mainBusy),.done(mainDone),
+        .geometryValid(mainGeometryValid),.overflow(mainOverflow),
+        .supportX(mainSupportX),.supportY(mainSupportY),.foregroundCount(mainForegroundCount),
+        .allocationPeak(mainAllocationPeak),.componentCount(mainComponentCount));
+    nativeAnchorReader #(.ENFORCE_OWNER_BOUNDS(ENFORCE_OWNER_BOUNDS)) anchorReader(
+        .clk(clk),.reset(reset),.start(state==ANCHOR_START),
         .pointX(pointX),.pointY(pointY),.busy(),.done(anchorDone),
+        .ownerXMin(box.xmin),.ownerXMax(box.xmax),.ownerYMin(box.ymin),.ownerYMax(box.ymax),
         .readAddress(anchorReadAddress),.readWhite(readStrongWhite),
+        .weakSupportMode(fallbackScan),.readWeakWhite(readWhite),
+        .seedXMin(thinXMin),.seedXMax(thinXMax),.seedYMin(thinYMin),.seedYMax(thinYMax),
+        .seedStrongCount(thinStrongCount),.thinSeedCount(anchorThinCount),
+        .thinSeedXMin(anchorThinXMin),.thinSeedXMax(anchorThinXMax),
+        .thinSeedYMin(anchorThinYMin),.thinSeedYMax(anchorThinYMax),
+        .thinSeedStrongCount(anchorThinStrongCount),.thinSeedHazard(anchorHazard),
+        .supportAccepted(anchorSupportAccepted),
         .anchorCount(anchorCount),.anchorWidth(anchorWidth),.anchorHeight(anchorHeight),
         .ambiguous(),.overflow(),.allocationPeak(),.componentCount());
     projectiveSerialMultiply coefficientMultiplier(.clk(clk),.reset(reset),
@@ -157,6 +235,8 @@ module projectiveMarkerReader #(
                 nativeBaseIndex=2'(corner);
         end
         areaTwice=0;quadrilateralGood=foregroundCount>=32;highResolutionQuad=1;
+        calibrationQuadGood=foregroundCount>=32;
+        digitSizeGood=boxWidth>=MIN_EDGE_PIXELS&&boxHeight>=MIN_EDGE_PIXELS;
         for(int i=0;i<4;i++)begin
             edgeDx[i]=pointX[(i+1)%4]-pointX[i];
             edgeDy[i]=pointY[(i+1)%4]-pointY[i];
@@ -168,10 +248,15 @@ module projectiveMarkerReader #(
             edgeSquared[i]=edgeDx[i]*edgeDx[i]+edgeDy[i]*edgeDy[i];
             if(crossProduct[i]<=0 || edgeSquared[i] < 23'(4*MIN_EDGE_PIXELS*MIN_EDGE_PIXELS))
                 quadrilateralGood=0;
+            // A calibration strip may be thinner than a numbered card. Its
+            // separate geometry gate cannot relax the digit's 24-pixel edge.
+            if(crossProduct[i]<=0 || edgeSquared[i]<23'd64)
+                calibrationQuadGood=0;
             if(edgeSquared[i]<23'd6400)highResolutionQuad=0;
         end
         // point coordinates are doubled, so twice-area is eight times pixel area.
         if(areaTwice<8*MIN_QUAD_AREA)quadrilateralGood=0;
+        if(areaTwice<25'sd256)calibrationQuadGood=0;
         gridU=$signed({1'b0,gridX,1'b1})*10'sd5;
         gridV=$signed({1'b0,gridY,1'b1})*10'sd4;
         // One signed shift/add multiplier is time-shared across determinant and
@@ -205,13 +290,14 @@ module projectiveMarkerReader #(
             multiplyB=geometryProductPhase?probeDx:probeDy;
         end
         if(state==ANCHOR_START||state==ANCHOR_WAIT)readAddress=anchorReadAddress;
+        else if(state==MAIN_START||state==MAIN_WAIT)readAddress=mainReadAddress;
         else if(state==SCAN_INIT||state==SCAN_WAIT||state==SCAN_SAMPLE)
             readAddress=17'(scanY)*17'd320+17'(scanX);
         else readAddress=17'(quotientY)*17'd320+17'(quotientX);
         segmentBits=0;uncertain=0;
         // A two-pixel stroke can classify consistently yet does not justify the
         // strongest quality tier. Every quadrilateral edge must span >=40 px.
-        strongEvidence=selectedAnchorCount>=4&&highResolutionQuad;
+        strongEvidence=selectedAnchorCount>=4&&highResolutionQuad&&!selectedFallback;
         for(int i=0;i<7;i++)begin
             // Horizontal strokes cover eight independent canonical columns;
             // vertical strokes cover seven rows. Middle evidence is rejected.
@@ -252,6 +338,8 @@ module projectiveMarkerReader #(
             scanX<=0;scanY<=0;foregroundCount<=0;geometryRejected<=0;mapRejected<=0;
             hypothesisIndex<=0;selectedOrientation<=0;cornerBaseIndex<=0;anchorMatches<=0;
             orientationResolved<=0;orientationRejected<=0;
+            totalThinSeeds<=0;thinOrientation<=0;fallbackHazard<=0;fallbackScan<=0;selectedFallback<=0;
+            thinXMin<=0;thinXMax<=0;thinYMin<=0;thinYMax<=0;thinStrongCount<=0;
             pairA<=0;pairB<=1;diameterA<=0;diameterB<=0;crossIndex<=0;crossLowIndex<=0;crossHighIndex<=0;
             geometryProductPhase<=0;diameterSquared<=0;crossLow<=0;crossHigh<=0;geometryFirstProduct<=0;
             cornerSumX<=0;cornerSumY<=0;
@@ -284,6 +372,8 @@ module projectiveMarkerReader #(
                     end
                     orientation<=orientationHint;hypothesisIndex<=0;selectedOrientation<=0;
                     anchorMatches<=0;orientationResolved<=0;orientationRejected<=0;
+                    totalThinSeeds<=0;thinOrientation<=0;fallbackHazard<=0;fallbackScan<=0;selectedFallback<=0;
+                    thinXMin<=0;thinXMax<=0;thinYMin<=0;thinYMax<=0;thinStrongCount<=0;
                     selectedAnchorCount<=0;selectedAnchorWidth<=0;selectedAnchorHeight<=0;
                     foregroundCount<=0;geometryRejected<=0;mapRejected<=0;
                     holeUpperWhite<=0;holeLowerWhite<=0;
@@ -294,8 +384,26 @@ module projectiveMarkerReader #(
                 SCAN_INIT:begin
                     scanX<=box.xmin;scanY<=box.ymin;
                     if(!box.valid||box.xmin>box.xmax||box.ymin>box.ymax||box.xmax>=320||box.ymax>=240||
-                        boxWidth<MIN_EDGE_PIXELS||boxHeight<MIN_EDGE_PIXELS)begin geometryRejected<=1;state<=DECIDE;end
+                        ((!EMIT_CALIBRATION_QUADS||heldBypassPerspective||!heldColours[index])&&!digitSizeGood)||
+                        boxWidth<4||boxHeight<4)begin geometryRejected<=1;state<=DECIDE;end
+                    else if(ENFORCE_MAIN_COMPONENT&&!heldBypassPerspective)state<=MAIN_START;
                     else state<=SCAN_WAIT;
+                end
+                MAIN_START:state<=MAIN_WAIT;
+                MAIN_WAIT:if(mainDone)begin
+                    // SETUP already clears all supports/counts. A failed local
+                    // scan must not publish old geometry from a prior marker.
+                    if(!mainGeometryValid||mainOverflow)begin geometryRejected<=1;state<=DECIDE;end
+                    else begin
+                        for(int direction=0;direction<16;direction++)begin
+                            supportX[direction]<=mainSupportX[direction];
+                            supportY[direction]<=mainSupportY[direction];
+                        end
+                        // Preserve the historical >=32 RAW foreground gate;
+                        // this count is not the winning component's area.
+                        foregroundCount<=mainForegroundCount;
+                        state<=DIAMETER_INIT;
+                    end
                 end
                 SCAN_WAIT:state<=SCAN_SAMPLE;
                 SCAN_SAMPLE:begin
@@ -388,20 +496,47 @@ module projectiveMarkerReader #(
                     end
                     state<=GEOMETRY;
                 end
-                GEOMETRY:if(!quadrilateralGood)begin geometryRejected<=1;state<=DECIDE;end
+                GEOMETRY:begin
+                    if(!quadrilateralGood||!digitSizeGood)begin geometryRejected<=1;state<=DECIDE;end
                     else state<=orientationResolved?HOMO_DELTAS:ANCHOR_START;
+                end
                 ANCHOR_START:state<=ANCHOR_WAIT;
                 ANCHOR_WAIT:if(anchorDone)begin
+                    if(fallbackScan)begin
+                        // The weak component contributes only two-dimensional
+                        // support. Its true strong seed count is preserved;
+                        // the caller marks this evidence tier explicitly.
+                        if(anchorSupportAccepted&&anchorCount>=3&&anchorWidth>=2&&anchorHeight>=2)begin
+                            selectedAnchorCount<=anchorCount;selectedAnchorWidth<=anchorWidth;
+                            selectedAnchorHeight<=anchorHeight;selectedOrientation<=orientation;
+                            selectedFallback<=1;orientationResolved<=1;state<=CORNER_PREP;
+                        end else begin orientation<=orientationHint;orientationRejected<=1;state<=DECIDE;end
+                    end else begin
                     if(anchorCount>=3&&anchorWidth>=2&&anchorHeight>=2)begin
                         if(anchorMatches<2)anchorMatches<=anchorMatches+2'd1;
                         selectedOrientation<=orientation;selectedAnchorCount<=anchorCount;
                         selectedAnchorWidth<=anchorWidth;selectedAnchorHeight<=anchorHeight;
                     end
+                    if(ENABLE_THIN_ANCHOR_SUPPORT&&!heldBypassPerspective)begin
+                        fallbackHazard<=fallbackHazard||anchorHazard;
+                        if({1'b0,totalThinSeeds}+{1'b0,anchorThinCount}>=3'd2)totalThinSeeds<=2;
+                        else totalThinSeeds<=totalThinSeeds+anchorThinCount;
+                        if(totalThinSeeds==0&&anchorThinCount==1)begin
+                            thinOrientation<=orientation;thinStrongCount<=anchorThinStrongCount;
+                            thinXMin<=anchorThinXMin;thinXMax<=anchorThinXMax;
+                            thinYMin<=anchorThinYMin;thinYMax<=anchorThinYMax;
+                        end
+                    end
                     if(hypothesisIndex==3)state<=ORIENTATION_FINISH;
                     else begin hypothesisIndex<=hypothesisIndex+2'd1;orientation<=orientation+2'd1;state<=CORNER_PREP;end
+                    end
                 end
                 ORIENTATION_FINISH:begin
                     if(anchorMatches==1)begin orientation<=selectedOrientation;orientationResolved<=1;state<=CORNER_PREP;end
+                    else if(ENABLE_THIN_ANCHOR_SUPPORT&&!heldBypassPerspective&&anchorMatches==0&&
+                            !fallbackHazard&&totalThinSeeds==1)begin
+                        orientation<=thinOrientation;fallbackScan<=1;state<=CORNER_PREP;
+                    end
                     else begin orientation<=orientationHint;orientationRejected<=1;state<=DECIDE;end
                 end
                 HOMO_DELTAS:begin

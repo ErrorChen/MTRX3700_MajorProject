@@ -140,7 +140,7 @@ class AutomaticOrientationTests(unittest.TestCase):
     def testSharedCapacityUsesOnePoolAndExplicitHistoricalSplit(self):
         for identities in ([('blue',index%6+1) for index in range(16)],
                            [('red',index%2+1) for index in range(14)]+[('blue',5),('blue',6)]):
-            result=recogniseProjective(sharedPoolImage(identities))
+            result=recogniseProjective(sharedPoolImage(identities),readerAlgorithm=5)
             self.assertEqual(result['candidatePoolMode'],'SHARED')
             self.assertEqual(result['schema'],'ECHO7_PROJECTIVE_MODEL_7')
             self.assertFalse(result['overflow'])
@@ -149,8 +149,8 @@ class AutomaticOrientationTests(unittest.TestCase):
         # Seventeen usable regions exceed total16 even when neither colour
         # exceeds16. The legacy schema6 pool remains explicitly reproducible.
         crowded=sharedPoolImage([('blue',1)]*13+[('red',1)]*4)
-        current=recogniseProjective(crowded)
-        historical=recogniseProjective(crowded,sharedPool=False)
+        current=recogniseProjective(crowded,readerAlgorithm=5)
+        historical=recogniseProjective(crowded,readerAlgorithm=5,sharedPool=False)
         self.assertTrue(current['overflow'])
         self.assertFalse(any(marker['accepted'] for marker in current['markers']))
         self.assertFalse(historical['overflow'])

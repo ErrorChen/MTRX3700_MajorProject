@@ -112,12 +112,48 @@ def tenSignFixture(mode):
     return data
 
 
+def typedFixture(mode):
+    """Explicit new synthetic schema8/v3 records, not relabelled board evidence."""
+    data=tenSignFixture(mode)
+    states=[data["initialStatus"],*[s["status"] for s in data["requestSelections"]],
+            *[r["status"] for r in data["observations"]]]
+    for state in states:
+        state.update(debugSchemaVersion=8,contractVersion=3)
+        report=state["targetReport"]
+        report["digit"]=report.pop("bayId")
+        report["markerType"]=1 if report["digit"] in range(1,7) else 0
+    return data
+
+
 class Sw9ComparisonTests(unittest.TestCase):
     def setUp(self):
         self.normal, self.bypass = fixture(0), fixture(1)
 
     def compare(self, conditions="Synthetic fixture conditions only"):
         return compareTrials(self.normal, self.bypass, conditions)
+
+    def testCurrentTypedContractRetainsAllComparisonRecords(self):
+        self.normal,self.bypass=typedFixture(0),typedFixture(1)
+        result,code=self.compare()
+        self.assertEqual(code,0)
+        self.assertEqual(result["difference"]["currentExpectedPerMode"],900)
+        self.assertEqual(len(result["modes"]["normal"]["observations"]),90)
+        self.bypass["observations"][0]["status"]["targetReport"]["markerType"]=2
+        result,code=self.compare()
+        self.assertEqual(code,1)
+        self.assertIn("current-request label",result["comparisonValidity"]["issues"][0])
+
+    def testContractMustMatchSchemaAndLegacyMissingVersionMeansTwo(self):
+        for data in (self.normal,self.bypass):
+            for state in [data["initialStatus"],*[s["status"] for s in data["requestSelections"]],
+                          *[r["status"] for r in data["observations"]]]:
+                state.pop("contractVersion")
+        self.assertEqual(self.compare()[1],0)
+        self.normal,self.bypass=typedFixture(0),typedFixture(1)
+        self.bypass["observations"][0]["status"]["contractVersion"]=2
+        result,code=self.compare()
+        self.assertEqual(code,1)
+        self.assertIn("contract version conflicts",result["comparisonValidity"]["issues"][0])
 
     def testCompletePairAllowsDifferentConfigurationVersions(self):
         result, code = self.compare()

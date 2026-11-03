@@ -2,9 +2,9 @@
 
 ## 1. Scope and current status / 范围与当前状态
 
-Member B reads coloured number signs from real OV7670 pixels, calibrates red/blue segmentation, selects and tracks blue bays1–6, displays diagnostics on VGA and exposes a synchronous interface to Member C. The board wrapper is stationary and does not instantiate motor, chassis UART, steering or navigation control. Real microphone input is deferred by the user; JTAG/BCTL drives the non-motion C simulator for this development phase.
+Member B reads coloured number signs from real OV7670 pixels, calibrates red/blue segmentation, lists and locates recognised signs, and tracks a selected blue bay1–6, red function card1/2 or uniquely paired calibration strip BJ. It displays VGA diagnostics and exposes a synchronous interface to Member C. The board wrapper is stationary and does not instantiate motor, chassis UART, steering or navigation control. Real microphone input is deferred by the user; JTAG/BCTL drives the non-motion C simulator for this development phase.
 
-Member B 从实际 OV7670 像素识别红蓝数字牌、校准红蓝分割、选择并跟踪蓝色车位1–6，通过 VGA 显示诊断并向 Member C 提供同步接口。独立板级顶层保持固定，不实例化电机、底盘串口、转向或导航控制。本阶段按用户要求暂缓麦克风，使用 JTAG/BCTL 驱动无运动的 C 模拟器。
+Member B 从实际OV7670像素识别红蓝数字牌、校准红蓝分割、列举和定位标牌，并持续跟踪选定的蓝车位1–6、红功能牌1/2或唯一配对校色蓝条BJ。通过VGA显示诊断，向Member C提供同步接口。独立板级顶层保持固定，不实例化电机、底盘串口、转向或导航控制。本阶段按用户要求暂缓麦克风，使用JTAG/BCTL驱动无运动C模拟器。
 
 The implementation descends from the same-group preliminary repository by Hajin and Jiaze Sun; Hajin mainly contributed Member A work. Member B's confirmed SID is **540207680**. Original staff/IP notices remain applicable. See [OWNERS.md](OWNERS.md) for file-level responsibility, origin and unsigned human-review status; Git preserves earlier code history. A starter ZIP was not used as the replacement project.
 
@@ -12,17 +12,17 @@ The implementation descends from the same-group preliminary repository by Hajin 
 
 | Evidence layer / 证据层 | Verified checkpoint / 已执行结果 | Boundary / 边界 |
 |---|---|---|
-| MODEL | Previous checkpoint222 tests passed, including a clean exported copy; new pair rules passed seven focused cases / 前检查点222项通过，含干净副本；新配对七项针对测试通过 | Final post-migration full-suite result must be recorded separately / 迁移后完整回归须单独记录 |
-| RTL_SIM | `a9caa52f`:35-bench audited aggregate; new pair source passed two focused benches, full run in progress / 旧源35项汇总，新配对两项针对通过、完整执行中 | Original negative-vector-export failure stays in VERSION / 原向量导出覆盖失败保留于版本记录 |
-| COURSE R6 RTL_SIM | `127d80b2`, Verilator5.050, actual Bash entry,89.781s, intended early-lock mutant CAUGHT / 新源码实跑规定入口并抓住缺陷 | Separate from full ModelSim, fitting and camera / 与完整ModelSim、拟合和相机分开 |
-| QUARTUS_FIT_TIMING / PROGRAMMED | `0xa9caa52f`, private schema7: fitted, timed, downloaded and build identity read back / 完成拟合时序、下载和板上身份回读 | Applies to that frozen source, not later edits / 仅适用于对应冻结源码 |
-| CAMERA_HW | `a9caa52f`:three normal-mode trials passed; calibration committed; SW8 comparison and SW9 pause/resume actually read back / 三轮正常模式通过、校色提交、两开关模式已实际回读 | Exact normal/bypass metrics in VERSION; real failures30158/37621 remain / 精确比较数值见版本记录，真实反例仍成立 |
-| VGA_PHYSICAL | User confirmed raw-camera-only output with current SW9 up; earlier SW0/SW1 four combinations confirmed / 用户确认当前SW9仅相机；旧检查点四种面板确认 | USER_REPORTED_PHYSICAL, not photographed or a value calibration / 用户实体确认，非照片或数值校准 |
+| MODEL | Current reader9:370 tests plus independent counterfactual checks passed / 当前算法9的370项及独立反事实测试通过 | Historical profiles retain their IDs; model success is not camera acceptance / 历史配置不改编号，模型不代替相机 |
+| RTL_SIM | `c63c9edb`:52-frame core/116 checks;11 normal+bypass reader cases;73 native support cases and1868-ROI strict equivalence passed / 当前核心及针对性仿真通过 | Full43-bench ModelSim run interrupted at user close-out; old7408a02d had39/39 / 本轮完整43项按收口中止，旧版本39项全过单列 |
+| COURSE R6 RTL_SIM | Current run FAIL at300s aggregate deadline; seven benches passed, last bench/mutant not completed / 本轮总限时失败，最后一项及缺陷注入未完成 | Historical7408a02d PASS228.031s and645102d6 PASS255.766s do not certify current source / 旧版本成功不移用 |
+| QUARTUS_FIT_TIMING / PROGRAMMED | `c63c9edb`, reader9/colour3/public3/schema8: built, timed, downloaded once and identity read back / 最终构建、时序、一次下载及身份核对通过 | 29133 adjusted ALMs,356M10K,57DSP;72 timing checks passed, no unconstrained paths / 72项时序通过、无未约束路径；放置统计详见版本记录 |
+| CAMERA_HW | Final fresh frame251: red1/2,blue1–6,BJ; automatic eight-sample calibration committedcfg1/R33/B28;59.439ms capture-to-result / 最后一帧八张数字牌及BJ，八帧校色成功 | Single close-out frame only; blue6 stability deferred by user; old multi-trial scores are historical / 单帧不证明稳定性，蓝6暂缓，旧多轮成绩不移用 |
+| VGA_PHYSICAL | Historical7408a02d SW0/SW1 combinations confirmed by user; final diagnostics passed3,944,178-pixel old/new RTL equivalence / 历史实体确认与当前像素等价分开 | Finalc63c9edb physical switches/monitor were not re-confirmed at user close-out / 收口未重复最终版本实体开关验收 |
 | MIC_HW | DEFERRED_BY_USER / 用户暂缓 | `audioReady=0`; JTAG SELECT is not speech / JTAG 数字不是语音识别 |
 
-The current calibration-pair refinement is not included in `a9caa52f` fit/program evidence. Update this table only from completed, source-linked results. Detailed changes, exact build/SOF hashes, failed attempts and run locations belong in [VERSION_README.md](VERSION_README.md), not a second competing interface document.
+The final programmed source is **c63c9edb**, publicv3/schema8, colourAlgorithm3 and readerAlgorithm9. It adds same-frame projective calibration and generic thin-anchor support, sharing the existing component scanner; VGA records now use synchronous RAM. Full fitting/timing passed and the exact new SOF was downloaded once. [Fresh frame251](tests/fixtures/camera/frame251/frame.png) read all eight formal numbered signs plus the paired BJ strip; eight valid raw sampling frames had already committed configuration1, red33/blue28. Capture-to-result latency was59.439ms. This single frame does not settle blue6 stability, which the user explicitly deferred. Current MODEL and targeted/full-core RTL passed; the R6 aggregate time budget and complete43-bench ModelSim run are not claimed as passed. Historical multi-trial, interface and physical-VGA results remain source-labelled. Detailed failures, remaining tests, source/SOF hashes and commands are in [VERSION_README.md](VERSION_README.md). Development is closed at this checkpoint; no microphone or further switch trials were undertaken.
 
-当前校色配对修正尚不属于 `a9caa52f` 的拟合与下载证据。此表只能按已完成且绑定源码的结果更新。详细版本变化、build/SOF 哈希、失败记录和运行目录统一见 [VERSION_README.md](VERSION_README.md)，不要再建立另一份相互冲突的接口文档。
+最终板上源码为 **c63c9edb**，公共v3/schema8、颜色算法3、数字算法9。同帧透视校色与通用薄锚点补查复用现有扫描器，VGA记录改用同步RAM。完整拟合和时序通过，本轮新SOF已最后下载一次并核对身份。[新实拍frame251](tests/fixtures/camera/frame251/frame.png)识别了八张正式数字牌及配对BJ，八帧原RGB采样已提交配置1、红33/蓝28，采集到结果耗时59.439毫秒。单帧不证明蓝6长期稳定，按用户要求暂缓该问题。当前模型及针对性/完整核心RTL通过；R6总限时和完整43项ModelSim不能声称本轮通过。旧多轮实拍、接口与实体VGA结果保留各自源码身份。失败、剩余项、源码/SOF哈希及命令统一见VERSION_README；本版本已收口，不再进行麦克风或新增开关实验。
 
 ## 2. Repository and inputs / 仓库与输入
 
@@ -96,9 +96,11 @@ flowchart LR
     CCL --> READ[Quad + native anchor + strokes / 四边形与字形]
     BANK --> READ
     READ --> TRACK[Target tracker / 目标跟踪]
+    READ --> QUERY[Descriptor banks + LIST/GET / 描述符查询]
     READ --> CAL[Red1 calibration + red2 arming / 功能牌]
     CAL --> HSV
     TRACK <--> C[Member C or stationary simulator / C接口]
+    QUERY <--> C
     READ --> DBG[BCTL + snapshot + VGA / 调试]
 ```
 
@@ -109,11 +111,17 @@ flowchart LR
 | `boundedCandidates` | Fifteen active labels per colour, sixteen shared completed slots; explicit colour and whole-frame overflow / 每色15活动标签、总16完成槽，显式颜色与整帧溢出 |
 | `glyphBanks` | Two320×240×2-bit banks,37.5KiB logical storage; synchronous read / 两个2位字形缓存，同步读取 |
 | `projectiveMarkerReader`, `nativeAnchorReader` | Pixel-derived quad, unique native anchor,32×40 sampling and stroke/hole rejection / 像素四边形、唯一原生锚点与字形判决 |
+| `mainColourSupportReader` | Reader7 bounded eight-label raw-colour component scan and synchronous support RAM; reject overflow, ties or changed candidate bbox / 算法7的八活动标签原色连通域扫描与同步支撑点RAM，溢出、并列或候选框不一致时拒绝 |
 | `colourSampler`, `fixedSheetInteraction` | Raw RGB sample validation, shadow profile, permitted SOF commit / 原RGB样本验证、影子配置、许可下SOF提交 |
 | `targetTracker`, `memberCSimulator` | Current observations, three-frame lock, requests/events and cache-age rules / 当前观测、三帧锁定及请求/事件/年龄 |
+| `markerQueryStore` | Three synchronous16×64-bit descriptor banks, coherent LIST/GET batches and independent backpressure / 三组同步描述符RAM、同帧查询及独立反压 |
 | `memberBDebug`, `frame_snap` | Transport acknowledgement with separate action acceptance/error, and same-frame captured status / 传输ACK与动作接受/错误分开，同帧抓取 |
 | `memberBVgaContour`, `memberBVgaLabels`, `memberBVgaDiagnostics`, `memberBVgaOverlay` | Colour contours, typed labels and frame-published RGB/HSV panels / 色域轮廓、类型标签与整帧发布诊断 |
 | `perceptionCore`, `perceptionDemoTop` | Integratable CLOCK_50 core and stationary board wrapper / 可集成核心与无运动板级封装 |
+
+For Member C's resource planning, the `7408a02d` debug fit attributes16067.8 adjusted ALMs,46 M10K and23 DSP to the inclusive `perceptionCore` hierarchy. The complete debug top uses27810 adjusted ALMs,351 M10K and47 DSP, including camera display/frame-grab infrastructure. These are measured hierarchy allocations in this fit, not a guaranteed standalone or merged design budget: shared logic, packing and timing change when C integrates the core. Fit the combined project before claiming it fits. The placement table is essentially full despite the lower packing-adjusted ALM estimate; its detailed integer/fractional accounting is recorded in VERSION_README.
+
+供C规划资源：7408a02d调试工程的拟合报告将16067.8个调整后ALM、46个M10K和23个DSP归属到包含子模块的perceptionCore层级。完整调试顶层还含显示和抓帧设施，共27810个调整后ALM、351个M10K和47个DSP。这是当前工程内的实测归属，不能保证单独核心或合并工程的占用；共享逻辑、打包和时序均会随集成变化，须重新拟合。实际放置几乎用满器件，不能将较低的打包调整估计直接理解为空闲位置；详细计数差异记录于VERSION_README。
 
 `CLOCK_50` is50MHz. The video PLL generates25MHz display and10MHz camera XCLK. With the selected camera programme (`CAMERA_FPS=25`, CLKRC=0x81, DBLV=0x4A), returned PCLK is constrained as an independent20MHz source; it is not treated as a PLL-related clock after travelling through the camera/cable. SCCB is100kHz. JTAG has its own clock. [PartBDebug.sdc](quartus/PartBDebug.sdc) and [MemberBCdc.sdc](quartus/MemberBCdc.sdc) define the actual constraints.
 
@@ -129,13 +137,13 @@ Every candidate and glyph result carries one frameId, original captureStartUs, c
 
 ## 5. Colour, candidates and digit reading / 颜色、候选与数字识别
 
-Production colour algorithm2 implements HSV tests through signed integer products: red signed hue−24°…0°, blue200°…260°, saturation≥0.5, initial value floors R48/B20. Calibration changes the two value floors as one complete profile; white thresholds remain fixed. HSV separates brightness from hue better than a fixed RGB magnitude test, but cannot separate physically overlapping measured hues or restore lost optical detail.
+Production colour algorithm3 retains algorithm2's HSV tests through signed integer products: red signed hue−24°…0°, blue200°…260°, saturation≥0.5, initial value floors R48/B20. Version3 changes horizontal run support from3to2pixels; the pixel colour gate itself is unchanged. Calibration changes the two value floors as one complete profile; white thresholds remain fixed. HSV separates brightness from hue better than a fixed RGB magnitude test, but cannot separate physically overlapping measured hues or restore lost optical detail.
 
-生产颜色算法2用有符号整数乘积实现 HSV 条件：红色环绕色相−24°…0°、蓝色200°…260°、饱和度至少0.5，默认亮度下限 R48/B20。校色原子更新整组红蓝下限，白字门槛固定。HSV 比固定 RGB 大小门槛更明确地区分亮度和色相，但不能分开实际重叠的色相，也不能恢复丢失的光学细节。
+生产颜色算法3保留算法2的整数HSV条件：红色环绕色相−24°…0°、蓝色200°…260°、饱和度至少0.5，默认亮度下限R48/B20。版本3将横向游程支持从3像素改为2像素，单像素颜色判据不变。校色原子更新整组红蓝下限，白字门槛固定。HSV更明确地区分亮度和色相，但不能分开实际重叠色相，也不能恢复丢失的光学细节。
 
-CCL receives complete horizontal runs of at least3pixels followed by causal left-or-above support. Raw colour retained for the reader's corner extraction is not eroded by those filters. Labels0/1–15 mean sentinel/active handles; completed count is5bits and supports16. Completed red and blue regions share one16-slot pool in retirement order; simultaneous retirement allocates red first. No colour quota is reserved. If only one slot remains, the second retirement raises overflow and invalidates the whole frame. Active labels remain separate by colour. Maintenance requires335 invalid processing clocks per row,336 for end-of-frame publication; the core guard is341 including upstream latency. A continuous gap-free fake stream cannot prove this hardware schedule.
+CCL receives complete horizontal runs of at least2pixels followed by causal left-or-above support. This preserves measured narrow side connections on rotated signs, at the cost of admitting more small noise components; capacity overflow still rejects the whole frame. Raw colour retained for the reader's corner extraction is not eroded by those filters. Labels0/1–15 mean sentinel/active handles; completed count is5bits and supports16. Completed red and blue regions share one16-slot pool in retirement order; simultaneous retirement allocates red first. No colour quota is reserved. If only one slot remains, the second retirement raises overflow and invalidates the whole frame. Active labels remain separate by colour. Maintenance requires335 invalid processing clocks per row,336 for end-of-frame publication; the core guard is341 including upstream latency. A continuous gap-free fake stream cannot prove this hardware schedule.
 
-连通域输入先保留至少3像素的完整横向同色游程，再做左/上邻支持清理；读字形所用原色缓存不经过该腐蚀。标签0是哨兵，1–15为活动句柄，完成计数为5位可表示16。红蓝完成区域按退休顺序动态共享16槽，同沿红蓝退休先分红色，不预留配额。仅剩一槽时第二个区域触发溢出并使整帧无效，不能隐藏重复目标。活动标签仍分色管理。每行维护需要335个无效处理时钟，末帧发布336个，核心含前级延迟保护341个；没有行间空隙的假输入不能证明实际调度可用。
+连通域输入先保留至少2像素的完整横向同色游程，再做左/上邻支持清理，保留实拍旋转牌的窄侧边连接，但会接纳更多小噪声分量，容量溢出仍整帧拒绝。读字形原色缓存不经过该腐蚀。标签0为哨兵，1–15为活动句柄，完成计数5位可表示16。红蓝完成区域动态共享16槽，同沿先分红色、不预留配额，仅剩一槽时第二区域触发整帧溢出，不能隐藏重复目标。活动标签分色管理。每行维护335个无效处理时钟，末帧发布336个，核心保护341个；无行间空隙假输入不能证明实际调度可用。
 
 Reader5 finds16 directional contour supports, the farthest pair and maximum signed-cross-product points on opposite sides to form a bounded convex quad. The canonical start is minimum(x+y), then y/x tie-break; orientation0–3 is a cyclic corner offset, **not a measured continuous angle**. Four native anchor hypotheses are checked before the glyph. Exactly one valid anchor permits one32×40 homography pass. The algorithm never chooses direction because one guessed direction yields a convenient digit. SW8's bbox baseline uses the same automatic anchor/number/rejection rules.
 
@@ -145,25 +153,45 @@ The independent native anchor is a closed four-connected strong-white component 
 
 独立原生锚点必须是四边形预测邻域内闭合的四连通强白分量：至少3像素、跨2行2列，大小/面积有界且唯一。触边白纸、多锚点和局部标签溢出均拒绝。字形检查七段笔画投影和两个空洞；数字1仍用相对主色区的统一 ROI，不围绕窄笔画重新居中。蓝色只接受1–6，红色只接受1/2，未知图形和无数字蓝条没有车位编号。
 
-Bank classes are00background,01raw colour,10weak stroke,11strong white. Strong white requires `R+2G+B>=384` and channel spread≤64. Weak strokes additionally allow sum≥334, spread≤64 and `2*spread<max(R,G,B)`; strong white remains included. This is fixed empirical classification, not automatic white calibration. Historical readers1–4 remain explicit replay profiles; current defaults are reader5/colour2/shared16/active15. Model canonical geometry sorting is not hardware slot order.
+Reader6 additionally requires the exact doubled centre of a white component's bounding box to lie inside the original measured colour candidate. This removes a neighbouring card's anchor from an overlapping search window without shrinking the anchor to a fixed pixel size. A component may cross the candidate edge while its centre remains inside; demanding full containment incorrectly rejected existing recordings. The candidate bbox and quad are latched together. Historical reader5 replay explicitly disables this new predicate and retains its recorded colour/white profile. This rule does not prove ownership when two candidate bounding boxes themselves overlap.
 
-缓存编码为00背景、01原色、10弱笔画、11强白。强白要求加权和至少384且通道差不超过64；弱笔画额外允许和至少334、差不超过64并满足两倍差小于最大通道。强白包含在笔画集合中。这是固定经验分类，不是自动白色校准。旧读字算法1–4保留显式历史回放，当前默认5/2/共享16/活动15；模型的几何排序不代表硬件槽顺序。
+数字算法6增加归属检查：白分量包围框的精确双中心必须落在原始实测彩色候选框内，排除搜索窗碰到的邻牌锚点，不将锚点尺寸写死。允许分量边缘越过候选边界而中心仍在内部；要求整个分量包含会错误拒绝既有实拍。候选框与四边形同时锁存；历史算法5回放明确关闭新条件，并保持原记录的颜色及白字参数。两个候选包围框本身重叠时，该规则并不保证归属唯一。
+
+Reader7 scans four-connected raw-colour components inside each candidate and takes supports only from the unique largest component. Its measured bbox must exactly match all four candidate edges; otherwise the candidate rejects. This removes a neighbouring card that merely enters the rectangular search area. Eight active component labels and synchronous support RAM bound the cost; ties and overflow reject rather than select arbitrarily. Area chooses geometry only: the digit still comes from anchor-oriented white strokes. SW8 bypass skips this component scan as well as perspective correction. Historical reader6 disables the new component stage; reader5 also disables the newer anchor ownership predicate.
+
+数字算法7先扫描候选内的原色四连通分量，仅从唯一最大分量取支撑点，且其四条实测边界须与原候选框完全一致，否则拒识。这排除仅进入矩形搜索范围的邻牌。使用八个活动标签与同步支撑点RAM限制资源；并列及溢出均拒绝，不随意选择。面积只用于确定几何，数字仍由锚点定向后的白色笔画读取。SW8同时旁路该扫描与透视矫正。历史算法6关闭新增分量阶段，算法5还关闭后来的锚点归属检查。
+
+Bank classes are00background,01raw colour,10weak stroke,11strong white. Strong white requires `R+2G+B>=384` and channel spread≤64. Weak strokes additionally allow sum≥334, spread≤64 and `2*spread<max(R,G,B)`; strong white remains included. This is fixed empirical classification, not automatic white calibration. Historical readers1–8 remain explicit replay profiles; current working-source defaults are reader9/colour3/shared16/active15. Reader8 adds same-frame calibration geometry; reader9 adds the generic rule below. Model canonical geometry sorting is not hardware slot order.
+
+缓存编码为00背景、01原色、10弱笔画、11强白。强白要求加权和至少384且通道差不超过64；弱笔画额外允许和至少334、差不超过64并满足两倍差小于最大通道。强白包含在笔画集合中。这是固定经验分类，不是自动白色校准。旧读字算法1–8保留显式历史回放，当前工作源码默认9/3/共享16/活动15；算法8增加同帧校色几何，算法9增加以下通用薄锚点规则。模型的几何排序不代表硬件槽顺序。
+
+Reader9 preserves strict-anchor priority across all four orientations. Only when none passes, no ambiguity/overflow hazard exists and exactly one eligible closed strong component is one row or one column wide may the same component scanner inspect its weak-white support. The complete weak component must retain every strong seed pixel, contain no foreign strong pixels, remain closed and satisfy the original scale/area/ownership gates. A successful fallback reports the true strong count, uses supported dimensions and caps quality at192. It does not depend on digit, colour, candidate slot or expected scene. SW8 bypass and explicit historical profiles retain strict behaviour. A second thin seed, foreign bridge, missing seed or insufficient support rejects; weak pixels never invent a seed. One shared scan engine performs the extra pass only when needed, rather than instantiating another recogniser. The extra control has a measured cost: isolated MAP adds155 estimated ALMs and194 registers, with unchanged1280 RAM bits and10 DSPs; full fitted resources are reported separately.
+
+算法9先完成四个方向的严格锚点判定，严格结果优先。只有全部未通过、无歧义/溢出风险且恰好存在一个合格的闭合强白单行或单列种子时，才复用同一连通域扫描器检查周围弱白支撑。完整弱白分量必须包含全部原强白种子、没有其它强白像素、保持闭合并满足原有相对尺度、面积和归属门槛。补救成功仍报告真实强白数量，尺寸采用支撑分量，质量最高192。规则不依赖数字、颜色、槽位或场景答案；SW8旁路和历史版本保持严格行为。第二个薄种子、连接其它强白、种子缺失或支撑不足均拒绝，弱白不能凭空生成锚点。额外扫描按需分时复用，不另实例化一套识别器；它仍有资源代价：独立MAP增加约155个ALM、194个寄存器，RAM1280位和10个DSP不变，完整拟合结果另行记录。
 
 ## 6. Calibration, switches and display / 校色、开关与显示
 
-Fixed-sheet mode allows red1 and red2 to remain together. Three consecutive good red1/reference observations begin one permitted calibration attempt. Eight valid raw-RGB sampling frames must satisfy count, brightness, contamination, geometry and frame-to-frame stability checks. The reference must belong geometrically to red1 and must not be an accepted blue bay. Previous-frame ROI use is checked against the sampled frame's location. A validated shadow profile commits atomically at input SOF, increments configVersion and clears target confirmation. Failed or cancelled attempts retain the last complete profile. Red1 remaining visible does not repeatedly recalibrate after success.
+Fixed-sheet mode allows red1 and red2 to remain together. Three consecutive good red1/reference observations begin one permitted calibration attempt. Eight consecutive native-frame IDs must provide valid raw-RGB samples under one configuration; a bad sample, skipped sample-frame ID, version mismatch or timeout fails the attempt. The reference must belong geometrically to red1 and must not be an accepted blue bay. Previous-frame sampling regions are checked against the actual sampled frame: bbox edges may move at most3pixels, and normal-mode polygon vertices at most48Q4 units (3pixels) per axis. A validated shadow profile commits atomically at input SOF, increments configVersion and clears target confirmation. Failed or cancelled attempts retain the last complete profile. Red1 remaining visible does not repeatedly recalibrate after success.
 
-固定纸面允许红1/红2同时常驻。连续三个有效红1及专属参考观测开启一次许可下的校色尝试；八个有效原始 RGB 采样帧须通过数量、亮度、污染、几何与帧间稳定检查。蓝参考必须按几何属于红1，不能是已接受的蓝车位。使用上一帧 ROI 时须复核实际采样帧的位置。验证后的 shadow 在输入 SOF 原子生效、版本加一并清跟踪确认，失败/取消保留旧完整配置；成功后红1常驻不反复校色。
+固定纸面允许红1/红2同时常驻。连续三个有效红1及专属参考观测开启一次许可下的校色尝试；同一配置下连续八个原生帧号必须提供有效原RGB样本，坏样本、采样帧号跳变、错版本或超时均使该次尝试失败。蓝参考必须按几何属于红1，不能是已接受的蓝车位。上一帧采样区域须由实际采样帧复核：包围框边界每轴最多移动3像素，正常模式下多边形每角点每轴最多移动48个Q4单位，即3像素。验证后的shadow在输入SOF原子生效、版本加一并清跟踪确认，失败/取消保留旧完整配置；成功后红1常驻不反复校色。
 
-Calibration pairing still uses one of four configured orientations and bbox geometry, **not arbitrary-angle/projective calibration**. Source127d80b2 replaces the old fixed±4pixel endpoint tolerance with a scale-relative doubled-centre condition `abs((refLo+refHi)-(cardLo+cardHi)) <= 2*ceil(cardWidth/16)` and at least80% overlap of card width. It retains reference width80–120% of card width, reference height10–30% of card height, gap0…cardHeight/8, a recognised red1, valid unaccepted blue candidate, unique pair and good frame. Signed15-bit arithmetic avoids negative-offset errors and doubled centres avoid half-pixel rounding. Raw sampling/purity/count≥16per colour, eight valid frames and previous-ROI movement≤3pixels are unchanged. These source rules still require their own full fitting/programming/new-camera proof. Default recovery is common reset; the protocol's atomic default restoration must only be exposed through an implemented, logged command.
+In the current reader9 source, **SW8 down** pairs the anchor-oriented measured red1 quad with a measured blue component from the same frame. A forward homography predicts the formal reference strip; scale-relative corner errors, edge ratios, forward half-plane bounds, positive convexity and exactly one candidate/cyclic match must pass. Each object's own measured quad supplies its inset sampling polygon. Coordinates use canonical scale320 and floor-Q4 mapping, including negatives. Blue geometry may be available from a four-pixel bbox minimum, but the digit's24-pixel edge/400-pixel area gates are unchanged. This is a bounded projective design, not a guarantee for all angles, distances or clipping: insufficient projected gaps, samples, component capacity or geometry reject. Pixel-cell field-of-view checks do not prove that every physical card edge is visible. Reader8 calibration currently has model/targeted RTL evidence; fitting, programming and new-camera acceptance remain separate gates.
 
-校色仍按四种配置方向和包围框配对，**不是任意角度/投影校色**。源码127d80b2以相对牌宽的双中心条件和至少80%牌宽交叠替换旧每端点±4像素容差；保留参考宽为牌宽80–120%、高为牌高10–30%、间隔0至牌高八分之一、真实红1、有效且未接受为车位的蓝候选、唯一配对与好帧。15位有符号运算避免负偏移错误，双中心避免半像素取整。原RGB纯度/每色至少16样本、八有效帧和上一ROI位移不超过3像素不变。这些源码规则仍须本轮完整拟合/下载/新实拍证明，不能由读字自动方向推断任意角度校色完成。共同复位恢复默认；协议默认恢复语义也只有实际实现且记录的命令才能开放。
+当前算法9源码在**SW8下拨**时，以红1的实际锚点定向四边形和同帧实测蓝色分量配对。前向单应变换预测正式蓝条位置，须通过按牌尺度计算的角点误差、边长比例、前向半平面、正向凸性及唯一候选/循环对应检查，再用两者各自实测四边形产生内缩采样多边形。规范坐标为scale320，Q4映射向下取整，包含负值。蓝分量的包围框可从4像素门槛提供几何，数字仍保留24像素边长和400像素面积门槛。这是有界透视方案，不保证任意角度、距离或裁切都成功；投影间隙、样本、容量或几何不足均拒绝。像素单元视野检查不证明实体标牌边界全部可见。该校色流程已有模型及完整核心RTL回放证据，拟合、下载和新实拍仍按第1节分层记录。
+
+**SW8 up** keeps the historical configured-orientation bbox pairing and rectangular raw-RGB sampling, while digit recognition uses its bbox baseline. Pairing retains reference width80–120% of card width, height10–30% of card height, gap0…height/8, scale-relative doubled-centre tolerance and80% overlap. It does not use the new quads. The programmed reader7 checkpoint uses this historical calibration geometry in both switch modes; its completed board tests remain recorded in VERSION_README. Normal and bypass sampling never borrow another blue bay as a calibration answer.
+
+**SW8上拨**时保留历史配置方向下的包围框配对、矩形原RGB采样，读字使用轴对齐基线。配对保留参考宽为牌宽80–120%、高为牌高10–30%、间隔0至牌高八分之一、相对尺度双中心容差及80%交叠，不使用新增四边形。此前已下载的算法7在两种开关状态均使用这套历史校色几何，其板验记录见VERSION_README。两种模式都不能借邻近蓝车位作为校色答案。
+
+All pixels inside a sampling region contribute raw RGB; the old colour mask never filters out inconvenient samples. Each colour needs at least16 samples. Red/blue selected-channel minima must be at least32/24, exceed the largest other channel by more than8, span at most80, and have selected-channel maxima below248 and other channels below224. The eight proposed half-minimum floors may span at most24 per colour; the committed floor is half the darkest validated reference sample. Hue, saturation and white gates remain fixed. AGC/AWB/AEC remain enabled, so rapid lighting changes, a colour-temperature-induced hue shift, clipping or contamination can reject calibration. Initial red1/reference detection still requires the active colour gate; unfiltered sampling does not remove that bootstrap limit. No lux/K operating range has been proved. Common reset restores defaults; `calibrate --arm` only permits another real attempt and does not inject success or restore default thresholds.
+
+采样区域内所有像素都贡献原RGB，不能用旧颜色mask剔除不利样本。每色至少16个样本；红/蓝目标通道最小值至少32/24，且比其他通道最大值严格高8以上，目标通道跨度不超过80、最大值低于248、其他通道最大值低于224。八次提出的半最小值门槛每色跨度不超过24，最终采用全部有效参考中最暗样本的一半。色相、饱和度及白字门槛保持固定。AGC/AWB/AEC仍开启，快速照明变化、色温造成的色相偏移、过曝或污染都可能使校色拒绝。初始红1/参考检测仍依赖当前颜色门槛，原RGB采样不能解除这个启动条件。尚未证明照度/色温工作范围。共同复位恢复默认；`calibrate --arm`仅允许再次真实尝试，不注入成功，也不恢复默认阈值。
 
 | Switch / 开关 | Down0 / 下拨0 | Up1 / 上拨1 |
 |---|---|---|
 | SW0 | No per-object RGB/HSV panel / 不显示逐对象面板 |4×4 raw-display RGB/HSV for accepted signs and the uniquely paired BJ strip / 已识别牌及唯一 BJ 的4×4采样 |
 | SW1 | No centre panel / 无中心面板 |8×8 centre box, mean RGB/HSV, detected colour and unique accepted-box association / 中心8×8、均值和颜色/关联数字 |
-| SW8 | Measured-quad perspective sampling / 实测四边形透视采样 | Axis-aligned bbox baseline, algorithms still running / 轴对齐基线，算法继续运行 |
+| SW8 | Reader9: measured-quad digit normalisation and projective calibration pairing/sampling / 算法9：实测四边形读字及透视校色配对/采样 | Bbox digit baseline and historical bbox calibration/raw sampling; algorithms still running / 轴对齐读字及历史框校色/原RGB采样，算法继续运行 |
 | SW9 | Perception and normal VGA / 正常处理与VGA | Perception/interaction paused at input SOF, exact raw camera VGA at packet boundary / 输入SOF暂停处理，显示包边界切纯相机 |
 
 SW0 and SW1 may be enabled together. Blue objects use#0–#7, red#A–#F; BJ has a separate row and is only the uniquely paired calibration strip. UI tags are association labels, not bay IDs. Unknown candidates do not occupy empty panels. Display capacity overflow is shown explicitly, while recognition/tracking still uses all16shared slots. RGB/S/V are0–255 and H is0–359degrees, calculated from mean raw-display RGB before overlays. Values publish together at display SOP as `VGA HELD`; the scan and native metadata IDs may differ. STALE/BAD must prevent old panels being mistaken for current measurements. The centre digit is an accepted-main-bbox association, not OCR of eight pixels.
@@ -197,7 +225,7 @@ This section and [perception_pkg.sv](rtl/common/perception_pkg.sv) define the si
 | `targetReport`, `targetReportValid/Ready` |141,1,1| B→C, B→C/C→B | Continuous selected-target result; valid does not mean observed / 持续跟踪结果，valid不等于看见 |
 | `queryResult`, `queryResultValid/Ready` |141,1,1| B→C, B→C/C→B | On-demand LIST/GET result batch / 按需列举、位置查询结果批次 |
 | `userEvent`, `userEventValid/Ready` |104,1,1| B→C, B→C/C→B | Interaction terminal event / 交互终结事件 |
-| `status` |76| B→C | Registered current status, no valid/ready / 注册的当前状态，无独立握手 |
+| `status` |76| B→C | Current CLOCK_50-domain state, sampled synchronously; no valid/ready / CLOCK_50域当前状态，同步采样，无独立握手 |
 
 A transfer occurs only on `!reset && valid && ready`. A sender must assert valid without waiting for ready. Once `valid && !ready`, valid and the entire payload remain unchanged until transfer or common reset, including across new requests, commits and cancellation. Reset takes priority, clears driven valid/ready, queues, bank ownership, tracker history and C caches. Reset restores version0/default profile, calibrated=0, speechArmed=0, busy=0, kind=NONE, state=IDLE and no target; readiness stays0 until recovered. Independent B-only reset with C retaining state is unsupported; it would require a new epoch/supervision contract.
 
@@ -212,11 +240,15 @@ A transfer occurs only on `!reset && valid && ready`. A sender must assert valid
 | `markerType` |2|0NONE,1BAY (blue),2FUNCTION (red),3REFERENCE (BJ) / 标牌类型 |
 | `digit` |4| BAY1–6,FUNCTION1/2,REFERENCE15; CLEAR/LIST ignore identity / 数字或BJ专用值15 |
 
-SELECT starts continuous tracking of the exact type/digit; CLEAR stops tracking. At acceptance C changes its expected tracking tag and clears its cache; B clears confirmation. The request binds from the first complete capture after safe application. Already captured/processing frames retain their old bound tag. An invalid SELECT identity is consumed, clears selection, keeps its tag, sets FAULT_REQUEST_INVALID and reports NONE/15,targetSelected0,INVALID_REQUEST. CLEAR gives NO_SELECTION. **LIST returns all recognised markers; GET returns all locations matching one exact identity. Neither changes selection, tracking tag, confirmation count or cache.** LIST/GET use queryResult, not targetReport. An invalid GET produces QUERY_INVALID_REQUEST and leaves tracking intact. Tags compare by equality and must not be reused while old same-tag transactions remain. Acceptance is neither recognition nor lock.
+SELECT starts continuous tracking of the exact type/digit; CLEAR stops tracking. At acceptance C changes its expected tracking tag and clears its cache; B clears confirmation. The request binds from the first complete capture after safe application. Already captured/processing frames retain their old bound tag. An invalid SELECT identity is consumed, clears selection, keeps its tag, sets FAULT_REQUEST_INVALID and uses NONE/15,targetSelected0. On a current good, ready frame, invalid SELECT gives INVALID_REQUEST and CLEAR gives NO_SELECTION; higher-priority errors are listed below. **LIST returns all recognised markers; GET returns all locations matching one exact identity. Neither changes selection, tracking tag, confirmation count or cache.** LIST/GET use queryResult, not targetReport. An invalid GET produces QUERY_INVALID_REQUEST and leaves tracking intact. Tags compare by equality and must not be reused while old same-tag transactions remain. Acceptance is neither recognition nor lock.
 
 SELECT持续跟踪指定类型和数字；CLEAR停止跟踪。只有这两类请求更新跟踪tag并清确认/缓存，已采集旧帧保留旧tag。无效SELECT清选择、保留新tag并报告NONE/15及INVALID_REQUEST，不能继续旧目标。**LIST列出当前识别标牌；GET返回指定类型和数字的全部位置，均不改变当前跟踪。** 两种查询通过queryResult返回，无效GET也不影响跟踪。Tag按相等比较，旧事务未排空前不能复用；请求被接受不代表已经识别或锁定。
 
 ### 7.3 `targetReport_t` —141bits / 持续跟踪报告
+
+Report reason priority is RESOURCE_DROP → FRAME_BAD → PIPELINE_NOT_READY → REQUEST_CHANGED → CONFIG_CHANGED → NO_SELECTION → INVALID_REQUEST → duplicate/quality/match evaluation. Thus a CLEAR selection on a bad capture can report FRAME_BAD. Clearing lock means clearing internal confirmation and subsequent reports; a previously presented report stalled by C is still immutable. C must reject that old tag/config/age when it is eventually transferred.
+
+报告原因优先级为资源丢帧→坏帧→未就绪→请求变化→配置变化→无选择→非法身份→重复/质量/匹配判决，所以CLEAR之后遇坏帧也可能先报告FRAME_BAD。立即失锁指内部确认及随后生成报告清除；已经向C呈现但被反压的旧报告仍不能改写，最终收到时由C按旧tag/配置/年龄拒绝。
 
 | Field / 字段 | Bits | Meaning / 含义 |
 |---|---:|---|
@@ -249,13 +281,13 @@ SELECT持续跟踪指定类型和数字；CLEAR停止跟踪。只有这两类请
 |6|`REPORT_CONFIG_CHANGED`|Configuration invalidated confirmation / 配置切换 |
 |7|`REPORT_REQUEST_CHANGED`|Request invalidated confirmation / 请求切换 |
 |8|`REPORT_PIPELINE_NOT_READY`|Current pipeline unavailable / 当前链路不可用 |
-|9|`REPORT_INVALID_REQUEST`|Invalid operation/ID / 无效请求 |
+|9|`REPORT_INVALID_REQUEST`|Invalid SELECT identity / SELECT身份无效 |
 |10|`REPORT_LOW_QUALITY`|Insufficient classification/geometry / 质量不足 |
 |11|`REPORT_RESOURCE_DROP`|Capture discarded for resource shortage / 资源丢帧 |
 
-`observed=0` requires centreU/V, boxWidth/Height and quality all0, and locked0. `observed=1` requires frameGood1,targetSelected1,ambiguous0; reason is ACQUIRING until locked then OK. Missing/bad/ambiguous frames, capture gaps, new requests and configuration changes immediately clear continuity/lock; returning targets need three fresh distinct confirmations. Repeated snapshots/transfers do not count. C backpressure losing a report is not a lost capture. For duplicates: good frame, selected1, ambiguous1, observed0, locked0, zero measurements, DUPLICATE_ID; never choose largest/first. Different numbers together are normal. Every completed frame produces an observation, including absent targets; candidate overflow or frame mismatch invalidates the whole frame.
+`observed=0` requires centreU/V, boxWidth/Height and quality all0, and locked0. `observed=1` requires frameGood1,targetSelected1,ambiguous0; reason is ACQUIRING until locked then OK. Missing/bad/ambiguous frames, capture gaps, SELECT/CLEAR requests and configuration changes immediately clear continuity/lock; returning targets need three fresh distinct confirmations. Repeated snapshots/transfers do not count. C backpressure losing a report is not a lost capture. For duplicates: good frame, selected1, ambiguous1, observed0, locked0, zero measurements, DUPLICATE_ID; never choose largest/first. Different numbers together are normal. Every completed frame produces an observation, including absent targets; candidate overflow or frame mismatch invalidates the whole frame.
 
-observed为0时公开位置、尺寸、quality全部清零且不能锁定；为1则必须好帧、已选择且无歧义，满三帧前ACQUIRING，之后OK。缺失/坏帧/歧义/采集缺口/新请求/新配置立即清确认和锁，重现需三个新帧。重复快照或传输不计数，C反压漏收报告不等于B漏采帧。同号多位置时保留好帧与选择，但歧义、无观测无锁定、测量零，不能取最大或第一个。不同号码同时存在正常，每个完成帧都有观察记录，候选溢出/错帧使整帧无效。
+observed为0时公开位置、尺寸、quality全部清零且不能锁定；为1则必须好帧、已选择且无歧义，满三帧前ACQUIRING，之后OK。缺失/坏帧/歧义/采集缺口/SELECT或CLEAR/新配置立即清确认和锁，重现需三个新帧；LIST/GET不清跟踪。重复快照或传输不计数，C反压漏收报告不等于B漏采帧。同类型同号多位置时歧义、无观测无锁定、测量零，不能取最大或第一个。不同号码或不同类型同时存在正常，候选溢出/错帧使整帧无效。
 
 ### 7.4 Coordinates, time and sequence / 坐标、时间与序号
 
@@ -289,7 +321,7 @@ Extend additions before summing endpoints; x10–13/y20–24 gives public centre
 | `state` |4| State table below / 下表状态 |
 | `calibrated` |1| At least one complete profile committed since reset/default recovery / 本次复位/恢复后曾成功提交 |
 | `audioReady` |1| Actual capture and vocabulary ready, not activity detection / 真采音与词表就绪 |
-| `perceptionReady` |1| Current consistent visual result path usable / 当前视觉链可用 |
+| `perceptionReady` |1| Processing enabled/active with a completion within150ms; does not imply frameGood / 处理启用且150ms内有完成，不保证本帧有效 |
 | `activeCfgVersion` |16| Currently active configuration, not stalled report's version / 当前配置 |
 | `reportDropCount` |16| Saturating replaced-not-presented report count / 待发报告替换饱和计数 |
 | `eventOverflow` |1| Event capacity shortage, sticky to reset / 事件容量不足保持到复位 |
@@ -331,12 +363,11 @@ Wait-for-permit, valid-sample collection and active utterance processing have fi
 | enable0 | Keep | Clear and clear start/silence history / 清武装和历史 | Keep logical selection / 保留逻辑选择 |
 | Re-enable / 再使能 | No automatic repeat after success / 不重复成功校色 | Must see real red2 again / 重新看见红2 | Existing request rules / 按原请求 |
 | Explicit recalibration / 显式重校 | Keep old until commit; failure keeps old / 提交前/失败保旧 | Clear then require red2 again / 清后重新红2 | New config requires3frames / 新配置三帧 |
-| Restore default / 恢复默认 | Atomic SOF,version++,calibrated0 / 原子切换 | Clear | Clear confirmation / 清确认 |
 | Common reset / 共同复位 | Default,version0,calibrated0 | Clear | Clear selection/cache / 清选择缓存 |
 
-Only completed profile/arming state persists across folding. Moving red1 during sampling can invalidate that attempt. After selecting blue3, returning to the red half may keep targetSelected1 but must give observed0; returning to the blue half requires three fresh frames again. Debug retry/default restoration is not an extra targetRequest operation and cannot directly assert recognised/calibrated state.
+Only completed profile/arming state persists across folding. Moving red1 during sampling can invalidate that attempt. After selecting blue3, returning to the red half may keep targetSelected1 but must give observed0; returning to the blue half requires three fresh frames again. Debug recalibration is not an extra targetRequest operation and cannot directly assert recognised/calibrated state. Only common reset restores the default profile in this implementation; no run-time restore command is implemented.
 
-翻页只保留已完成的配置/武装，采样期间移走红1可使尝试失败。选蓝3后翻到红侧可保留targetSelected，但必须observed0；翻回仍需三个新帧。调试重试/恢复不新增targetRequest操作，也不能直接写“识别/校色成功”。
+翻页只保留已完成的配置/武装，采样期间移走红1可使尝试失败。选蓝3后翻到红侧可保留targetSelected，但必须observed0；翻回仍需三个新帧。调试重新校色不新增targetRequest操作，也不能直接写“识别/校色成功”。当前仅共同复位恢复默认颜色并令版本归零，没有运行时“恢复默认”BCTL命令。
 
 `interactionPermit` is continuous authorisation. permit0 during WAIT_PERMIT is normal waiting; after sampling/classification begins, revocation discards unfinished samples/shadow/results. enable0 also disarms. In idle ARMED, permit0 is not a cancellation event: keep intent but clear incomplete onset history and require silence on resume. Current commit domain is CLOCK_50 at the camera FIFO SOF token; a revocation visible on that edge wins, but a previously committed profile never rolls back. Any future cross-domain commit must await final committed/not-committed acknowledgement before emitting exactly one correct terminal event.
 
@@ -405,18 +436,18 @@ currentRequest.operation==TARGET_SELECT
 && report.targetSelected && report.frameGood
 && report.observed && report.locked && !report.ambiguous
 && status.perceptionReady && !status.interactionBusy
-&& fresh(report.captureStartUs,timeUs)
+&& freshTime(timeUs,report.captureStartUs,maxAgeUs)
 ```
 
-C may additionally require calibrated as its policy; a real default-profile observation is distinct from a completed user calibration. Idle armed has busy0 and must not permanently block observation. Active calibration/utterance can still report real visual data for recording, but busy0/events are not movement permission. B supplies no distance, steering, parking-complete or safe-to-drive decision. New request/config, current-stream bad/missing observations and age expiry invalidate cache. Old tag/config, duplicate or out-of-order packets cannot replace a current valid cache; cached use continues checking live status/time. JTAG SELECT exercises this same interface, never speech.
+C may additionally require calibrated as its policy; a real default-profile observation is distinct from a completed user calibration. Idle armed has busy0 and must not permanently block observation. Active calibration/utterance can still report real visual data for recording, but busy0/events are not movement permission. B supplies no distance, steering, parking-complete or safe-to-drive decision. SELECT/CLEAR or configuration changes, current-stream bad/missing observations and age expiry invalidate cache. Old tag/config, duplicate or out-of-order packets cannot replace a current valid cache; cached use continues checking live status/time. JTAG SELECT exercises this same interface, never speech.
 
-C可按自身政策额外要求calibrated，但默认配置真实观察与已完成用户校色是两件事。空闲武装busy0不能永久阻断观察，实际交互时仍可记录真实视觉结果；busy0或事件不是运动许可。B不提供距离、转向、停车完成或可行驶结论。新请求/配置、当前流坏/缺帧与过期使缓存失效，旧tag/配置、重复/倒序包不能替换当前有效缓存，每次使用还检查实时状态/时间。JTAG选择走同一接口，绝非语音证据。
+C可按自身政策额外要求calibrated，但默认配置真实观察与已完成用户校色是两件事。空闲武装busy0不能永久阻断观察，实际交互时仍可记录真实视觉结果；busy0或事件不是运动许可。B不提供距离、转向、停车完成或可行驶结论。SELECT/CLEAR或配置改变、当前流坏/缺帧与过期使缓存失效，LIST/GET不清跟踪缓存。旧tag/配置、重复/倒序包不能替换当前有效缓存，每次使用还检查实时状态/时间。JTAG选择走同一接口，绝非语音证据。
 
 ### 7.9 `queryResult_t` —141bits / 当前标牌与位置查询
 
-Use LIST to answer “which signs can B see?” and GET to answer “where are the blue1 signs?”. Each accepted request reserves the **latest complete frame at that edge**, not a newly triggered camera frame. One query may be outstanding. Further query requests wait for its final result transfer; SELECT/CLEAR and targetReport remain independent. A sender must finish a stalled request before presenting another request on the same channel. The host client drains abandoned queries explicitly before starting another.
+Use LIST to answer “which signs can B see?” and GET to answer “where are the blue1 signs?”. Each accepted request reserves the **latest complete frame from before that handshake edge**, not a newly triggered camera frame. One query may be outstanding. Further query requests wait for its final result transfer; SELECT/CLEAR and targetReport remain independent. A sender must finish a stalled request before presenting another request on the same channel. The host client drains abandoned queries explicitly before starting another.
 
-LIST回答“当前识别到哪些牌”，GET回答“蓝1在哪里”。请求接受时锁定**当时最新完整帧**，不触发新拍摄。最多一个未完成查询；第二个查询须等前一批排空，但查询响应反压不影响SELECT/CLEAR、相机或持续报告。同一个请求通道上已被反压的请求不能自行换成另一条；主机客户端会先明确排空遗留查询。
+LIST回答“当前识别到哪些牌”，GET回答“蓝1在哪里”。请求接受时锁定**握手沿之前已完成的最新帧**，同沿新提交帧不纳入，也不触发新拍摄。最多一个未完成查询；第二个查询须等前一批排空，但查询响应反压不影响SELECT/CLEAR、相机或持续报告。同一个请求通道上已被反压的请求不能自行换成另一条；主机客户端会先明确排空遗留查询。
 
 | Field / 字段 | Bits | Meaning / 含义 |
 |---|---:|---|
@@ -461,9 +492,102 @@ Three banks of16×64-bit descriptors separate WRITING, latest complete and READI
 
 ### 7.10 Member C connection and commands / Member C接入步骤与命令
 
-For FPGA integration, compile the shared package before both teams' modules. Replace the `memberCSimulator`/`memberBDebug` request producer in [perceptionDemoTop.sv](rtl/top/perceptionDemoTop.sv) with C's controller, and connect the four valid/ready channels plus status, common reset/time and interaction permissions to `perceptionCore`. Keep the camera wrapper and its CDC intact. `queryBusy` and debugWords are private wrapper diagnostics; C only needs queryRequestReady/valid and queryResultReady/valid. Do not instantiate two request drivers. C may hold queryResultReady high when its sink can consume one item per clock.
+For FPGA integration, compile the shared package before both teams' modules. Replace the `memberCSimulator`/`memberBDebug` request producer in [perceptionDemoTop.sv](rtl/top/perceptionDemoTop.sv) with C's controller, and connect the four valid/ready channels plus status, common reset/time and interaction permissions to `perceptionCore`. Keep the camera wrapper and its CDC intact. `queryBusy` and debugWords are private wrapper diagnostics; queries use the existing **targetRequestValid/Ready** request handshake and **queryResultValid/Ready** response handshake. There is no separate public queryRequest port. Do not instantiate two request drivers. C may hold queryResultReady high when its sink can consume one item per clock.
 
-FPGA集成先编译共享package。以[顶层现有连线](rtl/top/perceptionDemoTop.sv)为模板，将memberCSimulator/memberBDebug请求源换成C控制器，接入请求、跟踪报告、查询结果、事件四个valid/ready通道，以及status、共同复位/时基和交互许可。保留相机及其CDC。queryBusy与debugWords是调试wrapper信号，C只需公共握手；不能同时接两个请求驱动。接收器能够每拍消费时可将queryResultReady常置1。
+FPGA集成先编译共享package。以[顶层现有连线](rtl/top/perceptionDemoTop.sv)为模板，将memberCSimulator/memberBDebug请求源换成C控制器，接入请求、跟踪报告、查询结果、事件四个valid/ready通道，以及status、共同复位/时基和交互许可。保留相机及其CDC。queryBusy与debugWords是调试wrapper信号；查询共用**targetRequestValid/Ready**，通过**queryResultValid/Ready**返回，没有另一个公共queryRequest端口。不能同时接两个请求驱动。接收器能够每拍消费时可将queryResultReady常置1。
+
+#### 7.10.1 First understand the selector / 先理解“选哪一块牌”
+
+Colour alone is insufficient: blue3 is a numbered parking sign, while BJ is the unnumbered blue strip owned by red1. The protocol therefore uses a type plus a digit. `--type` selects the **category**, not an arbitrary RGB/HSV colour or candidate slot. `--digit` selects the number printed on that category. The same identity is used by `locate`, `track`, Python and FPGA requests.
+
+仅说“蓝色”还不够：蓝3是有数字的车位牌，BJ是属于红1、没有数字的校色蓝条。因此协议使用“类型＋数字”。`--type`选择**标牌类别**，不是任意RGB/HSV颜色，也不是VGA候选槽号；`--digit`选择该类牌面真实印出的数字。locate、track、Python和FPGA请求用同一套身份。
+
+| Physical target / 实物目标 | CLI `--type` | CLI `--digit` | RTL `markerType` | RTL `digit` |
+|---|---|---|---|---|
+| Blue numbered bay / 蓝底数字车位牌 | `bay` | Required1–6 / 必填1–6 | `MARKER_BAY` (=1) | Printed number1–6 / 实际数字 |
+| Red function card / 红底功能牌 | `function` | Required1 or2 / 必填1或2 | `MARKER_FUNCTION` (=2) | Printed number1/2 / 实际数字 |
+| Red1-owned blue calibration strip BJ / 红1专属蓝校色条 | `reference` | Omit / 不填 | `MARKER_REFERENCE` (=3) | `4'hF` (=15), means no numeral / 表示无数字 |
+| No particular identity, for LIST/CLEAR / 列举或清除时不指定牌 | No selector / 不填 | No digit / 不填 | `MARKER_NONE` (=0) | `4'hF` (=15) |
+
+Why are the BJ values `TARGET_GET`, `MARKER_REFERENCE`, `4'hF`? They answer three different questions: **what to do** (GET one snapshot query), **which category** (reference strip), and **which printed number** (none, represented byF). GET and REFERENCE both happen to have numeric code3, but those3s occupy different fields. Neither means “blue digit3”. F is hexadecimal15 (`4'h` means a4-bit hexadecimal literal), not a newly supported bay15. `requestTag` is a fourth field: C chooses a fresh16-bit transaction label, which B echoes so C can match the reply; it is not part of the marker identity. JTAG/CLI assigns it automatically.
+
+为什么读BJ要写`TARGET_GET`、`MARKER_REFERENCE`、`4'hF`？它们分别回答：**做什么**（GET，一次位置查询）、**哪一类**（校色参考条）、**牌上什么数字**（没有数字，用F表示）。GET与REFERENCE的数值恰好都为3，但在不同字段中，**均不表示蓝色数字3**。F是十六进制15，`4'h`表示4位十六进制常量，不是增加车位15。请求还包含第四个字段`requestTag`，由C分配新的16位事务标签，B原样返回以匹配回复；tag不是牌的编号。使用JTAG/CLI时由模拟器自动分配。
+
+```systemverilog
+// Explicit field assignments are easier to maintain than unexplained numbers.
+// C allocates nextTag and holds this complete request while valid && !ready.
+targetRequest.operation  = TARGET_GET;        // Action: one location query.
+targetRequest.requestTag = nextTag;           // Transaction label, not a bay ID.
+targetRequest.markerType = MARKER_REFERENCE;  // Category: paired blue BJ strip.
+targetRequest.digit      = 4'hF;              // BJ has no printed numeral.
+```
+
+To query blue3, change markerType to MARKER_BAY and digit to3; operation stays GET and use a new tag. To query red2, choose MARKER_FUNCTION and2. To continuously track either, change only GET to SELECT, again with a new tag. Do not change BJ's digit to3 while retaining REFERENCE; that identity is invalid.
+
+改查蓝3：把markerType改成MARKER_BAY，digit改3，operation保持GET并换新tag。改查红2：使用MARKER_FUNCTION和2。改成持续跟踪：将GET改为SELECT，同样换新tag。不能保留REFERENCE却把digit写3，那是非法身份。
+
+#### 7.10.2 What each command does / 每条命令的用途、参数和返回
+
+Run commands from the repository root using a real Python interpreter. Global tool/target options go **before** the command; `--type`/`--digit` go after `locate` or `track`. For example, the following queries BJ using the installed Quartus toolchain. `python tools/echo7.py` starts the client; `locate` is the operation; `--type reference` chooses BJ. No digit is supplied because BJ has none. The path is machine-specific and can be omitted when doctor discovers the correct installation.
+
+在仓库根目录用真实Python解释器运行。工具路径、设备等全局参数放在**子命令之前**，--type/--digit放在locate或track之后。下例中，python tools/echo7.py启动客户端，locate表示一次位置查询，--type reference指定BJ；BJ无数字，所以不写--digit。Quartus路径随机器修改，doctor能正确发现时可以省略。
+
+```powershell
+python tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' locate --type reference
+```
+
+| Optional connection setting / 可选连接设置 | CLI, before command / CLI子命令之前 | Python constructor / Python构造参数 | Meaning / 含义 |
+|---|---|---|---|
+| Quartus tools / 工具路径 | `--quartus-bin PATH` | `quartusBin=PATH` | Directory containing quartus_stp/quartus_pgm, not a project path / 工具所在bin目录，不是工程目录 |
+| Cable / 电缆 | `--cable 'DE-SoC [USB-1]'` | `cable='DE-SoC [USB-1]'` | Exact discovered cable; use doctor on each machine / 实际发现的精确名称 |
+| FPGA / 目标器件 | `--device '2'` | `device='2'` | Discovered chain index or exact device name;2 is only this bench's observed index / 实际链索引或器件名，不能照抄假定2 |
+| Timeout / 超时 | `--timeout 60` | `timeout=60` | Positive integer seconds per external phase, not an overall multi-phase deadline; CLI default300, Python default30 / 每外部阶段正整数秒，非整个多阶段调用总时限；CLI默认300、Python默认30 |
+
+Omit cable/device only when discovery finds a unique compatible FPGA. An ambiguous chain is an error, not a reason to choose the last match. The core's flat clock port is `clk`, so a C top connects `.clk(CLOCK_50)`; the optional perceptionLink interface names its clock CLOCK_50. Keep wrapper controls such as processingEnable explicitly driven as in the existing top.
+
+仅在能唯一发现目标FPGA时省略cable/device；多目标必须报错，不能选最后一个。核心平面时钟端口名是clk，所以C顶层连接`.clk(CLOCK_50)`；可选perceptionLink的时钟才名为CLOCK_50。processingEnable等wrapper控制按现有顶层明确驱动，不能悬空。
+
+| Command / 命令 | Purpose and parameters / 用途与参数 | Return and state effect / 返回与状态影响 |
+|---|---|---|
+| `markers` | One LIST of all currently recognised typed markers; takes no type/digit / 列出当前全部已识别牌，不填类型或数字 | `queryTransaction.items` contains every location, including duplicates andBJ; current tracking stays unchanged / 返回每个位置，包含同号副本和BJ，不改跟踪 |
+| `locate --type bay --digit 1` | One GET of blue1; replace1 with any1–6 / 一次查询蓝1，可将1换成1–6 | Zero, one or multiple matching positions; no tracking lock promised / 返回零个、一个或多个位置，不保证三帧锁定 |
+| `locate --type function --digit 1` | One GET of red1; replace1 with2 to read red2 / 一次查询红1，改2则查红2 | Returns red card position only; does not start calibration/arming / 仅查红牌位置，不触发校色或武装 |
+| `locate --type reference` | One GET of the uniquely paired BJ strip; omit digit / 一次查询唯一配对BJ，不填数字 | Returns the strip bbox/centre, not red1's; no pairing in a ready, fresh, good frame givesNOT_FOUND / 返回蓝条自身框和中心；就绪、新鲜好帧无配对才返回未找到 |
+| `track --type bay --digit 3` | SELECT blue3; change type/digit using the selector table / 持续跟踪蓝3，按上表可换目标 | ACK accepts the request; later targetReport needs three fresh unique frames to lock / ACK仅受理，随后三帧唯一观察才锁定 |
+| `track --type function --digit 2` | SELECT red2, without invoking its function / 持续跟踪红2，不执行其功能 | Same report/lock/loss rules as a blue target / 与蓝牌相同的跟踪、锁定和失锁规则 |
+| `track --type reference` | SELECT BJ, omit digit / 持续跟踪BJ，不填数字 | Requires a valid unique red1/BJ pair in each observation / 每帧须有真实唯一配对 |
+| `select --bay 3` | Short compatibility spelling for `track --type bay --digit 3`; bay1–6only / 蓝牌跟踪简写，只允许1–6 | Exactly the same SELECT path; not a recognition shortcut / 完全相同请求路径，不绕过识别 |
+| `status` | Read current FPGA diagnostic/status snapshot; no selector / 读FPGA当前诊断状态，无选择参数 | Inspect `boardStatus.decoded.activeRequest` and `.targetReport`; does not itself request new recognition / 查看当前选择和报告，不主动要求新识别 |
+| `clear` | CLEAR the continuous tracking target; no parameters / 清除持续跟踪目标，无参数 | Selection/cache invalidated; camera, calibration and queries continue / 清选择与缓存，相机、校色和查询继续 |
+| `markers --drain` | Recovery after an interrupted/timed-out query; do not issue a new LIST / 查询中断或超时后的排空恢复，不发新LIST | Old tail appears under`drainedReplies`; active tracking unchanged / 旧尾包放drainedReplies，不改跟踪 |
+
+`locate` is a one-off answer from the latest completed frame; `track` changes the target for subsequent continuously generated reports. Running `status` immediately after `track` may still show an old-tag report or ACQUIRING. Wait for a report whose tag/type/digit/config match and then apply §7.8; the CLI does not turn the ACK into a fabricated lock. `markers` and `locate` may be called while blue3 is tracked without changing blue3.
+
+locate是一次查询最新完成帧；track改变以后持续报告的目标。track后立即status可能仍有旧tag报告或ACQUIRING，须等tag/类型/数字/配置都匹配，再按§7.8判断；CLI不会把ACK包装成已锁定。持续跟踪蓝3时可以随时markers或locate，蓝3选择不变。
+
+#### 7.10.3 Changing targets and reading replies / 更换查询目标与判读结果
+
+```powershell
+python tools/echo7.py markers                           # What is currently visible?
+python tools/echo7.py locate --type reference            # BJ, the unnumbered blue strip.
+python tools/echo7.py locate --type bay --digit 3         # Change category and digit: blue3.
+python tools/echo7.py locate --type bay --digit 6         # Same category, another digit: blue6.
+python tools/echo7.py locate --type function --digit 2    # Change category and digit: red2.
+python tools/echo7.py track --type bay --digit 3          # Start continuous blue3 tracking.
+python tools/echo7.py status                             # Inspect the current matching report.
+python tools/echo7.py locate --type function --digit 1    # Query red1; blue3 remains selected.
+python tools/echo7.py clear                              # Stop continuous tracking.
+```
+
+For a query, first check the command's `status`/`exitCode`, then inspect `queryTransaction.results[0].reason` and `count`. `items` contains only nonempty observations. For GET: reason0/count1 is a unique match; reason1/count>1 is multiple positions; reason2/count0 means no match in a good frame. Reasons3–6 mean bad frame, not ready, invalid request or stale data respectively, and must not be interpreted as “the sign is definitely absent”. For LIST, nonempty results have reason0 even if the list contains two blue1s. Read all items through last; the index is a position within this batch, not a permanent object ID.
+
+查询先检查命令status/exitCode，再看queryTransaction.results[0]的reason和count；items只放非空观测。GET的reason0/count1为唯一位置，reason1/count大于1为多个位置，reason2/count0才表示好帧中没有找到。reason3–6分别为坏帧、未就绪、非法请求、过期，不能解读成“牌肯定不存在”。LIST有内容时reason为0，即使里面有两张蓝1。读完直到last；index只是本批排列序号，不是永久对象ID。
+
+Every item supplies centreU/V and boxWidth/Height in the fixed public240×320 image coordinates, **pixels, not millimetres or distance**. The timestamp is the original capture time. BJ quality is the paired red1 classification quality, not a digit score for the blank strip. A GET with two blue1 positions helps C inspect the scene, but selecting “blue1” still cannot choose between those copies: tracking reports ambiguity and zero measurements. Per-instance spatial selection would require a separately agreed extension; arbitrary first/largest selection is deliberately absent.
+
+每项centreU/V和boxWidth/Height采用固定对外240×320图像坐标，单位是**像素，不是毫米或距离**；时间戳是原始采集时间。BJ质量继承配对红1识别质量，不是给空蓝条编造数字分数。GET返回两个蓝1位置便于C了解场景，但SELECT“蓝1”仍无法指定其中副本，跟踪会报告歧义并清测量。若未来要按空间位置选择某个副本，需要另行协商扩展；当前不会擅自取第一个或最大的。
+
+#### 7.10.4 FPGA request and Python client examples / FPGA请求与Python客户端示例
 
 | C's intention / C的需求 | Request payload / 请求 | Response / 返回 |
 |---|---|---|
@@ -494,6 +618,27 @@ These PC commands exercise the actual public RTL transactions through BCTL and t
 
 这些PC命令通过BCTL和无运动C模拟器执行真正的公共RTL事务；select --bay 3保留为蓝3跟踪别名。JTAG传输可能慢于相机帧，返回PC的位置保留原始时间，不能当作实时底盘控制测量；真正C直接使用CLOCK_50。命令输出JSON，传输/协议失败返回非零；NOT_FOUND或MULTIPLE属于明确有效的协议结果，调用方仍须判断含义。
 
+Python callers can use [member_b_client.py](tools/member_b_client.py) after adding `tools` to their import path. Results use the same JSON structure and retained logs as the CLI; `MemberBClientError.result` contains a failed transaction's diagnostics. For LIST/GET, an empty `queryTransaction.items` list requires inspecting `queryTransaction.results[0].reason`, not assuming a broken connection. `drain()` is different: it deliberately has no new results and retains any old tail under `queryTransaction.drainedReplies`.
+
+Python调用方可将tools加入import路径，使用同一真实事务客户端；返回值与CLI及日志相同，异常的result保留失败诊断。仅对于LIST/GET，queryTransaction.items为空时读queryTransaction.results[0].reason区分未发现、坏帧、过期等。drain()不发新查询，所以results可以为空，旧尾包位于queryTransaction.drainedReplies。
+
+```python
+import sys
+from pathlib import Path
+
+# Run from the repository root. Use an absolute checkout path otherwise.
+sys.path.insert(0, str(Path.cwd() / "tools"))
+from member_b_client import MemberBClient
+
+client = MemberBClient(quartusBin="C:/intelFPGA_lite/18.1/quartus/bin64")
+batch = client.locate("function", 1)["queryTransaction"]
+for item in batch["items"]:
+    print(item["markerType"], item["digit"], item["centreU"], item["centreV"])
+client.track("bay", 3)  # New SELECT; recognition and three-frame lock still apply.
+allMarkers = client.markers()["queryTransaction"]  # Does not replace blue3.
+client.clear()
+```
+
 ## 8. Private debug interface and commands / 私有调试接口与命令
 
 Public v3 uses private schema8:96 frozen32-bit status words, with captured frameId/buildId appended by GRAB for98words. Schema8 versions the typed24-bit request/141-bit report and adds an independent QRP3 query packet. Schema1–7 are explicitly decoded as publicv2; schema6's historical split16-per-colour trial is distinct from shared16. Model JSON schema is another independent version. Every slot carries explicit colour, including rejection; slot/order is never an ID source.
@@ -514,7 +659,7 @@ Public v3 uses private schema8:96 frozen32-bit status words, with captured frame
 |90|bit0eventValid,1reportValid,2eventHistory,3BJvalid,bits7:4BJglobalSlot,15:8BJquality,16queryBusy / 有效位、历史、BJ槽/质量、查询忙 |
 |91–93|frameGood,buildId; word93bytes: sharedLayout1/total16/active15, low nibbles active peaks / 帧有效、构建与容量高水位 |
 |94|Saturating completionDiscardCount in31:16; low bits3transport history,2overflow,1candidate error,0schedule overrun / 丢弃与故障 |
-|95|colourAlgorithm3 (RUN2),readerAlgorithm5,white84/spread64 / 实际算法与白字参数 |
+|95|colourAlgorithm3 (RUN2),readerAlgorithm9,white84/spread64 / 当前源码颜色、读字算法及白字参数；按实际buildId查版本记录 |
 
 BCTL sourceWord uses bit31 as the transaction toggle, bits27:24 as opcode, bits15:8 as frozen-word address, and bits5:4/type plus3:0/digit as selector. Opcodes1SELECT,2CLEAR,3calibrate,4speech-arm,5status snapshot,6orientation,7auto-cycle,8LIST,9GET,10READ_QUERY. LIST/GET ACK confirms the C simulator request slot accepted the command; query completion requires the actual response batch. READ_QUERY ACK follows a real queryResult valid/ready transfer. If no result is available it returns BUSY without consuming or replacing the frozen bank. Frozen probe meta bit8 distinguishes a pending query from a completely drained channel. Queries are drained/enqueued/read in one Tcl session, with timeout and a recoverable `markers --drain` operation.
 
@@ -563,7 +708,7 @@ The course R6 entry is `bash run_all_tests.sh` with Verilator5.050, make, C++ co
 & $python tools/run_r6_windows.py --compiler-bin 'C:/Program Files/JetBrains/CLion 2026.1.3/bin/mingw/bin' --bash 'C:/Program Files/Git/bin/bash.exe'
 & $python tools/echo7.py test --rtl --only projectiveMarkerReader_tb projectiveBypass_tb --capture-result '<actual-fresh-capture-result.json>'
 & $python tools/echo7.py calibrate --arm --verify-busy
-& $python tools/echo7.py --timeout 900 test --hardware --trials 3 --truth-regions tests/fixtures/camera/frame30158/expected_regions.json
+& $python tools/echo7.py --timeout 900 test --hardware --trials 3 --truth-regions tests/fixtures/camera/frame364/expected_regions.json
 ```
 
 The angle/pose/lighting must still match that independently annotated truth; otherwise annotate the new actual pixels before scoring. `--truth-regions` requires explicit trials and stays host-only. The R7 capture-result command replays the captured profile and identical real pixels through normal/bypass RTL and the reference model; it proves implementation agreement, not printed-label accuracy or another fresh hardware observation.
@@ -580,27 +725,31 @@ Use three30-observation trials with five current-request reports for each SELECT
 
 三轮每轮30观察，按SELECT1–6各五份当前请求报告，保留失败/未锁定及等待中采样。十牌场景分别评分每个重复1/2，选择它们必须歧义清零，不能漏掉副本后算唯一跟踪成功；3–6正常重锁。新请求仍需三帧，按时间界定的旧请求排空作为过渡保留，不改成当前数据；超龄/未来/错配置、首份当前之后再出旧报告或越界都失败。数值门槛是设计指标，不是课程评分原文。
 
-For R9 keep SW9 down, compare SW8 normal/bbox on the same fixed camera/sheet/lighting using the same three trials and metrics. Record actual switch mode/config and truthful operator condition attestation. The comparator's COMPARISON_VALID means compatible inputs, not that either mode passed or that normal is better. SW9 pure camera is a separate demonstration, not the quantitative algorithm bypass. If the scene changes, do not pool those trials.
+For R9 keep SW9 down and compare SW8 modes on the same fixed camera/sheet/lighting, recording actual mode/profile and truthful operator condition attestation. Compare numbered-sign accuracy/latency separately from calibration pairing, sample validity and commit time. Reader7's original pose scored900/900 in both modes; its rotated pose scored717/720 normal (strict FAIL) and720/720 bypass. No normal-mode digit advantage has been demonstrated. Reader8's new calibration geometry has no camera benefit claim yet: future paired trials must declare the same starting thresholds, wait for the requested mode to complete a fresh frame, then use real `calibrate --arm` attempts and retain rejected/time-out attempts. A changed calibration profile cannot silently be treated as a matched digit-comparison profile. COMPARISON_VALID means compatible inputs, not successful acceptance or improvement. SW9 pure camera is a separate demonstration, not the quantitative algorithm bypass. If the scene changes, do not pool trials.
 
-R9保持SW9下拨，在同一固定相机/纸张/照明下比较SW8两模式的同样三轮指标，记录实际模式/配置与真实操作者条件确认。COMPARISON_VALID仅说明可比较，不代表任何模式通过或正常模式更好。SW9纯相机是另一个演示，不是定量算法旁路；场景改变后不能混合统计。
+R9保持SW9下拨，在同一固定相机/纸张/照明下比较SW8两模式，记录实际模式/配置及真实操作者条件确认。数字正确率/延迟与校色配对、样本有效性、提交耗时分别比较。算法7原场景两模式各900/900；旋转场景正常717/720且严格FAIL，旁路720/720，尚未证明正常模式读字优势。算法8新增校色几何尚无相机收益证据；后续配对试验须声明相同起始阈值，等待请求模式完成一个新帧，再执行真实`calibrate --arm`并保留拒绝/超时。校色改变阈值后不能默认为同配置数字对照。COMPARISON_VALID仅说明可比较，不代表验收通过或性能改善。SW9纯相机是另一演示，不是定量算法旁路；场景变化后不能合并统计。
 
 Recover from missing tools by rerunning doctor with explicit discovered paths; from ambiguous JTAG by choosing the actual cable/device; from a failed build by reading that run's first relevant error and keeping its logs; from stale/CRC/schema mismatch by fixing transport and requesting fresh capture. Never use held data, old SOF or a model result to fill a missing hardware gate. Keep SW8/SW9 down for normal acceptance, verify buildId and configuration, then run:
 
 缺工具则doctor并配置实际路径，JTAG歧义则明确设备，构建失败从该轮相关首错修起并保留日志，旧帧/CRC/schema不符先修传输再新采集。不能用held、旧SOF或模型结果补硬件缺口。正常验收先SW8/SW9下拨、确认buildId与版本，再运行：
 
 ```powershell
-& $python tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' --timeout 3600 autodebug --trials 3 --truth-regions tests/fixtures/camera/frame30158/expected_regions.json
+& $python tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' --timeout 120 capture --fresh
 ```
 
-This recovery command is correct only while that photographed arrangement still applies; use a newly reviewed region file after movement. Meaningful RTL changes require a new build/program/fresh-capture cycle after relevant regressions. Documentation-only results never certify an unbuilt logic change.
+This command reads a new image from the already programmed checkpoint without rebuilding or downloading. Before quantitative trials, review a truth-region file against that exact pose; the old ten-sign frame364 truth is not valid for the rotated eight-sign scene. Meaningful RTL changes require a new build/program/fresh-capture cycle after relevant regressions. Documentation-only results never certify an unbuilt logic change.
 
-该恢复命令仅在对应取景仍适用时成立，移动后换经过复核的新区域文件。实质RTL变化必须相关回归后重新构建/下载/新采集，文档整理不能证明未构建的新逻辑。
+该命令从已下载版本取得新图，不会重新构建或下载。定量验收前必须对当前取景复核区域真值，旧十牌frame364不能用于旋转八牌场景。实质RTL变化须相关回归后重新构建/下载/新采集，文档整理不能证明未构建的新逻辑。
 
 ## 10. Known limits and design decisions / 已知限制与设计决策
 
-Two genuine failures remain distinct. Frame30158's rotated extra blue2 has only a1×3/3-pixel strict-white anchor; weak white adds no adjacent support. With a manually fixed diagnostic orientation its digit strokes are complete, but production correctly retains anchor rejection. Frame37621's rotated extra blue1 is connected in raw HSV (1180pixels) but RUN3 splits it into two pieces; the downstream reader rejects incomplete shapes. The latter is a cleanup failure, not the former's anchor failure. A passing sampled90-frame trial does not erase either real counterexample.
+At the user's final close-out request, blue6 instability is explicitly deferred. Real frame30321 under the old41/33 red/blue floors loses most of blue6 before anchor processing:881 of1459 pixels that pass blue hue/saturation fail the value floor;501 lower-half pixels have expanded RGB565 B=24. The raw largest component stops at y210 and the cleaned candidate at y207. Reader7 and9 both reject this partial geometry. This differs from frame45625/63647's thin-anchor failure, which the general reader9 rule recovers in RTL replay. Changing33 to28 does not cross the next RGB565 blue level; diagnostic20/24 models recover the sign but were not used to justify a source change. The actual contributions of lighting, AGC/AWB and pose were not isolated. The final source is frozen; no universal environmental robustness or blue6 stability is claimed.
 
-两类真实失败必须分开：30158额外旋转蓝2的强白锚点只有1×3三像素，弱白也未增加邻接支持；固定人工诊断方向后笔画完整，但生产保留锚点拒识。37621额外旋转蓝1在原HSV中1180像素连通，RUN3将其切成两块，后续拒绝残缺字形。前者锚点、后者清理，不是一锅放宽阈值。90帧采样通过不能抹去这些反例。
+按用户最终收口要求，蓝6不稳定明确暂缓。真实frame30321在旧红/蓝41/33门槛下，在锚点之前就损失多数蓝6像素：1459个符合蓝色色相/饱和度的像素中，881个未通过亮度门槛，下半部501个像素的RGB565展开B值为24。原始最大分量只到y210，清理后候选只到y207，算法7和9均拒绝这块不完整几何。这不同于45625/63647的薄锚点失败，后者已由算法9通用规则在RTL回放中恢复。33改28没有跨过下一蓝色量化级，诊断20/24模型虽恢复标牌，也没有据此修改源码。光照、AGC/AWB与摆位各自影响尚未隔离；最终源码冻结，不宣称任意环境鲁棒性或蓝6稳定性已经解决。
+
+Two real failure mechanisms must remain distinct. Frame30158's rotated extra blue2 has only a1×3/3-pixel strict-white anchor; weak white adds no adjacent support. With a manually fixed diagnostic orientation its digit strokes are complete, but production retains anchor rejection. Historical frame37621's rotated extra blue1 is connected in raw HSV (1180pixels) but RUN3 split it into two pieces. ColourAlgorithm3/RUN2 restores its measured two-pixel connections in model replay; that fix has a different cause and validation path from the unresolved thin anchor. More admitted small noise can exhaust candidate capacity, which remains an explicit whole-frame rejection. A passing sampled90-frame trial does not prove every intervening frame passed.
+
+两类真实失败机制必须分开：30158额外旋转蓝2的强白锚点只有1×3三像素，弱白也未增加邻接支持；人工固定诊断方向后笔画完整，但生产保留拒识。历史37621额外旋转蓝1原HSV中1180像素连通，却被RUN3切成两块；颜色算法3/RUN2在模型回放中恢复了实测两像素连接。这与仍未解决的细锚点不同，须分别验证；更多小噪声可能耗尽容量，仍整帧拒绝。90帧采样通过不证明所有间隔帧通过。
 
 Relaxing the anchor to1pixel thickness was evaluated offline and rejected: a projected-location-constrained prototype falsely accepted16/232 negative cases containing a small noise cluster, versus0/232 for production. Larger image-only tests initially missed that small-pixel counterexample. No untested thin-anchor rule was deployed. Rotation tests cover measured synthetic angle/size sets and actual fixtures, not all possible homographies, clipping or blur. Lux, colour temperature and camera angle are not instrumented; no numeric operating range is claimed.
 
@@ -637,6 +786,7 @@ COURSE为可定位课程来源，USER为用户范围，DESIGN为实现/验收选
 |COURSE FPGA p46|SignalTap/ISSP/JTAG board tools / 板级工具|BCTL/GCTL/GRAB and actual discovery / 实际调试链 |
 |USER|1–6,onefoldableA4, no motion, postponed speech / 集合版式边界|Pixel-only IDs, C simulator and audio deferred / 真像素与延期说明 |
 |USER|Perspective, multiple contours, diagnostics and shared pool / 透视多轮廓诊断共享池|Reader5, SW0/1/8/9, active15/shared16 / 实际实现 |
+|USER|Simple C inventory/location/typed tracking API with explained commands / 简洁列举、定位和类型化跟踪接口及参数说明|Publicv3 four operations, independent141-bit query stream, CLI/Python and §7.10 / 四操作、独立查询、命令和逐参数说明 |
 |DESIGN|Same-frame/overflow/drop invariants; three-frame lock / 同帧溢出和锁定|Ownership, conservative rejection and counted loss / 所有权与明确失败 |
 
 The lecture grade percentages and dates do not define per-feature accuracy thresholds. Do not infer rubric points, deadlines or report requirements from this README; consult the supplied final Brief and current course notices. The group still owns its integrated robot tests, report and contribution assessment.
@@ -653,9 +803,9 @@ Demonstrate eight-frame raw calibration and atomic version commit; explain why i
 
 演示八帧原RGB校色和原子版本提交，解释空闲武装不忙、撤销不能重写已展示事件；展示SW0、SW1、同时开启、SW8公平算法比较及SW9真实纯相机暂停。区分源码ID、SOF哈希、实拍、模型/RTL回放和实体VGA确认，离线预览截图不等于显示器或仪器测量。
 
-OpenAI Codex assisted code, tests, models, marker recovery, tool execution, debugging and documentation. Real student ownership is listed separately; generated text does not certify human review. The team must understand and verify the work, select actual decisions/failures/tests for its AI appendix and produce its own required report/decision statement. The supervised demonstration/Q&A is performed by students without an AI assistant. A full authentic chat transcript requires export by the account owner if required; a reconstructed narrative must not be represented as an original transcript.
+OpenAI Codex assisted code, tests, models, marker recovery, tool execution, debugging and documentation. Real student ownership is listed separately; generated text does not certify human review. Brief p7 requires the relevant AI conversations and a one-page statement; the team must understand and verify the work and prepare that statement from actual decisions, failures and tests. The supervised demonstration/Q&A is performed by students without an AI assistant. A verified local transcript export may cover only the identified session; the account owner must supply any other relevant conversations. A reconstructed narrative must not be represented as an original transcript. Private reasoning, system instructions, tool internals and unrelated account content are excluded from the user-visible transcript.
 
-OpenAI Codex协助源码、测试、模型、标牌恢复、工具执行、调试和文档。学生归属另列，生成文字不证明人类已审阅。团队须理解验证工作，以真实决策/失败/测试撰写AI附录并完成自己的报告/决策说明；受监督演示问答由学生独立完成，不使用AI助手。若需完整真实对话，应由账号所有者导出，不能将重建叙述冒充原始记录。
+OpenAI Codex协助源码、测试、模型、标牌恢复、工具执行、调试和文档。学生归属另列，生成文字不证明人类已审阅。Brief第7页要求提交相关AI对话及一页说明，团队须理解验证工作，以真实决策、失败和测试完成说明；受监督演示问答由学生独立完成，不使用AI助手。经校验的本地对话导出只覆盖所标识会话，其它相关会话由账号所有者补齐，不能将重建叙述冒充原始记录。用户可见对话不包含私有推理、系统指令、工具内部记录或无关账号内容。
 
 Representative decisions worth explaining are: FSM-consumed action acceptance distinct from transport ACK; bounded shared candidates rather than colour quotas; FIFO/bank ownership rather than per-bit bus synchronisation; genuine anchor rejection rather than forced nearest digit; frame-original timestamps rather than PC receipt time; and separate MODEL/RTL/FIT/PROGRAMMED/CAMERA/VGA evidence. The version record includes errors and corrections as well as successes. No microphone, movement or untested lighting-range claim is hidden behind a general “complete” label.
 

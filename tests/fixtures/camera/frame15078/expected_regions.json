@@ -1,0 +1,124 @@
+{
+  "schema": "echo7-test-only-printed-regions-v1",
+  "coordinateSystem": "native320x240",
+  "frameId": 15078,
+  "inputSource": "MANUAL_VISUAL_ANNOTATION_OF_RECORDED_CAMERA",
+  "sourceImage": "frame.png",
+  "sourceImageSha256": "23a288f2f07c645eee27703d4980f1b0ad9c4feced0b80b57e83db3abed1fb39",
+  "annotationMethod": "Independent visual inspection of exact frame15078 native PNG before inspecting FPGA marker outputs. Labels and broad disjoint scoring rectangles were newly drawn from visible pixels; frame241 regions and candidate bboxes were not copied.",
+  "runtimeUse": "FORBIDDEN; host-only scoring expectations, never transmitted to FPGA or supplied to its recogniser.",
+  "regions": [
+    {
+      "label": "red1",
+      "isBlue": false,
+      "digit": 1,
+      "bbox": [
+        110,
+        0,
+        180,
+        90
+      ]
+    },
+    {
+      "label": "red2",
+      "isBlue": false,
+      "digit": 2,
+      "bbox": [
+        100,
+        134,
+        173,
+        226
+      ]
+    },
+    {
+      "label": "blue1",
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        224,
+        25,
+        270,
+        100
+      ]
+    },
+    {
+      "label": "blue2",
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        271,
+        42,
+        311,
+        111
+      ]
+    },
+    {
+      "label": "blue3",
+      "isBlue": true,
+      "digit": 3,
+      "bbox": [
+        220,
+        101,
+        265,
+        173
+      ]
+    },
+    {
+      "label": "blue4",
+      "isBlue": true,
+      "digit": 4,
+      "bbox": [
+        267,
+        112,
+        306,
+        176
+      ]
+    },
+    {
+      "label": "blue5",
+      "isBlue": true,
+      "digit": 5,
+      "bbox": [
+        213,
+        176,
+        261,
+        239
+      ]
+    },
+    {
+      "label": "blue6",
+      "isBlue": true,
+      "digit": 6,
+      "bbox": [
+        263,
+        179,
+        302,
+        239
+      ]
+    }
+  ],
+  "nonDigitRegions": [
+    {
+      "label": "BJ",
+      "markerType": "REFERENCE",
+      "isBlue": true,
+      "digit": null,
+      "bbox": [
+        110,
+        80,
+        176,
+        110
+      ],
+      "meaning": "Visible blue reference strip immediately below red1, without white numeral. This manual reference label is independent of the current hardware pairing outcome."
+    }
+  ],
+  "limitations": [
+    "The paper is rotated in plane relative to frame241. Its outer boundary is not wholly inside the320x240 image; this is a new fixed photographed pose, not a complete-page framing claim.",
+    "Exactly eight formal digits are visibly present: red1/2 and blue1..6. The two extra blue1/2 signs from frame241 are absent; no expected regions or duplicate-ID expectation are retained for them.",
+    "Red1 meets the upper image boundary. Blue5 and blue6 meet the lower image boundary. Visible glyphs and orientation anchors can be read, but complete physical main-region extents cannot be recovered from these clipped edges.",
+    "The blue reference strip is visually present below red1, without a white digit. Its visible presence is a host annotation, not a claim that hardware calibration pairing succeeded.",
+    "All digit labels and broad disjoint scoring rectangles were read from the exact native PNG before inspecting FPGA marker outputs. Regions are host-only centre-association expectations, never detector bboxes, calibration sampling ROIs or recognition inputs.",
+    "The paper rotation is continuous, not a change of public coordinate dimensions. External coordinates remain native320x240; no exact rotation angle is claimed by this annotation.",
+    "Different hardware trials must preserve this new arrangement. This retained image is a known regression/scoring input, not a new independent acquisition or a generalisation accuracy result."
+  ]
+}

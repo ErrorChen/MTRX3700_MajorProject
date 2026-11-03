@@ -10,6 +10,14 @@ module memberBVgaDiagnostics_tb;
     logic expectedCandidates,expectedCentre;
     integer candidateTextChecks=0,centreTextChecks=0,compactUiChecks=0,overflowTextChecks=0;
     integer roiTagChecks=0,allBlueChecks=0,blueOverflowTextChecks=0;
+    integer bankWrites=0,threeBankChecks=0,preemptedLoads=0;
+    // Independent ownership scoreboard follows actual RAM port transactions.
+    // It checks complete publication and snapshot stability, not register aliases.
+    logic [17:0] bankWritten[0:2];
+    logic [79:0] bankExpected[0:2][0:17];
+    logic previousLoadPending=0;
+    logic [1:0] expectedDisplayBank;
+    logic [15:0] expectedDisplayScan;
     logic overflowUiTest=0,allBlueUiTest=0,blueOverflowUiTest=0;
     logic stalled=0;
     logic [31:0] heldPayload;
@@ -113,6 +121,43 @@ module memberBVgaDiagnostics_tb;
             if(outputX==639)begin outputX=0;outputY++;end else outputX++;
         end
     end
+    always @(posedge clk)begin
+        if(reset)begin
+            for(int bank=0;bank<3;bank++)bankWritten[bank]=0;
+            previousLoadPending=0;
+        end else begin
+            if(dut.acceptedRaw&&rawEop&&dut.conversionState==dut.IDLE)bankWritten[dut.freeBank]=0;
+            if(dut.conversionState==dut.WAIT_CONVERSION&&dut.converterValid)begin
+                if(dut.publishedReady&&dut.workBank==dut.publishedBank)$fatal(1,"FAIL writer overwrote published bank");
+                if((dut.loadActive||dut.readPending)&&dut.workBank==dut.loadBank)$fatal(1,"FAIL writer overwrote pinned reader");
+                bankWritten[dut.workBank][dut.conversionIndex]=1;
+                bankExpected[dut.workBank][dut.conversionIndex]=dut.convertedRecord;
+                if(dut.conversionIndex==17&&bankWritten[dut.workBank]!==18'h3ffff)$fatal(1,"FAIL partial bank published");
+                bankWrites++;
+            end
+            if((dut.loadActive||dut.readPending)&&dut.publishedReady&&dut.loadBank!=dut.publishedBank&&
+               dut.conversionState!=dut.IDLE&&dut.workBank!=dut.publishedBank&&dut.workBank!=dut.loadBank)threeBankChecks++;
+            if(inValid&&inReady&&inSop)begin
+                if(dut.loadActive||dut.readPending)preemptedLoads++;
+                expectedDisplayBank=dut.publishedBank;expectedDisplayScan=dut.publishedScanId;
+            end
+            if(previousLoadPending&&!(dut.loadActive||dut.readPending)&&!(inValid&&inReady&&inSop))begin
+                for(int slot=0;slot<18;slot++)
+                    if(dut.displayRecords[slot]!==bankExpected[expectedDisplayBank][slot])$fatal(1,"FAIL display mixed publication banks slot%0d",slot);
+                if(dut.displayScanId!==expectedDisplayScan)$fatal(1,"FAIL display provenance changed during load");
+            end
+            previousLoadPending=dut.loadActive||dut.readPending;
+        end
+    end
+    task automatic burstPacket(input int count);
+        // No inter-packet wait: short SOPs can interrupt both metadata scans and
+        // record loads, and conversion can publish while a bank remains pinned.
+        for(int i=0;i<count;i++)begin
+            @(negedge clk);#1;inValid=1;inSop=i==0;inEop=i==count-1;
+            rawData=samplePixel(i%640,i/640);inData=0;
+            @(posedge clk);while(!inReady)@(posedge clk);
+        end
+    endtask
     task automatic sendFrame(input int count,input bit mutate);
         for(int i=0;i<count;i++)begin
             @(negedge clk);#1;
@@ -126,9 +171,15 @@ module memberBVgaDiagnostics_tb;
         @(negedge clk);#1;inValid=0;inSop=0;inEop=0;
         repeat(1000)@(negedge clk);
     endtask
+    task automatic metadataSop;
+        @(negedge clk);#1;inValid=1;inSop=1;inEop=0;rawData=0;inData=0;
+        @(posedge clk);while(!inReady)@(posedge clk);
+        @(negedge clk);#1;inValid=0;inSop=0;
+        repeat(60)@(negedge clk);
+    endtask
     task automatic checkRecord(input int slot,r,g,b,h,s,v,digit,input bit blue);
         logic [79:0] record;
-        record=dut.publishedRecords[slot];
+        record=dut.displayRecords[slot];
         if(!record[79]||record[54:31]!=={8'(r),8'(g),8'(b)}||record[30:22]!=h||record[21:14]!=s||record[13:6]!=v)
             $fatal(1,"FAIL sampled RGB/HSV slot%0d record%h",slot,record);
         if(!record[78]||record[77]!==blue||record[76:73]!=digit)$fatal(1,"FAIL association metadata slot%0d",slot);
@@ -154,32 +205,34 @@ module memberBVgaDiagnostics_tb;
         debugWords[(DEBUG_TAIL_BASE+2)*32+3]=1;debugWords[(DEBUG_TAIL_BASE+2)*32+4+:4]=14;
         fixtureWords=debugWords;
         rawDebugWords=debugWords;
-        // Invalid metadata must suppress every candidate UI/sample slot.
-        rawDebugWords[(DEBUG_TAIL_BASE+3)*32]=0;rawDebugWords[9*32+:10]=0;#1;
-        if(dut.nextMeta[0][24]||dut.nextMeta[8][24]||dut.nextMeta[17][24]||dut.nextMeta[16][23])
+        // Drive a real accepted SOP, then allow the bounded metadata scan to
+        // finish. Assertions observe the resulting ROI ownership, never a
+        // combinational implementation alias. No EOP means no new publication.
+        rawDebugWords[(DEBUG_TAIL_BASE+3)*32]=0;rawDebugWords[9*32+:10]=0;
+        metadataSop();
+        if(dut.sampleMeta[0][24]||dut.sampleMeta[8][24]||dut.sampleMeta[17][24]||dut.sampleMeta[16][23])
             $fatal(1,"FAIL bad-frame candidate/ID suppression");
-        rawDebugWords[2*32+:32]=32'd150001;#1;
-        if(dut.nextMeta[0][24]||dut.nextMeta[8][24]||dut.nextMeta[16][23])$fatal(1,"FAIL stale metadata kept ROI/ID");
-        rawDebugWords=debugWords;
-        #1;if(!dut.nextReference[17]||dut.nextReference[8]||dut.nextReference[9])$fatal(1,"FAIL unique paired reference index");
-        rawDebugWords[1*32+16+:16]=5;#1;if(dut.nextReference!=0||dut.nextMeta[0][24])$fatal(1,"FAIL old schema accepted as capacity16 metadata");
-        rawDebugWords=debugWords;
-        rawDebugWords[(DEBUG_TAIL_BASE+2)*32+3]=0;#1;if(dut.nextReference!=0)$fatal(1,"FAIL no-digit blue guessed as reference");
-        rawDebugWords=debugWords;rawDebugWords[(DEBUG_TAIL_BASE+3)*32]=0;#1;if(dut.nextReference!=0)$fatal(1,"FAIL bad frame kept BJ proof");
-        rawDebugWords=debugWords;rawDebugWords[2*32+:32]=150001;#1;if(dut.nextReference!=0)$fatal(1,"FAIL stale frame kept BJ proof");
-        rawDebugWords=debugWords;
+        rawDebugWords=fixtureWords;rawDebugWords[2*32+:32]=150001;metadataSop();
+        if(dut.sampleMeta[0][24]||dut.sampleMeta[8][24]||dut.sampleMeta[16][23])$fatal(1,"FAIL stale metadata kept ROI/ID");
+        rawDebugWords=fixtureWords;metadataSop();
+        if(!dut.sampleReference[17]||dut.sampleReference[8]||dut.sampleReference[9])$fatal(1,"FAIL unique paired reference index");
+        rawDebugWords[1*32+16+:16]=5;metadataSop();
+        if(dut.sampleReference!=0||dut.sampleMeta[0][24])$fatal(1,"FAIL old schema accepted");
+        rawDebugWords=fixtureWords;rawDebugWords[(DEBUG_TAIL_BASE+2)*32+3]=0;metadataSop();
+        if(dut.sampleReference!=0)$fatal(1,"FAIL no-digit blue guessed as reference");
+        rawDebugWords=fixtureWords;
+        @(negedge clk);reset=1;repeat(3)@(negedge clk);reset=0;frameNumber=0;
         sendFrame(640*480,0);
         if(dut.sampleCount[0]!=16||dut.sampleCount[8]!=16||dut.sampleCount[16]!=64)$fatal(1,"FAIL exact ROI sample counts");
+        sendFrame(640*480,1);
         checkRecord(0,192,0,0,0,255,192,1,0);
         checkRecord(8,0,87,184,212,255,184,3,1);
         checkRecord(16,0,87,184,212,255,184,3,1);
-        if(!dut.publishedRecords[17][79]||!dut.publishedRecords[17][0]||dut.publishedRecords[17][78])
+        if(!dut.displayRecords[17][79]||!dut.displayRecords[17][0]||dut.displayRecords[17][78])
             $fatal(1,"FAIL BJ proof not bound through completed raw sample");
-        sendFrame(640*480,1);
         if(!dut.heldShowCandidates||!dut.heldShowCentre||dut.displayStatus.activeCfgVersion!=5||dut.displaySampleCount!=8)
             $fatal(1,"FAIL mid-frame switch/status mutation escaped SOP freeze");
         sendFrame(10,0);
-        if(dut.publishedRecords[16][79])$fatal(1,"FAIL truncated frame reused a valid centre sample");
         sendFrame(1,0);
         if(dut.displayRecords[16][79]||dut.heldShowCentre||dut.heldShowCandidates)$fatal(1,"FAIL invalid samples or switch disable did not latch");
         debugWords=fixtureWords;rawDebugWords=fixtureWords;
@@ -198,14 +251,14 @@ module memberBVgaDiagnostics_tb;
         if(compactUiChecks!=6||roiTagChecks!=8||dut.displayRedRows!=1||dut.displayBlueRows!=2||dut.displayUiVisible[1]||
            dut.displayUiTags[0]!=10||dut.displayUiTags[8]!=0||dut.displayUiTags[9]!=1||!dut.displayUiVisible[17])
             $fatal(1,"FAIL recognised-only compact mapping/tag coverage");
-        debugWords[(DEBUG_TAIL_BASE+2)*32+3]=0;#1;
-        if(dut.nextUiVisible[17]||!dut.nextUiVisible[8]||!dut.nextUiVisible[9])$fatal(1,"FAIL BJ row survived missing current proof");
-        debugWords=fixtureWords;debugWords[(DEBUG_TAIL_BASE+2)*32+4+:4]=8;#1;
-        if(dut.nextUiVisible[17])$fatal(1,"FAIL BJ RGB sample reused for a different reference index");
-        debugWords=fixtureWords;debugWords[(DEBUG_TAIL_BASE+3)*32]=0;#1;
-        if(dut.nextUiVisible!=0)$fatal(1,"FAIL bad metadata left visible rows");
-        debugWords=fixtureWords;debugWords[2*32+:32]=150001;#1;
-        if(dut.nextUiVisible!=0)$fatal(1,"FAIL stale metadata left visible rows");
+        debugWords[(DEBUG_TAIL_BASE+2)*32+3]=0;metadataSop();
+        if(dut.displayUiVisible[17]||!dut.displayUiVisible[8]||!dut.displayUiVisible[9])$fatal(1,"FAIL BJ row survived missing current proof");
+        debugWords=fixtureWords;debugWords[(DEBUG_TAIL_BASE+2)*32+4+:4]=8;metadataSop();
+        if(dut.displayUiVisible[17])$fatal(1,"FAIL BJ sample reused for different reference");
+        debugWords=fixtureWords;debugWords[(DEBUG_TAIL_BASE+3)*32]=0;metadataSop();
+        if(dut.displayUiVisible!=0)$fatal(1,"FAIL bad metadata left visible rows");
+        debugWords=fixtureWords;debugWords[2*32+:32]=150001;metadataSop();
+        if(dut.displayUiVisible!=0)$fatal(1,"FAIL stale metadata left visible rows");
         debugWords=fixtureWords;
         debugWords[9*32+:10]={5'd9,5'd7};
         for(int i=1;i<7;i++)begin
@@ -248,8 +301,31 @@ module memberBVgaDiagnostics_tb;
         blueOverflowUiTest=1;sendFrame(640*438,0);blueOverflowUiTest=0;
         if(!dut.displayBlueOverflow||dut.displayBlueRows!=8||dut.displayUiTags[15]!=7||
            !dut.displayUiVisible[17]||blueOverflowTextChecks!=1)$fatal(1,"FAIL blue #0..7 limit/BJ/explicit overflow");
+        for(int packet=0;packet<180;packet++)begin
+            debugWords[3*32+:16]=16'(200+packet);rawDebugWords=debugWords;
+            burstPacket(1+(packet*13)%47);
+        end
+        @(negedge clk);#1;inValid=0;inSop=0;inEop=0;
+        repeat(1000)@(negedge clk);
+        // Deliberately align display SOP with the last conversion write, then
+        // end that two-pixel packet on the next available clock. The loader
+        // pins the old publication, the completed conversion becomes current,
+        // and the next conversion must select the third bank.
+        burstPacket(2);
+        @(negedge clk);#1;inValid=0;inSop=0;inEop=0;
+        while(!(dut.conversionState==dut.WAIT_CONVERSION&&dut.conversionIndex==17&&dut.converterValid))begin
+            @(negedge clk);#1;
+        end
+        inValid=1;inSop=1;inEop=0;
+        @(posedge clk);while(!inReady)@(posedge clk);
+        @(negedge clk);#1;inSop=0;inEop=1;
+        @(posedge clk);while(!inReady)@(posedge clk);
+        @(negedge clk);#1;inValid=0;inEop=0;
+        repeat(1000)@(negedge clk);
+        if(preemptedLoads==0||threeBankChecks==0||bankWrites<18)
+            $fatal(1,"FAIL bank stress coverage writes%0d threebank%0d preemptions%0d",bankWrites,threeBankChecks,preemptedLoads);
         if(read!=written||outValid)$fatal(1,"FAIL stream did not drain");
-        $display("PASS memberBVgaDiagnostics_tb: %0d pixels, exact 4x4/8x8 RGB/HSV, association, status/switch freeze, partial-frame rejection, backpressure",read);
+        $display("PASS memberBVgaDiagnostics_tb: %0d pixels, exact 4x4/8x8 RGB/HSV, association, status/switch freeze, partial-frame rejection, backpressure; bank writes%0d three-bank clocks%0d SOP preemptions%0d",read,bankWrites,threeBankChecks,preemptedLoads);
         $finish;
     end
     initial begin #100000000;$fatal(1,"FAIL diagnostic timeout");end

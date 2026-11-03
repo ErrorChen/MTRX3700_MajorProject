@@ -57,6 +57,7 @@
       "passMarker": "PASS colourSampler_tb",
       "sources": [
         "rtl/vision/candidate_pkg.sv",
+        "rtl/common/vision_pkg.sv",
         "rtl/interaction/colourSampler.sv",
         "tests/rtl/colourSampler_tb.sv"
       ]
@@ -104,6 +105,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -111,6 +113,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -138,6 +142,7 @@
         "rtl/vision/candidate_pkg.sv",
         "rtl/common/vision_pkg.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "tests/rtl/projectiveMarkerReader_tb.sv"
       ],
@@ -160,6 +165,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -167,6 +173,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -193,6 +201,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -200,14 +209,52 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
       "plusargs": [
         "+CONTINUOUS"
       ],
-      "inputSource": "SYNTHETIC_CONTINUOUS_FRAME_AND_BACKPRESSURE",
+      "inputSource": "SYNTHETIC_40_MS_CONTINUOUS_FRAME_AND_BACKPRESSURE",
       "timeoutSeconds": 300
+    },
+    {
+      "name": "perceptionCoreOverload_tb",
+      "top": "perceptionCoreReplay_tb",
+      "passMarker": "PASS perceptionCoreOverload_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCoreReplay_tb.sv"
+      ],
+      "plusargs": [
+        "+CONTINUOUS",
+        "+OVERLOAD"
+      ],
+      "inputSource": "SYNTHETIC_17_1609_MS_OVERLOAD_THEN_40_MS_RECOVERY",
+      "timeoutSeconds": 600
     },
     {
       "name": "hsvColourGate_tb",
@@ -242,6 +289,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -249,6 +297,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreReplay_tb.sv"
       ],
@@ -274,6 +324,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -281,6 +332,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreProfile_tb.sv"
       ],
@@ -327,6 +380,16 @@
       "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_NATIVE_ROI_REPLAY"
     },
     {
+      "name": "nativeAnchorSupport_tb",
+      "passMarker": "PASS nativeAnchorSupport_tb",
+      "sources": [
+        "rtl/vision/nativeAnchorReader.sv",
+        "tests/rtl/nativeAnchorSupport_tb.sv"
+      ],
+      "timeoutSeconds": 120,
+      "inputSource": "SYNTHETIC_AND_RECORDED_CAMERA_GENERIC_ANCHOR_COMPONENTS"
+    },
+    {
       "name": "boundedCandidatesPruning_tb",
       "passMarker": "PASS boundedCandidatesPruning_tb:",
       "sources": [
@@ -360,6 +423,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -367,6 +431,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreCalibration_tb.sv"
       ],
@@ -418,6 +484,7 @@
         "rtl/vision/candidate_pkg.sv",
         "rtl/common/vision_pkg.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "tests/rtl/projectiveMarkerReader_tb.sv"
       ],
@@ -490,6 +557,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -497,6 +565,8 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCorePause_tb.sv"
       ],
@@ -565,6 +635,7 @@
         "rtl/vision/boundedCandidates.sv",
         "rtl/vision/glyphBanks.sv",
         "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
         "rtl/vision/projectiveMarkerReader.sv",
         "rtl/tracking/targetTracker.sv",
         "rtl/interaction/colourSampler.sv",
@@ -572,10 +643,78 @@
         "rtl/vision/hsvColourGate.sv",
         "rtl/vision/horizontalRunFilter.sv",
         "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
         "rtl/top/perceptionCore.sv",
         "tests/rtl/perceptionCoreQuery_tb.sv"
       ],
       "inputSource": "PROTOCOL_READER_INJECTION"
+    },
+    {
+      "name": "mainColourSupportReader_tb",
+      "passMarker": "PASS mainColourSupportReader_tb",
+      "sources": [
+        "rtl/vision/mainColourSupportReader.sv",
+        "tests/rtl/mainColourSupportReader_tb.sv"
+      ],
+      "timeoutSeconds": 600,
+      "inputSource": "SYNTHETIC_COMPONENT_OWNERSHIP_AND_RECORDED_PIXEL_REGIONS",
+      "plusargs": [
+        "+MAIN_VECTORS={vectors}"
+      ]
+    },
+    {
+      "name": "calibrationPointMapper_tb",
+      "passMarker": "PASS calibrationPointMapper_tb",
+      "sources": [
+        "rtl/interaction/calibrationPointMapper.sv",
+        "tests/rtl/calibrationPointMapper_tb.sv"
+      ]
+    },
+    {
+      "name": "calibrationGeometry_tb",
+      "passMarker": "PASS calibrationGeometry_tb",
+      "sources": [
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
+        "tests/rtl/calibrationGeometry_tb.sv"
+      ]
+    },
+    {
+      "name": "perceptionCalibration_tb",
+      "passMarker": "PASS perceptionCalibration_tb",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
+        "rtl/top/perceptionCore.sv",
+        "tests/rtl/perceptionCalibration_tb.sv"
+      ],
+      "plusargs": [
+        "+SCENE_FILE={vectors}/calibration_scene_rgb565.hex"
+      ],
+      "timeoutSeconds": 1800,
+      "inputSource": "ONE_RECORDED_CAMERA_FRAME_REPEATED_IN_RTL"
     }
   ]
 }

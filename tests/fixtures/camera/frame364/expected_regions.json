@@ -1,0 +1,148 @@
+{
+  "schema": "echo7-test-only-printed-regions-v1",
+  "coordinateSystem": "native320x240",
+  "frameId": 364,
+  "inputSource": "MANUAL_VISUAL_ANNOTATION_OF_RECORDED_CAMERA",
+  "sourceImage": "frame.png",
+  "sourceImageSha256": "4fa44f9356ef44e526a4d3fad702638f3bce3f79ca10a72707a909234587dac9",
+  "annotationMethod": "Independent AI visual inspection of the exact native PNG and separately rotated extra-sign crops; no previous scene scoring regions or detector marker bboxes copied.",
+  "runtimeUse": "FORBIDDEN; host-only scoring expectations, never transmitted to FPGA or supplied to its recogniser.",
+  "regions": [
+    {
+      "label": "red1",
+      "isBlue": false,
+      "digit": 1,
+      "bbox": [
+        31,
+        0,
+        111,
+        89
+      ]
+    },
+    {
+      "label": "red2",
+      "isBlue": false,
+      "digit": 2,
+      "bbox": [
+        38,
+        150,
+        120,
+        239
+      ]
+    },
+    {
+      "label": "blue1_main",
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        164,
+        3,
+        218,
+        80
+      ]
+    },
+    {
+      "label": "blue2_main",
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        220,
+        10,
+        267,
+        80
+      ]
+    },
+    {
+      "label": "blue3",
+      "isBlue": true,
+      "digit": 3,
+      "bbox": [
+        173,
+        82,
+        226,
+        161
+      ]
+    },
+    {
+      "label": "blue4",
+      "isBlue": true,
+      "digit": 4,
+      "bbox": [
+        228,
+        82,
+        271,
+        151
+      ]
+    },
+    {
+      "label": "blue5",
+      "isBlue": true,
+      "digit": 5,
+      "bbox": [
+        177,
+        162,
+        229,
+        239
+      ]
+    },
+    {
+      "label": "blue6",
+      "isBlue": true,
+      "digit": 6,
+      "bbox": [
+        232,
+        153,
+        276,
+        225
+      ]
+    },
+    {
+      "label": "blue1_rotated_extra",
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        272,
+        17,
+        313,
+        78
+      ],
+      "visibleDigitRotationDegreesClockwise": 90
+    },
+    {
+      "label": "blue2_rotated_extra",
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        273,
+        80,
+        315,
+        137
+      ],
+      "visibleDigitRotationDegreesClockwise": 90
+    }
+  ],
+  "nonDigitRegions": [
+    {
+      "label": "BJ",
+      "markerType": "REFERENCE",
+      "isBlue": true,
+      "digit": null,
+      "bbox": [
+        34,
+        90,
+        111,
+        116
+      ],
+      "meaning": "Visible blue reference strip directly below red1. No white numeral is printed; exclude from the ten digit regions and every bay count."
+    }
+  ],
+  "limitations": [
+    "The A4 paper boundary is not wholly inside the image; this is a fixed photographed pose, not a complete-page framing claim.",
+    "The red2 and blue5 coloured main regions meet the bottom image boundary. Their visible white digits and orientation anchors are readable, but their complete physical main-region extents cannot be measured from this frame.",
+    "The upper edge of red1 meets the top image boundary; its white1 and direction anchor remain visible.",
+    "A dark/green object occupies part of the right paper/background below the extra rotated signs. Do not infer identities for hidden or unprinted regions.",
+    "These broad, disjoint host scoring rectangles associate observed marker centres with manually inspected visible signs; they are not detector-derived bboxes, calibration ROIs, exact physical dimensions, or recognition answers.",
+    "The two extra blue signs were also inspected after lossless quarter-turn and nearest-neighbour enlargement. Their white glyphs read1 and2 and their anchors establish the quarter-turn; no expected scene placement supplied the labels.",
+    "Reuse for new hardware scoring requires the same physical arrangement. Different frames/profiles of this recording are not independent generalisation tests."
+  ]
+}

@@ -1,0 +1,54 @@
+{
+  "buildId": 1946722349,
+  "frameId": 30321,
+  "configVersion": 9,
+  "captureStartUs": 2158076625,
+  "completionUs": 2158134551,
+  "readerAlgorithm": 7,
+  "colourAlgorithm": 3,
+  "redMinimum": 41,
+  "blueMinimum": 33,
+  "whiteMinimum": 84,
+  "whiteMaxSpread": 64,
+  "orientationProfile": 0,
+  "bypassPerspective": false,
+  "rawCameraMode": false,
+  "activeCandidateCapacity": 15,
+  "outputCandidateCapacity": 16,
+  "poolLayout": "SHARED_TOTAL",
+  "frameGood": true,
+  "candidateOverflow": false,
+  "redCandidateCount": 2,
+  "blueCandidateCount": 7,
+  "calibrationReferenceValid": false,
+  "schema": "EBP1",
+  "hardwareDebugSchemaVersion": 8,
+  "publicContractVersion": 3,
+  "inputSource": "RECORDED_CAMERA",
+  "originalCaptureStatus": "PASS",
+  "originalCaptureResult": "build/member_b/20261103T063047_128847Z_capture/result.json",
+  "originalCaptureResultSha256": "734d3c3b4beab4f36235974cd654afb94572882a29b397c87b6ea4e42db117f1",
+  "fresh": true,
+  "sameFrameVerified": true,
+  "files": {
+    "frame.png": "4516b99ec2508b5ae170526397e9a7dff1836633b0ac8401395cb1b0558abb93"
+  },
+  "use": "Actual blue6 partial candidate refusal; independently inspect candidate/raw-colour failure before claiming a thin-anchor fix covers it.",
+  "recordedFailure": {
+    "isBlue": true,
+    "printedDigit": 6,
+    "nativeBox": [
+      260,
+      177,
+      291,
+      207
+    ],
+    "hardwareReason": 1,
+    "hardwareAccepted": false,
+    "printedLabelSource": "Manual visual reading of exact camera PNG; host-only annotation."
+  },
+  "limitations": [
+    "Lower card/scene margins have changed slightly since frame15078; compare real pixels before assuming unchanged conditions.",
+    "Original acquisition reader7 profile is retained. Reader9 generic support does not by itself repair absent candidate geometry."
+  ]
+}

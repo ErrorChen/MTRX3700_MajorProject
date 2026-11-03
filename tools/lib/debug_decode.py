@@ -11,7 +11,8 @@ def schemaLayout(debugSchema):
 
     Schemas 1..5 retain eight candidates per colour; schema6 retains16 per
     colour. Schema7 has16 total shared slots. Four-bit active labels remain
-    separate from these completed stores, and the public contract stays v2.
+    separate from these completed stores. Schema8 retains that geometry and
+    introduces the public-v3 typed request/report fields.
     """
     if debugSchema not in (1, 2, 3, 4, 5, 6, 7, 8):
         raise ValueError("unsupported EBP1 schema")
@@ -130,26 +131,30 @@ def decodeWords(words):
     # each; old captures must never be silently reinterpreted as HSV inputs.
     readerAlgorithm = words[tail+7] >> 16 if debugSchema == 1 else (words[tail+7] >> 16) & 255
     colourAlgorithm = 0 if debugSchema == 1 else words[tail+7] >> 24
-    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else range(6) if debugSchema >= 6 else range(5)):
+    if readerAlgorithm not in ((0, 1) if debugSchema == 1 else range(10) if debugSchema == 8 else range(6) if debugSchema >= 6 else range(5)):
         raise ValueError("unsupported EBP1 reader algorithm")
     if colourAlgorithm not in (0, 1, 2, 3):
         raise ValueError("unsupported EBP1 colour algorithm")
     # Colour3 changes horizontal run support from three pixels to two while
     # retaining colour2's HSV gate and the subsequent causal cleanup. It was
-    # introduced only for the shared-pool schema7/reader5 implementation. Keep
-    # historical colour2 packets explicit: their pixels still require RUN3.
-    if colourAlgorithm == 3 and (debugSchema not in (7, 8) or readerAlgorithm != 5):
-        raise ValueError("colour algorithm 3 requires schema7/8 and reader algorithm 5")
+    # introduced for shared-pool schema7/reader5. Reader6 adds ownership of
+    # anchor components by the candidate bbox and was first published in
+    # schema8 with colour3. Keep historical reader5/colour2 and reader5/colour3
+    # explicit: neither may acquire reader6's component filter during replay.
+    if colourAlgorithm == 3 and (debugSchema not in (7, 8) or readerAlgorithm not in (5, 6, 7, 8, 9)):
+        raise ValueError("colour algorithm 3 requires schema7/8 and reader algorithm 5, 6, 7, 8 or 9")
     if readerAlgorithm == 3 and colourAlgorithm != 1:
         raise ValueError("reader algorithm 3 requires HSV colour algorithm 1")
     if readerAlgorithm == 4 and colourAlgorithm != 2:
         raise ValueError("reader algorithm 4 requires HSV colour algorithm 2")
     if readerAlgorithm == 5 and colourAlgorithm not in (2, 3):
         raise ValueError("reader algorithm 5 requires HSV colour algorithm 2 or 3")
+    if readerAlgorithm in (6, 7, 8, 9) and colourAlgorithm != 3:
+        raise ValueError(f"reader algorithm {readerAlgorithm} requires HSV colour algorithm 3")
     whiteMinimum, whiteSpread = (words[tail+7] >> 8) & 255, words[tail+7] & 255
     if readerAlgorithm in (2, 3) and (whiteMinimum != 96 or whiteSpread != 64):
         raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor96 and spread64")
-    if readerAlgorithm in (4, 5) and (whiteMinimum != 84 or whiteSpread != 64):
+    if readerAlgorithm in (4, 5, 6, 7, 8, 9) and (whiteMinimum != 84 or whiteSpread != 64):
         raise ValueError(f"reader algorithm {readerAlgorithm} requires weighted-luma floor84 and spread64")
     activeCapacity = (words[tail+5] >> 8) & 255 if debugSchema >= 4 else 8
     outputCapacity = (words[tail+5] >> 16) & 255 if debugSchema >= 4 else 8
@@ -191,15 +196,15 @@ def decodeWords(words):
             "buildId": words[tail+4], "readerAlgorithm": readerAlgorithm,
             "colourAlgorithm": colourAlgorithm,
             "whiteMinimum": whiteMinimum, "whiteMaxSpread": whiteSpread,
-            "whiteMode": {2: "QUARTER_WEIGHTED_LUMA", 3: "ROUNDED_STROKES_STRICT_ANCHOR", 4: "UNSATURATED_STROKES_STRICT_ANCHOR", 5: "UNSATURATED_STROKES_STRICT_ANCHOR"}.get(readerAlgorithm, "MIN_RGB_CHANNEL"),
-            "readerOrientationMode": "PER_MARKER_ANCHOR" if readerAlgorithm == 5 else "CONFIGURED_QUARTER_TURN",
-            "whiteThresholdExpression": ("R+2*G+B >= 384 OR (R+2*G+B+2 >= 4*whiteMinimum AND 2*(max(R,G,B)-min(R,G,B)) < max(R,G,B))" if readerAlgorithm in (4, 5) else
+            "whiteMode": {2: "QUARTER_WEIGHTED_LUMA", 3: "ROUNDED_STROKES_STRICT_ANCHOR", 4: "UNSATURATED_STROKES_STRICT_ANCHOR", 5: "UNSATURATED_STROKES_STRICT_ANCHOR", 6: "UNSATURATED_STROKES_STRICT_ANCHOR", 7: "UNSATURATED_STROKES_STRICT_ANCHOR", 8: "UNSATURATED_STROKES_STRICT_ANCHOR", 9: "UNSATURATED_STROKES_STRICT_ANCHOR"}.get(readerAlgorithm, "MIN_RGB_CHANNEL"),
+            "readerOrientationMode": "PER_MARKER_ANCHOR" if readerAlgorithm in (5, 6, 7, 8, 9) else "CONFIGURED_QUARTER_TURN",
+            "whiteThresholdExpression": ("R+2*G+B >= 384 OR (R+2*G+B+2 >= 4*whiteMinimum AND 2*(max(R,G,B)-min(R,G,B)) < max(R,G,B))" if readerAlgorithm in (4, 5, 6, 7, 8, 9) else
                 "R+2*G+B+2 >= 4*whiteMinimum" if readerAlgorithm == 3 else
                 "R+2*G+B >= 4*whiteMinimum" if readerAlgorithm == 2 else "min(R,G,B) >= whiteMinimum"),
             **({"whiteAnchorThresholdExpression": "R+2*G+B >= 4*whiteMinimum",
                 "candidateSizePruning": True} if readerAlgorithm == 3 else {}),
             **({"whiteAnchorThresholdExpression": "R+2*G+B >= 384", "whiteAnchorMinimum": 96,
-                "candidateSizePruning": True} if readerAlgorithm in (4, 5) else {}),
+                "candidateSizePruning": True} if readerAlgorithm in (4, 5, 6, 7, 8, 9) else {}),
             "userEventValid": bool(words[tail+2] & 1), "captureAgeAtSnapshotUs": captureAge,
             "processingLatencyUs": (words[5] - words[4]) & 0xffffffff,
             "freshAtSnapshot": freshTime(words[2], words[4], 150000)}
@@ -301,7 +306,7 @@ def compareMarkerPixels(imagePath, decoded, output):
         if not (0 <= bbox[0] <= bbox[2] < 320 and 0 <= bbox[1] <= bbox[3] < 240):
             raise ValueError("candidate bbox is not an in-frame colour main area")
         candidate = {"colour": "blue" if measured["isBlue"] else "red", "bbox": bbox}
-        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5):
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5, 6, 7, 8, 9):
             expected = classifyProjective(image, candidate, decoded["orientationProfile"],
                 decoded["redMinimum"], decoded["blueMinimum"], decoded["whiteMinimum"],
                 decoded["whiteMaxSpread"], output / f"marker_{index:02d}_projective",
@@ -311,7 +316,7 @@ def compareMarkerPixels(imagePath, decoded, output):
             profile = whiteProfileFor(decoded["readerAlgorithm"], decoded["whiteMinimum"], decoded["whiteMaxSpread"])
             cropArray = np.asarray(crop, dtype=np.int16)
             mask = Image.fromarray((whitePixelsFor(cropArray, profile)*255).astype(np.uint8))
-            if decoded["readerAlgorithm"] in (3, 4, 5):
+            if decoded["readerAlgorithm"] in (3, 4, 5, 6, 7, 8, 9):
                 strongMask = Image.fromarray((whitePixelsFor(cropArray, profile, anchor=True)*255).astype(np.uint8))
                 strongMask.save(output / f"marker_{index:02d}_strong_white.png")
         else:
@@ -323,9 +328,9 @@ def compareMarkerPixels(imagePath, decoded, output):
             differences.append("accepted")
         if measured["accepted"] and expected["accepted"]:
             differences.extend(field for field in ("digit", "quality") if measured[field] != expected[field])
-            if decoded["readerAlgorithm"] == 5 and measured["orientation"] != expected["orientationProfile"]:
+            if decoded["readerAlgorithm"] in (5, 6, 7, 8, 9) and measured["orientation"] != expected["orientationProfile"]:
                 differences.append("orientation")
-        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5):
+        if decoded["readerAlgorithm"] in (1, 2, 3, 4, 5, 6, 7, 8, 9):
             if measured["reason"] != expected["reasonCode"]:
                 differences.append("reason")
             if expected["windowScores"]:

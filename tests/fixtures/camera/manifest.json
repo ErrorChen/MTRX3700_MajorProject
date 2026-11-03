@@ -226,6 +226,158 @@
       "originalPath": "build/member_b/20261103T013531_934094Z_capture/result.json",
       "originalSha256": "44ccd33241d7b4fe5bfa054e3453ff87e832900cb6e714c491b47f8ff919f48c",
       "transformation": "Derived small acquisition/profile identity from original capture; retained only hashes of copied pixel/truth inputs, no binary dump or execution logs."
+    },
+    {
+      "path": "frame270/frame.png",
+      "sha256": "da7b0c928a35830bb4ab6c4d55e7a4a34d30c19777886d4846e04a99557f6e32",
+      "bytes": 61914,
+      "originalPath": "build/member_b/20261103T031731_104872Z_capture/capture/frame.png",
+      "originalSha256": "da7b0c928a35830bb4ab6c4d55e7a4a34d30c19777886d4846e04a99557f6e32",
+      "transformation": "NONE; byte-identical native camera PNG"
+    },
+    {
+      "path": "frame270/index.json",
+      "sha256": "f082049ca50644628ea0d17f904505152cab72f75e2d8328e8c69ffc6dec6388",
+      "bytes": 1282,
+      "originalPath": "build/member_b/20261103T031731_104872Z_capture/result.json",
+      "originalSha256": "78c9fa58806268846f97e067e7edb715d3608958fd6b78c505fa9b14bcfac45a",
+      "transformation": "Derived small acquisition/profile identity from the original capture result; no original binary dump or execution log included."
+    },
+    {
+      "path": "frame364/frame.png",
+      "sha256": "4fa44f9356ef44e526a4d3fad702638f3bce3f79ca10a72707a909234587dac9",
+      "bytes": 57427,
+      "originalPath": "build/member_b/20261103T040200_186255Z_capture/capture/frame.png",
+      "originalSha256": "4fa44f9356ef44e526a4d3fad702638f3bce3f79ca10a72707a909234587dac9",
+      "transformation": "NONE; byte-identical native camera PNG"
+    },
+    {
+      "path": "frame364/index.json",
+      "sha256": "39a54449c04781e642a4446f86154bf27049c8388cc84f19359be6cc21148bdd",
+      "bytes": 2920,
+      "originalPath": "build/member_b/20261103T040200_186255Z_capture/result.json",
+      "originalSha256": "f1f2782d77e7fef65a8c1cca0cbbe4ed2d2cf2df103f1511f69c1202eecfc718",
+      "transformation": "Derived small acquisition/profile identity from the original capture result; no original binary dump or execution log included."
+    },
+    {
+      "path": "frame364/expected_regions.json",
+      "sha256": "e32cf54f30855543ee8a4b60ff4240b9f7ceefa3327bef8ee1c2486b65fdfbe8",
+      "bytes": 4067,
+      "originalPath": "build/member_b/20261103T040200_186255Z_capture/capture/frame.png",
+      "originalSha256": "4fa44f9356ef44e526a4d3fad702638f3bce3f79ca10a72707a909234587dac9",
+      "transformation": "New independent visual annotation of this exact PNG; no previous scoring bbox or detector identity copied. Host test-only regions, including separately identified non-digit BJ."
+    },
+    {
+      "path": "frame241/frame.png",
+      "sha256": "1be1a747c12bb0accce3809c70ce5f8f3b4ae75f859b081c53f52053dd0f6afc",
+      "bytes": 57861,
+      "originalPath": "build/member_b/20261103T044324_762472Z_capture/capture/frame.png",
+      "originalSha256": "1be1a747c12bb0accce3809c70ce5f8f3b4ae75f859b081c53f52053dd0f6afc",
+      "transformation": "NONE; byte-identical native camera PNG"
+    },
+    {
+      "path": "frame241/index.json",
+      "sha256": "09d0aa9e6d6af1bbd508a15e1d18000b27be1183336c3611ba9ace12f499cebb",
+      "bytes": 3670,
+      "originalPath": "build/member_b/20261103T044324_762472Z_capture/result.json",
+      "originalSha256": "01e477a88df9e78c35f2ce797a7f1a122df9af1f44e6673b67593513bfbafb02",
+      "transformation": "Derived acquisition identity/profile from the exact recorded capture; no binary dump or execution log retained."
+    },
+    {
+      "path": "frame241/expected_regions.json",
+      "sha256": "20119f9712490b81d20c848578dd46ff9ee9175939abdea30921b70781fc9c06",
+      "bytes": 5255,
+      "originalPath": "build/member_b/20261103T044324_762472Z_capture/capture/frame.png",
+      "originalSha256": "1be1a747c12bb0accce3809c70ce5f8f3b4ae75f859b081c53f52053dd0f6afc",
+      "transformation": "New independent visual annotation of exact frame241, with explicit changed right-hand sign pose relative to364. Host-only scoring, never runtime recognition input. Revision2 narrows blue6 xMax275 to271 to remove the annotation overlap; identities unchanged. Previous frozen truth and original hardware trial remain preserved in ignored build outputs."
+    },
+    {
+      "path": "frame15078/frame.png",
+      "sha256": "23a288f2f07c645eee27703d4980f1b0ad9c4feced0b80b57e83db3abed1fb39",
+      "bytes": 56450,
+      "originalPath": "build/member_b/20261103T045317_513673Z_capture/capture/frame.png",
+      "originalSha256": "23a288f2f07c645eee27703d4980f1b0ad9c4feced0b80b57e83db3abed1fb39",
+      "transformation": "NONE; byte-identical native camera PNG"
+    },
+    {
+      "path": "frame15078/index.json",
+      "sha256": "4625344f2ed027604a7c941d7c2c274f89a51d2ab2e74093892b8ede8d5e4cc4",
+      "bytes": 3126,
+      "originalPath": "build/member_b/20261103T045317_513673Z_capture/result.json",
+      "originalSha256": "6b24f8d701aca139be13a5aefc84b1ebc29f3f88e1990f8dbf29640c41a0b7c6",
+      "transformation": "Derived small acquisition/profile identity from exact capture after physical paper rotation. No binary dump or execution log retained."
+    },
+    {
+      "path": "frame15078/expected_regions.json",
+      "sha256": "9929ab8dd889a4689db01ad8c81fe1db5d6654b1b0313245bba8589bda38ae63",
+      "bytes": 3904,
+      "originalPath": "build/member_b/20261103T045317_513673Z_capture/capture/frame.png",
+      "originalSha256": "23a288f2f07c645eee27703d4980f1b0ad9c4feced0b80b57e83db3abed1fb39",
+      "transformation": "New independent visual annotation of exact rotated frame15078: eight formal digits plus separately labelled non-digit blue reference. No detector identity or candidate bbox supplied truth."
+    },
+    {
+      "path": "frame45625/frame.png",
+      "sha256": "aa08297df6abeba63768a7d32b4f336b2708e737d595ea877080aae6b653203f",
+      "bytes": 55747,
+      "originalPath": "build/member_b/20261103T055719_167964Z_capture/capture/frame.png",
+      "originalSha256": "aa08297df6abeba63768a7d32b4f336b2708e737d595ea877080aae6b653203f",
+      "transformation": "NONE; byte-identical real native camera PNG"
+    },
+    {
+      "path": "frame45625/index.json",
+      "sha256": "efd0b9890aca838c28f7dbeb773c5d71564faa18640b73dbba70e99f176f33b3",
+      "bytes": 2056,
+      "originalPath": "build/member_b/20261103T055719_167964Z_capture/result.json",
+      "originalSha256": "5fae6e243007f3aa466f316b6bf174e58672ae947bb09480943e009817727b36",
+      "transformation": "Derived acquisition/profile and explicit hardware refusal; manual printed digit is host-only counterexample annotation"
+    },
+    {
+      "path": "frame63647/frame.png",
+      "sha256": "7b92662617cc954ebbc1772bf658658e39f30c73625147eafa398bdfe2dde675",
+      "bytes": 56346,
+      "originalPath": "build/member_b/20261103T060920_641543Z_capture/capture/frame.png",
+      "originalSha256": "7b92662617cc954ebbc1772bf658658e39f30c73625147eafa398bdfe2dde675",
+      "transformation": "NONE; byte-identical real native camera PNG"
+    },
+    {
+      "path": "frame63647/index.json",
+      "sha256": "d1608dd5c51bcdab4181021e43b8c0dd933d1de87b3f94d0874cd91fcdcb154e",
+      "bytes": 2301,
+      "originalPath": "build/member_b/20261103T060920_641543Z_capture/result.json",
+      "originalSha256": "b884f44e5603f50760d8ad1b84efa456d07c557abeed969e6f417f6dc649d724",
+      "transformation": "Derived actual acquisition and main-card anchor refusal; separate inner component geometry refusal is not a split-card claim"
+    },
+    {
+      "path": "frame30321/frame.png",
+      "sha256": "4516b99ec2508b5ae170526397e9a7dff1836633b0ac8401395cb1b0558abb93",
+      "bytes": 56026,
+      "originalPath": "build/member_b/20261103T063047_128847Z_capture/capture/frame.png",
+      "originalSha256": "4516b99ec2508b5ae170526397e9a7dff1836633b0ac8401395cb1b0558abb93",
+      "transformation": "NONE; byte-identical native camera PNG"
+    },
+    {
+      "path": "frame30321/index.json",
+      "sha256": "8c5c59fae1dee9c14eaa4cb85fab5a163dc574bc3abc28066c0e35e67ef736e3",
+      "bytes": 1862,
+      "originalPath": "build/member_b/20261103T063047_128847Z_capture/result.json",
+      "originalSha256": "734d3c3b4beab4f36235974cd654afb94572882a29b397c87b6ea4e42db117f1",
+      "transformation": "Derived acquisition identity and partial blue6 hardware refusal; manual digit label is host-only"
+    },
+    {
+      "path": "frame251/frame.png",
+      "sha256": "1d92356cf81fe7ac2e166b03ccc4d10fd45761f28ab14f33735b25425d574089",
+      "bytes": 55052,
+      "originalPath": "build/member_b/20261103T065056_662337Z_capture/capture/frame.png",
+      "originalSha256": "1d92356cf81fe7ac2e166b03ccc4d10fd45761f28ab14f33735b25425d574089",
+      "transformation": "NONE; byte-identical final programmed c63c9edb native camera PNG"
+    },
+    {
+      "path": "frame251/index.json",
+      "sha256": "1c5a222484c946667379be911c9a8bf99f71037bc8a4f50b38cbedf1ab02bf06",
+      "bytes": 4608,
+      "originalPath": "build/member_b/20261103T065056_662337Z_capture/result.json",
+      "originalSha256": "d09d3143542c9d28e6d24541141f4b1024b04fb2862f4413cef75a6dd217713c",
+      "transformation": "Derived final acquisition/calibration identity and accepted hardware list; not a multi-frame accuracy claim"
     }
   ]
 }

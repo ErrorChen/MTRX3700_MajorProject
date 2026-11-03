@@ -62,3 +62,7 @@ class MemberBClient:
 
     def clear(self):
         return self._execute("clear")
+
+    def status(self):
+        """Read current board time/config/readiness before using cached results."""
+        return self._execute("status")

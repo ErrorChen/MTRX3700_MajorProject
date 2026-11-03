@@ -131,6 +131,14 @@ module memberBDebug_tb;
             dut.probes.src_jtag={hostToggle,3'd0,4'd10,8'd0,8'd0,8'd0};waitClocks(8);
             if(dut.probeWord[31:0]!=32'h51525033 || queryTransfers!=item+1)
                 $fatal(1,"Address read consumed or changed a query result");
+            // A QRP3 packet has eight words; prior status-bank contents must
+            // not leak through its unused tail, even though storage is reused.
+            for(int address=8;address<perception_pkg::DEBUG_WORD_COUNT;address++)begin
+                dut.probes.src_jtag={hostToggle,3'd0,4'd10,8'd0,8'(address),8'd0};
+                waitClocks(8);
+                if(dut.probeWord[31:0]!==0 || queryTransfers!=item+1)
+                    $fatal(1,"Query tail was nonzero or consumed another packet at %0d",address);
+            end
         end
         // No valid result is explicit BUSY, with current query busy frozen in
         // metadata. The previous successful packet is never silently replaced.
@@ -141,6 +149,12 @@ module memberBDebug_tb;
         if(!dut.commandError || dut.probeWord[40] || queryTransfers!=16)$fatal(1,"Idle drain termination not explicit");
         issue(5,0);waitAck();waitClocks(2);
         if(dut.probeWord[46] || dut.probeWord[31:0]!==32'hffffffff)$fatal(1,"Refresh/error clear failed");
+        for(int address=8;address<perception_pkg::DEBUG_WORD_COUNT;address++)begin
+            dut.probes.src_jtag={hostToggle,3'd0,4'd5,8'd0,8'(address),8'd0};
+            waitClocks(8);
+            if(dut.probeWord[31:0]!==32'hffffffff)
+                $fatal(1,"Status refresh left query-tail mask active at %0d",address);
+        end
         // A stable old toggle remains in ISSP across reset; do not replay it.
         reset=1;waitClocks(3);reset=0;waitClocks(10);
         if(commandValid || queryResultReady || autoCycle || orientationProfile!=0 || calibrateArm || speechArm || dut.frozenWords!='0)

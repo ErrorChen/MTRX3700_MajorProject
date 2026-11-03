@@ -1,0 +1,161 @@
+{
+  "schema": "echo7-test-only-printed-regions-v1",
+  "coordinateSystem": "native320x240",
+  "frameId": 241,
+  "inputSource": "MANUAL_VISUAL_ANNOTATION_OF_RECORDED_CAMERA",
+  "sourceImage": "frame.png",
+  "sourceImageSha256": "1be1a747c12bb0accce3809c70ce5f8f3b4ae75f859b081c53f52053dd0f6afc",
+  "annotationMethod": "Independent visual inspection of exact frame241 before reading any detector marker identities; separately inspected rotated extra-sign crop. New scoring rectangles were drawn from visible pixels; frame364 regions were compared for pose change and were not reused.",
+  "runtimeUse": "FORBIDDEN; host-only scoring expectations, never transmitted to FPGA or supplied to its recogniser.",
+  "priorIndependentTruth": {
+    "path": "../frame364/expected_regions.json",
+    "sha256": "e32cf54f30855543ee8a4b60ff4240b9f7ceefa3327bef8ee1c2486b65fdfbe8",
+    "relationship": "Same printed identities but changed right-hand sign arrangement; prior truth retained unmodified and not applicable as the full current scoring geometry."
+  },
+  "regions": [
+    {
+      "label": "red1",
+      "isBlue": false,
+      "digit": 1,
+      "bbox": [
+        27,
+        0,
+        108,
+        92
+      ]
+    },
+    {
+      "label": "red2",
+      "isBlue": false,
+      "digit": 2,
+      "bbox": [
+        38,
+        149,
+        119,
+        239
+      ]
+    },
+    {
+      "label": "blue1_main",
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        164,
+        2,
+        219,
+        80
+      ]
+    },
+    {
+      "label": "blue2_main",
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        220,
+        9,
+        266,
+        80
+      ]
+    },
+    {
+      "label": "blue3",
+      "isBlue": true,
+      "digit": 3,
+      "bbox": [
+        169,
+        82,
+        224,
+        162
+      ]
+    },
+    {
+      "label": "blue4",
+      "isBlue": true,
+      "digit": 4,
+      "bbox": [
+        225,
+        82,
+        270,
+        153
+      ]
+    },
+    {
+      "label": "blue5",
+      "isBlue": true,
+      "digit": 5,
+      "bbox": [
+        174,
+        163,
+        231,
+        239
+      ]
+    },
+    {
+      "label": "blue6",
+      "isBlue": true,
+      "digit": 6,
+      "bbox": [
+        232,
+        155,
+        271,
+        229
+      ]
+    },
+    {
+      "label": "blue1_rotated_extra",
+      "isBlue": true,
+      "digit": 1,
+      "bbox": [
+        272,
+        49,
+        315,
+        111
+      ],
+      "visibleDigitRotationDegreesClockwise": 90
+    },
+    {
+      "label": "blue2_rotated_extra",
+      "isBlue": true,
+      "digit": 2,
+      "bbox": [
+        274,
+        113,
+        316,
+        172
+      ],
+      "visibleDigitRotationDegreesClockwise": 90
+    }
+  ],
+  "nonDigitRegions": [
+    {
+      "label": "BJ",
+      "markerType": "REFERENCE",
+      "isBlue": true,
+      "digit": null,
+      "bbox": [
+        32,
+        93,
+        109,
+        116
+      ],
+      "meaning": "Visible blue reference strip directly below red1 with no white numeral; excluded from every bay and digit count."
+    }
+  ],
+  "limitations": [
+    "The A4 paper boundary is not wholly inside the image; this is a fixed photographed pose, not a complete-page framing claim.",
+    "The red2 and blue5 coloured main regions meet the bottom image boundary; their visible white digits and orientation anchors are readable, but complete physical main-region extents cannot be measured.",
+    "Red1 meets the upper image boundary, with its white1 and direction anchor visible.",
+    "The right-hand extra signs and adjacent green object have moved down by approximately30 native pixels relative to frame364; the previously frozen frame364 scene condition is therefore not fully satisfied. Do not reuse frame364 scoring regions or call the arrangement unchanged.",
+    "All ten labels were visually read from this exact PNG. The two extra signs were also inspected after a lossless quarter-turn and nearest-neighbour enlargement; they read1 and2. No FPGA classification, detector bbox, candidate order or paper-slot answer supplied a label.",
+    "These broad disjoint host scoring regions associate marker centres with visually inspected signs. They are not exact physical bboxes, calibration ROIs or runtime recognition inputs.",
+    "The green object partly occludes the lower-right paper/background; no hidden sign or digit is inferred.",
+    "This is a known recorded regression and fixed-pose scoring input. It is not an independent generalisation sample; subsequent live scores require that this newly annotated arrangement remains fixed."
+  ],
+  "annotationRevision": {
+    "previousPath": "tests/fixtures/camera/frame241/expected_regions.json",
+    "previousSha256": "0e1632bf838c536e1e47c58183876099b34c31d532ec18b25a6992ac4deca7d7",
+    "change": "Only blue6 scoring-region xMax275 ->271. No label or other coordinate changes.",
+    "reason": "Remove hand-drawn two-column overlap with rotated extraBlue2. Region271 right edge was selected from the previously viewed PNG; no detector bbox or classification supplied the edit.",
+    "physicalSceneChange": false
+  }
+}

@@ -329,7 +329,594 @@ be recorded separately; no partial run certifies a later binary.
 
 ### Current-source completion record
 
-IN_PROGRESS: append final source/SOF identity, executed tests, fit/program and
-new-camera results here before delivery. Microphone input remains deferred by
-the user. Human ownership/sign-off, new physical occlusion/lighting-range tests
-and whole-team integration remain separate responsibilities.
+Checkpointca5dc67d completed publicv3/private8 and colourAlgorithm3/RUN2,
+reader5. SourceSHAca5dc67d6d53b412ddaf23254194d0c16e5bf16107c517609f8d7c4b91211de9;
+SOFSHA93e52e763b1de1582aebf7a92e7d7e207c0f9dafd9b2ea47d4e0afbf218b2217.
+MODEL20261103T030213_630482Z_test passed283tests plus counterfactual groups.
+The frozen37-bench ModelSim suite030213_680753 passed in21min34s, with no
+source drift. R6 clean Verilator5.050 passed six production/module benches and
+caught the deliberate early-lock mutant in108.125s (025433_037716).
+Query-store standalone validation passed1313checks/43queries/107packets;
+the new core query test passed17checks/13packets using explicit reader-result
+injection, not camera pixels. A VGA fixture that still sent schema7 while
+expecting a schema8 BJ label failed025428, then was corrected to use current
+package constants and passed; production VGA logic did not change.
+
+Quartus build025754_918086 passed in18min08s plus23.703s extra timing audit.
+The correct top/device fitted: adjustedALM27542/32070 (86%), physical placement
+32070/32070, with5380ALMs estimated recoverable by dense packing; this is not
+an out-of-capacity result. Registers37140,349M10K,47DSP,2793072memory bits.
+Query descriptors mapped to exactly2M10Ks as48×49 simple dual-port synchronous
+RAM (unused64-bit padding optimised away), not an array of reset registers.
+Worst four-corner setup/hold/recovery/removal slack2.678/0.118/25.222/0.477ns;
+all72timing/constraint checks and four-corner63/63synchroniser coverage passed.
+Request CDC covers24bits; resultToCamera covers1601endpoints; display796 is
+unchanged. Every changed endpoint is within intended protocol/debug fields.
+Independent warning/resource review found no new unexplained warnings or
+pending exceptions. Full compile reported100warnings, all retained/reviewed.
+Numeric MTBF remains NOT_ASSESSED. The debug frozen-bank clear adds noticeable
+logic; a read-masking optimisation was analysed but deliberately not applied
+to this passing source.
+
+Program031717_832062 passed on the same uniquely discovered DE-SoC[USB-1]
+FPGAindex2 (0x02D120DD), with actual ca5dc67d/schema8/public3 readback.
+Fresh frame270 in031731_104872_capture passed CRC/same-frame/model comparison,
+but **did not pass full-sheet recognition**: actual SW8 was1 (bbox bypass),
+SW9 was0, config1, red1 and a top blue sign were clipped. Only blue5 was
+accepted in that frame; calibrated0/BJfalse. This image is different from the
+earlier fixed-scene truth and must not be scored against frame30158's regions.
+The user was asked to return SW8/SW9 down and bring the full signs into view.
+
+Real query smoke031934_markers returned the actual blue5 observation. Subsequent
+BLUE_BAY/5 SELECT, GETblue5 and GETBJ passed public transaction checks: tracking
+tag2 stayed unchanged through query tags3/4, blue5 remained locked, and missing
+BJ produced a sole zero-measurement QUERY_NOT_FOUND packet. Details are in
+build/member_b/ca5dc67d_initial_query_smoke.json. This is partial-scene interface
+evidence, not a ten-sign, red-function, calibration or arbitrary-lighting pass.
+R7 recorded-frame270 normal and bypass RTL/model comparison032112_857697 passed.
+Normal-model investigation separately exposed an adjacent-card anchor ownership
+failure: blue2/3/4 can include the next sign's white anchor and reject ambiguity.
+Its cause is separate from the clipped red1, actual SW8 setting and prior1×3
+anchor limit; no physical normal-mode success was claimed for this new pose.
+
+README §7.10 was expanded after the user requested clearer parameters: every
+command, valid type/digit combinations, GET=3 versus REFERENCE=3 versus F=15,
+transaction tags, target substitutions, return codes, coordinates and executable
+Python imports are explained in both languages. Independent implementation
+review corrected readiness semantics, report-reason priority, query preservation
+of tracking and the absence of an implemented run-time default-restore command.
+
+### 2026-11-03, reader6 and command explanation follow-up
+
+The source now identifies readerAlgorithm6, while retaining publicv3/schema8
+and colourAlgorithm3. A white anchor component must have its exact doubled
+bbox centre within its original measured candidate bbox. Full containment
+was rejected experimentally because it lost17 previously accepted real
+observations and four synthetic ones. The centre rule kept every previous
+accepted candidate's bbox/type/digit/quality/orientation in33recorded-image
+profiles:272 to274 accepts, restoring only frame270's blue3/4. These are
+replays of preserved camera images, not33new independent acquisitions.
+Frame270's blue2 still rejects UNKNOWN_PATTERN/ABDG; its actual E stroke
+exists, but the estimated quad puts most samples outside it. No digit or
+orientation is guessed. The clipped red1 remains a separate physical-input
+blocker. Evidence: build/member_b/reader6/real_matrix.json.
+
+The native RTL latches the34-bit owner bbox with its quad and compares10-bit
+X/9-bit Y doubled centres before rounding. Targeted RTL passed18independent
+edge/half-pixel/ownership cases,42anchor ROIs,131072division checks and
+524288clipping checks. Three reader vectors (real frame270 and two explicit
+own/neighbour-anchor counterfactuals) passed8960sample-coordinate comparisons.
+Frame270's reader-only latency was282418cycles/5.648ms; this is not capture
+or end-to-end latency. Evidence: reader6_targeted/result.json.
+
+Versioned exports use MODEL_8, PROJECTIVE_VECTORS_5 and NATIVE_ANCHOR_VECTORS_2
+(24words, original bbox appended). Historical reader5 keeps its original
+models/formats and full-reader RTL replay explicitly sets
+ENFORCE_OWNER_BOUNDS=0; reader6 uses1. Current shared-pool RTL does not pretend
+to reproduce earlier/split-pool architectures. Host decoding fails closed
+for unsupported combinations.145related HOST tests passed, including reader6
+CLI propagation, unchanged historical5 and interface-profile drift rejection
+(reader6_host_validation/result.json).
+
+The previously reviewed QRP3 resource optimisation is now implemented: eight
+packet words are stored, and the unused tail is masked to zero at the32-bit
+read port. It avoids clearing88stored words on every query response. Debug
+tests explicitly read every tail word after each of16packets and verify that
+a subsequent status freeze restores all96words. Both debug/link benches passed
+034008_295970. This changes no public or private wire format.
+
+Source9070d1ed (SHA9070d1ed03edaa301cb43f823e211fed01cbc865a463f2d5fcb9ec35ed9a5193)
+is under final37-bench simulation and Quartus build034215_716773. Full MODEL
+034125_979536 passed310tests in268.007s, plus counterfactual groups; R6 clean
+Verilator5.050/Bash034126_392190 passed six benches and caught the intended
+early-lock mutation in112.172s. These are not fitting or board claims.
+
+README7.10 now explains every command, all four request fields, valid selectors,
+GET versus SELECT, JSON return interpretation and parameter substitutions.
+Independent review checked seven real CLI help invocations and Python/RTL
+signatures (reader6_host_validation/readme_7_10_review.json); all passed.
+
+The completed checkpoint is recorded below. Microphone input remains deferred
+by the user. Human ownership/sign-off, numeric physical operating ranges,
+remaining relevant AI conversation exports, new occlusion/lighting tests and
+whole-team integration remain separate responsibilities.
+
+### 2026-11-03, reader6 completed board and interface validation
+
+Source9070d1ed completed all37 ModelSim benches with no source drift
+(034125_931495). Build034215_716773 passed in1105.766s plus26.406s explicit
+timing audit:27071/32070 adjusted ALMs,37253 registers,349/397 M10K,
+47/87 DSP and2793072 memory bits. Worst accepted setup/hold/recovery/removal
+slack was2.601/0.107/25.034/0.442ns. All72 timing checks and63/63 synchroniser
+chains at each of four corners passed; quantitative MTBF is NOT_ASSESSED.
+The100 normalised warnings matched the previous reviewed checkpoint; none
+were newly unexplained. Query storage remained two M10K,48×49 useful bits.
+The query-tail read mask reduced memberBDebug total ALUT2287 to1005.
+
+SOF SHA256 is725882cfe7bf547acdb3da3c3a5e7a5066d19bf181fca0c904d022dc3042da6d.
+Program040143_422680 selected the discovered DE-SoC USB-1 FPGA, verified the
+same target identity and read back9070d1ed/public3/schema8. Capture040119
+correctly failed before programming because the new build manifest and old
+board differed; that failure was retained. Fresh capture040200_186255 produced
+real frame364,config1,ten accepted printed digits and one uniquely paired BJ.
+Its PNG, hash, origin, profile and independently reviewed host-only regions
+are retained under tests/fixtures/camera/frame364. Paper edges touch the image;
+this is not a claim that every physical sheet edge is visible. R7 replay
+040546_827101 compared these actual pixels/profile with both RTL modes.
+
+Three real recalibrations040344_444187,040348_656946 and040353_069673 passed
+eight-sample commits and busy-request rejection, advancing config2/3/4.
+Board-time poll upper bounds were580208,604969 and532525us; these are
+conservative command-to-observed-completion bounds, not exact red1 onset
+latencies. Last hardware sampling recorded252 red/504 blue pixels; a later
+same-image model measurement of288/492 uses a different ROI/time and is
+explicitly separate. Raw RGB validation does not imply AWB/AEC lock.
+
+The real publicv3 interface test040433_321702 passed LIST, typed GET,
+red1/red2/BJ SELECT, blue1/2 duplicate ambiguity, CLEAR and unaffected tracking
+requests during queries. It held a query under backpressure while camera
+frames continued and a genuine calibration committed config4 to5: held
+payload/time/config remained unchanged, then a new query returned the new
+configuration. All issued requests, responses and profile identities are
+recorded by tools/validate_member_c_interface.py.
+
+Normal hardware trials040656_032083 scored900/900, then SW8 bypass trials
+041414_952228 also scored900/900, both three trials of30 distinct fresh frames
+with ten signs. The first comparison was INVALID_COMPARISON because the host
+runner changed. Normal trials were therefore repeated using the identical
+frozen-checkpoint wrapper:041845_157073 scored900/900, zero wrong IDs/misses/
+outside-region results. reader6_sw8_comparison_repeated.json is valid; both
+modes pass. This scene demonstrates the physical bypass mechanism but does
+not demonstrate an accuracy advantage or necessity for the normal algorithm.
+These are sampled frames, not a claim about every intervening frame.
+
+The user confirmed all four SW0/SW1 combinations and BJ, then confirmed that
+SW0=SW1=SW9=1 shows only the camera. The later actual readback already had
+SW9 down, and blue3 requestTag75 was locked again at frame44819/config9.
+reader6_raw_user_confirmation.json distinguishes USER_REPORTED_PHYSICAL raw
+display from the hardware-confirmed restoration; no raw-up status snapshot
+was captured in this transition. No physical switch was simulated by the PC.
+
+### 2026-11-03, reader7 main-colour ownership and overload investigation
+
+Source7408a02d1009327f790bf246331e7f718f4671ba9f3998233ce07374ffb51ef9
+keeps public3/schema8/colour3 and identifies reader7. Frame270's blue2 contained
+a real three-pixel E stroke, but raw pixels belonging to the neighbouring blue4
+pulled its estimated lower corner from[244,61] to[244,72]. Taking supports from
+the unique largest four-connected raw-colour component restores seven of
+seven E samples instead of one of seven. The component bbox must match all
+four original candidate edges; ties, mixed bounds or active-label overflow
+reject. Area is never used to assign a number. SW8 skips this additional scan.
+
+mainColourSupportReader uses eight active labels,320×4 synchronous line RAM
+and128×28 synchronous support RAM. Targeted RTL passed565 cases/13689 checks,
+including512 small topologies,27 external vectors, merge/retirement/ties,
+overflow, held inputs and reset. A union-support-loss mutant was caught by
+the intended support assertion; ModelSim's raw exit0 was correctly converted
+to failure by the wrapper. Full-reader integration passed normal/bypass and
+historical reader6; maximum measured reader-only processing on these vectors
+was1319652 cycles/26.393ms, excluding acquisition. Historical algorithms remain
+explicit and are not silently reinterpreted.
+
+MODEL042234_461679 passed341 tests plus counterfactual groups. Separately,
+410 synthetic cases preserved295 prior accepts and had zero false accepts
+among236 negatives. Across33 recorded-image profiles accepts rose274 to275,
+with no lost IDs/orientations/bboxes. The strict all-field equality comparison
+remains FAIL because an existing blue3 quality increased192 to255; the separate
+non-regression assessment explicitly permits that improvement. These are
+recorded-camera replays, not new board captures.
+
+R6 run042119_525858 failed on the old continuous-frame test at frame3. An
+independent ModelSim trace confirmed that its17.1609ms source period, which
+omitted skipped sensor-row time, delivered frame3 at34.323470ms while the two
+banks were READING and READY. The core correctly rejected the entire incoming
+frame; at51.483070ms it published frame3 as bad/resourceDrop with zero matches.
+The previous assertion incorrectly required every such frame to be observed.
+The in-progress larger simulation042108_403104 was explicitly INTERRUPTED,
+not reported as passing. Verification now separates a free-running40ms source
+representing the measured camera from the original17.1609ms overload, retaining
+drop/ownership/backpressure checks and requiring fresh three-frame relock after
+recovery. No ready feedback is added to the simulated camera.
+
+Build042031_633519 passed full compilation and the explicit four-corner timing
+gate at04:40:52UTC. Source7408a02d binds SOF SHA256
+0ebb6a4849cd1f5e9499cca80929ee198682cc3f287e72ea1defc11663c23a39.
+Fitting used27810 adjusted ALM,38002 registers,351 M10K and47 DSP. The new
+supportMemory128×28 and lineLabels320×4 each occupy one physical M10K, rather
+than a register array. Full compile took1190s; fitter itself10min36s, with
+placement and routing successful. This was active computation, not the earlier
+memory-starved stalled build. All100 warnings match the previous reviewed
+normalised set; full timing details remain in the source-bound result.
+
+The detailed placement table displays32071/32070 ALMs while the root entity
+table reports32069.9. Both values are retained in main_colour_resource_review;
+local Quartus18.1 help documents proportional attribution of shared ALMs across
+entities but does not establish the exact integer summary rounding formula.
+FIT succeeded without an overuse error. This accounting difference must not
+be presented as one extra physical ALM or hidden as spare placement headroom.
+
+The revised cadence tests passed four independent ModelSim modes: continuous
+40ms,17.1609ms overload followed directly by40ms recovery, truncated-frame
+recovery, and protocol collision injection. The overload produced exactly two
+whole-frame input drops and two stale-result rejections; the next request's
+three new frames locked only on the third. Dropped frames wrote zero pixels;
+admitted frames wrote exactly76800 sequential addresses. Stalled reports did
+not change. Evidence:core_cadence_validation/summary.json. The production RTL
+did not require a scheduling change.
+
+Course R6 rerun043842_301612 passed all eight module/system benches and caught
+the deliberately early-lock tracker mutation in228.031s, below the300s rule.
+It includes both normal and overload system tests. Nine host runner tests
+separately passed and guard against silently dropping either scenario. The
+39-bench ModelSim development regression043535_957637 is still running;
+programming and fresh reader7 camera evidence remain pending at this entry.
+
+### 2026-11-03, reader7 completed checkpoint and two photographed poses
+
+The previously pending development regression043535_957637 completed at
+05:10:31UTC with39/39 ModelSim benches passing. Together with R6
+043842_301612 (eight system/module benches plus the rejected early-lock
+mutation), this completes the recorded simulation checkpoint for source
+7408a02d1009327f790bf246331e7f718f4671ba9f3998233ce07374ffb51ef9.
+Build042031_633519 passed fitting and the explicit final four-corner timing
+gate; its SOF SHA256 is
+0ebb6a4849cd1f5e9499cca80929ee198682cc3f287e72ea1defc11663c23a39.
+Program044313_012680 succeeded on the discovered DE-SoC USB-1 Cyclone V
+target and verified build7408a02d/public3/schema8. This is reader7 board
+evidence; later reader8 model defaults do not relabel it.
+
+Fresh capture044324_762472 produced frame241. Its two extra blue1/2 signs
+had moved approximately30 pixels relative to frame364, so the earlier frozen
+frame364 predictions are retained with an explicit scene-condition mismatch.
+They are not retrospectively claimed as predictions of this changed pose.
+Three recalibrations044349_203668,044421_302088 and044426_305022 passed;
+the observed board-time completion bounds were592011,580674 and600539us.
+The publicv3 interface test044436_346297 passed41 checks. R7
+044627_573160 passed both RTL modes on the exact frame241 capture.
+
+The corrected, independently labelled frame241 truth regions were used by
+normal run044951_489860:900/900 printed digits, zero wrong IDs,90 current
+reports and99 distinct observations including request transitions. Its maximum
+board capture-to-completion latency was65.417ms. The preceding truth-v1
+run044701_227993 remains retained; the v2 correction removed an overlapping
+score-region edge and did not retrospectively replace that run's inputs.
+The matched SW8 bypass run045104_494342 also scored900/900, with91 total
+observations and45.580ms maximum latency. reader7_sw8_comparison.json is
+COMPARISON_VALID under the user's unchanged-scene attestation. All four
+SW0/SW1 combinations were confirmed physically by the user. Neither these
+scores nor that confirmation proves an accuracy benefit from perspective
+recovery or substitutes for a reader7 SW9-up hardware snapshot.
+
+The subsequent physically rotated pose is a separate eight-sign scene,
+retained as frame15078. Normal run045611_428051 scored717/720, with three
+missing printed observations and no wrong IDs. Its strict hardware result is
+FAIL: four of95 retained observations failed, including one unreliable or
+unlocked target report. Maximum latency was58.494ms. Matched bypass
+045949_085041 scored720/720 and passed, with44.143ms maximum latency.
+reader7_rotated_sw8_comparison.json is a valid comparison containing that
+normal-mode failure; it is not converted into a pass because aggregate
+recognition exceeds95%. These results do not demonstrate an R9 digit benefit
+for the normal algorithm. A later bounded search saved30 distinct fresh
+images, frames32136..38058, all with blue6 accepted and no frame/overflow
+failure. rotated_failure_capture/result.json correctly records
+NO_FAILURE_CAPTURED_IN_BOUNDED_RUN. It neither erases the earlier failures nor
+supplies a captured blue6 failure image for a claimed repair.
+
+### 2026-11-03, reader8 projective calibration development, not yet board evidence
+
+The rotated frame15078 exposed a separate calibration limitation. Red1's
+bbox[117,1,176,87] and its blue reference bbox[115,81,170,105] have native
+axis gap-7 pixels even though the strip is correctly below the slanted card.
+The old axis-aligned blue inset also includes white/background pixels:
+495 raw samples have B minimum57 and other-channel maximum174, so purity
+fails independently of the pairing decision. Merely loosening the gap test
+cannot provide valid calibration. The stored diagnosis remains under
+rotated_calibration_15078; it is recorded-pixel analysis, not a new commit.
+
+Reader8 preserves reader7 digit, anchor, ownership, white and colour3 rules.
+It adds same-frame measured quads for calibration, allowing a blue strip with
+a four-pixel bbox minimum to publish geometry while retaining the numbered
+card's24-pixel edge and400-pixel area gates. SW8 bypass publishes no such
+quads. Default host MODEL/export metadata now names reader8; explicit
+readers1..7 retain their historical behaviour and version IDs. Nine exported
+frame15078 digit/map/mask/candidate files were byte-identical between7 and8.
+The thin-blue synthetic test remains UNKNOWN and never becomes a bay.
+
+The new maintained geometry oracle uses forward homographies, canonical
+scale320 and exact floor-Q4 coordinates, including negatives. It compares the
+formal strip projection with the actual component under a scale-based corner
+budget, edge ratios and forward half-plane bounds, requires unique cyclic
+matching, and samples each object's own inset polygon. Blue sampling order
+follows the winning cyclic correspondence. No inverse matrix or new RGB frame
+buffer is required by this design. The initial nearest-Q4 experiment remains
+separate from the new floor-Q4 results.
+
+The floor model preserved30/30 old valid real profiles, produced31 raw-pure
+pairs, rejected all215 neighbouring bays even when their accepted flags were
+removed, and rejected six wrong-reference geometries. Of540 controlled
+rotation/perspective/scale geometries,536 passed; four small projected-gap
+collapse cases remain conservative rejections. Five raw-colour contamination
+cases and the15-sample negative were rejected. Model sampling of frame15078
+suggests blue floor28 instead of33. In the RGB565 input representation there
+is no blue-channel level between24 and33, so this floor change alone changes
+no pixel classification; it is not a digit-recovery claim.
+
+Targeted host/model validation passed46 tests, and14 focused historical
+tests passed after making the current8 and historical7 defaults explicit.
+The817-record geometry vectors retain valid, invalid, rounded-degenerate,
+extrapolation and cyclic-order cases. RTL integration, complete current-source
+regression, fitting/timing, programming and new calibration-camera validation
+are still separate gates at this entry. Reader7's fitted/programmed evidence
+must not be presented as reader8 completion. Microphone input remains deferred.
+
+### 3 November 2026, 05:49–06:08 UTC — configuration fix, full-core replay and fit failure
+
+The complete MODEL run `20261103T054332_443689Z_test` passed355 tests and the
+counterfactual entry. Its preceding failures concerned stale default-version
+assertions and a missing datasheet description; those failures remain recorded.
+
+An independent RTL probe found that the eighth old-version calibration sample
+could coincide with a mode/configuration change and later request a commit.
+`reader8_geometry_port_validation/config_boundary_result.json` retains the FAIL.
+The repair binds a complete attempt to `attemptCfgVersion`, rejects changed
+versions through WAIT/COLLECT/VALIDATE/COMMIT and immediately gates collection
+and commit. An acknowledged commit is final. Pending SW8/orientation changes
+also take priority over an old-profile commit at the core SOF boundary.
+Updated interaction tests and the original counterexample passed ModelSim;
+core calibration passed318 checks, including3px versus49-Q4 movement,
+unchanged old thresholds and no false acknowledgement on mode switches.
+See `reader8_geometry_port_validation/receipt.json` for source/log hashes.
+
+`perception_calibration/perceptionCalibration_tb_verilator/result.json` passed
+52 frames derived from the single actual frame15078:116 checks,18 raw-RGB
+sampling frames, three terminal events, one SOP commit and SELECT1–6 each
+locking only on its third new simulated observation. Permission revocation
+and configuration changes retained the old48/20 profile; a fresh eight-frame
+window committed37/28. Each sample contained177 red/272 blue pixels using
+the reset/default-derived geometry. Earlier177/274 model samples used a
+different profile. CSV files preserve samples, events and reports. This is
+RTL_SIM of repeated recorded pixels, not52 independent camera acquisitions.
+
+Source645102d6 SHA256 is
+`645102d67d5e166d4298fb8ca5d79464a5a0ddc82524fcad05c13b905b6d7a9e`.
+Actual R6 passed eight benches plus the caught early-lock mutant in255.766s
+(`20261103T060008_784610Z_verilator_course`). An earlier loaded-machine run
+exceeded300s and remains FAIL. The runner now reuses an identically compiled
+core only within the current clean run, with binary/source/tool hashes and
+separate continuous/overload simulation logs;13 HOST tests cover this change.
+It never loads a previous run's binary or relaxes the300s gate.
+
+Full build `20261103T055358_022378Z_build` FAILED placement preparation:
+Error170012 requires3374 LABs, but the5CSEMA5 has3207. The incomplete-fit
+estimate is33142 ALMs (103%),39589 registers and57 DSPs. These are not
+completed timing/placement results. MAP correctly inferred16×88 geometry
+storage as M10K. No SOF from this attempt was programmed. The earlier
+e6a60680 build was interrupted for the proved configuration bug. Interrupted
+full ModelSim runs retain partial results and interruption records, never a
+full-suite PASS. VGA storage/control resource reduction is in progress; the
+board still runs the successful7408a02d checkpoint.
+
+Fresh frame45625 (`20261103T055719_167964Z_capture`) passed CRC, same-frame
+and glyph checks with no candidate overflow, but rejected blue6 with reason4.
+Its strict-white anchor is a closed1×3 component with three pixels; only the
+two-column requirement fails. Adjacent unsaturated edge pixels fall below the
+strong-white threshold. This differs from the earlier unrecorded uncertain
+stroke/split refusals. Exact PNG/profile: `tests/fixtures/camera/frame45625/`.
+A conservative strong-seed/weak-support model restores this example, but is
+not yet a production RTL or camera fix. No global white threshold was lowered.
+
+中文记录：真实图回放已验证许可撤销、版本切换拒旧、八帧采样、原子提交和
+蓝1–6三帧锁定；R6实际入口通过，但拟合因LAB超限失败，尚未下载。
+新实拍已保存蓝6锚点只剩一列的拒识反例。资源优化与锚点修复分别验证，
+MODEL、RTL_SIM、失败拟合和真实相机证据不能相互替代。
+
+### 3 November 2026, 06:09–06:33 UTC — generic anchor recovery and resource reuse
+
+Fresh recorded frame63647 (`20261103T060920_641543Z_capture`) retains another
+reader7 anchor refusal. Its full blue6 box remains[264,176,296,236]; an extra
+inner blue island is not the earlier unrecorded split-card failure. Both
+frame45625 and63647 are preserved with original pixels/profile in the small
+camera fixtures. No historical result has been relabelled as reader9.
+
+Reader9 adds one general rule, shared by every red/blue digit and rotation.
+All four strict-anchor hypotheses run first. Zero strict matches, no hazard
+and exactly one closed thin strong seed permit one additional scan through
+the existing native component engine. Its complete weak support must retain
+every seed pixel, contain no foreign strong pixels and pass the original
+closure, size, area and ownership conditions. True strong count is retained;
+fallback quality is capped at192. SW8 and historical reader profiles keep
+strict behaviour. There is no blue6, slot or scene-position branch.
+
+Final native source SHA256 is
+`943f3330ac0550168c76ad30b8d5a90abcc8f27cdae4768ffdd4a0eae7f8348c`.
+Actual component RTL passed73 cases/1193 checks, including27 supports,
+14 refusals, two overflows and one ambiguity. Strict old/new cycle comparison
+passed1868 ROIs and7,288,257 cycles, including overflow/ambiguity. A deliberate
+foreign-strong mutant failed as required; the checked runner propagated a
+nonzero result despite ModelSim's raw `$fatal` exit behaviour. Independent MAP
+estimated1434→1589 ALMs,2228→2492 ALUTs,1196→1390 registers, with1280 RAM bits
+and10 DSPs unchanged. These are isolated synthesis estimates, not full fitting.
+Receipt: `build/member_b/native_anchor9/review.json`.
+
+MODEL preserved all old decisions across33 recorded profiles/330 ROIs and
+410 synthetic cases/577 ROIs: zero lost/changed IDs, changed qualities or
+negative false accepts. Eleven added host tests cover32 formal type/digit/
+quarter-turn combinations and explicit counterexamples. The current-source
+targeted actual ModelSim run `20261103T062653_461164Z_test` passed11 normal and
+11 bypass cases, including both real failures, strict-priority/multiple-seed/
+foreign-bridge negatives, four type/rotation examples and unknown/deleted
+anchors. Normal mode recovered the two real blue6 anchors; this is RTL_SIM
+using recorded pixels, not new CAMERA_HW. Full43-bench regression is separate.
+
+VGA diagnostic work/published records now use a three-bank synchronous M10K
+store; displayed records remain stable during serial loading and SOP
+preemption. Actual old/new pixel and handshake equivalence passed3,944,178
+pixels. The enhanced bench exercised2214 writes,46 load preemptions and17
+cycles with all three banks owned. Independent same-settings MAP estimated
+9908→7332 ALMs,9747→6189 ALUTs,6517→4016 registers; it inferred96×77bits of
+M10K, with20 DSPs unchanged. Pipeline/SW9/arithmetic tests passed in
+`20261103T061918_135877Z_test`. No display function was removed to save logic.
+
+Current full build `20261103T062826_889919Z_build` uses source
+`c63c9edbbd669744c7dee86f060352bf48ff9557bb0989f8084091860e4691d2`.
+At this entry it is RUNNING, with the old7408a02d still programmed. A successful
+isolated MAP or pixel replay is not evidence of final fit, timing or VGA
+hardware. The complete flow, new SOF identity and fresh camera tests remain
+required. The maintained inventory now covers230 files and43 RTL benches;
+structural validation passed and human R8 sign-off remains pending.
+
+中文记录：按用户要求采用通用判断规则，分时复用原扫描硬件；蓝6实拍只是
+反例输入，不是专用识别分支。旧严格路径逐周期等价通过，薄锚点补查及拒识
+反例实跑通过。VGA面板改用同步RAM，新旧逐像素一致，独立综合减少逻辑。
+完整新工程仍在构建，不能将这些结果称为已经下载或相机验收通过。
+
+### 3 November 2026 — final scope freeze and remaining blue6 failure
+
+The user requested that blue6 instability be deferred and that work close
+after one final programme. Production source remainsc63c9edb; no threshold
+or recognition changes were made in response to the following new frame.
+Fresh frame30321 (`20261103T063047_128847Z_capture`) still came from7408a02d.
+Its blue6 raw HSV region is already fragmented:26 components, largest410px
+ending aty210; cleanup leaves331px ending aty207. Of1459 hue/saturation-blue
+pixels,881 fail the current value33 gate;501 lower-half pixels have expanded
+blue24. A28 floor produces the same quantised mask. Diagnostic20/24 models
+recover the sign, but these are not calibration or hardware acceptance.
+Lighting/AGC/AWB/pose causes remain unisolated. The image is retained as
+`tests/fixtures/camera/frame30321/`; its PNG SHA256 is
+`4516b99ec2508b5ae170526397e9a7dff1836633b0ac8401395cb1b0558abb93`.
+This upstream failure is separate from the two recovered thin-anchor inputs.
+
+Final MODEL `20261103T063253_699527Z_test` passed370 tests in273.388s plus the
+independent counterfactual command. It used an explicit900s host-run timeout;
+the first default300s timeout remains FAIL. The course R6 budget was not
+changed: run062658 passed its first seven benches but hit300s during the
+last compilation, so its final bench/mutant did not execute and the aggregate
+remains FAIL. Historical source645102d6's255.766s R6 PASS is not a current
+source PASS. The broad current43-bench ModelSim run062727 was intentionally
+interrupted after eight completed benches to honour the close-out scope;
+its partial results/interruption record are retained. Current targeted
+normal/bypass/component/equivalence proofs remain individually valid. The
+existing52-frame changed-core test is being completed using Verilator,
+separately from the course300s claim.
+
+The pre-programme prediction was frozen at06:34:11UTC in
+`reader9_predictions/predictions.json`, SHA256
+`a5ed8fd0bbb688e2e4b2c6ce2d920347c2bfa3f9ebeb233ccc157fe09062ba24`.
+It records design expectations, not measurements. The separate condition
+assessment flags frame30321's slight pose/photometric change. No final90-frame
+trial, SW8 advantage or new physical VGA confirmation is implied by a single
+close-out capture. Those checks are deferred rather than silently passed.
+
+中文记录：用户要求蓝6问题暂缓、最后一次下载后收口，源码冻结。
+370项MODEL通过；R6本轮因300秒总限时失败，不能引用旧版本成功代替。
+完整43项ModelSim按收口范围中止并保留已完成八项，针对性仿真单独计证。
+本次仅完成最终构建、下载和新帧必要核验，不再安排三轮/开关对照实验。
+
+The current-source52-frame Verilator integration subsequently PASSED:
+19.219s compile,258.016s simulation,116 checks,18 accepted raw-sample frames,
+three expected events and one atomic commit. All SELECT1–6 lock sequences
+were0,0,1 on their three new simulated observations. Source hashes matched
+thec63c9edb build throughout. Exact result SHA256 is
+`b34358caeb4d45dc1e2cf49bba5d992455fabe15648f21a12e6efe1a61c92209`,
+at `reader9_calibration/perceptionCalibration_tb_verilator/result.json`.
+CSV samples/events/reports and evidence.json preserve each transition.
+This repeats recorded frame15078 with report-paced input; it is neither
+52 independent camera acquisitions nor a course R6 aggregate-budget PASS.
+
+### 3 November 2026, 06:50 UTC — final programme and close-out
+
+**Final source:**
+`c63c9edbbd669744c7dee86f060352bf48ff9557bb0989f8084091860e4691d2`.
+**Final SOF SHA256:**
+`3e4f572055f63c02436608623a7994fbf5d840cccc13ba7b8e5c11bca2524d1d`.
+Build `20261103T062826_889919Z_build` PASSED the complete Quartus18.1 flow
+in1267.797s, followed by27.453s explicit timing/CDC checks. Fitter finished
+at17:47:18 Sydney time:29133 adjusted ALMs,40579 registers,356/397 M10Ks,
+57/87 DSPs and2806736 block-memory bits. The placement column is32069.1
+ALMs: the adjusted91% figure is not spare placement capacity promised to C.
+The integrated core hierarchy uses20009.5 adjusted ALMs,49 M10Ks and33 DSPs;
+this is not a separately fitted C-integration budget. VGA diagnostics now
+use3945.2 adjusted ALMs and two M10Ks. Geometry and display stores inferred
+real synchronous RAM.
+
+All72 timing checks across four corners passed; worst setup/hold/recovery/
+removal slack is+2.139/+0.118/+27.361/+0.393ns. Illegal/unconstrained clocks
+and input/output paths are zero. All63 expected synchroniser chains appear
+at each corner; MTBF acceptance remains NOT_ASSESSED.100 compiler warnings
+were retained and reviewed: after source-path/line normalisation, there are
+no new warning descriptions relative to7408a02d. The unchanged bounded
+index/truncation/shift and signed-minimum sentinel warnings are explained
+in `reader9_closeout/warnings_review.json`; no warning suppression or new
+false path was added.
+
+Programme `20261103T065044_691029Z_program` successfully downloaded the new
+SOF **once**, to the discovered `DE-SoC [USB-1]` FPGAindex2,
+`5CSE(BA5|MA5)/5CSTFD5D5/..`, ID0x02D120DD. Exit0 and board readback both
+confirmed buildc63c9edb/public3/schema8. No persistent flash or Git remote
+write was performed.
+
+Fresh capture `20261103T065056_662337Z_capture` PASSED new-transaction,
+CRC/schema, same-frame and all nine candidate pixel/model agreement checks.
+Frame251 uses reader9/colour3, SW8=0 and SW9=0. All eight formal digits
+(red1/2, blue1–6) were accepted; the uniquely paired BJ strip is valid with
+quality255. Eight raw-RGB sampling frames completed automatic calibration:
+cfg1, red33/blue28,204 red samples and324 blue samples; the last sampling
+frame20 passed sampler/frame/pairing/geometry/window checks. Success event1
+was issued at785857us. The capture spans9942193→10001632us, giving59.439ms
+on the same board timebase. The event time is not an arm-to-commit interval.
+Interaction is idle/armed, busy0, audioReady0. Current frameGood1 and
+candidateOverflow0 coexist with the retained transport fault bit and two
+startup drops; no zero-drop continuous-run claim is made.
+
+The genuine image and acquisition identity are preserved as
+`tests/fixtures/camera/frame251/`, PNG SHA256
+`1d92356cf81fe7ac2e166b03ccc4d10fd45761f28ab14f33735b25425d574089`.
+The final pose differs from earlier reference frames; no historical truth
+regions or multi-trial scores were reused. One successful frame does not
+resolve blue6 instability. By explicit user direction, this is the last
+programme and development stops here: no new SW0/SW1/SW8/SW9 physical
+confirmation, final90-frame trials, current41-check C bench or microphone
+test was claimed. Historical tests remain available with their real sources.
+
+Close-out materials are `reader9_closeout/receipt.json`, the source-bound
+one-page `member_b_datasheet.pdf` (three-trial measurements explicitly
+PENDING), and `member_b_ai_statement_draft.pdf` (student review unsigned).
+The visible-message AI transcript is a read-only export of the identified
+session; it excludes private reasoning/system/tool content and does not
+claim to cover every project conversation. These local files are not a
+Canvas submission. The final source/SOF hand-off archive is
+`build/member_b/member_b_c63c9edb_closeout.zip`; its generated manifest records
+relative file hashes and the exact SOF/source binding. No compiler database
+or personal toolchain is included.
+
+最终中文交接：c63c9edb已通过完整构建与四角时序并最后下载一次，板上身份
+已核对。新frame251识别红1/2、蓝1–6及BJ，自动八帧校色提交cfg1/R33/B28，
+单帧处理延迟59.439毫秒。蓝6稳定性按用户要求暂缓；当前R6总限时失败、
+完整43项仿真中止及最终物理开关/三轮验收未执行均已明确记录，不能称全部
+课程验收完成。README、OWNERS和本版本记录为维护入口，麦克风继续暂缓。
+
+Read another fresh image without rebuilding/downloading / 继续读新图、不再下载：
+
+```powershell
+& 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe' tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' --timeout 120 capture --fresh
+```

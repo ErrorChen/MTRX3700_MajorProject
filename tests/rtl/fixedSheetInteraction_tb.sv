@@ -7,6 +7,12 @@ module fixedSheetInteraction_tb;
     logic enable=1,permit=1,debugCalArm=0,debugSpeechArm=0;
     logic frameValid=0,frameGood=1,red1Paired=1,red2Seen=1;
     logic [15:0] frameId=0,configVersion=0,activeCfgVersion=0;
+    // Models perceptionCore's nonblocking configuration update at input SOF.
+    // The interaction sees the old version on that edge, then the new version
+    // immediately afterwards; this is different from changing it at negedge.
+    logic switchConfigAtSampleEdge=0;
+    always @(posedge clk)
+        if(switchConfigAtSampleEdge) activeCfgVersion<=activeCfgVersion+16'd1;
     logic sampleResultValid=0,sampleGood=1,commitAck=0;
     logic [15:0] commitVersion=0;
     logic collectEnable,commitRequest,calibrationAttempt;
@@ -60,9 +66,19 @@ module fixedSheetInteraction_tb;
         frameValid=0;sampleResultValid=0;commitAck=0;debugCalArm=0;debugSpeechArm=0;
         enable=1;permit=1;frameGood=1;red1Paired=1;red2Seen=1;sampleGood=1;
         userEventReady=1;frameId=0;configVersion=0;activeCfgVersion=0;commitVersion=0;
-        timeUs=startUs;
+        timeUs=startUs;switchConfigAtSampleEdge=0;
         repeat(2) tick();
         @(negedge clk);reset=0;attempts=0;eventTotal=0;
+    endtask
+    task automatic expectConfigurationFailure;
+        flushEvent();
+        if(eventTotal!=1 || events[0].eventType!=EVENT_CALIBRATION_FAILED ||
+           events[0].reason!=REASON_CAL_SAMPLES_INVALID ||
+           events[0].configVersion!=activeCfgVersion || collectEnable ||
+           commitRequest || calibrated || busy)
+            $fatal(1,"configuration change did not cancel the uncommitted window");
+        repeat(4)tick();
+        if(eventTotal!=1)$fatal(1,"configuration change produced duplicate terminal events");
     endtask
     task automatic badSample;
         @(negedge clk);sampleGood=0;
@@ -235,6 +251,57 @@ module fixedSheetInteraction_tb;
         timeUs=10000;repeat(12) frame(0);
         if(attempts!=1 || eventTotal!=1 || busy || calibrated)
             $fatal(1,"failed explicit startup rearm retried automatically");
+
+        // A collection attempt owns one configuration, including its time spent
+        // waiting for permission. Granting permission cannot revive old geometry.
+        restart(0);arm();permit=0;frame(0);frame(0);frame(0);
+        if(state!=INTERACTION_WAIT_PERMIT)$fatal(1,"configuration WAIT setup");
+        @(negedge clk);activeCfgVersion=1;permit=1;#1;
+        if(collectEnable || commitRequest)$fatal(1,"changed WAIT configuration was enabled");
+        tick();expectConfigurationFailure();
+
+        // Mid-window mode/configuration changes stop the raw collection gate
+        // immediately and produce one failure even before another frame arrives.
+        restart(0);arm();beginAttempt();repeat(4)frame(1);
+        @(negedge clk);activeCfgVersion=1;#1;
+        if(collectEnable || commitRequest)$fatal(1,"old collection gate survived configuration change");
+        tick();expectConfigurationFailure();
+
+        // Regression for the observed review counterexample: the eighth valid
+        // old-config sample and SW8/SOF version increment share the same clock.
+        // Accepting this sample on that edge is harmless only if validation can
+        // never turn the obsolete eight-sample set into a commit request.
+        restart(0);arm();beginAttempt();repeat(7)frame(1);
+        @(negedge clk);frameId=frameId+1;frameValid=1;sampleResultValid=1;
+        switchConfigAtSampleEdge=1;tick();
+        if(activeCfgVersion!=1 || sampleCount!=8 || state!=INTERACTION_CAL_VALIDATE)
+            $fatal(1,"same-edge eighth-sample configuration stimulus was not exercised");
+        @(negedge clk);frameValid=0;sampleResultValid=0;switchConfigAtSampleEdge=0;
+        tick();
+        if(commitRequest)$fatal(1,"eighth old-config sample requested commit after same-edge switch");
+        expectConfigurationFailure();
+
+        // A mode change after the final sample, or while waiting for the next
+        // SOF commit, is equally invalid. These cover distinct FSM branches.
+        restart(0);arm();beginAttempt();repeat(8)frame(1);
+        if(state!=INTERACTION_CAL_VALIDATE)$fatal(1,"configuration VALIDATE setup");
+        activeCfgVersion=1;tick();expectConfigurationFailure();
+        restart(0);arm();beginAttempt();samples();
+        @(negedge clk);activeCfgVersion=1;#1;
+        if(commitRequest)$fatal(1,"obsolete pending commit was not gated immediately");
+        tick();expectConfigurationFailure();
+
+        // Equality, rather than ordered comparison, owns the configuration.
+        // Acknowledged commits remain final, including 0xffff -> 0 wrap and a
+        // simultaneous permit withdrawal; this must not be mistaken for failure.
+        restart(0);activeCfgVersion=16'hffff;configVersion=16'hffff;
+        arm();beginAttempt();samples();
+        @(negedge clk);activeCfgVersion=0;configVersion=0;commitVersion=0;
+        commitAck=1;permit=0;tick();
+        @(negedge clk);commitAck=0;flushEvent();
+        if(eventTotal!=1 || events[0].eventType!=EVENT_CALIBRATION_DONE ||
+           events[0].configVersion!=0 || !calibrated || commitRequest)
+            $fatal(1,"acknowledged wrapped commit was rolled back by configuration guard");
         $display("PASS fixedSheetInteraction_tb");
         $finish;
     end

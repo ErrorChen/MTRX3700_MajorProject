@@ -107,7 +107,7 @@ module memberBVgaOverlay_tb;
     task automatic referenceMetadata(input integer frameId,input logic validPair,input logic good,input integer age,input integer schema);
         begin
             metadata(frameId,good,age,1);
-            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(schema),16'd2};
+            debugWords[31:0]=32'h45425031;debugWords[1*32+:32]={16'(schema),16'(perception_pkg::PERCEPTION_CONTRACT_VERSION)};
             debugWords[84*32+:32]=32'h4f000000;
             debugWords[85*32+:32]=debugWords[25*32+:32];
             debugWords[86*32+:32]=debugWords[26*32+:32];
@@ -146,10 +146,10 @@ module memberBVgaOverlay_tb;
         // BJ is a separately proven blue reference. Rejected blue pixels alone
         // must never invent this label, and older schemas have no such proof.
         expectedReference=1;
-        referenceMetadata(7,1,1,100,7);sendPixels(9600,1,1,0);
-        referenceMetadata(8,0,1,100,7);sendPixels(9600,0,1,0);
-        referenceMetadata(9,1,0,100,7);sendPixels(9600,0,1,0);
-        referenceMetadata(10,1,1,150001,7);sendPixels(9600,0,1,0);
+        referenceMetadata(7,1,1,100,perception_pkg::DEBUG_SCHEMA_VERSION);sendPixels(9600,1,1,0);
+        referenceMetadata(8,0,1,100,perception_pkg::DEBUG_SCHEMA_VERSION);sendPixels(9600,0,1,0);
+        referenceMetadata(9,1,0,100,perception_pkg::DEBUG_SCHEMA_VERSION);sendPixels(9600,0,1,0);
+        referenceMetadata(10,1,1,150001,perception_pkg::DEBUG_SCHEMA_VERSION);sendPixels(9600,0,1,0);
         referenceMetadata(11,1,1,100,4);sendPixels(9600,0,1,0);
         expectedReference=0;
         // Consecutive one-pixel/truncated packets must retain their own metadata.

@@ -41,6 +41,11 @@ module fixedSheetInteraction #(
     eventReason_t lastAutoFailureReason;
     logic [1:0] red1Count, red2Count;
     logic [15:0] lastFrame, lastFrameConfig, lastSampleFrame;
+    // A collection window belongs to exactly one segmentation/orientation/
+    // bypass configuration. A later mode change cancels it, including the
+    // edge after its eighth sample; it must never commit old samples in a new
+    // mode. A commit already acknowledged by the commit domain remains final.
+    logic [15:0] attemptCfgVersion;
     logic [31:0] stateStartUs;
     logic [31:0] elapsedUs;
     logic frameCurrent, adjacentFrame, nextRed1Confirmed, nextRed2Confirmed;
@@ -61,8 +66,8 @@ module fixedSheetInteraction #(
         kind = busy ? KIND_CALIBRATION : KIND_NONE;
         // Permit remains a continuous condition; revoke takes priority before a
         // new same-domain SOF commit. A previously asserted commitAck is final.
-        collectEnable=state==INTERACTION_CAL_COLLECT && enable && permit;
-        commitRequest=state==INTERACTION_CAL_COMMIT && enable && permit;
+        collectEnable=state==INTERACTION_CAL_COLLECT && enable && permit && activeCfgVersion==attemptCfgVersion;
+        commitRequest=state==INTERACTION_CAL_COMMIT && enable && permit && activeCfgVersion==attemptCfgVersion;
         userEventValid=eventCount!=0 && !reset;
         userEvent=eventCount!=0 ? eventFifo[readPointer] : userEvent_t'('0);
         popEvent=userEventValid && userEventReady;
@@ -115,6 +120,7 @@ module fixedSheetInteraction #(
             haveAutoFailure<=0;lastAutoFailureType<=EVENT_CALIBRATION_FAILED;
             lastAutoFailureReason<=REASON_OK;
             lastFrame<=0;lastFrameConfig<=0;lastSampleFrame<=0;
+            attemptCfgVersion<=0;
             red1Count<=0;red2Count<=0;sampleCount<=0;
             stateStartUs<=0;interactionId<=0;calibrationAttempt<=0;
             eventOverflow<=0;readPointer<=0;writePointer<=0;eventCount<=0;
@@ -161,6 +167,7 @@ module fixedSheetInteraction #(
                         if(eventCount<4) begin
                             attemptAllowed<=0;interactionId<=interactionId+16'd1;
                             calibrationAttempt<=1;sampleCount<=0;haveSample<=0;
+                            attemptCfgVersion<=activeCfgVersion;
                             speechArmed<=0;red2Count<=0;stateStartUs<=timeUs;
                             state<=permit ? INTERACTION_CAL_COLLECT : INTERACTION_WAIT_PERMIT;
                         end else eventOverflow<=1;
@@ -180,6 +187,8 @@ module fixedSheetInteraction #(
                 end
                 INTERACTION_WAIT_PERMIT:begin
                     if(!enable) finishInteraction(EVENT_INTERACTION_CANCELLED,REASON_ENABLE_REVOKED,activeCfgVersion);
+                    else if(activeCfgVersion!=attemptCfgVersion)
+                        finishInteraction(EVENT_CALIBRATION_FAILED,REASON_CAL_SAMPLES_INVALID,activeCfgVersion);
                     else if(permit) begin state<=INTERACTION_CAL_COLLECT;stateStartUs<=timeUs;end
                     else if(elapsedUs>=WAIT_TIMEOUT_US)
                         finishInteraction(EVENT_INTERACTION_TIMEOUT,REASON_WAIT_TIMEOUT,activeCfgVersion);
@@ -188,6 +197,8 @@ module fixedSheetInteraction #(
                     if(!enable || !permit)
                         finishInteraction(EVENT_INTERACTION_CANCELLED,
                             !enable ? REASON_ENABLE_REVOKED : REASON_PERMIT_REVOKED,activeCfgVersion);
+                    else if(activeCfgVersion!=attemptCfgVersion)
+                        finishInteraction(EVENT_CALIBRATION_FAILED,REASON_CAL_SAMPLES_INVALID,activeCfgVersion);
                     else if(sampleResultValid) begin
                         if(!sampleGood || configVersion!=activeCfgVersion ||
                            (haveSample && frameId!=lastSampleFrame+16'd1))
@@ -203,6 +214,8 @@ module fixedSheetInteraction #(
                     if(!enable || !permit)
                         finishInteraction(EVENT_INTERACTION_CANCELLED,
                             !enable ? REASON_ENABLE_REVOKED : REASON_PERMIT_REVOKED,activeCfgVersion);
+                    else if(activeCfgVersion!=attemptCfgVersion)
+                        finishInteraction(EVENT_CALIBRATION_FAILED,REASON_CAL_SAMPLES_INVALID,activeCfgVersion);
                     else begin state<=INTERACTION_CAL_COMMIT;stateStartUs<=timeUs;end
                 end
                 INTERACTION_CAL_COMMIT:begin
@@ -213,6 +226,8 @@ module fixedSheetInteraction #(
                     end else if(!enable || !permit)
                         finishInteraction(EVENT_INTERACTION_CANCELLED,
                             !enable ? REASON_ENABLE_REVOKED : REASON_PERMIT_REVOKED,activeCfgVersion);
+                    else if(activeCfgVersion!=attemptCfgVersion)
+                        finishInteraction(EVENT_CALIBRATION_FAILED,REASON_CAL_SAMPLES_INVALID,activeCfgVersion);
                     else if(elapsedUs>=COMMIT_TIMEOUT_US)
                         finishInteraction(EVENT_INTERACTION_TIMEOUT,REASON_INTERNAL_ERROR,activeCfgVersion);
                 end

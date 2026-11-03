@@ -3,7 +3,8 @@
 
 This is a bounded course demonstration suite, not a replacement for echo7.py's
 full ModelSim regression. Its system bench runs the production perceptionCore
-on six alternating RGB565 frames with real row gaps and report backpressure.
+on six alternating RGB565 frames with real row gaps and report backpressure,
+plus an independent source-overload and three-fresh-frame recovery scenario.
 Synthetic pixels do not constitute live CAMERA_HW or vehicle integration.
 """
 from __future__ import annotations
@@ -25,8 +26,8 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_VERSION = "5.050"
 SUITE_NAMES = (
-    "perceptionCoreContinuous_tb", "hsvColourGate_tb", "targetTracker_tb",
-    "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb",
+    "perceptionCoreContinuous_tb", "perceptionCoreOverload_tb", "hsvColourGate_tb", "targetTracker_tb",
+    "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb", "mainColourSupportReader_tb",
 )
 ERROR_PATTERN = re.compile(r"%Error:|Assertion failed|\bFAIL(?:ED)?\b|\*\*\s+(?:Error|Fatal)")
 MUTATION_BEFORE = "newReport.locked = nextCount == 3;"
@@ -41,9 +42,86 @@ def fileHash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
+def compilationIdentity(command, sources, toolchain):
+    """Describe exactly the ordered inputs of one generated simulator.
+
+    Object-directory location is the only removed compiler argument. Runtime
+    plusargs never enter this function: continuous and overload must still run
+    as separate simulations. Absolute source paths, their current bytes, top,
+    defines, timing/assertion flags and compiler settings all remain in the key.
+    The present R6 source closure is explicit and contains no local includes.
+    """
+    arguments = [str(value) for value in command]
+    if arguments.count("--Mdir") != 1:
+        raise ValueError("expected one explicit compiler object directory")
+    index = arguments.index("--Mdir")
+    if index + 1 >= len(arguments):
+        raise ValueError("missing compiler object directory")
+    arguments[index + 1] = "<CURRENT_RUN_OBJECT_DIRECTORY>"
+    environmentNames = ("CC", "CXX", "CFLAGS", "CPPFLAGS", "CXXFLAGS", "LDFLAGS",
+                        "MAKE", "MAKEFLAGS", "AR", "VERILATOR_ROOT", "PATH")
+    identity = {
+        "arguments": arguments,
+        "sources": [{"path": str(Path(path).resolve()), "sha256": fileHash(path)} for path in sources],
+        "toolchain": toolchain,
+        # Hash environment values so a changed search path/flag prevents reuse,
+        # without copying the entire host PATH into every compilation record.
+        "environmentSha256": {name: hashlib.sha256(os.environ.get(name, "").encode("utf-8")).hexdigest()
+                              for name in environmentNames},
+    }
+    encoded = json.dumps(identity, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest(), identity
+
+
+class CurrentRunCompilations:
+    """In-memory reuse only; never discover or load an earlier run's binary.
+
+    A successful compilation registers its exact output hash. Every later use
+    checks that the resolved binary still belongs to this run and has identical
+    bytes. Creating another instance starts empty even for the same directory.
+    """
+    def __init__(self, directory):
+        self.directory = Path(directory).resolve()
+        self.entries = {}
+
+    def _ownedBinary(self, path):
+        binary = Path(path).resolve()
+        try:
+            binary.relative_to(self.directory)
+        except ValueError as error:
+            raise RuntimeError("compiled binary is outside the current clean run") from error
+        if not binary.is_file():
+            raise RuntimeError("compiled simulator binary is missing")
+        return binary
+
+    def register(self, key, name, path):
+        binary = self._ownedBinary(path)
+        entry = {"path": str(binary), "sha256": fileHash(binary),
+                 "inputSha256": key, "compiledFor": name}
+        self.entries[key] = entry
+        return {**entry, "reusedFrom": None}
+
+    def lookup(self, key):
+        if key not in self.entries:
+            return None
+        entry = self.entries[key]
+        binary = self._ownedBinary(entry["path"])
+        if fileHash(binary) != entry["sha256"]:
+            raise RuntimeError("compiled simulator binary changed during the current run")
+        return {**entry, "reusedFrom": entry["compiledFor"]}
+
+
 def selectTests(manifest):
     byName = {test["name"]: test for test in manifest["tests"]}
-    return [byName[name] for name in SUITE_NAMES]
+    selected = [dict(byName[name]) for name in SUITE_NAMES]
+    for test in selected:
+        if test["name"] == "mainColourSupportReader_tb":
+            # The bounded course run executes this bench's independent built-in
+            # merge/retirement/tie/overflow cases. The full ModelSim run also
+            # passes MAIN_VECTORS and exercises the recorded pixel matrix.
+            test["plusargs"] = []
+            test["inputSource"] = "SYNTHETIC_BUILTIN_COMPONENT_OWNERSHIP_AND_OVERFLOW"
+    return selected
 
 
 def exactVersion(output):
@@ -128,7 +206,7 @@ def prepareVectors(outputDir):
             candidateWords[slot] = packCandidate(fields)
             candidateColours[slot] = int(colour == "blue")
             marker = classifyProjective(image, fields, orientation=orientation, redMin=48, blueMin=20,
-                                        colourAlgorithm=3, readerAlgorithm=5)
+                                        colourAlgorithm=3, readerAlgorithm=9)
             digit = marker["digit"] if marker["accepted"] else 15
             expectedWords[slot] = (int(marker["accepted"]) << 24) | (digit << 16) | \
                                  (marker["quality"] << 8) | marker["reasonCode"]
@@ -178,11 +256,13 @@ def main(argv=None):
     outputDir.mkdir(parents=True, exist_ok=False)
     result = {"schema": "echo7-verilator-course-v1", "status": "RUNNING", "level": "RTL_SIM",
               "requiredVersion": REQUIRED_VERSION, "maximumSeconds": 300, "cleanBuild": True,
-              "scope": "Member B modules and perceptionCore pixel-to-report system; no chassis", "tests": [], "commands": []}
+              "scope": "Member B modules and perceptionCore pixel-to-report system; no chassis", "tests": [], "commands": [],
+              "compilations": [], "compilationReuse": "EXACT_INPUTS_WITHIN_THIS_FRESH_RUN_ONLY"}
     exitCode = 1
     try:
         verilator = shutil.which(args.verilator)
-        missing = [name for name in ("make",) if not shutil.which(name)]
+        makeExecutable = shutil.which("make")
+        missing = [] if makeExecutable else ["make"]
         compiler = shutil.which(os.environ.get("CXX", "g++")) or shutil.which("clang++")
         if not verilator or not compiler or missing:
             raise EnvironmentBlocked("require Verilator 5.050, make and a C++ compiler in this shell; "
@@ -197,6 +277,9 @@ def main(argv=None):
         if record["returnCode"]:
             raise EnvironmentBlocked("C++ compiler cannot report its version")
         result["toolchain"]["compilerVersion"] = compilerVersion.strip()
+        result["toolchain"]["make"] = makeExecutable
+        toolExecutables = {"verilator": verilator, "compiler": compiler, "make": makeExecutable}
+        result["toolchain"]["executableSha256"] = {name: fileHash(path) for name, path in toolExecutables.items()}
         try:
             import numpy
             import PIL
@@ -221,7 +304,10 @@ def main(argv=None):
             raise RuntimeError("system pixel/model vector generation failed or timed out")
         result["fixtures"] = json.loads((vectors / "fixtures.json").read_text(encoding="utf-8"))
         # Run the production system before smaller modules, never substituting
-        # a protocol-only bench to meet the deadline. All object dirs are new.
+        # a protocol-only bench to meet the deadline. Reuse is limited to an
+        # already compiled exact-input binary from this fresh invocation; every
+        # scenario still executes independently with its own log and verdict.
+        compiled = CurrentRunCompilations(outputDir)
         for test in [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]:
             mutant = test.get("mutant", False)
             name = "targetTracker_broken_lock" if mutant else test["name"]
@@ -243,11 +329,31 @@ def main(argv=None):
                 # DLLs. Bind the generated simulator to its compiler's static
                 # runtime; this changes no HDL semantics or assertion flags.
                 command[1:1] = ["-LDFLAGS", "-static", "-MAKEFLAGS", "PYTHON3=" + Path(sys.executable).as_posix()]
-            record, _ = runProcess(command, folder, folder / "compile.log", deadline)
-            result["commands"].append(record)
-            if record["returnCode"] or record["timedOut"]:
-                raise RuntimeError(f"{name} compilation failed or exceeded the complete-suite deadline")
-            binary = folder / "obj" / ("V" + top + (".exe" if os.name == "nt" else ""))
+            for toolName, path in toolExecutables.items():
+                if fileHash(path) != result["toolchain"]["executableSha256"][toolName]:
+                    raise RuntimeError("tool executable changed during clean suite: " + toolName)
+            # Detect a mid-run source edit before either compiling or reusing
+            # it. The deliberate private mutant is recorded separately above.
+            for path in test["sources"]:
+                if fileHash(ROOT / path) != result["sourceSha256"][path]:
+                    raise RuntimeError("source changed during clean suite: " + path)
+            compileKey, compileInputs = compilationIdentity(command, sources, result["toolchain"])
+            compiledBinary = compiled.lookup(compileKey)
+            if compiledBinary is None:
+                record, _ = runProcess(command, folder, folder / "compile.log", deadline)
+                result["commands"].append(record)
+                if record["returnCode"] or record["timedOut"]:
+                    raise RuntimeError(f"{name} compilation failed or exceeded the complete-suite deadline")
+                binary = folder / "obj" / ("V" + top + (".exe" if os.name == "nt" else ""))
+                compiledBinary = compiled.register(compileKey, name, binary)
+                result["compilations"].append({"inputSha256": compileKey, "inputs": compileInputs,
+                                               "compiledBinary": compiledBinary})
+            else:
+                binary = Path(compiledBinary["path"])
+                (folder / "compile_reuse.json").write_text(json.dumps(compiledBinary, indent=2) + "\n", encoding="utf-8")
+                (folder / "compile.log").write_text(
+                    "No compiler process was run: exact-input binary reused from this fresh run.\n" +
+                    json.dumps(compiledBinary, indent=2) + "\n", encoding="utf-8")
             plusargs = [value.replace("{vectors}", vectors.as_posix()) for value in test.get("plusargs", [])]
             record, output = runProcess([binary, "+VECTOR_DIR=" + vectors.as_posix(), *plusargs], folder,
                                         folder / "simulation.log", deadline)
@@ -255,6 +361,7 @@ def main(argv=None):
             passed = mutantCaught(record, output) if mutant else simulationPassed(record, output, test["passMarker"])
             status = "CAUGHT" if mutant and passed else "PASS" if passed else "FAIL"
             result["tests"].append({"name": name, "status": status,
+                                    "compiledBinary": compiledBinary,
                                     "inputSource": test.get("inputSource", "SYNTHETIC_MODULE_STIMULUS")})
             print(status + " " + name, flush=True)
             if not passed:

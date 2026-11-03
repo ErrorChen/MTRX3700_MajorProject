@@ -21,6 +21,7 @@ from PIL import Image, ImageDraw
 TOOLS = Path(__file__).resolve().parent
 sys.path.insert(0, str(TOOLS / 'lib'))
 from audit_calibration import paired, sample
+from debug_decode import schemaLayout
 from vision_reference import quantise565
 
 
@@ -37,6 +38,29 @@ def checkedBox(box):
             0 <= box[0] <= box[2] < 320 and 0 <= box[1] <= box[3] < 240):
         raise ValueError(f'candidate outside inclusive native coordinates: {box}')
     return box
+
+
+def presentCandidates(recognition):
+    """Use the recorded slot schema, never a historical eight-per-colour guess.
+
+    Shared slots may contain any red/blue order. Check the explicit colour bits
+    and counts before assigning a crop or a calibration ROI to an identity.
+    """
+    layout = schemaLayout(recognition['debugSchemaVersion'])
+    redCount, blueCount = recognition['redCandidateCount'], recognition['blueCandidateCount']
+    capacity = layout['capacity']
+    if (any(type(count) is not int or not 0 <= count <= capacity for count in (redCount, blueCount))
+            or layout['sharedPool'] and redCount + blueCount > capacity):
+        raise ValueError('completed candidate count exceeds recorded schema capacity')
+    markers = recognition['markers']
+    if len(markers) != layout['markerCount']:
+        raise ValueError('candidate array length differs from recorded schema')
+    indices = (list(range(redCount + blueCount)) if layout['sharedPool'] else
+               list(range(redCount)) + list(range(capacity, capacity + blueCount)))
+    present = [markers[index] for index in indices]
+    if sum(bool(marker['isBlue']) for marker in present) != blueCount:
+        raise ValueError('candidate colour bits disagree with recorded counts')
+    return present
 
 
 def sceneMeasurement(capturePath, outputPath):
@@ -75,11 +99,7 @@ def sceneMeasurement(capturePath, outputPath):
             raise ValueError('image or metadata differs from CRC-checked dump')
         validation.update(dumpCheck='CRC_PIXEL_METADATA_PASS', dumpSha256=sha256(dumpPath), crc=decoded['crc'])
 
-    redCount, blueCount = recognition['redCandidateCount'], recognition['blueCandidateCount']
-    if not (0 <= redCount <= 8 and 0 <= blueCount <= 8):
-        raise ValueError('completed candidate count exceeds output capacity')
-    presentIndices = list(range(redCount)) + list(range(8, 8 + blueCount))
-    present = [recognition['markers'][index] for index in presentIndices]
+    present = presentCandidates(recognition)
     for marker in present:
         checkedBox(bbox(marker))
     redCards = [marker for marker in present if marker['accepted'] and not marker['isBlue'] and marker['digit'] == 1]
@@ -90,6 +110,9 @@ def sceneMeasurement(capturePath, outputPath):
     redCard, reference = pairs[0]
     if reference['accepted']:
         raise ValueError('paired blue reference unexpectedly claims a bay digit')
+    if (recognition.get('calibrationReferenceValid') and
+            recognition['calibrationReferenceMarkerIndex'] != reference['index']):
+        raise ValueError('same-image geometric reference differs from the recorded FPGA reference')
     rawSamples = sample(image, bbox(redCard), bbox(reference), samplerAlgorithm=2)
     outputPath.mkdir(parents=True, exist_ok=True)
     rgb565 = np.asarray(quantise565(image), dtype=np.int16)
@@ -115,10 +138,12 @@ def sceneMeasurement(capturePath, outputPath):
     candidates = []
     for marker in present:
         box = bbox(marker)
-        label = ('B' if marker['isBlue'] else 'R') + (str(marker['digit']) if marker['accepted'] else '?')
+        isReference = marker['index'] == reference['index']
+        label = 'BJ' if isReference else ('B' if marker['isBlue'] else 'R') + (str(marker['digit']) if marker['accepted'] else '?')
         cropPath = outputPath / f"candidate_{marker['index']:02d}_{label.replace('?', 'unknown')}.png"
         image.crop((box[0], box[1], box[2]+1, box[3]+1)).save(cropPath)
-        item = {**marker, 'type': 'BAY' if marker['isBlue'] else 'FUNCTION',
+        item = {**marker, 'label': label, 'type': 'REFERENCE' if isReference else
+                ('BAY' if marker['isBlue'] else 'FUNCTION') if marker['accepted'] else 'UNKNOWN',
                 'bbox': box, 'widthPixels': box[2]-box[0]+1, 'heightPixels': box[3]-box[1]+1,
                 'touchesFrameBoundary': box[0] == 0 or box[1] == 0 or box[2] == 319 or box[3] == 239,
                 'crop': cropPath.name, 'cropSha256': sha256(cropPath)}
@@ -155,13 +180,13 @@ def sceneMeasurement(capturePath, outputPath):
         coordinates = scaled(item['bbox'])
         colour = '#52a9ff' if item['isBlue'] else '#ff7777'
         draw.rectangle(coordinates, outline=colour, width=2)
-        label = ('B' if item['isBlue'] else 'R') + (str(item['digit']) if item['accepted'] else '?')
+        label = item['label']
         draw.text((coordinates[0]+2, coordinates[1]+2), f"{label} q{item['quality']}", fill='white', stroke_width=1, stroke_fill='black')
     for colour, ink in (('red', 'yellow'), ('blue', '#00ff00')):
         draw.rectangle(scaled(rawSamples[colour]['sampleBounds']), outline=ink, width=3)
     overlay.save(outputPath / 'raw_rois_annotated.png')
     result = {
-        'schema': 'echo7-recorded-scene-measurement-v1', 'status': 'PASS',
+        'schema': 'echo7-recorded-scene-measurement-v2', 'status': 'PASS',
         'evidenceLevel': 'MODEL_ON_RECORDED_CAMERA', 'inputSource': 'RECORDED_OV7670_RGB565',
         'captureResult': str(capturePath), 'captureResultSha256': sha256(capturePath),
         'rawImage': str(imagePath), 'rawImageSha256': sha256(imagePath), 'validation': validation,
@@ -170,6 +195,8 @@ def sceneMeasurement(capturePath, outputPath):
         'buildId': recognition['buildId'], 'buildIdHex': f"{recognition['buildId']:08x}",
         'frameId': recognition['frameId'], 'captureStartUs': recognition['captureStartUs'],
         'configVersion': recognition['configVersion'], 'orientationProfile': 0,
+        'recordedAlgorithms': {key: recognition[key] for key in ('readerAlgorithm', 'colourAlgorithm')},
+        'candidatePool': schemaLayout(recognition['debugSchemaVersion']),
         'recordedActiveProfile': {'redMinimum': recognition['redMinimum'], 'blueMinimum': recognition['blueMinimum']},
         'pair': {'redMarkerIndex': redCard['index'], 'blueReferenceIndex': reference['index'],
                  'redBox': bbox(redCard), 'blueReferenceBox': bbox(reference), 'uniqueGeometricPair': True},
