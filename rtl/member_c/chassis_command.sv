@@ -25,6 +25,7 @@ module chassis_command #(
     parameter int CLKS_PER_BIT = 434,           // 50 MHz / 115200
     parameter int PERIOD_CLKS  = 10_000_000,    // 200 ms at 50 MHz
     parameter bit USE_WHEEL_REQUESTS = 0,
+    parameter bit INIT_FLOWOFF = 0, // optional one-shot RAM telemetry configuration
     parameter int SPEED0_CM_S  = 10             // slot 00; supplied by Top-Level
 ) (
     input  logic       clk,
@@ -34,6 +35,10 @@ module chassis_command #(
     input  logic [1:0] speed,       // 00 parameter speed; other slots disabled in this safety test
     input logic signed [6:0] left_cm_s, right_cm_s,
     input  logic       feedback,    // 1: also ask for telemetry ({"T":130}) every period
+    // initAllowed must mean truly disarmed, final zero wheels, and an allowed mode.
+    // softReset only requests a fresh zero/config sequence; it never resets UART.
+    input logic initAllowed, softReset,
+    output logic initSent = !INIT_FLOWOFF, // local complete LF, NOT a chassis ACK
     output logic       tx,          // to the chassis RX
     output logic       busy,        // a message is going out
     output logic       zeroSent = 0 // completed zero-speed JSON, not physical rest
@@ -48,6 +53,8 @@ module chassis_command #(
     localparam logic [8*5-1:0]  P2 = ",\"R\":";
     localparam logic [8*2-1:0]  P3 = "}\n";
     localparam logic [8*10-1:0] FB = "{\"T\":130}\n";
+
+    localparam logic [8*18-1:0] FLOWOFF = "{\"T\":131,\"cmd\":0}\n";
 
     // {length, text left-aligned in MAXLEN bytes}
     function automatic logic [MAXLEN*8+7:0] motion_msg(input logic armed_i, input logic [1:0] motion_i, input logic [1:0] speed_i);
@@ -77,19 +84,57 @@ module chassis_command #(
         endcase
     endfunction
 
-    // Independent signed cm/s requests; bounded before ASCII conversion.
+    // Exact signed-input lookup: removes cascaded absolute-value and decimal arithmetic.
+    // {legal, nonzero_negative, two ASCII decimal digits}; every unsupported value is illegal.
+    function automatic logic [17:0] wheel_ascii(input logic signed [6:0] value);
+      case(value)
+        -7'sd15: wheel_ascii={1'b1,1'b1,"15"};
+        -7'sd14: wheel_ascii={1'b1,1'b1,"14"};
+        -7'sd13: wheel_ascii={1'b1,1'b1,"13"};
+        -7'sd12: wheel_ascii={1'b1,1'b1,"12"};
+        -7'sd11: wheel_ascii={1'b1,1'b1,"11"};
+        -7'sd10: wheel_ascii={1'b1,1'b1,"10"};
+        -7'sd9: wheel_ascii={1'b1,1'b1,"09"};
+        -7'sd8: wheel_ascii={1'b1,1'b1,"08"};
+        -7'sd7: wheel_ascii={1'b1,1'b1,"07"};
+        -7'sd6: wheel_ascii={1'b1,1'b1,"06"};
+        -7'sd5: wheel_ascii={1'b1,1'b1,"05"};
+        -7'sd4: wheel_ascii={1'b1,1'b1,"04"};
+        -7'sd3: wheel_ascii={1'b1,1'b1,"03"};
+        -7'sd2: wheel_ascii={1'b1,1'b1,"02"};
+        -7'sd1: wheel_ascii={1'b1,1'b1,"01"};
+        7'sd0: wheel_ascii={1'b1,1'b0,"00"};
+        7'sd1: wheel_ascii={1'b1,1'b0,"01"};
+        7'sd2: wheel_ascii={1'b1,1'b0,"02"};
+        7'sd3: wheel_ascii={1'b1,1'b0,"03"};
+        7'sd4: wheel_ascii={1'b1,1'b0,"04"};
+        7'sd5: wheel_ascii={1'b1,1'b0,"05"};
+        7'sd6: wheel_ascii={1'b1,1'b0,"06"};
+        7'sd7: wheel_ascii={1'b1,1'b0,"07"};
+        7'sd8: wheel_ascii={1'b1,1'b0,"08"};
+        7'sd9: wheel_ascii={1'b1,1'b0,"09"};
+        7'sd10: wheel_ascii={1'b1,1'b0,"10"};
+        7'sd11: wheel_ascii={1'b1,1'b0,"11"};
+        7'sd12: wheel_ascii={1'b1,1'b0,"12"};
+        7'sd13: wheel_ascii={1'b1,1'b0,"13"};
+        7'sd14: wheel_ascii={1'b1,1'b0,"14"};
+        7'sd15: wheel_ascii={1'b1,1'b0,"15"};
+        default: wheel_ascii={1'b0,1'b0,"00"};
+      endcase
+    endfunction
+
+    // Independent signed cm/s requests; paired invalid-input fail-closed behavior is unchanged.
     function automatic logic [MAXLEN*8+7:0] wheel_msg(input logic enable,
       input logic signed [6:0] l, r);
-      logic [6:0] lm,rm;
+      logic [17:0] lc,rc;
       logic [15:0] ld,rd;
       logic ln,rn;
       logic [MAXLEN*8-1:0] t;
       begin
-        lm=l<0 ? 7'(-l):7'(l);rm=r<0 ? 7'(-r):7'(r);
-        if(!enable || lm>15 || rm>15) begin lm=0;rm=0;end
-        ln=l<0 && lm!=0;rn=r<0 && rm!=0;
-        ld={8'(48+(lm>=10)),8'(48+(lm>=10 ? lm-10:lm))};
-        rd={8'(48+(rm>=10)),8'(48+(rm>=10 ? rm-10:rm))};
+        lc=wheel_ascii(l);rc=wheel_ascii(r);
+        if(enable && lc[17] && rc[17])begin
+          ld=lc[15:0];rd=rc[15:0];ln=lc[16];rn=rc[16];
+        end else begin ld="00";rd="00";ln=0;rn=0;end
         t='0;
         case({ln,rn})
           2'b00:begin t[MAXLEN*8-1 -: 26*8]={P1,"0.",ld,P2,"0.",rd,P3};return {8'd26,t};end
@@ -99,6 +144,7 @@ module chassis_command #(
         endcase
       end
     endfunction
+
     logic signed [6:0] sentL=0,sentR=0;
     wire signed [6:0] desiredL=armed?left_cm_s:7'sd0;
     wire signed [6:0] desiredR=armed?right_cm_s:7'sd0;
@@ -120,7 +166,11 @@ module chassis_command #(
     logic                tx_valid = 1'b0, tx_ready;
     logic last_armed = 0, stop_pending = 1;
     logic messageIsZero=1,messageIsMotion=1;
+    logic messageIsInit=0, initMessageCurrent=0;
+    logic lastSoftReset=0, heartbeatPending=0;
+    wire softResetEdge=INIT_FLOWOFF && softReset && !lastSoftReset;
     wire stop_edge = last_armed && !armed;
+    wire effectiveStop=stop_pending || stop_edge || softResetEdge;
     enum logic [1:0] {IDLE, SEND, LOAD_FB} state = IDLE;
 
     uart_tx #(.CLKS_PER_BIT(CLKS_PER_BIT), .BITS_N(8)) tx_u (
@@ -128,32 +178,47 @@ module chassis_command #(
 
     always_ff @(posedge clk) begin
         last_armed <= armed;
+        lastSoftReset <= softReset;
         if (stop_edge) stop_pending <= 1;
+        // A config line may straddle the free-running wheel heartbeat tick.
+        // Remember that obligation without changing the period or ordinary motion semantics.
+        if (INIT_FLOWOFF && messageIsInit && state==SEND && tick) heartbeatPending<=1;
         if (reset) begin
             last_armed <= 0; stop_pending <= 1; sentL<=0;sentR<=0;
             state <= IDLE; tx_valid <= 1'b0; remaining <= '0; fb_pending <= 1'b0;
             zeroSent<=0;messageIsZero<=1;messageIsMotion<=1;
+            messageIsInit<=0;initMessageCurrent<=0;lastSoftReset<=0;heartbeatPending<=0;
+            initSent<=!INIT_FLOWOFF;
         end else case (state)
-            IDLE: if (stop_pending || stop_edge || tick || wheelsChanged || (armed && !last_armed)) begin
+            IDLE: if (stop_pending || stop_edge || softResetEdge || tick || heartbeatPending || wheelsChanged || (armed && !last_armed)) begin
+                heartbeatPending<=0;messageIsInit<=0;
                 if(USE_WHEEL_REQUESTS)
-                    {remaining,shreg}<=wheel_msg(armed && !stop_pending && !stop_edge,left_cm_s,right_cm_s);
-                else {remaining, shreg} <= motion_msg(armed && !stop_pending && !stop_edge, motion, speed);
-                sentL<=armed && !stop_pending && !stop_edge ? left_cm_s:7'sd0;
-                sentR<=armed && !stop_pending && !stop_edge ? right_cm_s:7'sd0;
+                    {remaining,shreg}<=wheel_msg(armed && !effectiveStop,left_cm_s,right_cm_s);
+                else {remaining, shreg} <= motion_msg(armed && !effectiveStop, motion, speed);
+                sentL<=armed && !effectiveStop ? left_cm_s:7'sd0;
+                sentR<=armed && !effectiveStop ? right_cm_s:7'sd0;
                 messageIsMotion<=1;
-                messageIsZero<=!armed || stop_pending || stop_edge ||
+                messageIsZero<=!armed || effectiveStop ||
                   (USE_WHEEL_REQUESTS && left_cm_s==0 && right_cm_s==0);
-                if(armed && !stop_pending && !stop_edge &&
+                if(armed && !effectiveStop &&
                   (!USE_WHEEL_REQUESTS || left_cm_s!=0 || right_cm_s!=0))zeroSent<=0;
                 stop_pending <= 0;
-                fb_pending <= feedback && !stop_pending && !stop_edge;
+                fb_pending <= feedback && !effectiveStop;
                 state <= SEND;
+            end else if(INIT_FLOWOFF && !initSent && !softReset && initAllowed &&
+                        !armed && desiredL==0 && desiredR==0 && zeroSent && tx_ready) begin
+                // One shared serializer, after a complete stop. Configuration never
+                // impersonates a motion packet or changes the sent wheel baseline.
+                shreg<={FLOWOFF,{(MAXLEN-18)*8{1'b0}}};remaining<=18;
+                messageIsMotion<=0;messageIsInit<=1;initMessageCurrent<=1;
+                fb_pending<=0;state<=SEND;
             end
             SEND: begin
                 if (!tx_valid) begin
                     if (remaining == 0 && tx_ready) begin
-                        state <= (fb_pending && !stop_pending && !stop_edge) ? LOAD_FB : IDLE;
+                        state <= (fb_pending && !effectiveStop) ? LOAD_FB : IDLE;
                         if(messageIsMotion && messageIsZero)zeroSent<=1;
+                        if(INIT_FLOWOFF && messageIsInit && initMessageCurrent && !softReset) initSent<=1;
                     end
                     else if (tx_ready)   tx_valid <= 1'b1;
                 end else if (tx_ready) begin              // handshake: this byte is taken
@@ -162,8 +227,10 @@ module chassis_command #(
                     remaining <= remaining - 1'b1;
                 end
             end
-            LOAD_FB: begin
-                messageIsMotion<=0;
+            LOAD_FB: if(effectiveStop) begin
+                fb_pending<=0;state<=IDLE;
+            end else begin
+                messageIsMotion<=0;messageIsInit<=0;
                 shreg <= {FB, {(MAXLEN - 10) * 8{1'b0}}};
                 remaining <= 8'd10;
                 fb_pending <= 1'b0;
@@ -171,6 +238,12 @@ module chassis_command #(
             end
             default: state <= IDLE;
         endcase
+        // Highest-priority bookkeeping only: leave state/shifter/UART intact.
+        // A reset during an old config invalidates that completion and queues
+        // an entirely new zero -> config transaction after reset is released.
+        if(!reset && softResetEdge) begin
+            initSent<=0;initMessageCurrent<=0;stop_pending<=1;zeroSent<=0;
+        end
     end
     assign busy = (state != IDLE);
 endmodule

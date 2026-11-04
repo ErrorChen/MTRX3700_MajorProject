@@ -2,20 +2,24 @@
 // ECHO-7 production board: separate tracking, task authorization and safety.
 // POWER starts a perception-driven task, never direct fixed-speed motion.
 // Board I/O wrapper reused from validated Member C; only reset ownership changed.
-// KEY1 pages: decimal distance (d), NEC high word (H), NEC low word (L).
+// KEY1 pages: decimal distance / confirmed out-of-range FAr (d), NEC words (H/L).
 // On the H page HEX1..0 is the command byte, code[23:16].
 module memberCBoard #(
     // Existing chassis forward convention: both UART wheel signs are negative.
     parameter int LEFT_POLARITY = -1, RIGHT_POLARITY = -1,
     // Candidate image-to-turn convention: must be checked with wheels raised.
     parameter int TURN_SIGN = 1,
+    parameter bit RUNTIME_TUNING = 0,
+    parameter bit RUNTIME_MOTION_POLICY = 0,
+    parameter bit ALLOW_BOUNDED_ALIGN_GAP = 0,
+    parameter bit INIT_FLOWOFF = 0,
     // Single safety threshold in mm; stop at distance <= this value.
     parameter int ULTRASONIC_ESTOP_MM = 250, // EB STOP DISTANCE mm
     parameter int HEARTBEAT_CLKS = 10_000_000, // 200 ms at 50 MHz
     parameter int BLINK_CLKS = 2_500_000,      // 50 ms event indication
     parameter int KEY_DEBOUNCE_CLKS = 1_000_000, // 20 ms stable press AND release
     parameter int SELECTION_STABLE_CLKS = 1_000_000,
-    parameter int ACQUIRE_SETTLE_US = 200000, ACQUIRE_TIMEOUT_US = 900000
+    parameter int ACQUIRE_SETTLE_US = 1500000, ACQUIRE_TIMEOUT_US = 900000
 ) (
     input  wire       CLOCK_50,
     input  wire       reset50, // Shared integrated CLOCK_50 reset.
@@ -24,7 +28,7 @@ module memberCBoard #(
     input wire [5:0] SW,
     input logic [1:0] mode,
     input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
-    input logic [31:0] scanBudgetUs,
+    input logic [31:0] scanBudgetUs,tuningWord,alignTimingWord,motionPolicyWord,
     output logic [511:0] statusWords,
     // Internal public v3 link to perceptionCore, all synchronous to CLOCK_50.
     input logic [31:0] timeUs,
@@ -99,10 +103,17 @@ module memberCBoard #(
     end
     wire [15:0] shown = page==0 ? decimal_digits : high_page ? last_code[31:16] : last_code[15:0];
     wire display_blank=page==0 ? !distance_valid : !code_seen;
-    hex_digit h0 (.d(shown[3:0]),   .blank(display_blank), .seg(HEX0));
-    hex_digit h1 (.d(shown[7:4]),   .blank(display_blank), .seg(HEX1));
-    hex_digit h2 (.d(shown[11:8]),  .blank(display_blank), .seg(HEX2));
-    hex_digit h3 (.d(shown[15:12]), .blank(display_blank), .seg(HEX3));
+    // 4000 with valid=1 is the sonar FAR sentinel, never a measured 4 m.
+    wire displayFar=page==0 && distance_valid && distance_mm==12'd4000;
+    wire [6:0] digitHex0,digitHex1,digitHex2,digitHex3;
+    hex_digit h0 (.d(shown[3:0]),   .blank(display_blank), .seg(digitHex0));
+    hex_digit h1 (.d(shown[7:4]),   .blank(display_blank), .seg(digitHex1));
+    hex_digit h2 (.d(shown[11:8]),  .blank(display_blank), .seg(digitHex2));
+    hex_digit h3 (.d(shown[15:12]), .blank(display_blank), .seg(digitHex3));
+    assign HEX0=displayFar ? 7'b0101111 : digitHex0; // r, active low
+    assign HEX1=displayFar ? 7'b0001000 : digitHex1; // A
+    assign HEX2=displayFar ? 7'b0001110 : digitHex2; // F
+    assign HEX3=displayFar ? 7'b1111111 : digitHex3;
     assign HEX5 = !statusWords[14] ? (statusWords[15] ? 7'b1000110 : 7'b0101011) :
       page==0 ? 7'b0100001 : high_page ? 7'b0001001 : 7'b1000111; // H / L, active low
     hex_digit mode_hex(.d({2'b00,mode}),.blank(1'b0),.seg(HEX4)); // mode: 0 integrated, 1 vision, 2 injection
@@ -136,19 +147,21 @@ module memberCBoard #(
       else begin sw_meta<=SW;sw_sync<=sw_meta;end
     end
     wire [3:0] motionState;
-    wire chassis_busy,zeroSent;
+    wire chassis_busy,zeroSent,chassisInitSent;
     wire motionTargetValid;
     wire [511:0] controlStatusWords;
     wire signed [6:0] logicalL,logicalR;
     member_c_control #(.ULTRASONIC_ESTOP_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+      .RUNTIME_TUNING(RUNTIME_TUNING),.RUNTIME_MOTION_POLICY(RUNTIME_MOTION_POLICY),
+      .ALLOW_BOUNDED_ALIGN_GAP(ALLOW_BOUNDED_ALIGN_GAP),.REQUIRE_CHASSIS_INIT(INIT_FLOWOFF),
       .SELECTION_STABLE_CLKS(SELECTION_STABLE_CLKS),.ACQUIRE_SETTLE_US(ACQUIRE_SETTLE_US),
       .ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US)) control_u(
       .clk(CLOCK_50),.reset(reset50),.power_frame(power_frame),.estop_frame(estop_frame),
       .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
-      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),
+      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),.motionPolicyWord(motionPolicyWord),
       .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
       .rawMode(rawMode),.injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),
-      .distanceSample(sample_pulse),.zeroSent(zeroSent),.uartBusy(chassis_busy),.statusWords(controlStatusWords),
+      .distanceSample(sample_pulse),.chassisInitSent(chassisInitSent),.zeroSent(zeroSent),.uartBusy(chassis_busy),.statusWords(controlStatusWords),
       .targetRequest(targetRequest),.targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
       .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),
       .distance_valid(distance_valid),.distance_mm(distance_mm),.left_cm_s(logicalL),.right_cm_s(logicalR),
@@ -159,11 +172,16 @@ module memberCBoard #(
     // UART resets only at configuration, so KEY0 cannot truncate a JSON line.
     logic [1:0] uart_por = 2'b11;
     always_ff @(posedge CLOCK_50) uart_por <= {uart_por[0], 1'b0};
+    // taskActive is word0 bit20; permit alone also becomes zero during an armed
+    // acquisition/HOLD. Initialize only in true idle INTEGRATED/VISION_ONLY.
+    wire chassisInitAllowed=!reset50 && !controlStatusWords[20] && !running &&
+      logicalL==0 && logicalR==0 && mode<=1;
     // Legacy ir_drive manual control is NOT instantiated.
     chassis_command #(.CLKS_PER_BIT(434), .PERIOD_CLKS(HEARTBEAT_CLKS),
-        .USE_WHEEL_REQUESTS(1)) chassis_u (
+        .USE_WHEEL_REQUESTS(1),.INIT_FLOWOFF(INIT_FLOWOFF)) chassis_u (
         .clk(CLOCK_50), .reset(uart_por[1]), .armed(running && !reset50),
         .motion(2'b00), .speed(2'b00), .left_cm_s(motorL), .right_cm_s(motorR), .feedback(1'b0),
+        .initAllowed(chassisInitAllowed),.softReset(reset50),.initSent(chassisInitSent),
         .tx(CHASSIS_TX), .busy(chassis_busy),.zeroSent(zeroSent));
 
     wire [7:0] chassis_rx_byte;
@@ -181,6 +199,8 @@ module memberCBoard #(
     end
     always_comb begin
       statusWords=controlStatusWords;
+      statusWords[10*32+7]=INIT_FLOWOFF;
+      statusWords[10*32+8]=INIT_FLOWOFF && chassisInitSent; // local LF completion, not ESP ACK
       statusWords[12*32+:32]={7'd0,chassis_rx_fe,lastRxByte,chassisRxCount};
     end
     wire valid_led, repeat_led, rx_led;

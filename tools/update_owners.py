@@ -23,6 +23,7 @@ STAFF_FILES = {
 # Member A (Hajin Paek) Part A front end; ownership confirmed by Hajin Paek on 4 November 2026.
 # Each origin records what Member B changed during integration, from the git history.
 MEMBER_A_SID = "540287235"
+MEMBER_A = f"Member A (Hajin) {MEMBER_A_SID}"
 PART_A = "Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex)"
 PART_A_FILES = {
     "rtl/vision/causalMaskCleanup.sv": PART_A + "; unchanged from Part A",
@@ -51,11 +52,13 @@ INTEGRATION_FILES = {
 
 def maintainer(name):
     if name in PART_A_FILES:
-        return MEMBER_A_SID, PART_A_FILES[name]
+        return MEMBER_A, PART_A_FILES[name]
+    if name in TEAM_FILES:
+        return MEMBER_A, None
     if name.startswith(("rtl/member_c/", "tests/member_c/")):
-        return "Member C SID pending", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
+        return "Member C 530141790", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
     if name in INTEGRATION_FILES or name.startswith(("tests/integration/", "tests/scheme_c/")):
-        return "B 540207680; A/C SID pending", "B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off"
+        return "B 540207680; A 540287235; C 530141790", "B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off"
     return "540207680", None
 
 
@@ -69,9 +72,9 @@ def main():
     paths += [ROOT / name for name in ("run_all_tests.sh", "requirements.txt", ".gitignore", ".gitattributes", ".editorconfig")]
     paths += list((ROOT / "tests/fixtures/camera").rglob("*.png"))
     lines = ["# ECHO-7 ownership and provenance", "",
-        "Member A is Hajin Paek, SID **540287235**, owner of the Part A front-end files listed below.",
-        "SID **540207680** is the user-confirmed Member B maintainer. The Member C SID is **pending**.",
-        "The preliminary repository was built by same-group students Hajin and Jiaze Sun.",
+        "SID **540207680** is the user-confirmed Member B maintainer. Member A (Hajin Paek) is **540287235** and Member C is **530141790**.",
+        "The preliminary repository was built by same-group students Hajin and Jiaze Sun;",
+        "Hajin is Member A; Hajin's preliminary files and the Part A front-end files listed below are maintained by Member A.",
         "Origin is separate from maintenance responsibility. Original source/IP notices",
         "remain applicable. B additions and adaptations are AI-assisted; named human",
         "review/sign-off is **pending**, not certified by this generated inventory.", "",

@@ -8,6 +8,7 @@ module tb_uart_stop_priority;
     localparam logic [207:0] STOP="{\"T\":1,\"L\":0.00,\"R\":0.00}\n";
     localparam logic [207:0] MOVE="{\"T\":1,\"L\":0.10,\"R\":0.10}\n";
     chassis_command #(.CLKS_PER_BIT(4),.PERIOD_CLKS(1_000_000)) dut (
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
         .clk(clk),.reset(reset),.armed(armed),.motion(2'b00),.speed(2'b00),
         .left_cm_s(7'sd0),.right_cm_s(7'sd0),.feedback(1'b0),.tx(tx),.busy(busy));
     task automatic read_line(output logic [207:0] value);

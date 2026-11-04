@@ -16,6 +16,7 @@ module tb_board_repair_pins;
  int checks=0,moves=0,zeros=0;
  string line="";logic[7:0]ch;
  memberCBoard #(.SELECTION_STABLE_CLKS(8)) dut(
+   .motionPolicyWord(32'h00000af9),
    .CLOCK_50(clk),.reset50(reset),.KEY(2'b11),.IRDA_RXD(ir),.SW(6'b1),
    .mode(2'd2),.visualStart(1'b0),.debugStart(1'b0),.debugStop(1'b0),.modeChanged(1'b0),.rawMode(1'b0),
    .injectLeaseValid(1'b1),.scanCalibrated(1'b0),.scanBudgetUs(32'd10000000),.statusWords(words),

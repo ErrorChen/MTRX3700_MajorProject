@@ -1,7 +1,1179 @@
 {
-  "r6": "PASS 219.556 s for E7070004; Verilator 5.050 clean copy, jobs=4; 12 PASS + deliberate mutant CAUGHT. Meets the 285 s user limit.",
-  "fit": "PASS E7070004: compile 1,121.141 s + gate 25.868 s. ALM 29,576/32,070 (92%); M10K 357/397; DSP 51/87; 41,000 registers. Worst setup +1.633 ns / hold +0.118 ns; unconstrained 0; 0 errors / 92 warnings.",
-  "hardware": "E7070004: real-camera GRAB and 12 distinct samples accepted all six blue cards (each 12/12). All six physical one-hot choices locked correctly in 441 read-only polls; no selection/conflict stayed inhibited, all polls disarmed and zero. Seven candidate-overflow bad frames retained. Red2 physical start and blue1-loss stop confirmed earlier; independent host-STOP timing still unmeasured. Static vision coverage, not six-bay floor docking; final mode VISION_ONLY.",
-  "sof": "firmware/E7070004/PartBDebug.sof; 6,706,154 bytes. Original build: 20261104T111202_124373Z_build. Programmed-board ID E7070004 verified.",
-  "hardware_prior": "Earlier E7070002: synthetic left/centre/right, lease loss/no automatic restart, bounded NOT_FOUND, and real IR A/POWER1/POWER2 passed. User confirmed wheel actions and both sides forward for logical +3/+3 cm/s. These are prior-build checks."
+  "date": "05 NOV 2026",
+  "build_id": "E7070012",
+  "purpose": "Version-scoped verification record. Top-level historical build_id and measurements remain E12; source_build_id identifies the current candidate. Product and formal R5 PDFs use separate target specification.",
+  "control": "PASS: runtime TURN_SIGN-1/+1 each2041 checks /500 complete UART messages; legacy runtime-off with unknown timing input848/289. One compile plus three configurations44.0894113s,0 errors/warnings. All256 U positions across three total-duration profiles checked against independent arithmetic; kick8->cruise4 UART ordering, kick truncation,300ms bound, both phases safety/source interrupts and invalid timing word checked. Initial testbench hierarchical-name failure retained; only testbench fixed afterward. Production source frozen throughout full build.",
+  "r6": "PASS223.404755s, E12 first formal run;13 PASS plus mutant CAUGHT,targetMet=true below285s,exit0. Fresh61-source manifest,Verilator5.050,jobs4,max2 simulations/one compiler,11 prefetched scenarios and exact current-run-only hash reuse. Result20261104T193009_881634Z_verilator_course. No runner/test scope reduction for E12.",
+  "fit": "PASS: compile1163.903s plus post-fit gate26.783s. ALM29647/32070(92%);M10K357/397;DSP51/87;41286 registers;2802640 memory bits. Worst setup+0.842ns/hold+0.102ns. Build20261104T192605_706632Z_build,63 staged production sources byte-identical to working source. Fitter and timing accepted; MTBF remains unassessed.",
+  "hardware": "E12 programmed/ID verified; five-sample stationary pulse write/readback/default-restoration PASS, no motion. Initial blue4 calibration4/4 healthy/locked,U113,J3655..659mm. Five subsequent real-camera POWER observations: kick5/turn3 INCOMPLETE15.0223777s(320C42B); fine4 INCOMPLETE15.0445792s(422C35B); kick6 reverse INCOMPLETE15.0423456s(500C39B,U187->181); fixed200ms reverse ALIGN_CORRIDOR_OBSERVED3.8547528s(780C60B,U181->104/105,user accepted slight left offset; host stopped at firstAPPROACH,notDOCK); full approach INCOMPLETE60.0399573s(687C85B) with repeated alignment, short forward segments, loss and failed reacquisition. Final full-run J3 HOLD began248mm,min240mm,final254mm,no release; source/frame pipeline remained healthy, target candidates touched image edges and were rejected. Every trial cleaned up VISION_ONLY/disarmed/zero/zeroSent with cleanupErrors empty. Second/fourth trials directly sampled same-pulse kick->cruise commands; this is not measured wheel speed. No DOCKED in those first five trials. Separately, trial7 from approximately41cm now recorded DOCKED/22 zero snapshots after a fresh POWER task; J3292mm and user ruler370mm disagree by78mm, unresolved. This is not an uninterrupted60cm or outside-view search-to-dock pass.",
+  "sof": "firmware/E7070012/PartBDebug.sof;6706156bytes;sha256 d209153b7b8e32a824b835ae9b87367afd21f76bca557e144b055b4e6a5da3b6. Byte-identical to original build20261104T192605_706632Z_build. Programmed E7070012 verified UTC2026-11-04T19:46:26.577567Z.",
+  "hardware_prior": "E8 blue1/3/4 actual approach and DOCKED with user estimates335/310/320mm; blue2 separate manual forward/stop plus post-run DOCKED342mm, without continuous motion trace. E8 outside-view search failed NOT_FOUND. E4 raised real-J3/IR/STOP tests and historical failures retained. Blue5/6 independent ground tasks cancelled by user; six-card static evidence remains.",
+  "scan": "Search3 recalibration on unchanged plastic floor: first30.014554s observation was TWO circles plus10deg and3cm rearward drift; dividing by2 gives only15.007277s approximate reference. Second single-circle retry14.093147s, about7.5deg extra and right wheel1cm more; third14.691960s, about3deg extra and4cm rearward drift. The initial second attempt was IR-latched and aborted without motion. Set15.1s bounded calibrated-time budget using two single-circle trials plus one double-circle reference; do not call these three precise single-circle passes. Reverse recovery also consumes budget and reduces net coverage. Exact360deg and epoxy-floor performance unverified. Parameters and calibration are volatile; reset/reprogramming restores defaults and invalidates calibration.",
+  "remaining": "Two-stage ALIGN commands and stationary parameter protocol work; fixed200ms achieved an isolated allowed-heading result. Uneven wheel startup/turn-stop response and target-edge clipping still interrupt continuous approach. An uninterrupted approximately60cm E12 approach and outside-view search-to-dock have NOT passed; the separately restarted approximately41cm task has board DOCKED evidence. tolerance40 left only5px differential windows, but large position jumps also prevent attributing failure solely to tolerance; tolerance30 diagnostic now has continuous 5/4,5/5,4/4 command snapshots and user-confirmed correction; it intentionally stopped at first LOST, so full autonomous docking remains unverified. Exact lost-frame B sample unavailable. Independent trial7 near-target task now observed DOCKED, with J3292mm versus user ruler370mm unresolved. Outside-view trial8 found the target after2.553478s and recovered six sampled losses through ACQUIRE without newSEARCH, but remained INCOMPLETE60.1513566s with repeated alignment. No uninterrupted60cm-to-DOCK or full search-to-dock pass. SEARCH/APPROACH/backscan do not use kick. Existing HOLD-loss limitation, unconfirmed physical backtrack, exact net angle, scene-to-UART latency, SW8 ground comparison and unprovided A/C student IDs remain. Blue5/6 ground tasks waived by user. Trial10 also remained INCOMPLETE60.0024068s; repeated5/5 requests are not proof of physical straight travel. Long physical runs paused for read-only turn-to-forward/startup analysis. Runtime configuration is not a validated recommendation. User additionally confirmed almost only one side actually moved despite equal requests. Installed chassis firmware semantics and wheel speeds remain unverified; two official source paths differ, so no PI/integral or damaged-hardware diagnosis is established. A subsequent feedback-off real-camera search also remained INCOMPLETE60.0067485s after one isolated transition with user-confirmed two-wheel participation. Real-task final stop was host observation-limit cleanup, not DOCKED. Rejections include non-edge-touching candidate boxes; six sampled ALIGN segments were logically interrupted by target validity before nominal200ms. No causal repair or exact mechanical delay established.",
+  "runtime_protocol": "PASS:193 debug HDL checks/20 synthetic reports in1.5672301s;24 host tests in0.141s;2 production Tcl fake-transport tests in1.037s. CCTL opcode12 with word15 A2 capability and atomic18bit payload; original opcode11/word13 A1 retained. Stationary VISION_ONLY only, complete readback and unchanged speed/scan settings checked. Pulse times use10ms steps: min/max20..300ms,min<=max;kick0..100ms,0 disables;kick speed3..8cm/s. Total includes/truncates kick; later ALIGN speed follows existing tune configuration. Defaults20/100/0/5 preserve E11. Safety can stop earlier than the nominal minimum. Speed requests are not measured wheel speed or torque commands.",
+  "hardware_e11": "E11 programmed and ID verified. Stationary tuning seven-sample read/write/default/scan-invalidation test passed without motion. First outside-view search4 trial368C/50B ended NOT_FOUND at28.0071143s: two reverse SEARCH commands sampled and a third150ms charge inferred; user did not observe physical reverse, no APPROACH. Search3/turn4 trial593C/69B ended NOT_FOUND at43.5151717s with brief APPROACH and three LOST->ACQUIRE->ALIGN sequences, all already at exhausted scan budget. User reported right-wheel-only correction and overshoot. Turn3/tolerance40 trial273C/35B was INCOMPLETE at15.1179462s; U40->41 and user saw only jerks. Turn5/tolerance40 trial340C/44B was INCOMPLETE at15.0022591s: U41->82, APPROACH5/5, then U195 and LOST->ACQUIRE with all15.1s scan budget remaining. User saw both wheels move and some advance, then overshoot/right-edge target and left-wheel jerks. Every completed trial cleaned up to VISION_ONLY/disarmed/zero/zeroSent with no cleanup errors. zeroSent establishes UART completion, not physical standstill. Approach4 comparison289C/36B was INCOMPLETE at15.0186774s: repeated U41 then43/46/49/126/140 and NF, with a brief APPROACH4/4. User again saw initial forward jerks then two larger right-wheel movements taking blue4 past the right edge. Final VISION_ONLY/disarmed/zero/zeroSent, J3619mm, cleanupErrors empty. Lowering forward speed did not resolve short-pivot startup/overshoot; no end-to-end search-to-dock PASS.",
+  "experiment": "SameE12 tune3/4/5/4/30,pulse200/200/60/6,scan15.1 restored after user chassis restart and sameSOF reprogram. StartupOLED UGV Rover/version0.9 confirmed. Stopped RX approximately11kB/s before RAM feedbackflowoff, then no added bytes across5samples; no cross-window counter subtraction. Continuous command trial1 stopped at realD500, incomplete3rdhold and user did not watch. Trial2 oneSTART/3holds5/5->5/4->5/5, user observed faster->slower->faster->stop; not individual wheel-speed/direction acceptance or a matched flow-on causal test. Main search-to-dock still incomplete. Single ALIGN->zero/dwell->APPROACH isolation observed and user confirmed both wheels moving together; subsequent real-camera search INCOMPLETE60.0067485s, user reports repeated correction and both wheels advancing at the end; final stop was host observation-limit cleanup, not DOCKED. Camera-to-marker460mm is distinct from J3407mm. NoRTL/SOF/build/R6 changes.",
+  "hardware_e12_trial6": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_tolerance30_approach15s.jsonl",
+    "outcome": "APPROACH_INTERRUPTED",
+    "taskObservationSeconds": 2.2937077,
+    "statusSnapshots": 316,
+    "visionSnapshots": 28,
+    "tuning": {
+      "search": 3,
+      "turn": 3,
+      "approach": 5,
+      "fine": 4,
+      "tolerance": 30
+    },
+    "alignTiming": {
+      "minMs": 200,
+      "maxMs": 200,
+      "kickMs": 60,
+      "kickSpeed": 6
+    },
+    "commandSnapshotGroups": [
+      {
+        "left": 5,
+        "right": 4,
+        "samples": 10
+      },
+      {
+        "left": 5,
+        "right": 5,
+        "samples": 11
+      },
+      {
+        "left": 4,
+        "right": 4,
+        "samples": 4
+      }
+    ],
+    "targetUSamples": [
+      77,
+      87,
+      113
+    ],
+    "distanceMmStart": 625,
+    "distanceMmAtFirstLost": 440,
+    "distanceMmAfterCleanup": 426,
+    "scope": "Host STOP deliberately triggers on first departure from APPROACH; no ALIGN/SEARCH observed, no autonomous recovery result, not continuous 60cm-to-DOCK. Last sampled B box complete; exact lost-frame B sample unavailable. Command snapshot counts are not UART packet counts or measured wheel speed.",
+    "operatorObservation": "确实是不断修正，虽然最后有点偏右，但在可接受范围",
+    "subsequentPreflight": {
+      "file": "e12_after_tolerance30_preflight.json",
+      "healthyLockedSamples": 3,
+      "u": 141,
+      "distanceMm": [
+        414,
+        414,
+        409
+      ],
+      "mode": "VISION_ONLY",
+      "zero": true
+    }
+  },
+  "hardware_e12_trial7": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_tolerance30_final_approach.jsonl",
+    "outcome": "DOCKED_OBSERVED",
+    "taskObservationSeconds": 14.885635,
+    "statusSnapshots": 385,
+    "visionSnapshots": 52,
+    "startCommands": 0,
+    "syntheticWrites": 0,
+    "heartbeatCommands": 0,
+    "firstArmedObserverSeconds": 40.6648686,
+    "firstDockObserverSeconds": 52.4846055,
+    "firstArmToDockSeconds": 11.8197369,
+    "dockSnapshots": 22,
+    "dockSnapshotSpanSeconds": 3.065829,
+    "dockAllDisarmedZeroSent": true,
+    "firstArmedJ3mm": 416,
+    "allDockJ3mm": 292,
+    "userRulerProbeFrontToBoardMmApprox": 370,
+    "rulerJ3DifferenceMmApprox": 78,
+    "distanceDifferenceCause": "UNRESOLVED; do not average or claim exact350mm/absolute range calibration",
+    "observedLostOrSearch": false,
+    "scanElapsedUs": 0,
+    "cleanupErrors": [],
+    "scope": "Fresh physical POWER task from approximately41cm. Not concatenated with trial6 into one60cm-to-DOCK task. Repeated ALIGN/ACQUIRE after approach; no loss-recovery/search acceptance. Final horizontal box completeU58..225 but vertical extent touchesV319;52B without candidate/transport fault."
+  },
+  "hardware_e12_trial8": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_tolerance30_search_to_dock.jsonl",
+    "outcome": "INCOMPLETE",
+    "reason": "60 s task observation limit reached during vision read",
+    "taskObservationSeconds": 60.1513566,
+    "statusSnapshots": 671,
+    "visionSnapshots": 84,
+    "startCommands": 0,
+    "syntheticWrites": 0,
+    "heartbeatCommands": 0,
+    "initialSearchAccumulatedSeconds": 2.553478,
+    "remainingScanSeconds": 12.546522,
+    "laterSearchOrReverseSearchObserved": false,
+    "sampledApproachSegments": 7,
+    "sampledAlignSegments": 18,
+    "sampledLostSegments": 6,
+    "allSampledLostThenAcquireRecovery": true,
+    "dockObserved": false,
+    "j3StartApproxMm": 628,
+    "j3FinalMm": 390,
+    "cameraToMarkerUserApproxMm": 470,
+    "distanceScope": "Camera-to-marker estimate and J3 have different origins/directions; not same-baseline error. Range628->390 does not prove238mm vehicle displacement.",
+    "operatorObservation": "找到B4后牌滑到VGA右边缘，随后转动伴随前移，牌又跨到左边缘，慢慢回正后仍在右边缘留小缝；相机到牌约47cm。",
+    "targetSummary": "U195 approximately10s,U65 approximately5s; finalU124->176->171 beyond165 tracking corridor",
+    "final": "VISION_ONLY,disarmed,permit0,L/R0,zeroSenttrue,J3390,IR0,HOLD0",
+    "cleanupErrors": [],
+    "scope": "Outside-view discovery and sampled recovery with budget remaining, but repeated alignment prevented DOCK; discrete segments are not all transitions or pulses."
+  },
+  "hardware_e12_trial9": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_turn4_reverse_align15s.jsonl",
+    "outcome": "ALIGN_CORRIDOR_OBSERVED",
+    "taskObservationSeconds": 1.7750441,
+    "statusSnapshots": 1228,
+    "visionSnapshots": 111,
+    "firstArmedObserverSeconds": 115.1999995,
+    "snapshotScope": "Most snapshots waited for physicalPOWER; counts are not motion-duration/rate measurements.",
+    "tuning": {
+      "search": 3,
+      "turn": 4,
+      "approach": 5,
+      "fine": 4,
+      "tolerance": 30
+    },
+    "alignTiming": {
+      "minMs": 200,
+      "maxMs": 200,
+      "kickMs": 60,
+      "kickSpeed": 6
+    },
+    "sampledCommandChain": [
+      "ALIGN -4/+4",
+      "ACQUIRE 0/0",
+      "APPROACH 4/5",
+      "host STOP"
+    ],
+    "kick6Sampled": false,
+    "uSamples": [
+      171,
+      164
+    ],
+    "j3FinalMm": 388,
+    "cleanupErrors": [],
+    "dockObserved": false,
+    "operatorObservation": "更稳定，并且能向中间移动，但没能居中",
+    "subsequentPreflight": {
+      "file": "e12_after_turn4_alignment_preflight.json",
+      "healthyLockedSamples": 3,
+      "u": 147,
+      "j3Mm": [
+        379,
+        379,
+        383
+      ]
+    },
+    "scope": "Stops at firstAPPROACH by diagnostic rule; noDOCK. Separate U147 preflight is not a precise mechanical settling/latency measurement. Subsequent full trial10 remained INCOMPLETE; limited diagnostic does not replace it."
+  },
+  "hardware_e12_trial10": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_turn4_search_to_dock.jsonl",
+    "outcome": "INCOMPLETE",
+    "taskObservationSeconds": 60.0024068,
+    "statusSnapshots": 613,
+    "visionSnapshots": 79,
+    "startCommands": 0,
+    "syntheticWrites": 0,
+    "heartbeatCommands": 0,
+    "firstArmedObserverSeconds": 24.2043404,
+    "firstArmedState": "SEARCH",
+    "firstArmedJ3MmApprox": 699,
+    "final": "VISION_ONLY,disarmed,L/R0,zeroSenttrue,J3524,IR0,HOLD0",
+    "cleanupErrors": [],
+    "sampledUPairs": [
+      [
+        141,
+        201
+      ],
+      [
+        119,
+        76
+      ],
+      [
+        114,
+        196
+      ],
+      [
+        143,
+        60
+      ]
+    ],
+    "operatorObservation": "一直左右调，哪怕居中后还继续调到另一边边缘，并不会往前直走",
+    "scope": "APPROACH5/5 sampled repeatedly but equal logical requests do not establish matched measured wheels or physical straight motion. C/B independently frozen. Full search-to-dock not passed; independent detailed audit retained, no newRTL/SOF/R6.",
+    "operatorClarification": "请求了，但实际几乎只动了一边",
+    "audit": {
+      "armedCSamples": 447,
+      "allArmedSourceRangeSelectionHealthy": true,
+      "armedIrHoldFatalRxErrorObserved": false,
+      "all79BGoodFresh": true,
+      "candidateOrTransportFaultObserved": false,
+      "completionDiscard": 0,
+      "bufferDropConstant": 2,
+      "processingMsRange": [
+        39.309,
+        50.81
+      ],
+      "captureAgeMsRange": [
+        41.41,
+        88.097
+      ],
+      "sampledSegments": {
+        "SEARCH": 2,
+        "ALIGN": 21,
+        "APPROACH": 4,
+        "LOST": 9,
+        "ACQUIRE": 27
+      },
+      "searchAccumulatedSeconds": 5.155026,
+      "scanRemainingSeconds": 9.944974,
+      "reverseSearchObserved": false,
+      "dockObserved": false,
+      "sameAlignKickToCruiseSamples": {
+        "total": 7,
+        "reverse": 5,
+        "forward": 2,
+        "magnitude": "6->4"
+      },
+      "approachEntrancesAll5_5": 4,
+      "nearestPriorCAllAcquireZeroSentUartIdle": true,
+      "approachSampleCommands": {
+        "5/5": 11,
+        "4/5": 2,
+        "5/4": 1
+      },
+      "finalBU": 60,
+      "finalBBoxU": [
+        11,
+        109
+      ],
+      "scope": "Discrete C/B state/command snapshots, not physicalTX bit decode, precise pulse widths or measured wheel speed. No command-transmission bug demonstrated; not proof of mechanical settling, matched startup or absence of unobserved issues."
+    },
+    "readOnlyCodeReview": {
+      "result": "NO_DEFINITE_FPGA_CONTROL_OR_TRANSMISSION_BUG_FOUND",
+      "checks": [
+        "centred ALIGN exit -> zeroSent ->1.5s ->three new fenced frames ->APPROACH",
+        "equal5/5 independently encoded without identified one-side sign reversal",
+        "no nonzero command FIFO; single complete packet and STOP priority"
+      ],
+      "nominalPacketBytes": 28,
+      "baud": 115200,
+      "nominalSerialMsApprox": 2.43,
+      "scope": "Existing UART pin-level simulation evidence, no new test. Does not prove actual chassis ACK, wheel speed, mechanical settling or complete exclusion of FPGA causes; installed mode pending."
+    }
+  },
+  "chassis_firmware_semantics": {
+    "status": "OLED_VERSION_CONFIRMED_RUNTIME_SEMANTICS_UNVERIFIED",
+    "checkedDate": "2026-11-05",
+    "generalSource": "https://github.com/waveshareteam/ugv_base_general/blob/main/General_Driver/movtion_module.h#L275-L303",
+    "rosSource": "https://github.com/waveshareteam/ugv_base_ros/blob/main/ROS_Driver/movtion_module.h#L246-L268",
+    "scope": "User startupOLED confirms UGV Rover/version0.9, not binary/source identity. Nominal FPGA cm/s is not measured wheel speed. Official sources and timing mechanisms differ; no PI/integral or motor-damage conclusion. RAM automatic feedback disabled by userT131, no chassis flash/PID/PWM/model writes.",
+    "oledObserved": {
+      "ap": "UGV",
+      "st": "OFF",
+      "voltageV": 11.27,
+      "modelVersion": "NOT_OBSERVED",
+      "mac": "OMITTED",
+      "scope": "One voltage reading is not a low-voltage diagnosis; no chassis flash or PID/PWM/model writes."
+    },
+    "startupOled": {
+      "modelLabel": "UGV Rover",
+      "versionLabel": "0.9",
+      "scope": "User-read startup display, not binary/source identity proof"
+    },
+    "pageObject": {
+      "T": 1001,
+      "L": 0,
+      "R": 0,
+      "r": -1.184410511,
+      "p": 0.192824244,
+      "v": 11.17282963,
+      "scope": "User-observed page telemetry,not T131 ACK or host live wheel-speed trace"
+    }
+  },
+  "stationary_rx_flowoff": {
+    "beforeFile": "e12_ugv090_rx_preflight.json",
+    "beforeBoardTimesUs": [
+      233294191,
+      233631613,
+      233980951
+    ],
+    "beforeRxCounts": [
+      1523,
+      5232,
+      9079
+    ],
+    "adjacentRatesBpsApprox": [
+      10992.2,
+      11012.3
+    ],
+    "afterFile": "e12_ugv090_rx_after_flowoff.json",
+    "afterBoardTimesUs": [
+      641121327,
+      641512681,
+      641893017,
+      642252710,
+      642654185
+    ],
+    "afterRxCounts": [
+      1230,
+      1230,
+      1230,
+      1230,
+      1230
+    ],
+    "newBytesWithinAfterWindow": 0,
+    "allStoppedV1UnarmedZeroSent": true,
+    "counterScope": "Counter wrapped between files; no cross-file subtraction.",
+    "operation": "User phone GET /js?json={T:131,cmd:0}; RAM feedback flow disabled. FPGA feedback already0; no host T130 query.",
+    "motionOutcome": "TRIAL1_PARTIAL_NO_PHYSICAL_ACCEPTANCE;TRIAL2_THREE_HOLDS_AND_USER_VISIBLE_SPEED_STAGES_STOP_OBSERVED_NOT_CAUSAL_CURE",
+    "sourceCommitReference": "53c25eb5007e73779ad54526c89bb1b738f1dd1d",
+    "scope": "Same E12 reprogrammed/restored after chassis restart. No PID,model,ESP flash or newSOF/R6. RX effect confirmed independently; does not prove motion fix. 100ms PID/60ms kick interaction is mechanism inference only."
+  },
+  "continuous_command_flowoff_trial1": {
+    "log": "build/remaining_20261104/e12_continuous_command_flowoff_trial1.jsonl",
+    "outcome": "INCOMPLETE",
+    "reason": "ProbeStopped: real measured J3 clearance must be >500 mm",
+    "source": "CHASSIS_INJECT synthetic vision -> real C/FSM -> real J3/IR safety -> UART; no direct wheel/sonar writes",
+    "preflightJ3Mm": [
+      717,
+      717
+    ],
+    "preflightRxCount": 1230,
+    "statusSnapshots": 46,
+    "startCommands": 1,
+    "completedPhaseRequests": [
+      {
+        "phase": 1,
+        "u": 120,
+        "wheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.0229965
+      },
+      {
+        "phase": 2,
+        "u": 80,
+        "wheels": [
+          5,
+          4
+        ],
+        "observedHoldSeconds": 1.028899
+      }
+    ],
+    "phase3": {
+      "sampled5_5Count": 4,
+      "snapshotSpanMsApprox": 198.598,
+      "fullOneSecondHoldCompleted": false
+    },
+    "final": "VISION_ONLY,disarmed,permit0,L/R0,zeroSenttrue,J3500,IR0,HOLD0,RX1230",
+    "cleanupErrors": [],
+    "physicalFeedback": "USER_DID_NOT_WATCH_CLOSELY_NO_PHYSICAL_ACCEPTANCE",
+    "scope": "Diagnostic >500mm clearance guard, not HOLD/IR or docking failure. No precise217mm displacement/speed inference. Four-second host budget is not measured physical stop deadline. Helper/fake7 tests ignored-build experimental only; no production RTL/SOF/R6 change."
+  },
+  "continuous_command_flowoff_trial2": {
+    "log": "build/remaining_20261104/e12_continuous_command_flowoff_trial2.jsonl",
+    "outcome": "THREE_PHASE_REQUESTS_OBSERVED",
+    "statusSnapshots": 60,
+    "startCommands": 1,
+    "phases": [
+      {
+        "phase": 1,
+        "u": 120,
+        "logicalWheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.040495
+      },
+      {
+        "phase": 2,
+        "u": 80,
+        "logicalWheels": [
+          5,
+          4
+        ],
+        "observedHoldSeconds": 1.0156123
+      },
+      {
+        "phase": 3,
+        "u": 120,
+        "logicalWheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.0268218
+      }
+    ],
+    "final": "VISION_ONLY,disarmed,permit0,L/R0,zeroSenttrue,J3855,RX1230,IR0,HOLD0",
+    "cleanupErrors": [],
+    "physicalFeedback": "USER_OBSERVED_FASTER_SLOWER_FASTER_STOPPED",
+    "scope": "One active CHASSIS_INJECT task through real C/FSM/J3/IR/UART; no direct wheel/distance writes. Three holds and user-visible faster/slower/faster/stop observed. Not exact wheel-speed or camera-docking acceptance, no causal attribution to flow-off.",
+    "operatorObservation": "机器人较快行驶一段→较慢行驶一段→恢复此前较快行驶→目前已停",
+    "physicalScope": "Continuous request changes visibly affected motion, not individually verified wheel speeds/direction or quantitative5/4. No matched flow-on comparison; no causal repair claim.",
+    "audit": {
+      "armedSamples": 54,
+      "allArmedState": "APPROACH",
+      "armedSourceLockLeaseValid": true,
+      "irHoldFatalObserved": false,
+      "rxAll60Samples": 1230,
+      "startRequestToStopRequestSeconds": 3.4557113,
+      "startRequestToFinalZeroConfirmationSecondsApprox": 3.5274695,
+      "templateAckToNewRequestObservedMsApprox": [
+        132.4,
+        141.3
+      ],
+      "replayPreflight": {
+        "file": "e12_continuous_command_replay_preflight.json",
+        "healthyBlue4Samples": 2,
+        "u": 84,
+        "j3Mm": 1249
+      },
+      "scope": "ACK-to-observation includes host sampling/report formation, not chassis delay. Timings are not mechanical stopping. Range change is not exact displacement."
+    }
+  },
+  "single_turn_to_forward_flowoff_trial1": {
+    "log": "build/remaining_20261104/e12_single_turn_to_forward_flowoff_trial1.jsonl",
+    "outcome": "SINGLE_ALIGN_ZERO_FORWARD_REQUESTS_OBSERVED",
+    "statusSnapshots": 60,
+    "armedSnapshots": 54,
+    "hostStartCommands": 1,
+    "inputSource": "SYNTHETIC through real C/FSM/J3/IR/UART; no direct wheel or distance override",
+    "alignSamples": [
+      {
+        "left": 6,
+        "right": -6,
+        "samples": 2
+      },
+      {
+        "left": 4,
+        "right": -4,
+        "samples": 2
+      }
+    ],
+    "acquireZeroSnapshots": 31,
+    "forwardSnapshots": 19,
+    "forwardRequests": [
+      5,
+      5
+    ],
+    "forwardSampleSpanSeconds": 0.92035,
+    "zeroToFirstForwardSeconds": 1.611663,
+    "naturalAcquireAfterStartSeconds": 0.267321,
+    "targetChangeRequestedAfterStartSeconds": 0.31145,
+    "targetChangeCommitAckAfterStartSeconds": 0.343871,
+    "startToStopRequestSeconds": 2.799345,
+    "startToFinalZeroSeconds": 2.842336,
+    "hostBudgetSeconds": 6,
+    "outstandingReadCutoffOverrunMs": 34.774,
+    "rxCountAllSamples": 1230,
+    "cleanupErrors": [],
+    "final": {
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "permit": false,
+      "left": 0,
+      "right": 0,
+      "zeroSent": true,
+      "uartBusy": false,
+      "distanceMm": 730
+    },
+    "operatorObservation": "两侧轮子都一起走的",
+    "scope": "Both wheels participated in this check; no separate physical direction, precise duration or straightness claim. No matched flow-on control, no causal feedback repair claim. Natural zero/ACQUIRE preceded the synthetic centre update; normal fence requalification is not a LOST fault. No second ALIGN/SEARCH/LOST sampled."
+  },
+  "real_camera_flowoff_search": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_flowoff_search_to_dock.jsonl",
+    "outcome": "INCOMPLETE",
+    "taskObservationSeconds": 60.0067485,
+    "statusSnapshots": 729,
+    "visionSnapshots": 90,
+    "hostStartCommands": 0,
+    "syntheticWrites": 0,
+    "heartbeatCommands": 0,
+    "terminalObserved": false,
+    "cleanupErrors": [],
+    "final": {
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "permit": false,
+      "left": 0,
+      "right": 0,
+      "zeroSent": true,
+      "distanceMm": 407,
+      "irEstop": false,
+      "sonarHold": false
+    },
+    "operatorObservation": "找到蓝4后慢慢修正，牌边先靠VGA右边再靠左边，最终居中；有反复修正，末段两轮共同前进后停；用户对末段是否再大幅纠偏不确定。",
+    "independentAudit": {
+      "armedSnapshots": 469,
+      "sampledStateSegments": {
+        "SEARCH": 3,
+        "ACQUIRE": 27,
+        "ALIGN": 18,
+        "LOST": 15,
+        "APPROACH": 4
+      },
+      "approachCommandSamples": [
+        {
+          "left": 5,
+          "right": 5,
+          "samples": 1
+        },
+        {
+          "left": 5,
+          "right": 4,
+          "samples": 4
+        },
+        {
+          "left": 4,
+          "right": 5,
+          "samples": 2
+        },
+        {
+          "left": 4,
+          "right": 4,
+          "samples": 8
+        }
+      ],
+      "searchSeconds": 1.433652,
+      "remainingSearchSeconds": 13.666348,
+      "searchRequests": [
+        3,
+        -3
+      ],
+      "reverseSearchObserved": false,
+      "sourceUnhealthyArmedSamples": 3,
+      "sourceUnhealthyStates": [
+        "ACQUIRE"
+      ],
+      "sourceUnhealthyFrames": [
+        45034,
+        45117,
+        45129
+      ],
+      "sourceUnhealthyInputAgeMsRange": [
+        54,
+        77
+      ],
+      "sourceUnhealthyScope": "All zero/zeroSent; exact B frames unsampled, no acquisition-timeout cause established.",
+      "lostEntries": 15,
+      "lostEntriesSourceHealthy": 15,
+      "lostEntriesNotObservedNotLocked": 12,
+      "lostEntriesObservedNotLocked": 3,
+      "visionAllGoodFresh": true,
+      "candidateFaults": false,
+      "transportFaults": false,
+      "bufferDropCountConstant": 3,
+      "completionDiscardCount": 0,
+      "visionProcessingMsRange": [
+        38.818,
+        57.066
+      ],
+      "visionSnapshotAgeMsRange": [
+        40.02,
+        92.062
+      ],
+      "rxAllSamples": 1230,
+      "armedDistanceValidAndSelectionMatch": true,
+      "armedIRHoldFatalFramingError": false,
+      "targetUProgression": [
+        53,
+        85,
+        142,
+        185,
+        192,
+        194,
+        129,
+        64,
+        77,
+        129
+      ],
+      "candidateBoxScope": "U185 main candidate139..230 or140..231 has8..9px right clearance despite NF/reason4; later146..238/149..239 touches edge. NF mostly reason4, one reason3 and one reason1; not every rejection is clipping.",
+      "alignSegmentsFollowedByLost": 11,
+      "kickFirstSegmentsProvenInterruptedBeforeNominal200ms": 6,
+      "kickSampleToLostBoardMsRange": [
+        96.095,
+        122.53
+      ],
+      "segmentDurationUpperBoundMsRange": [
+        156.095,
+        182.53
+      ],
+      "earlyInterruptionScope": "Bound uses first sampled kick within60ms; logical target-validity interruption, not exact physical pulse width or measured wheel response.",
+      "countsScope": "Sparse samples/observed segments, not exact actions or UART packets; C/B are not same-frame proof."
+    },
+    "scope": "Separate real-camera task, same E12/SOF/settings. Host STOP at observation limit; no completed search-to-dock or established feedback-shutdown causal improvement.",
+    "operatorCameraToMarkerPerpendicularMm": 460,
+    "measurementScope": "Camera-to-marker460mm and J3final407mm have different origins; no same-baseline error inferred. Host60s cleanup stop, not DOCKED. No matched flow-on comparison."
+  },
+  "candidate_e13": {
+    "status": "FOCUSED_R6_PASS_FULL_BUILD_TIMING_FAIL_NEVER_PROGRAMMED",
+    "currentReleasedAndProgrammedBuild": "E7070012",
+    "rollbackCommit": "22cdd130cef30251cb003f83488fc24618e2c17b",
+    "authorization": "Initial three-frame lock; at most200ms bounded ALIGN may complete its original time during healthy brief NF/same-identity reacquisition. No extension/re-kick/direction change. Trusted crossing/source fault/safety stop immediately. Full zero ACQUIRE reconfirmation afterward. APPROACH loss still stops. Implemented and focused/R6 verified in E13; timing failed, so no physical validation.",
+    "productionT131Initialization": false,
+    "feedbackFlowOffScope": "External RAM setting, not persistent across an assumed restart and not established causal repair.",
+    "focused": {
+      "status": "PASS_VERIFIED_FROM_EXISTING_LOGS",
+      "file": "build/remaining_20261104/align_continuity_e13_20261104T212612021761Z/verified_result.json",
+      "recordedElapsedSeconds": 21.4837644,
+      "newCases": [
+        {
+          "turnSign": -1,
+          "checks": 553,
+          "uartDecodes": 60
+        },
+        {
+          "turnSign": 1,
+          "checks": 553,
+          "uartDecodes": 60
+        }
+      ],
+      "legacyNoGap": {
+        "checks": 2041,
+        "uartDecodes": 500,
+        "strictAlignBand": false,
+        "runtimeTuning": true
+      },
+      "finalCompileAndSimErrors": 0,
+      "finalCompileAndSimWarnings": 0,
+      "hostRunnerChecks": 18,
+      "history": "Original result.json FAIL from PASS-colon matcher preserved; verified from original successful logs without rerun. Earlier mode2 cameraAbandon stimulus corrected to interactionBusy. Earlier wrap-test failure also retained; details awaiting reviewer."
+    },
+    "r6": {
+      "status": "PASS",
+      "file": "build/member_b/20261104T212711_301457Z_verilator_course/result.json",
+      "elapsedSeconds": 223.568636,
+      "targetSeconds": 285,
+      "targetMet": true,
+      "cleanBuild": true,
+      "freshSources": 62,
+      "normalPass": 14,
+      "mutant": "CAUGHT",
+      "exitCode": 0,
+      "jobs": 4,
+      "scope": "Current-run exact-source reuse; added test, no removed scenarios/frames/assertions."
+    },
+    "compilationPostFit": {
+      "status": "FAIL",
+      "result": "build/member_b/20261104T212541_740043Z_build/result.json",
+      "compileSeconds": 1309.487,
+      "quartusReturncode": 0,
+      "wrapperAccepted": false,
+      "setupSlow85Ns": -0.279,
+      "setupSlow0Ns": -0.246,
+      "holdNs": 0.214,
+      "criticalWarning": 332148,
+      "postFitGateRun": false,
+      "programmed": false,
+      "hardwareTested": false,
+      "scope": "Timing failure; not a downloadable release despite completed assembly and passing simulations."
+    },
+    "programming": "NOT_PROGRAMMED_TIMING_FAIL",
+    "physicalValidation": "NOT_RUN",
+    "scope": "Historical E13 focused/R6 pass, full-build timing failure, never programmed. Superseded candidate E14 requires its own verification.",
+    "candidateBuildId": "E7070013",
+    "implementation": "Integrated top enables ALLOW_BOUNDED_ALIGN_GAP; eligible locked-entry pulse0<duration<=200ms may continue healthy NF/same-ID acquisition to original deadline, phases/direction latched. >200ms stays strict. Trusted observed crossing stops, stale absent coordinate does not. Source/safety priority and full zero ACQUIRE retained; APPROACH loss immediate stop.",
+    "deliveryPlan": {
+      "nextVersionAfterE13": "E7070014_FINAL",
+      "priority": "E14 implemented candidate flow; full build and hardware pending",
+      "finalZip": "Wait for final version; no intermediate micro-test ZIP",
+      "integratedGuide": "docs/ECHO7_Integrated_Datasheet.pdf (2 pages: product + R5)",
+      "submissionDatasheet": "docs/ECHO7_R5_Datasheet.pdf (standalone1page)",
+      "r5Definition": "tools/data/echo7_r5_targets.json and docs/R5_TARGETS.md",
+      "r5Scope": "E14 currentTrials empty/acceptance and claimed grade PENDING; no historical results combined"
+    },
+    "fullBuild": {
+      "status": "FAIL",
+      "result": "build/member_b/20261104T212541_740043Z_build/result.json",
+      "compileSeconds": 1309.487,
+      "quartusReturncode": 0,
+      "wrapperAccepted": false,
+      "setupSlow85Ns": -0.279,
+      "setupSlow0Ns": -0.246,
+      "holdNs": 0.214,
+      "criticalWarning": 332148,
+      "postFitGateRun": false,
+      "programmed": false,
+      "hardwareTested": false,
+      "scope": "Timing failure; not a downloadable release despite completed assembly and passing simulations."
+    }
+  },
+  "source_build_id": "E7070014",
+  "published_build_id": "E7070014",
+  "programmed_build_id": "E7070014",
+  "candidate_e14": {
+    "buildId": "E7070014",
+    "status": "FINAL_HANDOFF_CONSERVATIVE_RAM_READBACK_PASS_FULL_FLOW_UNPASSED_TESTING_ENDED",
+    "changes": [
+      "Bounded original ALIGN gap at total <=200ms, no extension/re-kick/reversal; other safety priority retained",
+      "Whole zero then one RAM T131 flowoff initialization; local completion gates new starts, not an execution ACK",
+      "Equivalent UART ASCII lookup to shorten diagnosed mode-to-shifter path; final timing pending",
+      "Production boot uses tried E12 profile and historical plastic-floor15.1s scan time",
+      "Stationary atomic opcode13 policy tuning with readback; fixed obstacle250/300mm safety unchanged"
+    ],
+    "bootProfile": {
+      "search": 3,
+      "turn": 4,
+      "approach": 5,
+      "fine": 4,
+      "tolerance": 30,
+      "minMs": 200,
+      "maxMs": 200,
+      "kickMs": 60,
+      "kickSpeed": 6,
+      "scanBudgetUs": 15100000,
+      "scanCalibrated": true,
+      "scanScope": "Historical approximate plastic-floor profile; two single circles plus normalized double-circle reference, before telemetry-off; no E14 three-trial angle calibration"
+    },
+    "motionPolicy": {
+      "corridorPx": {
+        "min": 45,
+        "max": 70,
+        "step": 5,
+        "default": 45
+      },
+      "settleMs": {
+        "min": 500,
+        "max": 2000,
+        "step": 100,
+        "default": 1500
+      },
+      "stopMm": {
+        "min": 300,
+        "max": 400,
+        "step": 10,
+        "default": 350
+      },
+      "slowMm": {
+        "min": 500,
+        "max": 1000,
+        "step": 50,
+        "default": 500
+      }
+    },
+    "defaultCommandBoundary": "tune --defaults=4/4/5/3/30 and pulse --defaults=20/100/0/5 remain generic, not E14 boot profile; use explicit fields. policy defaults match production45/1500/350/500.",
+    "acceptanceRequired": [
+      "One uninterrupted physical SW/new-red2 outside-view search-to-DOCK task, no synthetic vision/host START",
+      "Real near-obstacle HOLD/release and IR latch/release, ending stopped"
+    ],
+    "build": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T220114_044911Z_build/result.json",
+      "compileSeconds": 1333.597,
+      "postFitSeconds": 25.925,
+      "errors": 0,
+      "warnings": 93,
+      "worstSetupNs": 1.136,
+      "worstHoldNs": 0.118,
+      "analysedChecks": 88,
+      "unconstrainedCountsAllZero": true,
+      "almUsed": 31016,
+      "almTotal": 32070,
+      "registers": 41154,
+      "ramBlocks": 357,
+      "dspBlocks": 51,
+      "plls": 2,
+      "synchroniserCoverage": "PASS",
+      "mtbfAcceptance": "NOT_ASSESSED"
+    },
+    "r6": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T222424_503862Z_verilator_course/result.json",
+      "elapsedSeconds": 233.259611,
+      "targetSeconds": 285,
+      "headroomSeconds": 51.740389,
+      "targetMet": true,
+      "exitCode": 0,
+      "cleanBuild": true,
+      "sourceCommit": "24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d",
+      "freshSources": 65,
+      "actualCompilations": 17,
+      "normalPass": 17,
+      "mutant": "CAUGHT",
+      "timeouts": 0,
+      "jobs": 4,
+      "compilerConcurrency": 1,
+      "simulationConcurrency": 2,
+      "hardDeadlineSeconds": 300,
+      "reuse": "Only overload from same-run exact-input continuous binary; no cross-run cache",
+      "scope": "Complete formal RTL regression pass; not end-to-end physical acceptance"
+    },
+    "hardware": {
+      "firstRealRed2Search": {
+        "file": "build/remaining_20261104/integrated_blue4_e14_red2_search_to_dock_01.jsonl",
+        "outcome": "INCOMPLETE",
+        "taskObservationSeconds": 60.0170459,
+        "cSnapshots": 728,
+        "bSnapshots": 91,
+        "hostStartCommands": 0,
+        "syntheticWrites": 0,
+        "heartbeatCommands": 0,
+        "requestTagTransition": [
+          4,
+          5
+        ],
+        "actualRed2SearchStartObserved": true,
+        "acquireAlignApproachDockObserved": false,
+        "scanElapsedUs": 8230596,
+        "startDistanceMm": 725,
+        "closeDistanceMm": 161,
+        "finalDistanceMm": 732,
+        "finalMode": "VISION_ONLY",
+        "finalArmed": false,
+        "finalLeftCmS": 0,
+        "finalRightCmS": 0,
+        "finalZeroSent": true,
+        "finalSonarHold": false,
+        "cleanupErrors": [],
+        "operatorObservation": "超过蓝四没停车",
+        "scope": "Real red2 start and close-obstacle stop evidence; no full search-to-dock. One sampled blue reason4 rejection is not a complete causal diagnosis.",
+        "armedSamples": 464,
+        "armedStateSamples": {
+          "SEARCH": 64,
+          "HOLD": 400
+        },
+        "armedObservedCount": 0,
+        "armedLockedCount": 0,
+        "scanRemainingUs": 6869404,
+        "scanBudgetExhausted": false,
+        "firstHoldDistanceMm": 49,
+        "longHoldEntryDistanceMm": 167,
+        "distanceSequence": [
+          {
+            "hostSeconds": 42.4734272,
+            "state": "HOLD",
+            "distanceMm": 49
+          },
+          {
+            "hostSeconds": 42.792617,
+            "state": "SEARCH",
+            "distanceKind": "FAR"
+          },
+          {
+            "hostSeconds": 43.6226031,
+            "state": "HOLD",
+            "distanceMm": 167
+          },
+          {
+            "hostSeconds": 94.5138016,
+            "state": "SEARCH",
+            "distanceKind": "FAR"
+          },
+          {
+            "hostSeconds": 95.0257638,
+            "state": "SEARCH",
+            "distanceMm": 600
+          }
+        ],
+        "recordCorrection": "Earlier49 SEARCH/6.552069s described intermediate snapshots. Complete-log totals64 SEARCH/400 HOLD and8.230596s supersede them; no rerun/source change."
+      },
+      "stationaryPolicy": {
+        "writeFile": "build/remaining_20261104/e14_policy_stationary_write.json",
+        "restoreFile": "build/remaining_20261104/e14_policy_stationary_restore.json",
+        "write": [
+          50,
+          1400,
+          360,
+          550
+        ],
+        "restore": [
+          45,
+          1500,
+          350,
+          500
+        ],
+        "exitCodes": [
+          0,
+          0
+        ],
+        "stationary": true,
+        "scope": "All four runtime fields written/read/restored; no physical-motion performance claim"
+      },
+      "secondBypassSearch": {
+        "file": "build/remaining_20261104/integrated_blue4_e14_red2_bypass_search_to_dock_02.jsonl",
+        "outcome": "INCOMPLETE",
+        "taskObservationSeconds": 60.0301474,
+        "cSnapshots": 765,
+        "bSnapshots": 104,
+        "armedSamples": 419,
+        "armedStateSamples": {
+          "SEARCH": 94,
+          "HOLD": 218,
+          "ACQUIRE": 100,
+          "ALIGN": 7
+        },
+        "approachDockObserved": false,
+        "hostStartCommands": 0,
+        "syntheticWrites": 0,
+        "heartbeatCommands": 0,
+        "scanElapsedUs": 14017840,
+        "scanRemainingUs": 1082160,
+        "cleanupErrors": [],
+        "operatorMovedVehicleOrScene": true,
+        "scope": "Manual movement in later part prevents autonomous-recovery acceptance; no full-flow success"
+      }
+    },
+    "releaseSof": {
+      "path": "firmware/E7070014/PartBDebug.sof",
+      "bytes": 6706155,
+      "sha256": "f74a3ff85a8543ac6a204d48d4a0a578189ca77a134c444a92d4a2c7920e5aba",
+      "currentSourceBuildBinding": "PASS",
+      "byteMatchesOriginalBuild": true,
+      "scope": "Build-verified copy; actual programming and physical task acceptance separate"
+    },
+    "focused": {
+      "status": "PASS",
+      "result": "build/remaining_20261104/motion_policy_20261104T220025097074Z/result.json",
+      "elapsedSeconds": 18.9839668,
+      "policyChecks": 11687,
+      "policyCombinations": 11616,
+      "debugChecks": 251,
+      "controlChecks": 2049,
+      "controlUartLines": 500,
+      "initGateChecks": 47,
+      "finalBootDebugResult": "build/remaining_20261104/motion_policy_20261104T220112003036Z/result.json",
+      "finalBootDebugChecks": 254,
+      "hostTests": 31,
+      "hostRunnerTests": 18
+    },
+    "r6Attempts": [
+      {
+        "status": "FAIL",
+        "result": "build/member_b/20261104T220131_947405Z_verilator_course/result.json",
+        "elapsedSeconds": 104.45794,
+        "exitCode": 1,
+        "targetMet": false,
+        "failureStage": "tb_chassis_init Verilator compilation",
+        "compilerElapsedSeconds": 0.095982,
+        "compilerReturnCode": 3221225477,
+        "windowsStatus": "0xC0000005",
+        "assertionFailure": false,
+        "timeout": false,
+        "repairScope": "Equivalent testbench compatibility only; final fresh full R6 still required; production RTL unchanged"
+      },
+      {
+        "status": "FAIL",
+        "result": "build/member_b/20261104T220649_240451Z_verilator_course/result.json",
+        "elapsedSeconds": 301.821791,
+        "exitCode": 1,
+        "targetMet": false,
+        "completedPass": 10,
+        "terminatedScenario": "perceptionCoreOverload_tb",
+        "wholeSuiteDeadlineSeconds": 300,
+        "laterScenariosCompleted": false,
+        "overlappedQuartusFit": true,
+        "scope": "Whole-suite deadline, not full17PASS. Contention under investigation; final fresh no-fit-contention run still required."
+      },
+      {
+        "status": "PASS",
+        "result": "build/member_b/20261104T222424_503862Z_verilator_course/result.json",
+        "elapsedSeconds": 233.259611,
+        "targetSeconds": 285,
+        "headroomSeconds": 51.740389,
+        "targetMet": true,
+        "exitCode": 0,
+        "cleanBuild": true,
+        "sourceCommit": "24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d",
+        "freshSources": 65,
+        "actualCompilations": 17,
+        "normalPass": 17,
+        "mutant": "CAUGHT",
+        "timeouts": 0,
+        "jobs": 4,
+        "compilerConcurrency": 1,
+        "simulationConcurrency": 2,
+        "hardDeadlineSeconds": 300,
+        "reuse": "Only overload from same-run exact-input continuous binary; no cross-run cache",
+        "scope": "Complete formal RTL regression pass; not end-to-end physical acceptance"
+      }
+    ],
+    "r6CompatibilityFix": {
+      "scope": "Only two hierarchical SEND/LOAD_FB enum references in tb_chassis_init replaced by same-encoding local constants; no production or assertion changes",
+      "result": "build/remaining_20261104/verilator_init_verified_20261104T220628_233730Z/result.json",
+      "status": "PASS",
+      "checks": 4939,
+      "uartLines": 183,
+      "initializationLines": 41,
+      "asciiCombinations": 32768,
+      "approxSeconds": 8.21
+    },
+    "publication": {
+      "scope": "Second evidence update after final R6; build-verified E14 SOF and actual programming/zero-preflight, full physical task still pending",
+      "readme": "Single section-paired bilingual README.md; README_EN removed",
+      "publicationChecks": {
+        "submissionTests": 14,
+        "submissionSeconds": 0.287,
+        "repositoryTests": 6,
+        "repositorySeconds": 2.038,
+        "actualStructure": "PASS",
+        "dependencies": 60,
+        "rtlBenches": 53
+      },
+      "sofPublished": true,
+      "finalValidatedZip": false
+    },
+    "programming": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T222420_281401Z_program/result.json",
+      "finishedUtc": "2026-11-04T22:24:28.724781+00:00",
+      "programmerSucceeded": true,
+      "buildIdVerified": true
+    },
+    "stationaryPreflight": {
+      "file": "build/remaining_20261104/e14_initial_preflight.json",
+      "samples": 4,
+      "healthyObservedLockedCalibrated": 4,
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "leftCmS": 0,
+      "rightCmS": 0,
+      "zeroSent": true,
+      "initSupported": true,
+      "initSent": true,
+      "rxCounts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bootProfileReadback": "PASS",
+      "distanceRangeMm": [
+        167,
+        180
+      ],
+      "sonarHold": true,
+      "scope": "Real read-only zero preflight; no task started because close real range; not full-flow acceptance"
+    },
+    "finalConservativeProfile": {
+      "schema": "echo7-manual-runtime-profile-v1",
+      "name": "E14 final conservative candidate",
+      "buildId": "E7070014",
+      "date": "2026-11-05",
+      "status": "HARDWARE_WRITTEN_AND_READ_BACK_NO_MOTION_RETEST",
+      "purpose": "Manual restoration reference only. No loader automatically applies this JSON. User ended motion testing due to time; full autonomous search-to-dock remains unpassed.",
+      "tuning": {
+        "search": 3,
+        "turn": 4,
+        "approach": 5,
+        "fine": 4,
+        "tolerance": 40
+      },
+      "alignTiming": {
+        "minMs": 120,
+        "maxMs": 160,
+        "kickMs": 40,
+        "kickSpeed": 6
+      },
+      "motionPolicy": {
+        "corridorPx": 60,
+        "settleMs": 1800,
+        "stopMm": 400,
+        "slowMm": 700
+      },
+      "unchangedScan": {
+        "scanBudgetUs": 15100000,
+        "scanCalibrated": true,
+        "scope": "Historical approximate plastic-floor time profile, not new three-trial angle calibration"
+      },
+      "fixedSafety": {
+        "obstacleHoldMm": 250,
+        "releaseMm": 300,
+        "releaseFreshReadings": 3,
+        "irA": "Latched stop; first fresh POWER only clears latch"
+      },
+      "finalState": {
+        "mode": "VISION_ONLY",
+        "taskArmed": false,
+        "motionPermit": false,
+        "leftCmS": 0,
+        "rightCmS": 0,
+        "zeroSent": true,
+        "irEstop": false,
+        "sonarHold": false,
+        "chassisInitSent": true,
+        "chassisRxCount": 0,
+        "physicalSwitchesOn": [
+          "SW3",
+          "SW8"
+        ],
+        "selectedBlue": 4,
+        "bypassPerspective": true
+      },
+      "evidence": {
+        "readback": "build/remaining_20261104/e14_final_conservative_readback.json",
+        "samples": 3,
+        "allParameterAndZeroReadbacksMatch": true,
+        "writeLogs": [
+          "build/remaining_20261104/e14_final_conservative_tune.json",
+          "build/remaining_20261104/e14_final_conservative_pulse.json",
+          "build/remaining_20261104/e14_final_conservative_policy.json"
+        ],
+        "distanceSamples": [
+          "FAR",
+          1147,
+          1329
+        ],
+        "distanceScope": "Scene/robot had been moved; not fixed-position ranging evidence",
+        "visionScope": "No target locks, two healthy C samples and one bad B frame; not a final vision-ready claim"
+      },
+      "persistence": {
+        "volatile": true,
+        "resetEvents": [
+          "KEY0",
+          "FPGA power loss followed by reprogramming",
+          "SOF reprogramming"
+        ],
+        "resetRestores": "Production SOF boot values below, not this conservative runtime profile",
+        "sofBootTuning": {
+          "search": 3,
+          "turn": 4,
+          "approach": 5,
+          "fine": 4,
+          "tolerance": 30
+        },
+        "sofBootAlignTiming": {
+          "minMs": 200,
+          "maxMs": 200,
+          "kickMs": 60,
+          "kickSpeed": 6
+        },
+        "sofBootMotionPolicy": {
+          "corridorPx": 45,
+          "settleMs": 1500,
+          "stopMm": 350,
+          "slowMm": 500
+        }
+      },
+      "restoreCommands": [
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode vision",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 tune --search 3 --turn 4 --approach 5 --fine 4 --tolerance 40",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 pulse --min-ms 120 --max-ms 160 --kick-ms 40 --kick-speed 6",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy --corridor-px 60 --settle-ms 1800 --stop-mm 400 --slow-mm 700",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status"
+      ],
+      "futureDemonstration": {
+        "normalVision": "Set physical SW8 down and obtain new healthy confirmed frames; leave current state unchanged at handoff",
+        "modeCommand": "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode integrated",
+        "start": "After checking scene, physical one-hot target selection and safety, remove red2 for fresh absence confirmation, then present it anew. POWER cannot start while still in VISION_ONLY.",
+        "scope": "Operating instructions only, not a claim that the full physical flow has passed"
+      }
+    },
+    "acceptanceDisposition": {
+      "physicalMotionTesting": "ENDED_AT_USER_REQUEST_TIME_LIMIT",
+      "fullAutonomousSearchToDock": "UNPASSED",
+      "conservativeProfileMotionRetest": "NOT_RUN",
+      "newCompilation": "NOT_RUN_OR_REQUIRED_FOR_RAM_PROFILE",
+      "handoffMode": "VISION_ONLY_DISARMED_ZERO_SENT",
+      "futureModeChangeRequired": true
+    }
+  }
 }

@@ -34,12 +34,16 @@ module tb_pixel_uart_repair;
  wire [3:0] motionState;wire [2:0] stopReason;
  wire [511:0] statusWords;
  wire tx,uartBusy,zeroSent;
- member_c_control #(.SELECTION_STABLE_CLKS(4),.ACQUIRE_SETTLE_US(1000),
+ // E7070005 production convention, verified against real body-left low U.
+ // Pixel input and the public U/V contract remain unchanged.
+ member_c_control #(.TURN_SIGN(-1),.RUNTIME_TUNING(1),.SELECTION_STABLE_CLKS(4),.ACQUIRE_SETTLE_US(1000),
    .ACQUIRE_TIMEOUT_US(300000),.LOST_WAIT_US(80000),.TASK_TIMEOUT_US(1500000)) control(
+   .motionPolicyWord(32'h00000af9),.chassisInitSent(1'b1),
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(1'b0),.visualStart(1'b0),
    .selection(6'b000001),.mode(2'd0),.debugStart(1'b0),.debugStop(debugStop),
    .modeChanged(1'b0),.rawMode(1'b0),.injectLeaseValid(1'b0),
-   .scanCalibrated(1'b1),.scanBudgetUs(32'd700000),.timeUs(timeUs),
+   .scanCalibrated(1'b1),.scanBudgetUs(32'd700000),.timeUs(timeUs),.tuningWord(32'h001e3544),
+   .alignTimingWord(32'h00015420),
    .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.status(status),
    .targetRequest(targetRequest),.targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
    .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),
@@ -49,11 +53,16 @@ module tb_pixel_uart_repair;
    .motionState(motionState),.stop_reason(stopReason),.statusWords(statusWords));
  // Accelerated baud only: transmit every real complete JSON and decode its pin.
  chassis_command #(.USE_WHEEL_REQUESTS(1),.CLKS_PER_BIT(4),.PERIOD_CLKS(100000)) sender(
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
    .clk(clk),.reset(reset),.armed(permit),.left_cm_s(-leftRequest),.right_cm_s(-rightRequest),
    .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(uartBusy),.zeroSent(zeroSent));
  logic [15:0] pixels[0:76799];string scenePath;
  integer frameNumber=0,reports=0,notFoundReports=0,observedReports=0;
+ // E10 enters forward steering directly after confirmed acquisition at U80.
+ // Keep complete forward JSON coverage distinct from forbidden tracking spins.
  integer searchLines=0,leftLines=0,forwardLines=0,rightLines=0,zeroLines=0;
+ integer leftSpinLines=0,rightSpinLines=0,coarseLeftLines=0,coarseRightLines=0;
+ integer fineLeftLines=0,fineRightLines=0;
  integer acquireFrames=0,lastReportId=0;
  logic fenceSeen=0,acquireSeen=0,started=0;
  logic [31:0] acquireFenceUs=0;
@@ -68,10 +77,16 @@ module tb_pixel_uart_repair;
    line={line,uartByte};
    if(uartByte==10)begin
      if(line=="{\"T\":1,\"L\":0.00,\"R\":0.00}\n")zeroLines++;
-     else if(line=="{\"T\":1,\"L\":0.04,\"R\":-0.04}\n")begin
-       if(!acquireSeen)searchLines++;else leftLines++;
+     else if(line=="{\"T\":1,\"L\":-0.04,\"R\":0.04}\n")begin
+       if(!acquireSeen)searchLines++;else begin leftLines++;leftSpinLines++;end
      end else if(line=="{\"T\":1,\"L\":-0.05,\"R\":-0.05}\n")forwardLines++;
-     else if(line=="{\"T\":1,\"L\":-0.04,\"R\":0.04}\n")rightLines++;
+     else if(line=="{\"T\":1,\"L\":0.04,\"R\":-0.04}\n")begin rightLines++;rightSpinLines++;end
+     // Production motor polarity is negative. With TURN_SIGN=-1, low U
+     // uses logical L>R; high U uses R>L, with both wheels still forward.
+     else if(line=="{\"T\":1,\"L\":-0.05,\"R\":-0.03}\n")begin leftLines++;coarseLeftLines++;end
+     else if(line=="{\"T\":1,\"L\":-0.03,\"R\":-0.05}\n")begin rightLines++;coarseRightLines++;end
+     else if(line=="{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n")begin leftLines++;fineLeftLines++;end
+     else if(line=="{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n")begin rightLines++;fineRightLines++;end
      else $fatal(1,"Malformed/unexpected physical UART JSON: %s",line);
      line="";
    end
@@ -114,6 +129,17 @@ module tb_pixel_uart_repair;
    end
    if((motionState==2||motionState==3)&&(!fenceSeen||acquireFrames<3))
      $fatal(1,"tracking began without three independent post-stop-fence pixel frames");
+   if(motionState==2)
+     $fatal(1,"far U80/120/160 fixture entered ALIGN instead of direct forward approach");
+   if(motionState==3 && motionTargetValid && permit && control.centreU==80 &&
+      (leftRequest!=5 || rightRequest!=3))
+     $fatal(1,"U80 initial approach did not request exact forward left correction 5/3");
+   if(motionState==3 && motionTargetValid && permit && control.centreU==120 &&
+      (leftRequest!=5 || rightRequest!=5))
+     $fatal(1,"U120 centred approach did not request exact straight forward 5/5");
+   if(motionState==3 && motionTargetValid && permit && control.centreU==160 &&
+      (leftRequest!=3 || rightRequest!=5))
+     $fatal(1,"U160 in-corridor approach did not request exact forward right correction 3/5");
    if(debugStop&&permit)$fatal(1,"STOP retained motion permission");
  end
  task automatic frame(input integer shiftY,input bit visible);
@@ -141,17 +167,19 @@ module tb_pixel_uart_repair;
    repeat(10)@(negedge clk);reset=0;resetPclk=0;
    repeat(30)@(negedge pclk);
    frame(0,0);frame(0,0);
-   repeat(5)frame(28,1); // Blue1 U=80, genuine pixels -> acquisition -> left turn.
-   repeat(2)frame(68,1); // U=120 -> forward.
-   repeat(2)frame(108,1); // U=160 -> right turn.
+   repeat(5)frame(28,1); // Blue1 U=80 -> acquisition -> direct forward correction 5/3.
+   repeat(4)frame(68,1); // U=120 -> forward.
+   repeat(2)frame(108,1); // U=160 in APPROACH -> forward right correction 3/5.
    frame(0,0); // Real no-target frame -> stop translation.
    if(searchLines==0||leftLines==0||forwardLines==0||rightLines==0||!fenceSeen||notFoundReports<2||observedReports<6)
      $fatal(1,"pixel/UART coverage missing search=%0d left=%0d forward=%0d right=%0d reports=%0d",searchLines,leftLines,forwardLines,rightLines,reports);
+   if(coarseLeftLines==0 || coarseRightLines==0 || leftSpinLines!=0 || rightSpinLines!=0)
+     $fatal(1,"U80/U160 require complete forward 5/3 and 3/5 JSON without tracking spins: left=%0d right=%0d leftSpin=%0d rightSpin=%0d",coarseLeftLines,coarseRightLines,leftSpinLines,rightSpinLines);
    @(negedge clk);debugStop=1;
    repeat(200000)@(negedge clk);
    if(permit||leftRequest!=0||rightRequest!=0||!zeroSent||motionState!=0||zeroLines==0)
      $fatal(1,"STOP did not complete a zero JSON and cancel task");
-   $display("PASS tb_pixel_uart_repair frames=%0d reports=%0d search=%0d left=%0d forward=%0d right=%0d zero=%0d fixed25fps pixel-to-UART",frameNumber,reports,searchLines,leftLines,forwardLines,rightLines,zeroLines);
+   $display("PASS tb_pixel_uart_repair frames=%0d reports=%0d search=%0d leftCorrection=%0d forward=%0d rightCorrection=%0d zero=%0d coarseLeft=%0d coarseRight=%0d fineLeft=%0d fineRight=%0d leftSpin=%0d rightSpin=%0d fixed25fps pixel-to-UART",frameNumber,reports,searchLines,leftLines,forwardLines,rightLines,zeroLines,coarseLeftLines,coarseRightLines,fineLeftLines,fineRightLines,leftSpinLines,rightSpinLines);
    $finish;
  end
  initial begin #650000000;$fatal(1,"pixel/UART watchdog");end

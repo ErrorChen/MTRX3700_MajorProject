@@ -14,14 +14,16 @@ module tb_motion_uart;
  wire permit,used,estop,sonar_stop,motionTargetValid;
  wire [2:0] state,reason;
  int frame=0,checks=0;
- member_c_control dut(.clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),
+ member_c_control dut(
+   .motionPolicyWord(32'h00000af9),.chassisInitSent(1'b1),.clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),
  .cameraFifoFault(1'b0),.cameraAbandonEvent(1'b0),.selection(selection),.timeUs(timeUs),.status(status),.targetRequest(req),.targetRequestValid(qv),
  .targetRequestReady(qr),.targetReport(rpt),.targetReportValid(rv),.targetReportReady(rr),
  .distance_valid(distance_valid),.distance_mm(distance_mm),.left_cm_s(l),.right_cm_s(r),
  .permit(permit),.used(used),.estop(estop),.sonar_stop(sonar_stop),.motionTargetValid(motionTargetValid),
  .motionState(state),.stop_reason(reason));
  wire signed [6:0] flipL,flipR;wire [2:0] flipState;
- motion_fsm #(.TURN_SIGN(-1)) flipped(.clk(clk),.reset(reset),.taskActive(dut.taskActive),
+ motion_fsm #(.TURN_SIGN(-1)) flipped(
+   .motionPolicyWord(32'h00000af9),.clk(clk),.reset(reset),.taskActive(dut.taskActive),
  .safetyHalt(estop_frame||estop||sonar_stop),.motionTargetValid(motionTargetValid),
  .distance_valid(distance_valid),.distance_mm(distance_mm),.centreU(dut.centreU),
  .left_cm_s(flipL),.right_cm_s(flipR),.state(flipState));
@@ -53,6 +55,7 @@ module tb_motion_uart;
  task automatic stopped(input string why);ck(!permit && l==0 && r==0,why);endtask
  wire tx,busy;
  chassis_command #(.USE_WHEEL_REQUESTS(1),.CLKS_PER_BIT(4),.PERIOD_CLKS(10000)) sender(
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
  .clk(clk),.reset(reset),.armed(permit),.left_cm_s(-l),.right_cm_s(-r),
  .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(busy));
  string line;

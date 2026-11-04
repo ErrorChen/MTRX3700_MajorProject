@@ -69,7 +69,7 @@ class SubmissionDatasheetTests(unittest.TestCase):
         build = {'status': 'PASS', 'source': self.current,
                  'sof': {'path': str(sof), 'bytes': sof.stat().st_size, 'modifiedNs': sof.stat().st_mtime_ns}}
         (work / 'last_build.json').write_text(json.dumps(build), encoding='utf-8')
-        for name in ('README.md', 'README_EN.md', 'VERSION_README.md', 'OWNERS.md', 'requirements.txt',
+        for name in ('README.md', 'VERSION_README.md', 'OWNERS.md', 'requirements.txt',
                      'run_all_tests.sh', '.gitignore', '.gitattributes', '.editorconfig'):
             (source / name).write_text('synthetic export fixture\n', encoding='utf-8')
         for name in ('evidence/old.log', 'member_b_review_pack/old.txt', 'docs/old.md'):
@@ -98,7 +98,8 @@ class SubmissionDatasheetTests(unittest.TestCase):
             self.assertIn('echo7_datasheet.pdf', record['files'])
             self.assertFalse(any(name.startswith(('evidence/', 'member_b_review_pack/')) for name in archive.namelist()))
             self.assertIn('docs/old.md', archive.namelist())
-            self.assertIn('README_EN.md', archive.namelist())
+            self.assertIn('README.md', archive.namelist())
+            self.assertNotIn('README_EN.md', archive.namelist())
             self.assertIn('docs/integrated_datasheet_metrics.json', archive.namelist())
             firmwarePath = 'firmware/AAAAAAAA/PartBDebug.sof'
             self.assertEqual([name for name in archive.namelist() if name.endswith('.sof')], [firmwarePath])

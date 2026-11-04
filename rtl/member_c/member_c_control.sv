@@ -1,7 +1,16 @@
 module member_c_control #(
+ parameter bit RUNTIME_TUNING=0,
+ parameter bit RUNTIME_MOTION_POLICY=0,
+ parameter bit ALLOW_BOUNDED_ALIGN_GAP=0,
+ parameter bit REQUIRE_CHASSIS_INIT=0,
  parameter int ULTRASONIC_ESTOP_MM=250,TURN_SIGN=1,
+ parameter int ALIGN_LOW=90,ALIGN_HIGH=150,
  parameter int SELECTION_STABLE_CLKS=1_000_000,
- parameter int ACQUIRE_SETTLE_US=200000,ACQUIRE_TIMEOUT_US=900000,
+ parameter int APPROACH_TRACK_ERROR=45,FINE_STEER_CM_S=4,
+ parameter int BACKTRACK_PULSE_US=150000,BACKTRACK_MAX_STEPS=3,
+ parameter int ALIGN_FINE_CM_S=3,ALIGN_FINE_ERROR=30,
+ parameter int ALIGN_US_PER_PIXEL=2000,ALIGN_MIN_PULSE_US=20000,ALIGN_MAX_PULSE_US=100000,
+ parameter int ACQUIRE_SETTLE_US=1500000,ACQUIRE_TIMEOUT_US=900000,
  parameter int LOST_WAIT_US=300000,TASK_TIMEOUT_US=120000000
 )(
  input logic clk,reset,power_frame,estop_frame,
@@ -9,6 +18,7 @@ module member_c_control #(
  input logic [1:0] mode,
  input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
  input logic [31:0] scanBudgetUs,timeUs,
+ input logic [31:0] tuningWord,alignTimingWord,motionPolicyWord,
  input logic cameraFifoFault,cameraAbandonEvent,
  input perception_pkg::perceptionStatus_t status,
  output perception_pkg::targetRequest_t targetRequest,
@@ -16,7 +26,7 @@ module member_c_control #(
  input perception_pkg::targetReport_t targetReport,
  input logic targetReportValid,output wire targetReportReady,
  input logic distance_valid,distanceSample,input logic [11:0] distance_mm,
- input logic zeroSent,uartBusy,
+ input logic zeroSent,uartBusy,chassisInitSent,
  output wire signed [6:0] left_cm_s,right_cm_s,
  output wire permit,used,estop,sonar_stop,motionTargetValid,
  output wire [3:0] motionState,output wire [2:0] stop_reason,
@@ -38,25 +48,28 @@ module member_c_control #(
  wire cancel=debugStop || modeChanged || rawMode || !selectionMatches || !selectionValid ||
    estop_frame || estop || fatalFault || (mode==2 && !injectLeaseValid);
  wire scanAllowed=scanCalibrated || mode==2;
+ // Startup configuration qualifies only a NEW task. IR release, STOP and
+ // tracking remain live, and readiness alone cannot synthesize a START.
+ wire chassisStartReady=!REQUIRE_CHASSIS_INIT || chassisInitSent;
  wire terminalState=motionState==0 || motionState==4 || motionState==8;
  // A newly presented red2 takes the current physical selection, refreshes
  // its request fence, then may start once a fresh report belongs to that tag.
  // Active tasks ignore this event so it cannot replenish search budgets.
- wire visualReselect=visualStart && mode!=2 && !taskActive && terminalState && selectionValid && selectionMatches;
+ wire visualReselect=visualStart && chassisStartReady && mode!=2 && !taskActive && terminalState && selectionValid && selectionMatches;
  // Without a calibrated scan, the first healthy/acquiring frame cannot
  // start SEARCH: wait for the new request's three-frame target lock instead.
  wire visualStartReady=pendingVisualStart && requestTag!=visualPreviousTag &&
    (scanAllowed || motionTargetValid);
  assign startPulse=(power_frame || debugStart || visualStartReady) && !taskActive && terminalState && !cancel &&
-   modePermit && !sonar_stop && distance_valid && distance_mm>ULTRASONIC_ESTOP_MM && sourceHealthyFresh;
+   chassisStartReady && modePermit && !sonar_stop && distance_valid && distance_mm>ULTRASONIC_ESTOP_MM && sourceHealthyFresh;
  always_ff @(posedge clk)begin
    if(reset)begin pendingVisualStart<=0;visualPreviousTag<=0;visualStartUs<=0;end
    else if(cancel || sonar_stop || !distance_valid || distance_mm<=ULTRASONIC_ESTOP_MM ||
-           !modePermit || startPulse || timeUs-visualStartUs>=1000000)pendingVisualStart<=0;
+           !chassisStartReady || !modePermit || startPulse || timeUs-visualStartUs>=1000000)pendingVisualStart<=0;
    // First establish a healthy physical safety condition; restoring a hazard
    // later must never activate an earlier red2 presentation.
    if(!reset && visualReselect)begin
-     pendingVisualStart<=!cancel && modePermit && !sonar_stop && distance_valid && distance_mm>ULTRASONIC_ESTOP_MM;
+     pendingVisualStart<=chassisStartReady && !cancel && modePermit && !sonar_stop && distance_valid && distance_mm>ULTRASONIC_ESTOP_MM;
      visualPreviousTag<=requestTag;visualStartUs<=timeUs;
    end
  end
@@ -75,14 +88,19 @@ module member_c_control #(
    .selectionConflict(selectionConflict),.selectionMatches(selectionMatches),.centreU(centreU),
    .sourceHealthyFresh(sourceHealthyFresh),.targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .requestTag(requestTag),.frameId(frameId),.inputAgeUs(inputAgeUs),.fatalFault(fatalFault));
- motion_fsm #(.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+ motion_fsm #(.RUNTIME_TUNING(RUNTIME_TUNING),.RUNTIME_MOTION_POLICY(RUNTIME_MOTION_POLICY),.ALLOW_BOUNDED_ALIGN_GAP(ALLOW_BOUNDED_ALIGN_GAP),
+   .SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(ALIGN_LOW),.ALIGN_HIGH(ALIGN_HIGH),
+   .APPROACH_TRACK_ERROR(APPROACH_TRACK_ERROR),.FINE_STEER_CM_S(FINE_STEER_CM_S),
+   .BACKTRACK_PULSE_US(BACKTRACK_PULSE_US),.BACKTRACK_MAX_STEPS(BACKTRACK_MAX_STEPS),
+   .ALIGN_FINE_CM_S(ALIGN_FINE_CM_S),.ALIGN_FINE_ERROR(ALIGN_FINE_ERROR),
+   .ALIGN_US_PER_PIXEL(ALIGN_US_PER_PIXEL),.ALIGN_MIN_PULSE_US(ALIGN_MIN_PULSE_US),.ALIGN_MAX_PULSE_US(ALIGN_MAX_PULSE_US),
    .ACQUIRE_SETTLE_US(ACQUIRE_SETTLE_US),.ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US),
    .LOST_WAIT_US(LOST_WAIT_US),.TASK_TIMEOUT_US(TASK_TIMEOUT_US)) motion(
    .clk(clk),.reset(reset),.startPulse(startPulse),.cancel(cancel),.taskActive(taskActive),
    .safetyHalt(estop_frame || estop || sonar_stop),.sourceHealthyFresh(sourceHealthyFresh),
    .targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .distance_valid(distance_valid),.distance_mm(distance_mm),.centreU(centreU),
-   .scanAllowed(scanAllowed),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),
+   .scanAllowed(scanAllowed),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),.motionPolicyWord(motionPolicyWord),
    .zeroSent(zeroSent),.motionApplied(permit && motionState==1),
    .left_cm_s(reqL),.right_cm_s(reqR),.state(motionState),.acquireFencePulse(acquireFencePulse),
    .taskDone(taskDone),.scanElapsedUs(scanElapsedUs),.scanRemainingUs(scanRemainingUs),.failureReason(failureReason));

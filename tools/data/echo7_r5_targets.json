@@ -1,0 +1,112 @@
+{
+  "schema": "echo7-r5-target-specification-v1",
+  "sourceBuildId": "E7070014",
+  "declaredDate": "05 NOV 2026",
+  "status": "FORMAL_TARGETS_DEFINED_MEASUREMENT_PENDING",
+  "claimedGradeLevel": "PENDING - no level asserted",
+  "gradeBasis": "Course levels depend on the demonstrated robot, measured targets and, above Pass where applicable, the contribution and bypass evidence. These project thresholds do not map automatically to a grade.",
+  "measurementBoundary": "No three-trial acceptance score is available for this source revision. Historical E4/E12 observations below are context only. A finite host test or a terminal J3 reading is not a completed docking trial.",
+  "predictionBoundary": "Predictions are prospective design expectations for this specification, not retrospective predictions of the historical measurements. Provisional budgets and ideal calculations are labelled; missing models stay PENDING.",
+  "courseSources": [
+    {"path": "docs/Major_Project_Brief_2026.pdf", "pages": "3-4", "sections": "R5 and 2.3", "meaning": "3-5 measurable targets; at least one timing and one accuracy/repeatability target; ranges, tests, threshold and goal; three trials scored without choosing the best. Numerical examples are not mandatory specifications."},
+    {"path": "docs/Major_Project_Brief_2026.pdf", "pages": "4,6", "sections": "2.4 and 4", "meaning": "Name the claimed level and the modules supporting it. Marks and level depend on actual demonstration; goal/threshold performance is not a self-awarded grade."},
+    {"path": "docs/Major_Project_Brief_2026.pdf", "pages": "4,7", "sections": "2.3 and 7", "meaning": "Bring and submit the one-page formal datasheet. The separate product operating guide is supplementary."}
+  ],
+  "targets": [
+    {
+      "id": "T1",
+      "shortName": "Marker accuracy",
+      "quantityUnit": "Correct blue-marker identities (%) = correct / 60 expected labels per trial.",
+      "conditions": "Six official blue 1-6 signs, fixed and fully visible with >=10 px margin; camera 0.40-0.70 m away. Stable indoor light, no glare. VISION_ONLY; SW8=0, SW9=0; calibrated profile held fixed.",
+      "threeTrialRule": "Three tutor-chosen static poses. Per pose, score the first 10 distinct reports against a photographed label/region map: 6 labels x 10. Count bad/missing/ambiguous labels as wrong; no best-frame filtering. Use the LOWEST of three rates; require zero wrong accepted IDs.",
+      "threshold": ">=95%; zero wrong accepted IDs; every bay appears in each trial.",
+      "goal": "100% in all three trials.",
+      "predictedValue": "100% intended on the declared static sheet. Design expectation, not a proven physical success rate.",
+      "measuredValue": "E14: PENDING. E4 history: all six IDs present in 12/12 snapshots in each of three sets; this is not spatially truth-scored T1 accuracy.",
+      "claimedGradeLevel": "PENDING",
+      "thresholdSource": "Project-defined threshold/goal retained from tools/render_member_b_datasheet.py; not a course grade cut-off.",
+      "contribution": "projectiveMarkerReader, nativeAnchorReader and main-colour segmentation/recognition.",
+      "acceptanceStatus": "PENDING",
+      "currentTrials": [],
+      "historicalEvidence": {
+        "buildId": "E7070004",
+        "files": ["build/remaining_20261104/sw8_pairs/normal1.json", "build/remaining_20261104/sw8_pairs_resume1/normal2.json", "build/remaining_20261104/sw8_pairs_resume1/normal3.json"],
+        "allSixIdPresenceCounts": [12, 12, 12],
+        "sampleCounts": [12, 12, 12],
+        "scope": "Set presence only. No per-label spatial truth score or unobserved-frame claim. Physical distance was reported as 42 cm. This is not E14 evidence."
+      }
+    },
+    {
+      "id": "T2",
+      "shortName": "Vision latency",
+      "quantityUnit": "Sampled capture-to-result latency (ms): unsigned completionUs - captureStartUs.",
+      "conditions": "Same scene ranges as T1, nominal 25 fps and 320 x 240 RGB565. Use complete FPGA reports, including failed results; keep build/config fixed. No newly dropped/overflow frames during a scored trial.",
+      "threeTrialRule": "Use T1's three sets of 10 distinct reports. Take each set's maximum board-time latency, then the LARGEST of those three. A missing report or new drop/overflow fails the trial. This sampled maximum does not bound unsampled frames or camera-to-wheel latency.",
+      "threshold": "<=150 ms, with all three sets complete and no new drop/overflow.",
+      "goal": "<=100 ms under the same rule.",
+      "predictedValue": "Provisional 100 ms budget: 40 ms capture  + 60 ms processing/commit allowance. Not a proven worst-case bound.",
+      "measuredValue": "E14: PENDING. E12 history: 38.818-57.066 ms across 90 sampled reports in one moving-target task; not the required three static sets.",
+      "claimedGradeLevel": "PENDING",
+      "thresholdSource": "Project-defined150/100ms retained from tools/render_member_b_datasheet.py. Course p4 camera-to-wheel example is a different quantity and is not used as this threshold.",
+      "contribution": "On-FPGA capture, candidate/reader processing and atomic report completion in perceptionCore.",
+      "acceptanceStatus": "PENDING",
+      "currentTrials": [],
+      "historicalEvidence": {
+        "buildId": "E7070012",
+        "file": "build/remaining_20261104/integrated_blue4_e12_flowoff_search_to_dock.jsonl",
+        "sampleCount": 90,
+        "minimumUs": 38818,
+        "maximumUs": 57066,
+        "scope": "Sparse BCTL reports from one dynamic task, independently frozen from CCTL. No physical response or complete-frame-population latency claim."
+      }
+    },
+    {
+      "id": "T3",
+      "shortName": "Colour calibration",
+      "quantityUnit": "Confirmed calibration attempt to new profile commit (ms); conservative observed upper bound.",
+      "conditions": "Red1 plus its paired blue reference, both complete and still; 0.40-0.70 m camera distance, stable indoor light, nominal 25 fps. VISION_ONLY; same build; independent rearm before each attempt.",
+      "threeTrialRule": "Three independently rearmed attempts. Log board-time trace from confirmed attempt through eight qualified samples and new-config commit. Use the LONGEST conservative interval. Failure, missing start/commit or >2 s is not a success; ACK alone does not count.",
+      "threshold": "All 3 commits <=2000 ms, each with 8 valid sample frames.",
+      "goal": "All 3 commits <=1000 ms.",
+      "predictedValue": "Ideal 360 ms: (8 sample frames + 1 commit boundary) x 40 ms. Excludes pre-confirmation detection and rejected frames.",
+      "measuredValue": "E14: PENDING. E12 preflight showed calibrated=true and 8 sample frames; three independently timed attempts are absent.",
+      "claimedGradeLevel": "PENDING",
+      "thresholdSource": "Project-defined2s/1s retained from tools/render_member_b_datasheet.py. Ideal estimate follows the eight-frame sampling/commit design, not measured convergence.",
+      "contribution": "calibrationGeometry, calibrationPointMapper and real-pixel threshold/profile commit logic.",
+      "acceptanceStatus": "PENDING",
+      "currentTrials": [],
+      "historicalEvidence": {
+        "buildId": "E7070012",
+        "file": "build/remaining_20261104/e12_blue4_calibration_preflight.json",
+        "calibrated": true,
+        "calibrationSampleFrames": 8,
+        "configVersion": 1,
+        "scope": "Completed-state observation only; it does not identify three attempt start times or convergence intervals."
+      }
+    },
+    {
+      "id": "T4",
+      "shortName": "Docking gap error",
+      "quantityUnit": "Absolute final gap error (mm): |ruler gap -350|, measured from J3 probe front to target plane.",
+      "conditions": "Already-visible blue 1-4, locked within U90-150; start gap 0.60-0.70 m. Flat plastic floor, vertical board spanning camera/J3 heights, unchanged supply/load. Fixed declared runtime settings for all 3 runs.",
+      "threeTrialRule": "Reset to the same start marks for 3 approaches. Stop a trial after 25 s if no autonomous DOCKED. Measure each settled ruler gap; use the LARGEST absolute error. Any timeout/manual stop/no DOCKED fails; J3 alone cannot replace the ruler.",
+      "threshold": "3/3 autonomous docks; worst absolute error <=50 mm.",
+      "goal": "3/3 docks; worst error <=20 mm.",
+      "predictedValue": "PENDING braking/ranging error model. A logical 350 mm stop threshold is not a physical gap prediction.",
+      "measuredValue": "E14: PENDING. Latest E12 outside-view task ended INCOMPLETE at 60.007 s, not DOCKED; no valid T4 error. Earlier partial runs cannot be joined.",
+      "claimedGradeLevel": "PENDING",
+      "thresholdSource": "New project choice:350mm matches the controller's desired stopping gap;50/20mm are explicit project acceptance/goal values. They are not prescribed course values or a grade claim.",
+      "contribution": "Real-camera target qualification, motion_fsm approach/stop decisions and J3 safety integration.",
+      "acceptanceStatus": "PENDING",
+      "currentTrials": [],
+      "historicalEvidence": {
+        "buildId": "E7070012",
+        "file": "build/remaining_20261104/integrated_blue4_e12_flowoff_search_to_dock.jsonl",
+        "outcome": "INCOMPLETE",
+        "taskObservationSeconds": 60.0067485,
+        "dockObserved": false,
+        "scope": "Different outside-view task, terminated by host observation limit. Final J3 distance407mm is not a scored docking gap."
+      }
+    }
+  ]
+}

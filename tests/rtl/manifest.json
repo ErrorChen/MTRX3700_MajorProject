@@ -732,6 +732,54 @@
       "inputSource": "SYNTHETIC_PROTOCOL_REAL_C_AND_UART"
     },
     {
+      "name": "tb_align_continuity",
+      "passMarker": "PASS tb_align_continuity",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/member_c/perception_adapter.sv",
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "rtl/member_c/member_c_control.sv",
+        "rtl/member_c/uart_tx.sv",
+        "rtl/member_c/chassis_command.sv",
+        "tests/member_c/tb_align_continuity.sv"
+      ],
+      "inputSource": "SYNTHETIC_REPORTS_REAL_C_UART_PRODUCTION_ENABLED_BOUNDED_ALIGN_GAP"
+    },
+    {
+      "name": "tb_chassis_init",
+      "passMarker": "PASS tb_chassis_init",
+      "sources": [
+        "rtl/member_c/uart_tx.sv",
+        "rtl/member_c/chassis_command.sv",
+        "tests/member_c/tb_chassis_init.sv"
+      ],
+      "inputSource": "REAL_UART_STARTUP_FLOWOFF_STOP_PRIORITY_AND_EXHAUSTIVE_ASCII_EQUIVALENCE"
+    },
+    {
+      "name": "tb_chassis_init_gate",
+      "passMarker": "PASS tb_chassis_init_gate",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/member_c/perception_adapter.sv",
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "rtl/member_c/member_c_control.sv",
+        "tests/member_c/tb_chassis_init_gate.sv"
+      ],
+      "inputSource": "REAL_CONTROL_NEW_TASK_INITIALIZATION_GATE_AND_EARLY_EVENT_DISCARD"
+    },
+    {
+      "name": "tb_motion_policy",
+      "passMarker": "PASS tb_motion_policy",
+      "sources": [
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "tests/member_c/tb_motion_policy.sv"
+      ],
+      "inputSource": "EXHAUSTIVE_BOUNDED_POLICY_DECODE_AND_REAL_MOTION_FIXED_SAFETY_BOUNDARIES"
+    },
+    {
       "name": "tb_chassis_debug",
       "passMarker": "PASS tb_chassis_debug",
       "sources": [
@@ -811,6 +859,18 @@
       ],
       "timeoutSeconds": 1200,
       "inputSource": "PIN_LEVEL_NEC_J3_UART_SYNTHETIC_VISION"
+    },
+    {
+      "name": "tb_sonar_guard",
+      "passMarker": "PASS tb_sonar_guard",
+      "sources": [
+        "rtl/member_c/sonar_pll.sv",
+        "rtl/member_c/sonar_range.sv",
+        "rtl/member_c/sonar_guard.sv",
+        "tests/member_c/tb_sonar_guard.sv"
+      ],
+      "timeoutSeconds": 300,
+      "inputSource": "PIN_LEVEL_J3_TRIG_ECHO_NORMAL_FAR_NEAR_FAULT_RECOVERY"
     },
     {
       "name": "red2Start_tb",
