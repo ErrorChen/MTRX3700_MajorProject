@@ -25,6 +25,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
  int lowTurnLines=0,highTurnLines=0,lowFineTurnLines=0,highFineTurnLines=0,fineLines=0;
  int lowSteerLines=0,highSteerLines=0,lowFineSteerLines=0,highFineSteerLines=0;
  localparam int TEST_SETTLE_US=1500; // Accelerated protocol dwell; production is 1500000 us.
+ localparam int TEST_BACKTRACK_US=150000; // Keep the production reverse duration.
  localparam int LOW_L=-4*TURN_SIGN,LOW_R=4*TURN_SIGN;
  localparam int LOW_FINE_L=-3*TURN_SIGN,LOW_FINE_R=3*TURN_SIGN;
  localparam int LOW_STEER_L=TURN_SIGN==-1 ? 5:3,LOW_STEER_R=TURN_SIGN==-1 ? 3:5;
@@ -38,7 +39,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
  localparam string LOW_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n" : "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n";
  localparam string HIGH_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n" : "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n";
  string lines[0:255];
- // Default follows the E7070008 production top; +1 remains an explicit
+ // Default follows the E7070009 production top; +1 remains an explicit
  // generic convention regression, not the corrected hardware configuration.
  member_c_control #(.TURN_SIGN(TURN_SIGN),.SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
    .ACQUIRE_TIMEOUT_US(20000),.LOST_WAIT_US(1000),.TASK_TIMEOUT_US(2000000)) dut(
@@ -105,6 +106,33 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
    tick();stopped("pulse deadline gates logical wheels without waiting for next state edge");
    tick();ck(state==6 && dut.taskActive,"pulse expires into stationary acquisition without disarming");
    ck(dut.scanElapsedUs==spent && dut.motion.taskStartUs==taskStart,"ALIGN pulse does not replenish search or total-task time");
+ endtask
+ task automatic startMissedSighting(input int budget=1000000);
+   stopTask();distance_valid=1;distance_mm=1000;samples();scanBudgetUs=budget;fresh();arm();
+   ck(state==1 && !dut.motion.backtracking && dut.motion.backtrackSteps==0,"new task starts forward SEARCH with a fresh recovery allowance");
+   tick(2500);send(1,80,0);
+   ck(state==6 && dut.motion.backtrackAuthorized,"only a forward SEARCH sighting authorizes recovery");
+   stopped("search sighting stops before stationary confirmation");send();
+   wait(dut.motion.acquirePhase==2);tick(3);send();
+   wait(dut.motion.backtracking);tick(2);
+   ck(state==1 && permit && l==LOW_R && r==LOW_L && dut.motion.backtrackSteps==1,"missed stationary sighting starts first bounded reverse step");
+ endtask
+ task automatic reverseEnd;
+   logic[31:0] began,spent,taskStart;int remainingUs,expectedBudgetUs;
+   began=dut.motion.stateStartUs;spent=dut.scanElapsedUs;taskStart=dut.motion.taskStartUs;
+   expectedBudgetUs=TEST_BACKTRACK_US-int'(timeUs-began);
+   // A real camera keeps reporting during the 150 ms command. Refresh the
+   // public NOT_FOUND report, rather than disabling its production age check.
+   while(timeUs-began<TEST_BACKTRACK_US-40001)begin
+     tick(35000);send();ck(dut.motion.backtracking && permit,"healthy reports cannot extend or prematurely end reverse pulse");
+   end
+   remainingUs=TEST_BACKTRACK_US-int'(timeUs-began)-1;ck(remainingUs>0,"reverse deadline checked before expiry");
+   tick(remainingUs);ck(dut.motion.backtracking && permit,"reverse remains permitted immediately before 150 ms limit");
+   tick();stopped("reverse expiry removes wheel request combinationally");tick();
+   ck(state==6 && !dut.motion.backtracking && dut.motion.backtrackRecoveryRequired,"reverse always enters full stationary acquisition");
+   ck(dut.scanElapsedUs-spent>=expectedBudgetUs-10 && dut.scanElapsedUs-spent<=expectedBudgetUs+2,
+     "reverse logical motion consumes the original scan budget");
+   ck(dut.motion.taskStartUs==taskStart,"reverse step cannot reset total-task wall time");
  endtask
  task automatic readLine;
    logic [7:0] ch;string line;line="";
@@ -331,6 +359,89 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
    // Keep health fresh while final acquisition expires.
    repeat(25)begin tick(1000);send();end
    ck(state==8 && !dut.taskActive && dut.failureReason==1,"bounded NOT_FOUND disarms");samples();fresh(1);stopped("NOT_FOUND cannot auto-resume");
+
+   // Ordinary approach/alignment acquisition must never invent a SEARCH
+   // sighting. This also protects E8's already-passing visible-target path.
+   stopTask();scanBudgetUs=1000000;distance_mm=1000;fresh(1);arm();send(1,166);send();
+   ck(state==6 && !dut.motion.backtrackAuthorized,"APPROACH-to-ACQUIRE grants no reverse authority");
+   wait(dut.motion.acquirePhase==2);tick(20003);
+   ck(state==1 && !dut.motion.backtracking && dut.motion.backtrackSteps==0,"ordinary acquisition timeout returns only to forward search");
+   // Three reversals at most for the entire task, even if another forward
+   // sighting later arrives. Each retry has its own zero/dwell/fresh boundary.
+   startMissedSighting();
+   begin int beforeReverse;logic[31:0] originalTask;beforeReverse=highTurnLines;originalTask=dut.motion.taskStartUs;
+     tick(2500);ck(highTurnLines>beforeReverse,"reverse SEARCH emits the exact complete opposite 4 cm/s UART JSON");
+     for(int step=1;step<=3;step++)begin
+       reverseEnd();wait(dut.motion.acquirePhase==1);tick(2);
+       ck(zeroSent && uartBusy==0,"each reverse retry waits for complete zero UART before dwell");
+       wait(dut.motion.acquirePhase==2);tick(3);send();
+       ck(timeUs-dut.motion.settleStartUs>=TEST_SETTLE_US,"each reverse retry establishes a post-dwell target fence");
+       tick(20003);
+       ck(dut.motion.taskStartUs==originalTask,"retries preserve the original task deadline");
+       if(step<3)ck(dut.motion.backtracking && dut.motion.backtrackSteps==step+1,"failed fresh confirmation advances bounded reverse count");
+       else ck(state==1 && !dut.motion.backtracking && !dut.motion.backtrackAuthorized && dut.motion.backtrackSteps==3,
+         "third failed recovery resumes original direction without replenishing attempts");
+     end
+     ck(l==LOW_L && r==LOW_R && dut.scanElapsedUs>3*TEST_BACKTRACK_US-20,"forward search resumes with reverse time already charged");
+     send(1,80,0);send();wait(dut.motion.acquirePhase==2);tick(20003);
+     ck(!dut.motion.backtracking && dut.motion.backtrackSteps==3 && l==LOW_L && r==LOW_R,"later forward sighting cannot create a fourth reverse step");
+   end
+   // A new observation while reversing stops immediately; only three new
+   // post-fence observations can unlock ALIGN/APPROACH again.
+   startMissedSighting();send(1,120,0);stopped("reverse sighting immediately stops without rearming recovery");
+   ck(state==6 && dut.motion.backtrackSteps==1,"reverse sighting does not refill the attempt count");
+   fresh(1);stopped("pre-settle reports after reverse cannot directly move forward");
+   wait(dut.motion.acquirePhase==2);tick(3);send(1);stopped("reverse recovery first post-fence target stays stopped");
+   send(1);stopped("reverse recovery second post-fence target stays stopped");send(1);tick(4);
+   ck(state==3 && permit && l==5 && r==5 && !dut.motion.backtrackAuthorized && !dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1,
+     "third new target completes recovery and clears authority without refunding attempts");
+   // A short remaining scan allowance truncates a reverse pulse before its
+   // nominal duration and finishes through the existing final ACQUIRE.
+   startMissedSighting(3500);
+   begin logic[31:0] began;began=dut.motion.stateStartUs;
+     wait(!dut.motion.backtracking);tick(2);stopped("remaining-budget exhaustion immediately stops reverse");
+     ck(state==6 && dut.motion.finalAcquire && dut.scanElapsedUs==3500 && timeUs-began<TEST_BACKTRACK_US,
+       "reverse cannot exceed a shorter remaining total budget");
+     wait(dut.motion.acquirePhase==2);tick(20003);
+     ck(state==8 && !dut.taskActive && dut.failureReason==1,"reverse budget exhaustion reaches bounded NOT_FOUND");fresh(1);stopped("late target cannot revive budget-exhausted reverse task");
+   end
+   // Source interruption revokes authority, retains the spent attempt, and
+   // cannot fall through LOST directly into forward motion before full dwell.
+   startMissedSighting();tick(2500);send(0,120,0,7);stopped("source failure immediately cancels reverse output");
+   ck(state==6 && !dut.motion.backtrackAuthorized && dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1,
+     "source interruption retains required stationary recovery and spent count");
+   tick(TEST_SETTLE_US+1000);ck(dut.motion.acquirePhase==0,"unhealthy source cannot consume the recovery dwell");
+   fresh();wait(dut.motion.acquirePhase==1);tick(2);stopped("restored source begins a full zero-confirmed dwell");
+   wait(dut.motion.acquirePhase==2);tick(3);send();tick(20003);
+   ck(state==1 && !dut.motion.backtracking && dut.motion.backtrackSteps==1 && l==LOW_L && r==LOW_R,
+     "source recovery resumes forward only after full stationary confirmation, with no refund");
+   // Near/invalid protection must not bypass that same stationary recovery.
+   startMissedSighting();tick(2500);distance_mm=200;#1;stopped("hazard immediately stops reverse");tick(3);
+   begin logic[31:0] spent;spent=dut.scanElapsedUs;tick(5000);
+     ck(state==7 && !dut.motion.backtrackAuthorized && dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1 && dut.scanElapsedUs==spent,
+       "HOLD keeps reverse authority revoked, count spent and scan time paused");
+   end
+   distance_mm=1000;samples();tick(3);ck(state==6 && dut.motion.backtrackRecoveryRequired,"HOLD recovery cannot jump directly from reverse to forward SEARCH");
+   wait(dut.motion.acquirePhase==2);tick(3);send();tick(20003);
+   ck(state==1 && !dut.motion.backtracking && dut.motion.backtrackSteps==1 && l==LOW_L && r==LOW_R,"HOLD recovery completes stationary confirmation without refund");
+   send(1,80,0);send();wait(dut.motion.acquirePhase==2);tick(3);send();wait(dut.motion.backtracking);tick(2);
+   ck(dut.motion.backtrackSteps==2,"a later valid sighting uses the second attempt after interrupted first step");
+   // Existing cancellation sources must also discard a live reverse grant.
+   for(int cancelCase=0;cancelCase<7;cancelCase++)begin
+     startMissedSighting();
+     case(cancelCase)
+       0:stopTask();
+       1:begin estop_frame=1;tick();estop_frame=0;tick(2);power_frame=1;tick();power_frame=0;tick(3);end
+       2:begin selection=selection==1?6'd2:6'd1;tick(15);end
+       3:begin switchMode(1);switchMode(2);end
+       4:begin rawMode=1;tick(3);rawMode=0;tick(3);end
+       5:begin injectLeaseValid=0;tick(3);injectLeaseValid=1;tick(3);end
+       6:begin reset=1;tick(3);reset=0;tick(20);samples();end
+     endcase
+     fresh();tick(2500);stopped("cancellation and safe restoration cannot resurrect a reverse task");
+     ck(!dut.taskActive && !dut.motion.backtracking && !dut.motion.backtrackAuthorized && !dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==0 && zeroSent,
+       "STOP/IR/selection/mode/raw/lease/reset discard reverse authority and complete zero");
+   end
    tick(2500);ck(zeroLines>0 && zeroSent,"completed UART zero observed separately from logical stop");
    $display("PASS: tb_control_repair TURN_SIGN=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d",TURN_SIGN,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines);$finish;
  end
