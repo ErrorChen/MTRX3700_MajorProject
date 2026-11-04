@@ -187,5 +187,21 @@ with pathlib.Path(sys.argv[1]).open("w", encoding="utf-8") as responses:
         self.assertTrue(state["irEstop"] and state["sonarHold"] and state["distanceValid"])
         self.assertEqual(state["chassisRxCount"], 19)
 
+    def test_far_sentinel_never_relabels_invalid_sonar_as_clear(self):
+        words = [0] * 16
+        words[8] = 4000
+        invalid = client.decode_status(words)
+        self.assertEqual(invalid["distanceKind"], "INVALID")
+        self.assertFalse(invalid["distanceFar"])
+        words[8] |= 1 << 12
+        far = client.decode_status(words)
+        self.assertEqual(far["distanceKind"], "FAR")
+        self.assertTrue(far["distanceValid"] and far["distanceFar"])
+        self.assertEqual(far["distanceMm"], 4000)
+        words[8] = 350 | (1 << 12)
+        measured = client.decode_status(words)
+        self.assertEqual(measured["distanceKind"], "MEASURED")
+        self.assertFalse(measured["distanceFar"])
+
 
 if __name__ == "__main__": unittest.main()

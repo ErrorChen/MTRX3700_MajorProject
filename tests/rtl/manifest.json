@@ -813,6 +813,18 @@
       "inputSource": "PIN_LEVEL_NEC_J3_UART_SYNTHETIC_VISION"
     },
     {
+      "name": "tb_sonar_guard",
+      "passMarker": "PASS tb_sonar_guard",
+      "sources": [
+        "rtl/member_c/sonar_pll.sv",
+        "rtl/member_c/sonar_range.sv",
+        "rtl/member_c/sonar_guard.sv",
+        "tests/member_c/tb_sonar_guard.sv"
+      ],
+      "timeoutSeconds": 300,
+      "inputSource": "PIN_LEVEL_J3_TRIG_ECHO_NORMAL_FAR_NEAR_FAULT_RECOVERY"
+    },
+    {
       "name": "red2Start_tb",
       "passMarker": "PASS red2Start_tb",
       "sources": [

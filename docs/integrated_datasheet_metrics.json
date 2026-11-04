@@ -1,7 +1,12 @@
 {
-  "r6": "PASS 219.556 s for E7070004; Verilator 5.050 clean copy, jobs=4; 12 PASS + deliberate mutant CAUGHT. Meets the 285 s user limit.",
-  "fit": "PASS E7070004: compile 1,121.141 s + gate 25.868 s. ALM 29,576/32,070 (92%); M10K 357/397; DSP 51/87; 41,000 registers. Worst setup +1.633 ns / hold +0.118 ns; unconstrained 0; 0 errors / 92 warnings.",
-  "hardware": "E7070004: six blue cards each 12/12; six physical selections covered in 441 polls (7 overflow bad frames retained). Raised synthetic-vision/real-J3: +5/+5 at 517 mm, +3/+3 at 446 mm, DOCKED at 347 mm; retreat did not restart. HOLD, hysteresis and recovery passed; explicit STOP stayed zero for 6 s with fresh inputs/lease. User confirmed stop/recovery, not wheel direction this round. Earlier red2 start/blue1-loss stop confirmed. Final VISION_ONLY, disarmed/zero.",
-  "sof": "firmware/E7070004/PartBDebug.sof; 6,706,154 bytes. Original build: 20261104T111202_124373Z_build. Programmed-board ID E7070004 verified.",
-  "hardware_prior": "Earlier E7070002: synthetic left/centre/right, lease loss/no automatic restart, bounded NOT_FOUND, and real IR A/POWER1/POWER2 passed. User confirmed wheel actions and both sides forward for logical +3/+3 cm/s. These are prior-build checks."
+  "date": "05 NOV 2026",
+  "build_id": "E7070008",
+  "control": "PASS: both steering signs, 433 checks / 88 complete UART messages each. Forward 5/3 and 4/3 corrections, boundary stops, zero/dwell/fresh qualification and safety covered.",
+  "r6": "PASS 270.641 s, E8; clean Verilator 5.050, jobs=4; 13 PASS + mutant CAUGHT; below 285 s. Fourteen 25 fps pixel frames include actual 3/5 forward-correction UART.",
+  "fit": "PASS: compile 1,159.722 s + gate 25.963 s. ALM 29,281/32,070 (91%); M10K 357/397; DSP 51/87; 41,081 registers. Worst setup +1.021 ns / hold +0.121 ns; unconstrained 0; 0 errors / 92 warnings.",
+  "hardware": "E8 blue1 real-camera task reached DOCKED in 29.315 s, then >3 s disarmed/zero. User: continuous forward travel, no obvious turn, ruler ~335 mm; J3 329 mm. Final fine alignment took ~25 s; possible ~1 cm unequal wheel travel remains. This trial began visible with one host START; five other bays and search/red2/POWER tasks remain pending.",
+  "sof": "firmware/E7070008/PartBDebug.sof; 6,706,156 bytes. Original build: 20261104T160829_127927Z_build. Programmed-board ID E7070008 verified.",
+  "hardware_prior": "E4 raised: real-J3 slowdown, docking, hysteresis/recovery and persistent STOP confirmed; earlier real IR A/POWER and both wheels forward. E5/E7 failed real ground tasks remain documented.",
+  "scan": "CALIBRATED_TIME 13.6 s restored on the unchanged plastic floor using three E5 circles (11.075500-13.561176 s; range 2.485676 s). SEARCH speed remains 4 cm/s. Bounded approximate scan only, with overshoot/drift and no yaw feedback. Epoxy untested; fixed-budget angle unmeasured. Reset/reprogramming requires restoring the runtime calibration.",
+  "remaining": "Five further real-camera bay tasks, search/red2/POWER integration; slow final alignment, startup asymmetry, fixed-budget angular error, scene-to-UART latency and SW8 ground comparison. A/C student IDs pending."
 }

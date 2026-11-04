@@ -5,7 +5,9 @@
 `include "memberBBuildId.svh"
 module echo7IntegratedTop #(
     parameter int CAMERA_FPS = 25, // Keep the verified 20 MHz PCLK setting.
-    parameter int LEFT_POLARITY = -1, RIGHT_POLARITY = -1, TURN_SIGN = 1
+    // E7070005: real low-U target is body-left; the former turn drove away.
+    // This corrects effective visual steering, not an inferred wiring cause.
+    parameter int LEFT_POLARITY = -1, RIGHT_POLARITY = -1, TURN_SIGN = -1
 ) (
     input  wire        CLOCK_50,
     output wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5,

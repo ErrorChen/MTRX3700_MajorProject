@@ -1,7 +1,10 @@
 module member_c_control #(
  parameter int ULTRASONIC_ESTOP_MM=250,TURN_SIGN=1,
  parameter int SELECTION_STABLE_CLKS=1_000_000,
- parameter int ACQUIRE_SETTLE_US=200000,ACQUIRE_TIMEOUT_US=900000,
+ parameter int APPROACH_TRACK_ERROR=45,FINE_STEER_CM_S=4,
+ parameter int ALIGN_FINE_CM_S=3,ALIGN_FINE_ERROR=30,
+ parameter int ALIGN_US_PER_PIXEL=2000,ALIGN_MIN_PULSE_US=20000,ALIGN_MAX_PULSE_US=100000,
+ parameter int ACQUIRE_SETTLE_US=1500000,ACQUIRE_TIMEOUT_US=900000,
  parameter int LOST_WAIT_US=300000,TASK_TIMEOUT_US=120000000
 )(
  input logic clk,reset,power_frame,estop_frame,
@@ -76,6 +79,9 @@ module member_c_control #(
    .sourceHealthyFresh(sourceHealthyFresh),.targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .requestTag(requestTag),.frameId(frameId),.inputAgeUs(inputAgeUs),.fatalFault(fatalFault));
  motion_fsm #(.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+   .APPROACH_TRACK_ERROR(APPROACH_TRACK_ERROR),.FINE_STEER_CM_S(FINE_STEER_CM_S),
+   .ALIGN_FINE_CM_S(ALIGN_FINE_CM_S),.ALIGN_FINE_ERROR(ALIGN_FINE_ERROR),
+   .ALIGN_US_PER_PIXEL(ALIGN_US_PER_PIXEL),.ALIGN_MIN_PULSE_US(ALIGN_MIN_PULSE_US),.ALIGN_MAX_PULSE_US(ALIGN_MAX_PULSE_US),
    .ACQUIRE_SETTLE_US(ACQUIRE_SETTLE_US),.ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US),
    .LOST_WAIT_US(LOST_WAIT_US),.TASK_TIMEOUT_US(TASK_TIMEOUT_US)) motion(
    .clk(clk),.reset(reset),.startPulse(startPulse),.cancel(cancel),.taskActive(taskActive),

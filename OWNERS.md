@@ -67,9 +67,9 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `rtl/member_c/nec_decoder.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins |
 | `rtl/member_c/perception_adapter.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_control_repair, tb_pixel_uart_repair, tb_board_repair_pins |
 | `rtl/member_c/safety_arbiter.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_control_repair, tb_pixel_uart_repair, tb_board_repair_pins |
-| `rtl/member_c/sonar_guard.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins |
-| `rtl/member_c/sonar_pll.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins |
-| `rtl/member_c/sonar_range.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins |
+| `rtl/member_c/sonar_guard.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins, tb_sonar_guard |
+| `rtl/member_c/sonar_pll.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins, tb_sonar_guard |
+| `rtl/member_c/sonar_range.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins, tb_sonar_guard |
 | `rtl/member_c/uart_rx.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_board_repair_pins |
 | `rtl/member_c/uart_tx.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_control_repair, tb_pixel_uart_repair, tb_board_repair_pins |
 | `rtl/top/echo7IntegratedTop.sv` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | echo7.py build; post-fit timing/CDC/resource gate and board validation |
@@ -150,6 +150,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/member_c/tb_member_c.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | Python suite / check_repository.py; command execution evidence remains separate |
 | `tests/member_c/tb_motion_uart.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | Python suite / check_repository.py; command execution evidence remains separate |
 | `tests/member_c/tb_safety_arbiter.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | Python suite / check_repository.py; command execution evidence remains separate |
+| `tests/member_c/tb_sonar_guard.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | tb_sonar_guard |
 | `tests/member_c/tb_uart_stop_priority.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | Python suite / check_repository.py; command execution evidence remains separate |
 | `tests/member_c/tb_wheel_uart.sv` | Member C SID pending | Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted | Python suite / check_repository.py; command execution evidence remains separate |
 | `tests/python/test_active_capacity.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |

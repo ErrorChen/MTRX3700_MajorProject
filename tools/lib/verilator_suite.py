@@ -27,7 +27,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_VERSION = "5.050"
 SUITE_NAMES = (
-    "tb_pixel_uart_repair", "tb_control_repair", "tb_chassis_debug", "red2Start_tb",
+    "tb_pixel_uart_repair", "tb_sonar_guard", "tb_control_repair", "tb_chassis_debug", "red2Start_tb",
     "perceptionCoreContinuous_tb", "perceptionCoreOverload_tb", "hsvColourGate_tb", "targetTracker_tb",
     "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb", "mainColourSupportReader_tb",
 )
@@ -117,6 +117,12 @@ def selectTests(manifest):
     byName = {test["name"]: test for test in manifest["tests"]}
     selected = [dict(byName[name]) for name in SUITE_NAMES]
     for test in selected:
+        if test["name"] == "tb_sonar_guard":
+            # Keep production clock frequencies and six complete 100 ms sensor
+            # transactions: measured/near/FAR/no-rise/stuck-high/recovery. The
+            # manifest default retains the full twelve-sample boundary run.
+            test["plusargs"] = ["+R6_REPRESENTATIVE"]
+            test["inputSource"] = "PIN_LEVEL_J3_REAL_TIMING_REPRESENTATIVE_NORMAL_FAR_NEAR_FAULT_RECOVERY"
         if test["name"] == "mainColourSupportReader_tb":
             # The bounded course run executes this bench's independent built-in
             # merge/retirement/tie/overflow cases. The full ModelSim run also
@@ -264,7 +270,7 @@ def main(argv=None):
               "requiredVersion": REQUIRED_VERSION, "maximumSeconds": 300, "cleanBuild": True,
               "targetSeconds": 285, "simulationConcurrency": 2,
               "compileJobs": args.jobs,
-              "scope": "B+C modules, scanning/safety/CCTL and actual perceptionCore pixels through C and UART", "tests": [], "commands": [],
+              "scope": "B+C modules, scanning/safety/CCTL, real-timing sonar TRIG/ECHO and actual perceptionCore pixels through C and UART", "tests": [], "commands": [],
               "compilations": [], "compilationReuse": "EXACT_INPUTS_WITHIN_THIS_FRESH_RUN_ONLY"}
     exitCode = 1
     try:
@@ -329,12 +335,13 @@ def main(argv=None):
         # already compiled exact-input binary from this fresh invocation; every
         # scenario still executes independently with its own log and verdict.
         compiled = CurrentRunCompilations(outputDir)
-        completedPairs = set()
-        for test in [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]:
+        result["parallelGroups"] = []
+
+        def prepareScenario(test):
+            # Preparation stays serial. Both independent binaries in a pair
+            # must finish compilation before either simulation is launched.
             mutant = test.get("mutant", False)
             name = "targetTracker_broken_lock" if mutant else test["name"]
-            if name in completedPairs:
-                continue
             folder = outputDir / name
             folder.mkdir()
             top = test.get("top", test["name"])
@@ -361,7 +368,7 @@ def main(argv=None):
             for path in test["sources"]:
                 if fileHash(ROOT / path) != sourceHashes[path]:
                     raise RuntimeError("source changed during clean suite: " + path)
-            compileKey, compileInputs = compilationIdentity(command, sources, result["toolchain"])
+            compileKey, _ = compilationIdentity(command, sources, result["toolchain"])
             compiledBinary = compiled.lookup(compileKey)
             if compiledBinary is None:
                 record, _ = runProcess(command, folder, folder / "compile.log", deadline)
@@ -378,7 +385,24 @@ def main(argv=None):
                 (folder / "compile.log").write_text(
                     "No compiler process was run: exact-input binary reused from this fresh run.\n" +
                     json.dumps(compiledBinary, indent=2) + "\n", encoding="utf-8")
-            group = [(test, name, folder, compiledBinary)]
+            return (test, name, folder, compiledBinary), command, compileKey, top
+
+        completedPairs = set()
+        for test in [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]:
+            mutant = test.get("mutant", False)
+            name = "targetTracker_broken_lock" if mutant else test["name"]
+            if name in completedPairs:
+                continue
+            prepared, command, compileKey, top = prepareScenario(test)
+            group = [prepared]
+            if name == "tb_pixel_uart_repair":
+                # Independent production pixel/UART and real-clock sonar
+                # benches have no shared writes. Compile their separate
+                # binaries first, then overlap only the two simulations.
+                paired = next(t for t in tests if t["name"] == "tb_sonar_guard")
+                pairedPrepared, _, _, _ = prepareScenario(paired)
+                group.append(pairedPrepared)
+                completedPairs.add(paired["name"])
             if name == "perceptionCoreContinuous_tb":
                 # These two independent processes only read their immutable
                 # vectors. They share this invocation's exact-input binary,
@@ -409,6 +433,7 @@ def main(argv=None):
                                   scenarioFolder, scenarioFolder / "simulation.log", deadline)
 
             if len(group) == 2:
+                result["parallelGroups"].append([item[1] for item in group])
                 with ThreadPoolExecutor(max_workers=2) as pool:
                     futures = [pool.submit(runScenario, item) for item in group]
                     outcomes = [future.result() for future in futures]

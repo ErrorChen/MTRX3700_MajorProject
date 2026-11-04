@@ -41,6 +41,11 @@ def decode_status(words):
     signed7 = lambda value: (value & 127) - (128 if value & 64 else 0)
     state = (words[0] >> 21) & 15
     selection = "VALID" if words[0] & (1 << 14) else "SELECTION_CONFLICT" if words[0] & (1 << 15) else "NO_SELECTION"
+    distance = words[8] & 4095
+    distance_valid = bool(words[8] & (1 << 12))
+    # E7070005 reserves valid+4000 for a completed out-of-range echo pulse.
+    # Older invalid+4000 records remain INVALID, not evidence of clear space.
+    distance_far = distance_valid and distance == 4000
     return {"mode": {0: "INTEGRATED", 1: "VISION_ONLY", 2: "CHASSIS_INJECT"}.get(mode, "INVALID"),
             "inputSource": "SYNTHETIC" if mode == 2 else "REAL_CAMERA",
             "switchMask": (words[0] >> 2) & 63, "stableMask": (words[0] >> 8) & 63,
@@ -60,8 +65,10 @@ def decode_status(words):
             "leftCmS": signed7(words[7]), "rightCmS": signed7(words[7] >> 8),
             "rawCameraMode": bool(words[7] & (1 << 17)),
             "failure": {0: "NONE", 1: "SCAN_BUDGET", 2: "TASK_TIMEOUT", 3: "SCAN_UNCALIBRATED"}.get((words[7] >> 20) & 15, "UNKNOWN"),
-            "stopReason": (words[7] >> 24) & 7, "distanceMm": words[8] & 4095,
-            "distanceValid": bool(words[8] & (1 << 12)), "uartBusy": bool(words[8] & (1 << 14)),
+            "stopReason": (words[7] >> 24) & 7, "distanceMm": distance,
+            "distanceValid": distance_valid, "distanceFar": distance_far,
+            "distanceKind": "FAR" if distance_far else "MEASURED" if distance_valid else "INVALID",
+            "uartBusy": bool(words[8] & (1 << 14)),
             "zeroSent": bool(words[8] & (1 << 15)), "timeUs": words[9],
             "fatal": bool(words[10] & (1 << 5)), "perceptionReady": bool(words[11] & 2),
             "pendingVisualStart": bool(words[10] & (1 << 6)),
@@ -346,7 +353,7 @@ def no_target_search_rows(state):
     budget = state["scanBudgetUs"] / 1_000_000
     if not 1 <= budget <= 120:
         raise ValueError("FPGA scanBudgetUs is outside 1..120 seconds")
-    # Production final acquire: zero UART + 200ms settle + 900ms confirmation.
+    # Production final acquire: zero UART + 1.5s settle + 900ms confirmation.
     # Three seconds includes polling margin; HOLD may still consume wall time,
     # so retained state records, not this duration, decide observed completion.
     return [{"visible": False, "hold": budget + 3.0}]

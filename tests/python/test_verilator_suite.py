@@ -20,7 +20,7 @@ spec.loader.exec_module(suite)
 
 
 class VerilatorRunnerTests(unittest.TestCase):
-    def runHostDouble(self, output, failedScenario=None):
+    def runHostDouble(self, output, failedScenario=None, timedOutScenario=None, failedCompile=None):
         """Exercise the real runner orchestration, with no HDL tool execution.
 
         Only compiler/simulator processes are replaced. Real source hashes,
@@ -30,14 +30,26 @@ class VerilatorRunnerTests(unittest.TestCase):
         selected = suite.selectTests(json.loads((ROOT / "tests/rtl/manifest.json").read_text(encoding="utf-8")))
         markers = {test["name"]: test["passMarker"] for test in selected}
         calls = []
-        pairedSimulationBarrier = threading.Barrier(2)
+        barriers = {}
+        for pair in (("tb_pixel_uart_repair", "tb_sonar_guard"),
+                     ("perceptionCoreContinuous_tb", "perceptionCoreOverload_tb")):
+            barrier = threading.Barrier(2)
+            barriers.update({name: barrier for name in pair})
+        activeSimulations = set()
+        callsLock = threading.Lock()
 
         def process(arguments, cwd, logPath, deadline):
             command = [str(value) for value in arguments]
             logPath = Path(logPath)
-            calls.append({"arguments": command, "cwd": str(cwd), "log": str(logPath), "deadline": deadline,
-                          "threadId": threading.get_ident()})
+            name = Path(cwd).name
+            simulation = logPath.name == "simulation.log"
+            with callsLock:
+                if simulation:
+                    activeSimulations.add(name)
+                calls.append({"arguments": command, "cwd": str(cwd), "log": str(logPath), "deadline": deadline,
+                              "threadId": threading.get_ident(), "activeSimulations": len(activeSimulations)})
             code = 0
+            timedOut = False
             if logPath.name == "version.log":
                 text = "Verilator 5.050 HOST_RUNNER_DOUBLE_ONLY\n"
             elif logPath.name == "compiler_version.log":
@@ -48,24 +60,31 @@ class VerilatorRunnerTests(unittest.TestCase):
                 (vectors / "fixtures.json").write_text("[]\n", encoding="utf-8")
                 text = "HOST_RUNNER_DOUBLE_ONLY vectors\n"
             elif "--binary" in command:
-                objects = Path(command[command.index("--Mdir") + 1])
-                objects.mkdir()
-                top = command[command.index("--top-module") + 1]
-                binary = objects / ("V" + top + (".exe" if os.name == "nt" else ""))
-                binary.write_bytes(b"INERT_HOST_TEST_FILE_NOT_A_SIMULATOR")
-                text = "HOST_RUNNER_DOUBLE_ONLY compilation\n"
-            else:
-                name = Path(cwd).name
-                if name in ("perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"):
-                    pairedSimulationBarrier.wait(timeout=2)
-                if name == "targetTracker_broken_lock":
-                    code, text = 1, "%Error: Assertion failed: three-frame lock HOST_RUNNER_DOUBLE_ONLY\n"
-                elif name == failedScenario:
-                    code, text = 1, "FAIL injected runner transport/simulation outcome\n"
+                if name == failedCompile:
+                    code, text = 1, "FAIL injected compilation outcome\n"
                 else:
-                    text = markers[name] + " HOST_RUNNER_DOUBLE_ONLY\n"
+                    objects = Path(command[command.index("--Mdir") + 1])
+                    objects.mkdir()
+                    top = command[command.index("--top-module") + 1]
+                    binary = objects / ("V" + top + (".exe" if os.name == "nt" else ""))
+                    binary.write_bytes(b"INERT_HOST_TEST_FILE_NOT_A_SIMULATOR")
+                    text = "HOST_RUNNER_DOUBLE_ONLY compilation\n"
+            else:
+                try:
+                    if name in barriers:
+                        barriers[name].wait(timeout=5)
+                    if name == "targetTracker_broken_lock":
+                        code, text = 1, "%Error: Assertion failed: three-frame lock HOST_RUNNER_DOUBLE_ONLY\n"
+                    elif name == failedScenario:
+                        code, text = 1, "FAIL injected runner transport/simulation outcome\n"
+                    else:
+                        text = markers[name] + " HOST_RUNNER_DOUBLE_ONLY\n"
+                    timedOut = name == timedOutScenario
+                finally:
+                    with callsLock:
+                        activeSimulations.remove(name)
             logPath.write_text(text, encoding="utf-8")
-            return {"arguments": command, "returnCode": code, "timedOut": False,
+            return {"arguments": command, "returnCode": code, "timedOut": timedOut,
                     "elapsedSeconds": 0.0, "log": str(logPath)}, text
 
         with patch.object(suite.shutil, "which", return_value=sys.executable), \
@@ -89,7 +108,14 @@ class VerilatorRunnerTests(unittest.TestCase):
         overload = next(test for test in selected if test["name"] == "perceptionCoreOverload_tb")
         self.assertIn("rtl/top/perceptionCore.sv", overload["sources"])
         self.assertIn("+OVERLOAD", overload["plusargs"])
-        self.assertEqual(len(selected), 12)
+        self.assertEqual(len(selected), 13)
+        sonar = next(test for test in selected if test["name"] == "tb_sonar_guard")
+        self.assertEqual(sonar["sources"], ["rtl/member_c/sonar_pll.sv", "rtl/member_c/sonar_range.sv",
+                                         "rtl/member_c/sonar_guard.sv", "tests/member_c/tb_sonar_guard.sv"])
+        self.assertEqual(sonar["passMarker"], "PASS tb_sonar_guard")
+        self.assertEqual(sonar["plusargs"], ["+R6_REPRESENTATIVE"])
+        self.assertEqual(next(test for test in manifest["tests"]
+                              if test["name"] == "tb_sonar_guard").get("plusargs", []), [])
         pixel = next(test for test in selected if test["name"] == "tb_pixel_uart_repair")
         self.assertIn("rtl/top/perceptionCore.sv", pixel["sources"])
         self.assertIn("rtl/member_c/member_c_control.sv", pixel["sources"])
@@ -100,6 +126,9 @@ class VerilatorRunnerTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             suite.selectTests({"tests": [test for test in manifest["tests"]
                                          if test["name"] != "perceptionCoreOverload_tb"]})
+        with self.assertRaises(KeyError):
+            suite.selectTests({"tests": [test for test in manifest["tests"]
+                                         if test["name"] != "tb_sonar_guard"]})
 
     def testPassRequiresMarkerExitAndNoErrors(self):
         record = {"returnCode": 0, "timedOut": False}
@@ -224,12 +253,32 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertEqual(result["status"], "PASS")
             self.assertTrue(result["cleanBuild"])
             self.assertEqual(result["maximumSeconds"], 300)
+            self.assertEqual(result["targetSeconds"], 285)
             self.assertEqual(len(result["tests"]), len(suite.SUITE_NAMES)+1)
             self.assertEqual([test["name"] for test in result["tests"][:-1]], list(suite.SUITE_NAMES))
             self.assertEqual(result["tests"][-1]["status"], "CAUGHT")
             compilations = [call for call in calls if "--binary" in call["arguments"]]
             simulations = [call for call in calls if Path(call["log"]).name == "simulation.log"]
             self.assertEqual((len(compilations), len(simulations)), (len(suite.SUITE_NAMES), len(suite.SUITE_NAMES)+1))
+            self.assertEqual(len({call["cwd"] for call in simulations}), len(simulations))
+            self.assertEqual(max(call["activeSimulations"] for call in calls), 2)
+            self.assertTrue(all(call["activeSimulations"] == 0 for call in compilations))
+            self.assertEqual(result["simulationConcurrency"], 2)
+            self.assertEqual(result["parallelGroups"], [["tb_pixel_uart_repair", "tb_sonar_guard"],
+                                                       ["perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"]])
+            pixel, sonar = result["tests"][:2]
+            self.assertEqual([pixel["name"], sonar["name"]], ["tb_pixel_uart_repair", "tb_sonar_guard"])
+            self.assertNotEqual(pixel["compiledBinary"]["path"], sonar["compiledBinary"]["path"])
+            self.assertNotEqual(pixel["compiledBinary"]["inputSha256"], sonar["compiledBinary"]["inputSha256"])
+            self.assertIsNone(sonar["compiledBinary"]["reusedFrom"])
+            firstSimulation = calls.index(simulations[0])
+            self.assertEqual([Path(call["cwd"]).name for call in calls[:firstSimulation]
+                              if "--binary" in call["arguments"]], [pixel["name"], sonar["name"]])
+            pixelRun, sonarRun = [next(call for call in simulations if Path(call["cwd"]).name == name)
+                                  for name in (pixel["name"], sonar["name"])]
+            self.assertNotEqual(pixelRun["threadId"], sonarRun["threadId"])
+            self.assertNotEqual(pixelRun["log"], sonarRun["log"])
+            self.assertIn("+R6_REPRESENTATIVE", sonarRun["arguments"])
             first = next(test for test in result["tests"] if test["name"] == "perceptionCoreContinuous_tb")
             overload = next(test for test in result["tests"] if test["name"] == "perceptionCoreOverload_tb")
             self.assertEqual(overload["compiledBinary"]["reusedFrom"], first["name"])
@@ -243,6 +292,15 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertNotEqual(continuousRun["threadId"], overloadRun["threadId"])
             self.assertEqual(result["parallelScenarios"], ["perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"])
             self.assertTrue((output / overload["name"] / "compile_reuse.json").is_file())
+            for source in ("rtl/member_c/sonar_pll.sv", "rtl/member_c/sonar_range.sv",
+                           "rtl/member_c/sonar_guard.sv", "tests/member_c/tb_sonar_guard.sv"):
+                self.assertEqual((output / "source" / source).read_bytes(), (ROOT / source).read_bytes())
+            for call in compilations:
+                for argument in call["arguments"]:
+                    if argument.endswith(".sv"):
+                        source = Path(argument)
+                        self.assertTrue(source.is_relative_to(output / "source") or
+                                        source == output / "targetTracker_broken_lock/targetTracker.sv")
             self.assertEqual(len(set(call["deadline"] for call in calls)), 1)
             good = next(test for test in result["tests"] if test["name"] == "targetTracker_tb")
             mutant = result["tests"][-1]
@@ -260,11 +318,56 @@ class VerilatorRunnerTests(unittest.TestCase):
             exitCode, result, calls = self.runHostDouble(output, "perceptionCoreOverload_tb")
             self.assertEqual(exitCode, 1)
             self.assertEqual(result["status"], "FAIL")
-            self.assertEqual([test["status"] for test in result["tests"]], ["PASS"]*5 + ["FAIL"])
+            beforeFailure = suite.SUITE_NAMES.index("perceptionCoreOverload_tb")
+            self.assertEqual([test["status"] for test in result["tests"]], ["PASS"]*beforeFailure + ["FAIL"])
             failed = result["tests"][-1]
             self.assertEqual(failed["compiledBinary"]["reusedFrom"], "perceptionCoreContinuous_tb")
             self.assertIn("FAIL injected", (output / failed["name"] / "simulation.log").read_text())
-            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), 5)
+            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), beforeFailure)
+
+    def testSonarFailureCannotBecomeCoursePass(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "failed sonar"
+            exitCode, result, _ = self.runHostDouble(output, "tb_sonar_guard")
+            self.assertEqual(exitCode, 1)
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["tests"][-1]["name"], "tb_sonar_guard")
+            self.assertEqual(result["tests"][-1]["status"], "FAIL")
+            self.assertIn("FAIL injected", (output / "tb_sonar_guard/simulation.log").read_text())
+
+    def testPixelFailureRetainsBothIndependentVerdictsAndStopsLaterWork(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "failed pixel"
+            exitCode, result, calls = self.runHostDouble(output, "tb_pixel_uart_repair")
+            self.assertEqual((exitCode, result["status"]), (1, "FAIL"))
+            self.assertEqual([(item["name"], item["status"]) for item in result["tests"]],
+                             [("tb_pixel_uart_repair", "FAIL"), ("tb_sonar_guard", "PASS")])
+            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), 2)
+            for name in ("tb_pixel_uart_repair", "tb_sonar_guard"):
+                self.assertTrue((output / name / "simulation.log").is_file())
+
+    def testEitherIndependentTimeoutFailsDespitePassMarker(self):
+        with tempfile.TemporaryDirectory() as folder:
+            for name in ("tb_pixel_uart_repair", "tb_sonar_guard"):
+                with self.subTest(scenario=name):
+                    output = Path(folder) / name
+                    exitCode, result, _ = self.runHostDouble(output, timedOutScenario=name)
+                    self.assertEqual((exitCode, result["status"], result["targetMet"]), (1, "FAIL", False))
+                    self.assertEqual(len(result["tests"]), 2)
+                    self.assertEqual(next(item["status"] for item in result["tests"] if item["name"] == name), "FAIL")
+                    self.assertEqual(sum(item["status"] == "PASS" for item in result["tests"]), 1)
+                    self.assertTrue((output / name / "simulation.log").read_text().startswith("PASS"))
+
+    def testSonarCompileFailureLaunchesNeitherSimulation(self):
+        with tempfile.TemporaryDirectory() as folder:
+            output = Path(folder) / "failed sonar compile"
+            exitCode, result, calls = self.runHostDouble(output, failedCompile="tb_sonar_guard")
+            self.assertEqual((exitCode, result["status"]), (1, "FAIL"))
+            self.assertEqual(result["tests"], [])
+            self.assertIn("tb_sonar_guard compilation failed", result["error"])
+            self.assertFalse(any(Path(call["log"]).name == "simulation.log" for call in calls))
+            self.assertEqual(len(result["compilations"]), 1)
+            self.assertIn("FAIL injected", (output / "tb_sonar_guard/compile.log").read_text())
 
 
 if __name__ == "__main__":

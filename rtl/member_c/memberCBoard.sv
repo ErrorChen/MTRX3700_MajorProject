@@ -2,7 +2,7 @@
 // ECHO-7 production board: separate tracking, task authorization and safety.
 // POWER starts a perception-driven task, never direct fixed-speed motion.
 // Board I/O wrapper reused from validated Member C; only reset ownership changed.
-// KEY1 pages: decimal distance (d), NEC high word (H), NEC low word (L).
+// KEY1 pages: decimal distance / confirmed out-of-range FAr (d), NEC words (H/L).
 // On the H page HEX1..0 is the command byte, code[23:16].
 module memberCBoard #(
     // Existing chassis forward convention: both UART wheel signs are negative.
@@ -15,7 +15,7 @@ module memberCBoard #(
     parameter int BLINK_CLKS = 2_500_000,      // 50 ms event indication
     parameter int KEY_DEBOUNCE_CLKS = 1_000_000, // 20 ms stable press AND release
     parameter int SELECTION_STABLE_CLKS = 1_000_000,
-    parameter int ACQUIRE_SETTLE_US = 200000, ACQUIRE_TIMEOUT_US = 900000
+    parameter int ACQUIRE_SETTLE_US = 1500000, ACQUIRE_TIMEOUT_US = 900000
 ) (
     input  wire       CLOCK_50,
     input  wire       reset50, // Shared integrated CLOCK_50 reset.
@@ -99,10 +99,17 @@ module memberCBoard #(
     end
     wire [15:0] shown = page==0 ? decimal_digits : high_page ? last_code[31:16] : last_code[15:0];
     wire display_blank=page==0 ? !distance_valid : !code_seen;
-    hex_digit h0 (.d(shown[3:0]),   .blank(display_blank), .seg(HEX0));
-    hex_digit h1 (.d(shown[7:4]),   .blank(display_blank), .seg(HEX1));
-    hex_digit h2 (.d(shown[11:8]),  .blank(display_blank), .seg(HEX2));
-    hex_digit h3 (.d(shown[15:12]), .blank(display_blank), .seg(HEX3));
+    // 4000 with valid=1 is the sonar FAR sentinel, never a measured 4 m.
+    wire displayFar=page==0 && distance_valid && distance_mm==12'd4000;
+    wire [6:0] digitHex0,digitHex1,digitHex2,digitHex3;
+    hex_digit h0 (.d(shown[3:0]),   .blank(display_blank), .seg(digitHex0));
+    hex_digit h1 (.d(shown[7:4]),   .blank(display_blank), .seg(digitHex1));
+    hex_digit h2 (.d(shown[11:8]),  .blank(display_blank), .seg(digitHex2));
+    hex_digit h3 (.d(shown[15:12]), .blank(display_blank), .seg(digitHex3));
+    assign HEX0=displayFar ? 7'b0101111 : digitHex0; // r, active low
+    assign HEX1=displayFar ? 7'b0001000 : digitHex1; // A
+    assign HEX2=displayFar ? 7'b0001110 : digitHex2; // F
+    assign HEX3=displayFar ? 7'b1111111 : digitHex3;
     assign HEX5 = !statusWords[14] ? (statusWords[15] ? 7'b1000110 : 7'b0101011) :
       page==0 ? 7'b0100001 : high_page ? 7'b0001001 : 7'b1000111; // H / L, active low
     hex_digit mode_hex(.d({2'b00,mode}),.blank(1'b0),.seg(HEX4)); // mode: 0 integrated, 1 vision, 2 injection
