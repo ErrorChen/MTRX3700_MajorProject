@@ -38,11 +38,11 @@ INTEGRATION_FILES = {
 
 def maintainer(name):
     if name in TEAM_FILES:
-        return "Member A (Hajin) SID pending", None
+        return "Member A (Hajin) 540287235", None
     if name.startswith(("rtl/member_c/", "tests/member_c/")):
-        return "Member C SID pending", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
+        return "Member C 530141790", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
     if name in INTEGRATION_FILES or name.startswith(("tests/integration/", "tests/scheme_c/")):
-        return "B 540207680; A/C SID pending", "B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off"
+        return "B 540207680; A 540287235; C 530141790", "B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off"
     return "540207680", None
 
 
@@ -56,9 +56,9 @@ def main():
     paths += [ROOT / name for name in ("run_all_tests.sh", "requirements.txt", ".gitignore", ".gitattributes", ".editorconfig")]
     paths += list((ROOT / "tests/fixtures/camera").rglob("*.png"))
     lines = ["# ECHO-7 ownership and provenance", "",
-        "SID **540207680** is the user-confirmed Member B maintainer. Member A and Member C SIDs are **pending**.",
+        "SID **540207680** is the user-confirmed Member B maintainer. Member A (Hajin) is **540287235** and Member C is **530141790**.",
         "The preliminary repository was built by same-group students Hajin and Jiaze Sun;",
-        "Hajin mainly handles Member A. Their SIDs remain unknown and are not invented.",
+        "Hajin is Member A; Hajin's preliminary files are maintained by Member A.",
         "Origin is separate from maintenance responsibility. Original source/IP notices",
         "remain applicable. B additions and adaptations are AI-assisted; named human",
         "review/sign-off is **pending**, not certified by this generated inventory.", "",
