@@ -798,11 +798,10 @@ class Runner:
             raise RuntimeError("captured glyph pixels disagree with the FPGA same-frame marker decisions")
 
     def hardware(self):
-        # Default/autodebug acceptance uses the same finite, loss-preserving
-        # assessor as formal multi-trial runs. Do not wait for success-only
-        # frames or silently omit failed observations from the denominator.
-        from trial_stream import measureLiveTrials
-        measureLiveTrials(self, getattr(self.args, "trials", 0) or 1, sourceIdentity()["buildId"])
+        raise Blocked("automatic BCTL SELECT/CLEAR trials are unsupported by echo7IntegratedTop; "
+                      "select the bay with physical SW0-SW5, then run: python tools/chassis_debug.py "
+                      "observe --samples 30 --out observation.json --label bay1-normal-trial1. "
+                      "This samples the physical selection only; it does not certify all six bays.")
 
     def execute(self):
         c = self.args.command
@@ -846,7 +845,9 @@ class Runner:
         elif c == "speech":
             raise Blocked("speech is unsupported; select a bay with physical SW0-SW5")
         elif c == "autodebug":
-            self.replay(); self.rtl(); self.build(); self.program(); self.capture(); self.hardware()
+            # Reject the obsolete automatic target-owner workflow before any
+            # expensive build or board programming side effect.
+            self.hardware()
 
 
 def main(argv=None):
@@ -867,7 +868,7 @@ def main(argv=None):
     # changes host scoring only; it never enters the build or FPGA commands.
     for command in (test, autodebug):
         command.add_argument("--trials", type=int, choices=(1, 2, 3), default=0,
-                             help="hardware only: retain all observations in 30-sample trials, including failures (default: one trial)")
+                             help="legacy automatic BCTL trials (unsupported by production top); use chassis_debug.py observe")
         command.add_argument("--truth-regions", type=Path,
                              help="Test-only printed-digit regions for a fixed photographed scene; never supplied to FPGA; requires --trials")
     test.add_argument("--only", nargs="+", help="run the named RTL benches when narrowing a regression")

@@ -100,6 +100,11 @@ class SubmissionDatasheetTests(unittest.TestCase):
             self.assertIn('docs/old.md', archive.namelist())
             self.assertIn('README_EN.md', archive.namelist())
             self.assertIn('docs/integrated_datasheet_metrics.json', archive.namelist())
+            firmwarePath = 'firmware/AAAAAAAA/PartBDebug.sof'
+            self.assertEqual([name for name in archive.namelist() if name.endswith('.sof')], [firmwarePath])
+            self.assertEqual(record['sof'], firmwarePath)
+            self.assertEqual(archive.read(firmwarePath), b'synthetic sof; never programmed')
+            self.assertNotIn('verified/PartBDebug.sof', archive.namelist())
 
     def testNoDatasheetArgumentNeverCollectsAnExistingPdf(self):
         with zipfile.ZipFile(self.runExport(False)) as archive:

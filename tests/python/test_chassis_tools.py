@@ -1,6 +1,7 @@
 """Host transaction/safety behaviour; mock sessions are never hardware evidence."""
 import contextlib
 import io
+import json
 import argparse
 import os
 from pathlib import Path
@@ -37,6 +38,71 @@ class FakeSession:
 
 
 class ChassisToolsTests(unittest.TestCase):
+    def test_no_target_search_uses_current_budget_plus_final_dwell_margin(self):
+        self.assertEqual(client.no_target_search_rows({"scanBudgetUs": 10000000}),
+                         [{"visible": False, "hold": 13.0}])
+        self.assertEqual(client.no_target_search_rows({"scanBudgetUs": 120000000})[0]["hold"], 123)
+        with self.assertRaises(ValueError): client.no_target_search_rows({"scanBudgetUs": 0})
+
+    def test_injection_records_state_while_renewing_in_the_same_session(self):
+        session = FakeSession()
+        now = [0.0]
+        def sleep(seconds): now[0] += seconds
+        output = io.StringIO()
+        with patch.object(client.time, "monotonic", side_effect=lambda: now[0]), \
+                patch.object(client.time, "sleep", side_effect=sleep), \
+                contextlib.redirect_stdout(output):
+            client.inject(session, [{"visible": False, "hold": 0.25}], True)
+        self.assertGreaterEqual(session.events.count(("status", True)), 5)
+        self.assertIn('"state": {', output.getvalue())
+        self.assertEqual(session.events[-1], ("tx", 4, 0))
+
+    def test_observe_retains_held_bad_unlocked_and_separate_frames_without_writes(self):
+        class ReadOnly:
+            def __init__(self): self.events = []
+            def status(self):
+                self.events.append("STATUS")
+                return {"mode": "VISION_ONLY", "digit": 2, "frameId": 5,
+                        "requestTag": 9, "configVersion": 1, "sourceHealthyFresh": False,
+                        "targetLockedFresh": False}
+            def bstatus(self):
+                self.events.append("BSTATUS")
+                return {"buildId": 0xE7070004, "frameId": 8, "configVersion": 1,
+                        "captureStartUs": 40000, "frameGood": False, "bypassPerspective": False,
+                        "redMinimum": 41, "blueMinimum": 37}
+        client.echo7.WORK.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=client.echo7.WORK) as directory:
+            path = Path(directory) / "observation.json"
+            session = ReadOnly()
+            with contextlib.redirect_stdout(io.StringIO()):
+                client.observe(session, path, "synthetic host test", samples=3, interval=0)
+            result = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(session.events, ["STATUS", "BSTATUS"] * 3)
+            self.assertEqual(result["status"], "COMPLETE")
+            self.assertEqual(result["summary"]["completePairs"], 3)
+            self.assertEqual(result["summary"]["bctlDistinctFrames"], 1)
+            self.assertEqual(result["summary"]["bctlBadFrameSamples"], 3)
+            self.assertEqual(result["summary"]["cctlLockedSamples"], 0)
+            self.assertEqual(result["samples"][0]["cctl"]["state"]["frameId"], 5)
+            self.assertEqual(result["samples"][0]["bctl"]["state"]["frameId"], 8)
+            self.assertLessEqual(result["samples"][0]["cctl"]["readEndSeconds"],
+                                 result["samples"][0]["bctl"]["readStartSeconds"])
+
+    def test_observe_transport_failure_keeps_partial_cctl_sample(self):
+        class Partial:
+            def status(self):
+                return {"mode": "VISION_ONLY", "digit": 1, "frameId": 5}
+            def bstatus(self): raise RuntimeError("BCTL failed")
+        client.echo7.WORK.mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=client.echo7.WORK) as directory:
+            path = Path(directory) / "partial.json"
+            with self.assertRaisesRegex(RuntimeError, "BCTL failed"):
+                client.observe(Partial(), path, "synthetic partial", samples=1)
+            result = json.loads(path.read_text(encoding="utf-8"))
+            self.assertEqual(result["status"], "FAIL")
+            self.assertEqual(result["summary"]["completePairs"], 0)
+            self.assertEqual(result["samples"][0]["cctl"]["state"]["frameId"], 5)
+
     def test_persistent_file_replies_work_before_buffered_stdout_closes(self):
         # A real subprocess models Quartus's buffered stdout. The session must
         # receive READY/command replies while that process remains alive.

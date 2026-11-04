@@ -8,6 +8,7 @@ in an active injection session. A lost process is stopped by the FPGA lease.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
@@ -225,6 +226,78 @@ class Session:
             self.lock = None
 
 
+def observation_summary(rows):
+    """Describe all samples; collection completion is not functional acceptance."""
+    cstates = [row["cctl"]["state"] for row in rows if "state" in row.get("cctl", {})]
+    bstates = [row["bctl"]["state"] for row in rows if "state" in row.get("bctl", {})]
+    return {
+        "samples": len(rows), "completePairs": sum(bool(row.get("complete")) for row in rows),
+        "cctlDistinctFrames": len({(s.get("requestTag"), s.get("configVersion"), s.get("frameId")) for s in cstates}),
+        "bctlDistinctFrames": len({(s.get("buildId"), s.get("configVersion"), s.get("frameId"), s.get("captureStartUs")) for s in bstates}),
+        "cctlHealthySamples": sum(bool(s.get("sourceHealthyFresh")) for s in cstates),
+        "cctlLockedSamples": sum(bool(s.get("targetLockedFresh")) for s in cstates),
+        "bctlBadFrameSamples": sum(not s.get("frameGood", False) for s in bstates),
+        "cctlModes": sorted({s["mode"] for s in cstates}),
+        "selectedDigits": sorted({s["digit"] for s in cstates}),
+        "bctlBuildIds": sorted({s["buildId"] for s in bstates}),
+        "bypassValues": sorted({s["bypassPerspective"] for s in bstates}),
+        "meaning": "All polls retained, including held, bad and unlocked samples. CCTL and BCTL are separately frozen; no same-frame claim."}
+
+
+def observe(session, out, label, *, samples=None, seconds=None, interval=0.1):
+    """Read STATUS then BSTATUS only. Never select, ARM, renew a lease or STOP."""
+    out = Path(out)
+    out.parent.mkdir(parents=True, exist_ok=True)
+    started = time.monotonic()
+    rows = []
+    status, failure = "COMPLETE", None
+    metadata = {"schema": "echo7-observation-v1", "label": label,
+                "startedAtUtc": datetime.now(timezone.utc).isoformat(),
+                "inputSource": "LIVE_FPGA_JTAG_READONLY", "transport": "ONE_PERSISTENT_JTAG_SESSION",
+                "requestedSamples": samples, "requestedSeconds": seconds, "intervalSeconds": interval,
+                "operations": ["STATUS", "BSTATUS"], "samples": []}
+    # Stream each complete or partial pair immediately; the finally block also
+    # closes a valid JSON record after Ctrl+C or a transport error.
+    with out.open("x", encoding="utf-8") as output:
+        header = dict(metadata); del header["samples"]
+        output.write(json.dumps(header, ensure_ascii=False)[:-1] + ', "samples": [\n')
+        output.flush()
+        try:
+            while ((samples is not None and len(rows) < samples) or
+                   (seconds is not None and time.monotonic() - started < seconds)):
+                row = {"index": len(rows), "complete": False}
+                rows.append(row)
+                try:
+                    for key, read in (("cctl", session.status), ("bctl", session.bstatus)):
+                        row[key] = {"readStartSeconds": time.monotonic() - started}
+                        row[key]["state"] = read()
+                        row[key]["readEndSeconds"] = time.monotonic() - started
+                    row["complete"] = True
+                finally:
+                    if len(rows) > 1: output.write(',\n')
+                    output.write(json.dumps(row, ensure_ascii=False))
+                    output.flush()
+                c, b = row["cctl"]["state"], row["bctl"]["state"]
+                print(json.dumps({"sample": row["index"], "mode": c["mode"], "digit": c["digit"],
+                                  "cFrame": c["frameId"], "cLocked": c["targetLockedFresh"],
+                                  "bFrame": b["frameId"], "bFrameGood": b["frameGood"],
+                                  "bypass": b["bypassPerspective"]}), flush=True)
+                if samples is not None and len(rows) >= samples: break
+                time.sleep(interval)
+        except BaseException as error:
+            status = "INTERRUPTED" if isinstance(error, KeyboardInterrupt) else "FAIL"
+            failure = str(error) or type(error).__name__
+            raise
+        finally:
+            summary = observation_summary(rows)
+            tail = {"status": status, "error": failure, "elapsedSeconds": time.monotonic() - started,
+                    "summary": summary}
+            output.write('\n], ' + json.dumps(tail, ensure_ascii=False)[1:])
+            output.flush()
+    print(json.dumps({"status": status, "path": str(out), "summary": summary}), flush=True)
+    return {**metadata, "samples": rows, **tail}
+
+
 def inject(session, rows, arm):
     """Rows hold a template while the same host session renews its lease."""
     if session.status()["mode"] != "CHASSIS_INJECT":
@@ -254,7 +327,10 @@ def inject(session, rows, arm):
             print(json.dumps({"input": "SYNTHETIC_VISION", "row": row, "armRequested": arm}), flush=True)
             until = time.monotonic() + row["hold"]
             while time.monotonic() < until:
-                session.tx(8)
+                # One session both renews between status pages and records the
+                # SEARCH -> final ACQUIRE -> NOT_FOUND sequence, including HOLD.
+                state = session.status(maintain_lease=True)
+                print(json.dumps({"input": "SYNTHETIC_VISION", "state": state}), flush=True)
                 time.sleep(min(0.1, max(0, until - time.monotonic())))
     finally:
         # Also revoke an already-armed task when a non-arming session ends.
@@ -263,6 +339,17 @@ def inject(session, rows, arm):
             print("STOP acknowledged; physical standstill requires observation.", flush=True)
         except (OSError, RuntimeError, TimeoutError) as error:
             print(f"STOP not confirmed: {error}; FPGA injection lease must expire.", file=sys.stderr)
+
+
+def no_target_search_rows(state):
+    """Current FPGA budget plus final zero/dwell/acquisition and polling margin."""
+    budget = state["scanBudgetUs"] / 1_000_000
+    if not 1 <= budget <= 120:
+        raise ValueError("FPGA scanBudgetUs is outside 1..120 seconds")
+    # Production final acquire: zero UART + 200ms settle + 900ms confirmation.
+    # Three seconds includes polling margin; HOLD may still consume wall time,
+    # so retained state records, not this duration, decide observed completion.
+    return [{"visible": False, "hold": budget + 3.0}]
 
 
 def main(argv=None):
@@ -274,6 +361,13 @@ def main(argv=None):
     commands = parser.add_subparsers(dest="command", required=True)
     commands.add_parser("mode").add_argument("mode", choices=MODES)
     commands.add_parser("status").add_argument("--watch", action="store_true")
+    observation = commands.add_parser("observe", help="read-only CCTL/BCTL samples; physical SW selects, no ARM/lease/STOP")
+    duration = observation.add_mutually_exclusive_group(required=True)
+    duration.add_argument("--samples", type=int, help="number of polls; duplicates/bad/unlocked frames are retained")
+    duration.add_argument("--seconds", type=float, help="bounded sampling duration, excluding session startup")
+    observation.add_argument("--out", type=Path, required=True, help="new JSON path, never overwritten")
+    observation.add_argument("--label", required=True, help="scene/bay/trial label; does not change hardware")
+    observation.add_argument("--interval", type=float, default=0.1, help="pause after each C/B pair (seconds)")
     commands.add_parser("stop", help="idle link only; an active session must use Ctrl+C")
     scan = commands.add_parser("scan", help="set bounded turn duration; calibrated requires three measured trials")
     scan.add_argument("--seconds", type=float, required=True)
@@ -295,6 +389,13 @@ def main(argv=None):
     if args.timeout <= 0 or bool(args.cable) != bool(args.device):
         parser.error("positive timeout and both --cable/--device are required when specifying a target")
     try:
+        if args.command == "observe":
+            if (args.samples is not None and not 1 <= args.samples <= 10000 or
+                    args.seconds is not None and not 0 < args.seconds <= 3600 or
+                    not 0 <= args.interval <= 10 or not args.label.strip()):
+                raise ValueError("observe requires samples 1..10000 or seconds >0..3600, interval 0..10 and a label")
+            if args.out.exists():
+                raise FileExistsError("refusing to overwrite observation output")
         rows = None
         if args.command == "inject":
             observation_words(args.x, args.y, args.visible, args.quality)
@@ -330,7 +431,12 @@ def main(argv=None):
                     print(json.dumps(session.status()), flush=True)
                     if not args.watch: break
                     time.sleep(0.5)
+            elif args.command == "observe":
+                observe(session, args.out, args.label, samples=args.samples,
+                        seconds=args.seconds, interval=args.interval)
             else:
+                if args.command == "scenario" and args.name == "no-target-search":
+                    rows = no_target_search_rows(session.status())
                 inject(session, rows, args.arm)
         return 0
     except KeyboardInterrupt:

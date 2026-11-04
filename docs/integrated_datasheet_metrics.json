@@ -1,7 +1,7 @@
 {
   "r6": "PASS 219.556 s for E7070004; Verilator 5.050 clean copy, jobs=4; 12 PASS + deliberate mutant CAUGHT. Meets the 285 s user limit.",
   "fit": "PASS E7070004: compile 1,121.141 s + gate 25.868 s. ALM 29,576/32,070 (92%); M10K 357/397; DSP 51/87; 41,000 registers. Worst setup +1.633 ns / hold +0.118 ns; unconstrained 0; 0 errors / 92 warnings.",
-  "hardware": "E7070004 red2 tag 3->4, new lock and ARM/ALIGN (+4/-4 cm/s, J3 468 mm). User confirmed physical start and stop when blue1 left view. 13 no-heartbeat samples stayed armed, with transient LOST/ACQUIRE. Final: VISION_ONLY, disarmed, zero; user confirmed stopped. STOP's separate mechanical timing was not measured. Blue1 q255, processing 47.652 ms; flags=3 retained.",
+  "hardware": "E7070004: real-camera GRAB and 12 distinct samples accepted all six blue cards (each 12/12). All six physical one-hot choices locked correctly in 441 read-only polls; no selection/conflict stayed inhibited, all polls disarmed and zero. Seven candidate-overflow bad frames retained. Red2 physical start and blue1-loss stop confirmed earlier; independent host-STOP timing still unmeasured. Static vision coverage, not six-bay floor docking; final mode VISION_ONLY.",
   "sof": "firmware/E7070004/PartBDebug.sof; 6,706,154 bytes. Original build: 20261104T111202_124373Z_build. Programmed-board ID E7070004 verified.",
   "hardware_prior": "Earlier E7070002: synthetic left/centre/right, lease loss/no automatic restart, bounded NOT_FOUND, and real IR A/POWER1/POWER2 passed. User confirmed wheel actions and both sides forward for logical +3/+3 cm/s. These are prior-build checks."
 }

@@ -156,7 +156,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/python/test_ai_transcript.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_anchor_ownership.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_auto_orientation.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
-| `tests/python/test_autodebug.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
+| `tests/python/test_autodebug.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | python -m unittest discover -s tests/python |
 | `tests/python/test_bctl_tcl.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_calibration_measurement.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_candidate_pruning.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
@@ -172,6 +172,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/python/test_hsv.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_interface_validation.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_main_colour_support.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
+| `tests/python/test_observation_comparison.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | python -m unittest discover -s tests/python |
 | `tests/python/test_projective.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_projective_calibration.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_query_protocol.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
@@ -187,7 +188,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/python/test_scene_measurement.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_schema6_capacity.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_schema7_shared_pool.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
-| `tests/python/test_submission.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
+| `tests/python/test_submission.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | python -m unittest discover -s tests/python |
 | `tests/python/test_sw9_comparison.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_synchronisers.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_tools.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
@@ -242,6 +243,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tools/capture/grab.py` | 540207680 | Course FrameGrab V2026.1; notices retained; B schema/control/decoder integration | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/chassis_debug.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/check_repository.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
+| `tools/compare_observations.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/compare_sw9_trials.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/echo7.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/export_ai_transcript.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |

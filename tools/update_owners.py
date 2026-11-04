@@ -27,6 +27,8 @@ INTEGRATION_FILES = {
     "rtl/top/echo7IntegratedTop.sv", "rtl/debug/chassisDebug.sv", "rtl/debug/syntheticPerception.sv",
     "quartus/MemberCIntegration.sdc", "tools/chassis_debug.py", "tools/tcl/chassis_session.tcl",
     "tools/echo7.py", "tools/check_repository.py", "tools/export_submission.py",
+    "tools/compare_observations.py", "tests/python/test_observation_comparison.py",
+    "tests/python/test_autodebug.py", "tests/python/test_submission.py",
     "tools/lib/verilator_suite.py", "tools/run_r6_windows.py", "run_all_tests.sh",
     "tools/render_integrated_datasheet.py",
     "tools/update_owners.py", "tools/validate_member_c_interface.py",

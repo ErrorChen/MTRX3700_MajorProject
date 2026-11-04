@@ -156,9 +156,11 @@ def main():
     for name in ("README.md", "README_EN.md", "VERSION_README.md", "OWNERS.md", "requirements.txt", "run_all_tests.sh",
                  ".gitignore", ".gitattributes", ".editorconfig"):
         selected[name] = root / name
-    selected["verified/PartBDebug.sof"] = sof
+    firmwarePath = f"firmware/{current['buildId']:08X}/PartBDebug.sof"
+    selected[firmwarePath] = sof
     record = {"schema": "echo7-submission-v2", "scope": "Integrated B+C; physical switches; speech cancelled",
-              "buildId": current["buildId"], "top": current["top"], "sof": build["sof"]["path"], "files": []}
+              "buildId": current["buildId"], "top": current["top"],
+              "sof": firmwarePath, "sourceSof": build["sof"]["path"], "files": []}
     if args.datasheet:
         record["datasheet"] = datasheetBinding(args.datasheet, current)
         selected["echo7_datasheet.pdf"] = args.datasheet

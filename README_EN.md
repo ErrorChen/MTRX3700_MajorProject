@@ -116,9 +116,31 @@ With no other JTAG session open, real vision status, calibration and capture are
 
 `echo7.py status` reads BCTL colour/candidate/report state. `chassis_debug.py status` reads CCTL selection/safety/task state. Capture retains real RGB565, result words and CRC/version checks; use the output location reported by that invocation. In the integrated production top, C exclusively owns SELECT/CLEAR. Older B debugging `select/track/locate` commands are not substitutes for physical switch selection; speech commands are unsupported.
 
+Use `observe` to save a bounded sequence. Physical SW0–SW5 still select the target. The command only reads CCTL then BCTL within one persistent session; it does not select a bay, change mode, ARM, renew a lease or STOP. Ending observation does not cancel a running INTEGRATED task. Set the mode and physical switches before running:
+
+```powershell
+& $pythonExe tools/chassis_debug.py observe --samples 30 --out build/observations/bay1-normal1.json --label bay1-normal-trial1
+# Alternatively sample for a duration; choose either --seconds or --samples.
+& $pythonExe tools/chassis_debug.py observe --seconds 8 --out build/observations/bay1-window.json --label bay1-window
+```
+
+`--samples` counts poll pairs, not necessarily new frames. `--interval` pauses after each pair and defaults to 0.1 seconds. JSON retains bad, unlocked and repeated samples, counts distinct C/B frames separately, and includes physical selection, mode, versions, thresholds, request tags and each read's start/end time. CCTL and BCTL freeze independently: **a pair is not a same-frame snapshot**. `COMPLETE` means collection completed, not recognition or motion acceptance. Ctrl+C or a transport error preserves records already read, including a partial CCTL sample if BCTL fails. Output must be a new file; existing evidence is never overwritten.
+
+Static SW8 vision comparisons can start in VISION_ONLY. Keep the same blue card, physical selection, camera position/focus, card placement and illumination, with SW9 off. Collect three normal runs with SW8=0 and three bypass runs with SW8=1, using the same `--samples` count each time. Give each run a new filename and label, such as `normal1.json` through `normal3.json` and `bypass1.json` through `bypass3.json`. After changing SW8, let the current request/configuration stabilize; do not change selection, calibrate or switch mode during a run. Then compare offline:
+
+```powershell
+& $pythonExe tools/compare_observations.py --normal build/observations/normal1.json build/observations/normal2.json build/observations/normal3.json --bypass build/observations/bypass1.json build/observations/bypass2.json build/observations/bypass3.json --out build/observations/comparison.json
+```
+
+Without `--conditions-confirmed`, the result is `UNCONFIRMED_CONDITIONS`, exit 2. Only after the operator actually checks unchanged camera/card/lighting conditions for these six runs, add `--conditions-confirmed 'describe the actual confirmation'`. The comparator checks build, algorithm/colour profile, physical target, operating mode and poll count across all six runs, plus stable request/configuration and the expected SW8 value within each run. Raw SW9 display, reused runs and invalid time order are rejected. `COMPARISON_VALID` only means the inputs match; bad frames, lost locks and stale data remain visible for each mode. Both all-poll and distinct-frame summaries are reported. FPGA capture-to-completion time is not image-change-to-UART or mechanical response latency. Three static pairs for one selected bay do not establish six-bay floor-level acceptance.
+
+The old `echo7.py test --hardware [--trials N]` and `autodebug` depend on automatic BCTL SELECT/CLEAR, which conflicts with the production top's sole request owner. They now return `BLOCKED`, exit 2, and point to `observe`. `autodebug` stops before building, programming or accessing the board. Historical B trial parsing/scoring remains available for old evidence; the old commands cannot certify that all six bays were automatically tested on the current top.
+
 U is the rotated image coordinate `0..239`; V is `0..319`. U80/U120/U160 mean left/centre/right. `--hold` is in seconds and defaults to 3. Without `--arm`, a session updates templates but does not start a task. Mode changes, heartbeats and read-only status commands do not start tasks either.
 
 Continuous injection updates the template, renews the lease and starts within one persistent Quartus STP session. Normal exit or Ctrl+C attempts STOP. An abnormal host exit causes the FPGA lease to expire after approximately 500 ms, directly revoking injection permission. Renewing the lease does not restart motion. Stopping frames while retaining heartbeats is still caught by the approximately 150 ms report freshness guard. INTEGRATED does not depend on JTAG heartbeats.
+
+`scenario no-target-search --arm` reads the FPGA's current `scanBudgetUs` and holds the synthetic no-target template for the budget in seconds plus 3 seconds. This covers the final zero-speed message, 200 ms settling, 900 ms confirmation and polling margin; the default 10-second budget gives a 13-second session. The same session continuously prints CCTL state and renews the lease between pages, exposing SEARCH, final ACQUIRE, NOT_FOUND or real HOLD. HOLD does not add search rotation time, so elapsed session duration alone cannot prove budget completion; inspect the retained states. Exit still attempts STOP. This command does not set scan calibration or equate raised-wheel rotation with a ground revolution.
 
 **Stop active injection using Ctrl+C in its owning process.** Use a separate `stop` command only when the JTAG link is idle. The tool rejects contention with another chassis session; inability to open the link does not mean STOP was delivered. Do not run another BCTL/GRAB process alongside an active injection session.
 
@@ -193,6 +215,14 @@ The published datasheet can be regenerated from `docs/integrated_datasheet_metri
 & $pythonExe tools/render_integrated_datasheet.py
 ```
 
+With a current successful local build record, export the integrated hand-off ZIP:
+
+```powershell
+& $pythonExe tools/export_submission.py --out build/echo7_submission.zip --datasheet docs/ECHO7_Integrated_Datasheet.pdf
+```
+
+Export verifies the current source/build, rejects a stale SOF and refuses to overwrite an existing ZIP. The archive contains exactly one SOF at `firmware/<BUILD_ID>/PartBDebug.sof`, currently `firmware/E7070004/PartBDebug.sof`, matching the README link; there is no second `verified/PartBDebug.sof` copy. It retains both READMEs, project/RTL/test/tool sources, real replay inputs and documentation, while excluding build databases, private toolchains and unrelated run caches. The one-page PDF needs no SHA sidecar, and the ZIP receives a CRC check. Dialogue enters the archive only through an explicitly selected, checked export manifest. A fresh clone without a local successful-build record must build before using the exporter. Archive integrity adds no hardware acceptance claim and performs no Git commit or upload.
+
 | Version with an actual artifact | Isolated build artifact path | Build status |
 |---|---|---|
 | E7070002 | `build/member_b/20261104T100141_653795Z_build/source/quartus/output_files/PartBDebug.sof` | PASS and programmed, with version-specific board evidence; historical artifact, not the release file |
@@ -224,8 +254,12 @@ The paths below index original logs in this working directory. Full build databa
 | E7070003, continuous real vision | 22 locks across 23 distinct frames; frame 855 blue1 quality 255, U115/V186, 122×130 box, 59.478 ms processing | `build/repair/hardware_vision.jsonl`; zero-speed VISION_ONLY, not six-bay floor completion |
 | E7070003, real red2 | Request tag 5→6 proved reselect; start preceded the new lock and entered SCAN_UNCALIBRATED/NOT_FOUND, with no automatic revival | `build/repair/hardware_red2_e7070003_early_start.jsonl`; recorded failure, not successful red2 acceptance |
 | E7070004, real red2 and real camera | Tag 3→4; frame 2900 acquired the new lock before ARM/ALIGN, logical L+4/R−4 cm/s, real J3=468 mm; scan uncalibrated, failure=NONE and historical faultFlags=3 retained; the user confirmed red2 starting and clarified that it stopped when blue1 left the view | `build/repair/hardware_red2.jsonl`, `red2_console.log`; the host STOP record's DISARMED, L0/R0 and zeroSent=true establish board state/message completion, while its independent physical stopping time was not measured. Final state: VISION_ONLY, disarmed, logical zero speed, with standstill confirmed by the user. |
+| E7070004, all six physical blue cards | Same-frame GRAB frame 26844 accepted blue1–6 at quality 255; across another 12 distinct B frames, each blue digit was accepted 12/12, while selected blue1 was C-healthy/locked 12/12; all samples commanded zero speed | `build/continuation_20261104/six_cards_initial/`, `blue1.json`, `vision_findings.json`; red57/blue37, configuration 1, normal perspective; green tape covered red2 and its residual was rejected rather than assigned a false digit |
+| E7070004, six physical switch selections and invalid masks | 150.054 seconds, 441 read-only pairs; each one-hot selection produced its matching real blue-card lock; 17 no-selection and 27 conflict samples; all 441 were VISION_ONLY, disarmed, without motion permission and at logical zero speed | `build/continuation_20261104/six_switches.json` and `six_switches_analysis.json`; C healthy 390/441, locked 370/441, B good 434/441; all seven candidate-overflow bad frames and lost locks retained |
 
 For approximately two seconds after triggering, status was read without sending heartbeats: all 13 samples remained armed with `leaseValid=0`, comprising 7 ALIGN, 4 LOST and 2 ACQUIRE. Including the trigger sample, there were 8 motion-command samples. **This is not two seconds of uninterrupted stable turning**: brief vision loss made the FPGA enter zero-speed reconfirmation. That run's final BCTL snapshot was frame 2959, E7070004, a good frame, blue1 quality 255, U182/V130, a 101×117 box, 47.652 ms processing, and red2 event 7/id 2. The record establishes red2→new-request lock→start and heartbeat-independent INTEGRATED operation. The user physically confirmed starting and clarified that the chassis stopped when blue1 left the view. The host's two-second STOP independently establishes board revocation/zeroSent only; its physical stopping time was not separately measured. The user's observed stop cannot be attributed to host STOP or the later mode1 switch. Final VISION_ONLY readback is disarmed with logical zero speed, and the user confirmed standstill. Six-bay floor docking and mechanical stopping latency are not established by this run.
+
+The later six-switch observation retained 441 distinct B frames and 405 distinct cached C frames. C/B freeze separately; paired frame IDs need not match. C lock counts in the main blue1–6 intervals were 197/200, 22/23, 24/28, 16/22, 23/29 and 26/30; one additional brief blue2 transition was unlocked, and return to blue1 after conflict was 62/64. Of 27 conflicts, 26 formed a sustained stable mask3 interval and one was a mask6 transition. Every no-selection/conflict sample had no C health/lock and no selected B target. The first return-to-blue1 sample retained an old CLEAR report, which C did not accept as a new lock. All seven bad B frames were candidate overflows, each followed by an observed good B frame. For some bad samples, selection changed before relocking was observed. This establishes six-position visual selection coverage, not 441 continuously locked samples or floor-level six-bay completion. See the full interval table and bad-frame indices in the [repair record](docs/REPAIR_RESULT.md). Actual SW6/7 VGA display, matched SW8 comparisons and physical distance boundaries still need their own acceptance evidence.
 
 Resources/timing remain version-specific: E2 used 29417/32070 ALMs, with worst setup 1.164 ns and hold 0.078 ns; E3 used 29373/32070 ALMs, with worst setup 0.967 ns and hold 0.117 ns. Both used 357/397 M10Ks and 51/87 DSPs, with no unconstrained items and passing four-corner/CDC checks.
 
@@ -237,7 +271,7 @@ Resources/timing remain version-specific: E2 used 29417/32070 ALMs, with worst s
 - Physical J3 hazard/no-echo tests and dedicated 250/300/350 mm boundary trials remain outstanding. Control/pin models cover these boundaries; board testing mainly established valid ranging and participation of the safety chain.
 - Three comparable SW8 normal/bypass trials, sustained movement, occlusion and varied lighting still need wider measurement. This repair used bounded validation instead of repeated long simulation in place of hardware work.
 - Fragmented red backgrounds can still exceed active-label capacity. Current bad frames revoke permission; recovery is possible from E3 onward, but persistently invalid images do not become valid automatically. Cropping, glare, blur and duplicate targets can be rejected.
-- The historical frame251 model accepts all eight official markers. Frame30321 blue6 is still rejected geometrically because upstream colour support is fragmented. Rejection is preserved; no file-specific, location-specific or digit-specific answers are substituted.
+- The historical frame251 model accepts all eight official markers. Frame30321 still rejects fragmented blue6 under its original red41/blue33 profile. One offline comparison kept the original pixels and only lowered blue to 20, restoring all eight accepts; the current real six-card scene also accepted all six at red57/blue37. Stability across lighting/threshold conditions still needs verification; historical inputs and digit6 answers were not fabricated.
 - The user confirmed physical E4 red2 starting and stopping when blue1 left the view. LOST/ACQUIRE intermittency remains in the vision log, so sustained target visibility needs improvement. Independent physical timing of the host's two-second STOP and mechanical stopping latency remain unmeasured. The final state is VISION_ONLY, disarmed and logical zero speed, with physical standstill confirmed; this does not establish floor docking acceptance.
 - A/C member SIDs must still be supplied by the members. Course/IP notices and AI-assisted-change attribution remain; human sign-off is not invented.
 
@@ -260,6 +294,7 @@ J3 uses the RCWL-1601, 3.3 V and common ground. Connect FPGA TX to chassis RX an
 | `rtl/debug/` | BCTL/CCTL, synthetic vision and VGA sample diagnostics |
 | `tests/`, `run_all_tests.sh` | Module/system self-checks, real-input fixtures and the formal R6 entry |
 | `tools/chassis_debug.py`, `tools/echo7.py` | Persistent JTAG, injection, build, programming, calibration and real capture |
+| `tools/compare_observations.py`, `tools/export_submission.py` | Offline paired SW8 summaries from physical-selection observations and integrated single-SOF ZIP export |
 | `firmware/E7070004/PartBDebug.sof` | Current release SOF, published only after the final build succeeds |
 | `docs/ECHO7_Integrated_Datasheet.pdf` | Current integrated datasheet |
 | `docs/REPAIR_RESULT.md`, `VERSION_README.md`, `OWNERS.md` | Version-specific results, iteration history and source/member attribution |

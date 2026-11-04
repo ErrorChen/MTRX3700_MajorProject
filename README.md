@@ -114,9 +114,31 @@ $pythonExe = 'C:\Users\user\AppData\Local\Programs\Python\Python313\python.exe'
 
 `echo7.py status`读取BCTL颜色/候选/报告状态；`chassis_debug.py status`读取CCTL选择/安全/任务状态。抓帧保留真实RGB565、结果字和CRC/版本检查，输出目录以本次命令记录为准。生产集成顶层由C独占SELECT/CLEAR；不要把旧B调试脚本中的`select/track/locate`当作实体拨码的替代入口，语音命令也不受支持。
 
+需要保存连续观察时，使用`observe`。实体SW0–5仍决定目标；命令不会选择车位、改变模式、ARM、续租或STOP，只在一个持久会话内依次读取CCTL与BCTL。退出观察不会取消正在执行的INTEGRATED任务。先完成模式和实体开关设置，再运行：
+
+```powershell
+& $pythonExe tools/chassis_debug.py observe --samples 30 --out build/observations/bay1-normal1.json --label bay1-normal-trial1
+# 或按时间观察；--seconds和--samples二选一。
+& $pythonExe tools/chassis_debug.py observe --seconds 8 --out build/observations/bay1-window.json --label bay1-window
+```
+
+`--samples`计数的是轮询对，不保证每次都是新帧；`--interval`是每对读取之后的暂停，默认0.1秒。JSON保留所有坏帧、未锁定和重复样本，分别统计C/B不同帧数，并记录实体选择、模式、版本、阈值、请求tag及每次读取的开始/结束时间。CCTL与BCTL各自冻结，**不能把一对记录称为同帧快照**。`COMPLETE`只表示采集完成，不表示识别或运动验收通过；Ctrl+C或传输失败保留已读记录，BCTL失败时也保留该对已取得的CCTL。输出路径必须是新文件，不覆盖旧证据。
+
+SW8静态视觉对照可先在VISION_ONLY进行。固定同一蓝牌、实体选择、相机位置/焦距、标牌摆位与光照，SW9保持关闭；正常模式SW8=0和旁路SW8=1各采集三次，每次使用相同`--samples`数。每次改用新的文件名和标签，例如`normal1.json`到`normal3.json`、`bypass1.json`到`bypass3.json`。改变SW8后先让当前请求/配置稳定；采集期间不要切牌、校色或换模式。随后离线比较：
+
+```powershell
+& $pythonExe tools/compare_observations.py --normal build/observations/normal1.json build/observations/normal2.json build/observations/normal3.json --bypass build/observations/bypass1.json build/observations/bypass2.json build/observations/bypass3.json --out build/observations/comparison.json
+```
+
+未提供`--conditions-confirmed`时，结果为`UNCONFIRMED_CONDITIONS`、退出码2。只有操作者确实核对这六次的相机、标牌与光照条件不变，才添加`--conditions-confirmed '如实填写本次条件确认'`。比较器核对六次的构建、算法/颜色配置、实体目标、运行模式和采样数，检查各次内部请求/config稳定及SW8取值；SW9原始画面、重复使用同次记录、时间顺序错误会被拒绝。`COMPARISON_VALID`只说明比较输入匹配，各模式的坏帧、丢锁和陈旧数据仍列出。结果同时给出全部轮询和不同帧统计；板上capture→completion时间不等于图像变化→UART或机械响应延迟。一个选定车位的静态三对比较也不等于六车位落地任务验收。
+
+旧`echo7.py test --hardware [--trials N]`和`autodebug`依赖BCTL自动SELECT/CLEAR，与当前正式顶层的唯一请求所有者冲突，现明确返回`BLOCKED`、退出码2并指向`observe`。`autodebug`在构建、下载或板卡访问之前停止。历史B试验解析/评分保留用于读取旧证据，不能用旧命令声称当前自动测过六车位。
+
 U坐标是旋转后画面的 `0..239`，V是 `0..319`；U=80/120/160分别表示左/中/右。`--hold` 单位为秒，默认3秒。不带 `--arm` 只更新模板，不能启动。模式切换、心跳和只读状态命令也不能启动。
 
 持续注入在一个Quartus STP会话内更新模板、心跳和启动；正常退出或Ctrl+C时尽力STOP。主机异常退出后，FPGA约500 ms租约超时直接撤销注入许可；续租不会自动复驶。停止出帧但继续心跳，仍会被约150 ms报告新鲜度保护拦截。INTEGRATED不依赖JTAG心跳。
+
+`scenario no-target-search --arm`读取当前FPGA的`scanBudgetUs`，保持合成无目标模板“预算秒数＋3秒”，覆盖最终零速报文、200 ms驻留、900 ms确认及轮询余量；默认10秒预算对应13秒会话。注入期间在同一会话持续输出CCTL状态并在分页间续租，可看到SEARCH、最终ACQUIRE、NOT_FOUND或真实HOLD。HOLD不累计搜索转动时间，因此会话时长不保证已完成预算；以保存的状态为准，退出仍尝试STOP。该命令没有设置扫描标定，也不把架空转动当作地面一圈。
 
 **活动注入通过当前进程Ctrl+C停止。** 独立 `stop` 仅在JTAG链路空闲时使用；工具会拒绝争抢另一个底盘会话，打不开链路不等于STOP已送达。不要同时运行另一个BCTL/GRAB进程占用活动注入会话。
 
@@ -191,6 +213,14 @@ UART为115200、8N1、完整 `T:1` JSON，正常心跳200 ms；停车优先排�
 & $pythonExe tools/render_integrated_datasheet.py
 ```
 
+本机已有当前成功构建记录时，可导出整项目交接ZIP：
+
+```powershell
+& $pythonExe tools/export_submission.py --out build/echo7_submission.zip --datasheet docs/ECHO7_Integrated_Datasheet.pdf
+```
+
+导出核对当前源与成功构建，拒绝旧SOF或覆盖已有ZIP。包中仅有一份SOF，使用`firmware/<BUILD_ID>/PartBDebug.sof`，当前即`firmware/E7070004/PartBDebug.sof`，与README链接一致；不再另放`verified/PartBDebug.sof`副本。保留中英文README、工程/RTL/TB/工具、真实回放输入和文档；排除编译数据库、私有工具链与无关运行缓存。一页PDF不要求SHA sidecar，压缩包做CRC检查；对话记录只有显式指定已检查的导出manifest才会加入。新的克隆没有本机成功构建记录时，应先自行构建再运行导出器。ZIP完整性通过不增加任何实机验收结论，也不执行Git提交或上传。
+
 | 已实际生成的版本 | 本次独立构建产物路径 | 构建状态 |
 |---|---|---|
 | E7070002 | `build/member_b/20261104T100141_653795Z_build/source/quartus/output_files/PartBDebug.sof` | PASS，已下载并记录该版硬件结果；历史产物不作为本次发布文件 |
@@ -222,8 +252,12 @@ E7070004正式R6已在干净副本用Verilator5.050实际完成：**219.556074�
 | E7070003，真实连续视觉 | 23个不同帧中22次锁定；frame855蓝1质量255，U115/V186、122×130框、处理59.478ms | `build/repair/hardware_vision.jsonl`；VISION_ONLY零速，不称六车位落地完成 |
 | E7070003，真实红2 | 请求tag5→6，重新选择生效；但启动早于新目标锁定，进入SCAN_UNCALIBRATED/NOT_FOUND，之后未自动复活 | `build/repair/hardware_red2_e7070003_early_start.jsonl`；明确记录失败，不作为红2成功验收 |
 | E7070004，真实红2及真实相机 | tag3→4；frame2900先获得新锁，再ARM/ALIGN，逻辑L+4/R−4cm/s、真实J3=468mm；扫描未标定，failure=NONE，历史flags3保留；用户确认红2启动，随后澄清蓝1离开后即停车 | `build/repair/hardware_red2.jsonl`、`red2_console.log`；主机STOP记录的DISARMED、L0/R0、zeroSent=true证明板上状态/报文完成，其独立物理停车时刻未验；末状态VISION_ONLY、未ARM、逻辑零速，用户确认已停止 |
+| E7070004，完整六张蓝牌真实视觉 | 同帧GRAB frame26844：蓝1–6均接受、质量255；另12个不同B帧中六张蓝牌分别12/12接受，C选蓝1为12/12健康/锁定，全部零速 | `build/continuation_20261104/six_cards_initial/`、`blue1.json`、`vision_findings.json`；红57/蓝37，配置1，正常透视；红2被绿色胶带遮住，拒识残余没有被伪造为有效数字 |
+| E7070004，六档实体开关及非法选择 | 150.054秒、441对只读采样；六个one-hot均有对应蓝牌真实锁定，全零17次、冲突27次；全441次VISION_ONLY、未ARM、无运动许可、逻辑零速 | `build/continuation_20261104/six_switches.json`及`six_switches_analysis.json`；C健康390/441、锁定370/441，B好帧434/441；保留7个候选溢出坏帧及全部丢锁 |
 
 E4触发后的约2秒继续读取状态而不发送心跳：13个采样均保持ARM且`leaseValid=0`，其中7个ALIGN、4个LOST、2个ACQUIRE。含触发采样共8个运动命令采样，**不能写成连续稳定转动2秒**；短暂视觉丢失时FPGA进入零速重确认。该次结束BCTL为frame2959、E7070004、好帧、蓝1质量255、U182/V130、101×117框、处理47.652ms，红2事件7/id2。此记录证明红2→新请求锁定→启动及INTEGRATED无需心跳；用户实物确认启动，并澄清“蓝一脱离后就停车了”。主机2秒STOP只独立确认板上撤销/zeroSent，其物理停车时刻未单独测量；不能把用户观察的停车归因于主机STOP或后续mode1切换。最终VISION_ONLY读回未ARM、逻辑零速，用户确认已停止。本轮不据此宣称六车位落地停靠或机械停车延迟已验收。
+
+后续六档观察保留441个不同B帧和405个不同C缓存帧；C/B分别冻结，不要求每对同帧。主要蓝1–6区间的C锁定次数分别为197/200、22/23、24/28、16/22、23/29、26/30；另有一次未锁定的蓝2短过渡，冲突后返回蓝1为62/64。27次冲突中26次是持续稳定的mask3，另一次为mask6过渡；所有无选择/冲突样本均无C健康/锁定且B未选择目标。返回蓝1的首个样本保留旧CLEAR报告，C没有把它当作新锁。7个坏B帧均为candidateOverflow，之后均观察到好B帧；并非每个坏帧都在同一选择结束前观察到重新锁定。六档覆盖由此成立，但不是441次全时锁定或六车位落地通过。完整区间表和坏帧索引见[修复记录](docs/REPAIR_RESULT.md)。SW6/7实际VGA显示、SW8公平对照及实物距离边界仍须各自验收，不能由这批零运动数据代替。
 
 构建资源/时序也按版本保留：E2为29417/32070 ALM，最差setup1.164ns、hold0.078ns；E3为29373/32070 ALM，最差setup0.967ns、hold0.117ns。两版M10K357/397、DSP51/87，未约束项0、四角及CDC检查通过。
 
@@ -235,7 +269,7 @@ E4触发后的约2秒继续读取状态而不发送心跳：13个采样均保持
 - 实物J3危险、无回波以及250/300/350mm边界专项验证尚待完成；这些边界已有控制/管脚模型检查，实板主要验证了有效距离和安全链参与。
 - 还需SW8正常/旁路各三次公平实测，以及持续移动、遮挡、不同光照等更广场景。本轮保持适度验证，没有用重复长仿真替代实机。
 - 复杂红色背景仍可能超出活动标签容量；当前坏帧停止授权，E3起可在新好帧后恢复，但持续坏图不会自动变成有效观测。裁切、反光、模糊和重复目标都可能被拒识。
-- 历史frame251模型接受全部八张正式标牌；frame30321蓝6仍因上游颜色区域碎裂而几何拒识。保留拒识，没有针对文件名、位置或目标数字伪造答案。
+- 历史frame251模型接受全部八张正式标牌；frame30321在原红41/蓝33配置下蓝6仍因颜色区域碎裂而几何拒识。一次保持原像素、只把蓝阈值降到20的离线对照恢复八牌接受；本次真实六牌在红57/蓝37下也全部接受。不同光照/阈值下的稳定性仍待验证，没有改历史输入或为数字6编造答案。
 - E4红2实物启动和蓝1离开后停车已有用户确认，但视觉日志仍有LOST/ACQUIRE间歇，持续目标可见性需要改进。主机2秒STOP的独立物理停车时刻及机械停车延迟未测；最终VISION_ONLY、未ARM、逻辑零速且实物已停，不把该结果扩大为落地停靠验收。
 - A/C成员SID仍待本人补齐；原课程/IP声明和AI辅助改动说明保留，不虚构人工签核。
 
@@ -258,6 +292,7 @@ J3使用RCWL-1601、3.3 V和共地；FPGA TX接底盘RX，FPGA RX接底盘TX；�
 | `rtl/debug/` | BCTL/CCTL、合成视觉、VGA采样诊断 |
 | `tests/`、`run_all_tests.sh` | 模块/系统自检、真实输入fixture、正式R6入口 |
 | `tools/chassis_debug.py`、`tools/echo7.py` | 持久JTAG会话、注入、构建、下载、校色及真实抓帧 |
+| `tools/compare_observations.py`、`tools/export_submission.py` | 实体选择观测的三对SW8离线摘要、整项目单SOF交接ZIP |
 | `firmware/E7070004/PartBDebug.sof` | 当前版本发布SOF；只在最终构建成功后发布 |
 | `docs/ECHO7_Integrated_Datasheet.pdf` | 当前集成版数据表 |
 | `docs/REPAIR_RESULT.md`、`VERSION_README.md`、`OWNERS.md` | 分版本结果、迭代记录及来源/成员归属 |
