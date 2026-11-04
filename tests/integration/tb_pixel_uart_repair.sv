@@ -55,10 +55,10 @@ module tb_pixel_uart_repair;
    .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(uartBusy),.zeroSent(zeroSent));
  logic [15:0] pixels[0:76799];string scenePath;
  integer frameNumber=0,reports=0,notFoundReports=0,observedReports=0;
- // Direction counters include either spin or forward steering. Separate
- // counters keep the E8 in-corridor correction distinct from a full spin.
+ // E10 enters forward steering directly after confirmed acquisition at U80.
+ // Keep complete forward JSON coverage distinct from forbidden tracking spins.
  integer searchLines=0,leftLines=0,forwardLines=0,rightLines=0,zeroLines=0;
- integer rightSpinLines=0,coarseLeftLines=0,coarseRightLines=0;
+ integer leftSpinLines=0,rightSpinLines=0,coarseLeftLines=0,coarseRightLines=0;
  integer fineLeftLines=0,fineRightLines=0;
  integer acquireFrames=0,lastReportId=0;
  logic fenceSeen=0,acquireSeen=0,started=0;
@@ -75,7 +75,7 @@ module tb_pixel_uart_repair;
    if(uartByte==10)begin
      if(line=="{\"T\":1,\"L\":0.00,\"R\":0.00}\n")zeroLines++;
      else if(line=="{\"T\":1,\"L\":-0.04,\"R\":0.04}\n")begin
-       if(!acquireSeen)searchLines++;else leftLines++;
+       if(!acquireSeen)searchLines++;else begin leftLines++;leftSpinLines++;end
      end else if(line=="{\"T\":1,\"L\":-0.05,\"R\":-0.05}\n")forwardLines++;
      else if(line=="{\"T\":1,\"L\":0.04,\"R\":-0.04}\n")begin rightLines++;rightSpinLines++;end
      // Production motor polarity is negative. With TURN_SIGN=-1, low U
@@ -126,6 +126,14 @@ module tb_pixel_uart_repair;
    end
    if((motionState==2||motionState==3)&&(!fenceSeen||acquireFrames<3))
      $fatal(1,"tracking began without three independent post-stop-fence pixel frames");
+   if(motionState==2)
+     $fatal(1,"far U80/120/160 fixture entered ALIGN instead of direct forward approach");
+   if(motionState==3 && motionTargetValid && permit && control.centreU==80 &&
+      (leftRequest!=5 || rightRequest!=3))
+     $fatal(1,"U80 initial approach did not request exact forward left correction 5/3");
+   if(motionState==3 && motionTargetValid && permit && control.centreU==120 &&
+      (leftRequest!=5 || rightRequest!=5))
+     $fatal(1,"U120 centred approach did not request exact straight forward 5/5");
    if(motionState==3 && motionTargetValid && permit && control.centreU==160 &&
       (leftRequest!=3 || rightRequest!=5))
      $fatal(1,"U160 in-corridor approach did not request exact forward right correction 3/5");
@@ -156,19 +164,19 @@ module tb_pixel_uart_repair;
    repeat(10)@(negedge clk);reset=0;resetPclk=0;
    repeat(30)@(negedge pclk);
    frame(0,0);frame(0,0);
-   repeat(5)frame(28,1); // Blue1 U=80, genuine pixels -> acquisition -> left turn.
+   repeat(5)frame(28,1); // Blue1 U=80 -> acquisition -> direct forward correction 5/3.
    repeat(4)frame(68,1); // U=120 -> forward.
    repeat(2)frame(108,1); // U=160 in APPROACH -> forward right correction 3/5.
    frame(0,0); // Real no-target frame -> stop translation.
    if(searchLines==0||leftLines==0||forwardLines==0||rightLines==0||!fenceSeen||notFoundReports<2||observedReports<6)
      $fatal(1,"pixel/UART coverage missing search=%0d left=%0d forward=%0d right=%0d reports=%0d",searchLines,leftLines,forwardLines,rightLines,reports);
-   if(coarseRightLines==0 || rightSpinLines!=0)
-     $fatal(1,"U160 must produce complete forward-right 3/5 JSON, not a spin: differential=%0d spin=%0d",coarseRightLines,rightSpinLines);
+   if(coarseLeftLines==0 || coarseRightLines==0 || leftSpinLines!=0 || rightSpinLines!=0)
+     $fatal(1,"U80/U160 require complete forward 5/3 and 3/5 JSON without tracking spins: left=%0d right=%0d leftSpin=%0d rightSpin=%0d",coarseLeftLines,coarseRightLines,leftSpinLines,rightSpinLines);
    @(negedge clk);debugStop=1;
    repeat(200000)@(negedge clk);
    if(permit||leftRequest!=0||rightRequest!=0||!zeroSent||motionState!=0||zeroLines==0)
      $fatal(1,"STOP did not complete a zero JSON and cancel task");
-   $display("PASS tb_pixel_uart_repair frames=%0d reports=%0d search=%0d left=%0d forward=%0d rightCorrection=%0d zero=%0d coarseLeft=%0d coarseRight=%0d fineLeft=%0d fineRight=%0d rightSpin=%0d fixed25fps pixel-to-UART",frameNumber,reports,searchLines,leftLines,forwardLines,rightLines,zeroLines,coarseLeftLines,coarseRightLines,fineLeftLines,fineRightLines,rightSpinLines);
+   $display("PASS tb_pixel_uart_repair frames=%0d reports=%0d search=%0d leftCorrection=%0d forward=%0d rightCorrection=%0d zero=%0d coarseLeft=%0d coarseRight=%0d fineLeft=%0d fineRight=%0d leftSpin=%0d rightSpin=%0d fixed25fps pixel-to-UART",frameNumber,reports,searchLines,leftLines,forwardLines,rightLines,zeroLines,coarseLeftLines,coarseRightLines,fineLeftLines,fineRightLines,leftSpinLines,rightSpinLines);
    $finish;
  end
  initial begin #650000000;$fatal(1,"pixel/UART watchdog");end

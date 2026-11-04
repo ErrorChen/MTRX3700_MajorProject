@@ -1,5 +1,6 @@
 module member_c_control #(
  parameter int ULTRASONIC_ESTOP_MM=250,TURN_SIGN=1,
+ parameter int ALIGN_LOW=90,ALIGN_HIGH=150,
  parameter int SELECTION_STABLE_CLKS=1_000_000,
  parameter int APPROACH_TRACK_ERROR=45,FINE_STEER_CM_S=4,
  parameter int BACKTRACK_PULSE_US=150000,BACKTRACK_MAX_STEPS=3,
@@ -79,7 +80,7 @@ module member_c_control #(
    .selectionConflict(selectionConflict),.selectionMatches(selectionMatches),.centreU(centreU),
    .sourceHealthyFresh(sourceHealthyFresh),.targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .requestTag(requestTag),.frameId(frameId),.inputAgeUs(inputAgeUs),.fatalFault(fatalFault));
- motion_fsm #(.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+ motion_fsm #(.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(ALIGN_LOW),.ALIGN_HIGH(ALIGN_HIGH),
    .APPROACH_TRACK_ERROR(APPROACH_TRACK_ERROR),.FINE_STEER_CM_S(FINE_STEER_CM_S),
    .BACKTRACK_PULSE_US(BACKTRACK_PULSE_US),.BACKTRACK_MAX_STEPS(BACKTRACK_MAX_STEPS),
    .ALIGN_FINE_CM_S(ALIGN_FINE_CM_S),.ALIGN_FINE_ERROR(ALIGN_FINE_ERROR),

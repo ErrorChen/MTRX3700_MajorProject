@@ -167,8 +167,8 @@ columns.setStyle(TableStyle([
 ]))
 story.extend([columns, Spacer(1, 6)])
 limits = table([
-    ["<b>APPROACH / STOP</b>  Nominally 5 cm/s, slowing to 3 cm/s inside 500 mm. A centred, locked target "
-     "at 350 mm or closer ends the task; a new start is needed to move again. At 250 mm or less, invalid/stale range, "
+    ["<b>APPROACH / STOP</b>  Nominally 5 cm/s, slowing to 3 cm/s inside 500 mm. Within +/-30 pixels of image centre, "
+     "a locked target allows straight approach and ends the task at 350 mm or closer; restart to move again. At 250 mm or less, invalid/stale range, "
      "or IR A, motion stops. Obstacle HOLD can recover after three new readings at least 300 mm; losing the target stops forward travel."],
     ["<b>SEARCH / RESET</b>  An unseen target uses bounded low-speed search. After a search sighting: stop, wait and reconfirm. "
      "If confirmation fails after losing the target, up to three 150 ms reverse steps may recover it; each stops to reconfirm "

@@ -1,6 +1,6 @@
 // Logical forward-positive cm/s. All time arguments are unsigned microseconds.
 module motion_fsm #(
- parameter int ALIGN_LOW=110,ALIGN_HIGH=130,DOCK_STOP_MM=350,
+ parameter int ALIGN_LOW=90,ALIGN_HIGH=150,DOCK_STOP_MM=350,
  parameter int SAFETY_MM=250,FINE_MM=500,
  parameter int TURN_CM_S=4,APPROACH_CM_S=5,FINE_CM_S=3,TURN_SIGN=1,
  parameter int APPROACH_TRACK_ERROR=45,FINE_STEER_CM_S=4,
@@ -46,7 +46,7 @@ module motion_fsm #(
  wire centred=centreU>=ALIGN_LOW && centreU<=ALIGN_HIGH;
  wire [31:0] alignErrorPixels,nextAlignPulseUs;
  generate
-   if(ALIGN_LOW==110 && ALIGN_HIGH==130 && ALIGN_US_PER_PIXEL==2000 &&
+   if(ALIGN_LOW+ALIGN_HIGH==240 && ALIGN_US_PER_PIXEL==2000 &&
       ALIGN_MIN_PULSE_US==20000 && ALIGN_MAX_PULSE_US==100000)begin: boundedAlignMath
      // Exact default mapping for all 256 U values. Clamp before scaling so
      // the report/fence mux does not feed a pair of serial 32-bit DSPs.
@@ -69,9 +69,12 @@ module motion_fsm #(
  endgenerate
  // Keep both wheels moving during small visual corrections. Repeated full
  // stops on the tested floor made startup asymmetry dominate each short turn.
- // This corridor applies only after centred entry into APPROACH; the original
- // alignment/docking deadband and stationary qualification remain unchanged.
+ // A fresh lock may enter this corridor directly outside the dock distance;
+ // the narrower straight/docking tolerance and stationary qualification remain.
  wire approachTrackable=alignErrorPixels<=APPROACH_TRACK_ERROR;
+ // A freshly locked target inside the existing forward-steering corridor
+ // need not pivot first. Never enter forward travel at the docking distance.
+ wire approachEntry=distance_valid && distance_mm>DOCK_STOP_MM && approachTrackable;
  wire approachLeftFast=centreU<ALIGN_LOW ? TURN_SIGN==-1 : TURN_SIGN==1;
  wire signed [6:0] approachFast=distance_mm<=FINE_MM?7'(FINE_STEER):7'(DRIVE);
  // Entry latches direction, speed and duration. A new image cannot extend a
@@ -105,7 +108,7 @@ module motion_fsm #(
        scanElapsedUs<=0;taskStartUs<=timeUs;stateStartUs<=timeUs;failureReason<=0;finalAcquire<=0;
        backtracking<=0;backtrackAuthorized<=0;backtrackSteps<=0;backtrackRecoveryRequired<=0;
        if(motionTargetValid)begin
-         state<=ALIGN;alignTurn<=!centred;alignLow<=centreU<ALIGN_LOW;
+         state<=approachEntry?APPROACH:ALIGN;alignTurn<=!centred;alignLow<=centreU<ALIGN_LOW;
          alignSpeed<=7'(alignErrorPixels<=ALIGN_FINE_ERROR?FINE_TURN:TURN);alignPulseUs<=nextAlignPulseUs;
        end
        else if(!scanAllowed)begin state<=NOT_FOUND;failureReason<=3;end
@@ -141,7 +144,7 @@ module motion_fsm #(
              acquireFencePulse<=1;acquirePhase<=2;stateStartUs<=timeUs;
            end else if(acquirePhase==2)begin
              if(motionTargetValid && !acquireFencePulse)begin
-               state<=ALIGN;stateStartUs<=timeUs;alignTurn<=!centred;alignLow<=centreU<ALIGN_LOW;
+               state<=approachEntry?APPROACH:ALIGN;stateStartUs<=timeUs;alignTurn<=!centred;alignLow<=centreU<ALIGN_LOW;
                alignSpeed<=7'(alignErrorPixels<=ALIGN_FINE_ERROR?FINE_TURN:TURN);alignPulseUs<=nextAlignPulseUs;
                backtrackAuthorized<=0;backtracking<=0;backtrackRecoveryRequired<=0;
              end

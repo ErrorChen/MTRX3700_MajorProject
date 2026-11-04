@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-module tb_control_repair #(parameter int TURN_SIGN=-1);
+module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN_BAND=0);
  import perception_pkg::*;
  logic clk=0,reset=1,power_frame=0,estop_frame=0;
  always #10 clk=~clk;
@@ -26,8 +26,12 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
  int lowSteerLines=0,highSteerLines=0,lowFineSteerLines=0,highFineSteerLines=0;
  localparam int TEST_SETTLE_US=1500; // Accelerated protocol dwell; production is 1500000 us.
  localparam int TEST_BACKTRACK_US=150000; // Keep the production reverse duration.
+ localparam int TEST_ALIGN_LOW=STRICT_ALIGN_BAND?110:90,TEST_ALIGN_HIGH=STRICT_ALIGN_BAND?130:150;
+ localparam int NEAR_LOW=TEST_ALIGN_LOW-1,NEAR_HIGH=TEST_ALIGN_HIGH+1;
+ localparam int NEAR_PULSE_US=(120-NEAR_LOW)*2000;
  localparam int LOW_L=-4*TURN_SIGN,LOW_R=4*TURN_SIGN;
  localparam int LOW_FINE_L=-3*TURN_SIGN,LOW_FINE_R=3*TURN_SIGN;
+ localparam int NEAR_L=STRICT_ALIGN_BAND?LOW_FINE_L:LOW_L,NEAR_R=STRICT_ALIGN_BAND?LOW_FINE_R:LOW_R;
  localparam int LOW_STEER_L=TURN_SIGN==-1 ? 5:3,LOW_STEER_R=TURN_SIGN==-1 ? 3:5;
  localparam int LOW_FINE_STEER_L=TURN_SIGN==-1 ? 4:3,LOW_FINE_STEER_R=TURN_SIGN==-1 ? 3:4;
  localparam string LOW_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.04,\"R\":0.04}\n" : "{\"T\":1,\"L\":0.04,\"R\":-0.04}\n";
@@ -38,10 +42,11 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
  localparam string HIGH_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.05}\n" : "{\"T\":1,\"L\":-0.05,\"R\":-0.03}\n";
  localparam string LOW_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n" : "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n";
  localparam string HIGH_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n" : "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n";
- string lines[0:255];
- // Default follows the E7070009 production top; +1 remains an explicit
+ string lines[0:511];
+ // Default follows the E7070010 production top; +1 remains an explicit
  // generic convention regression, not the corrected hardware configuration.
- member_c_control #(.TURN_SIGN(TURN_SIGN),.SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
+ member_c_control #(.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(TEST_ALIGN_LOW),.ALIGN_HIGH(TEST_ALIGN_HIGH),
+   .SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
    .ACQUIRE_TIMEOUT_US(20000),.LOST_WAIT_US(1000),.TASK_TIMEOUT_US(2000000)) dut(
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),.selection(selection),
    .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),.rawMode(rawMode),
@@ -141,7 +146,8 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
      for(int b=0;b<8;b++)begin #80;ch[b]=tx;end
      #80;if(tx!==1)$fatal(1,"UART stop bit");line={line,ch};
      if(ch==10)begin
-       if(lineCount<256)lines[lineCount]=line;
+       if(lineCount>=512)$fatal(1,"UART capture capacity exceeded");
+       lines[lineCount]=line;
        lineCount++;
        if(line=="{\"T\":1,\"L\":0.00,\"R\":0.00}\n")zeroLines++;
        else if(line==LOW_JSON)begin spinLines++;lowTurnLines++;end
@@ -186,9 +192,12 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
      ck(dut.motion.alignPulseUs==100000,"far error pulse is clamped to 100 ms");
      pulseStart=dut.motion.stateStartUs;taskStart=dut.motion.taskStartUs;
      tick(4000);ck(lowTurnLines>beforeLow,"low-U ALIGN emits exact complete UART JSON");
-     send(1,90);ck(l==LOW_L && r==LOW_R && dut.motion.alignPulseUs==100000 && dut.motion.stateStartUs==pulseStart,
+     send(1,STRICT_ALIGN_BAND?90:89);ck(l==LOW_L && r==LOW_R && dut.motion.alignPulseUs==100000 && dut.motion.stateStartUs==pulseStart,
        "same-side fresh U cannot alter latched speed, width or pulse origin");
      pulseEnd(100000);
+     // E10 far in-corridor locks now enter forward steering. Exercise the
+     // retained pivot widths at a safe docking distance, without forward motion.
+     distance_mm=350;
      wait(dut.motion.acquirePhase==1);tick(2);
      ck(zeroSent && uartBusy==0,"post-pulse dwell begins only after actual zero JSON completion");
      fresh(1,89);stopped("frames during stationary dwell cannot restart a pulse");
@@ -200,14 +209,16 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
      send(1,89);stopped("two post-fence frames cannot restart");
      send(1,89);ck(state==2 && permit && l==LOW_L && r==LOW_R,"third new frame starts error31 coarse turn");
      ck(dut.motion.alignPulseUs==62000 && dut.motion.taskStartUs==taskStart,"fresh pulse width uses new error without resetting task lifetime");
-     send(1,90);ck(l==LOW_L && r==LOW_R && dut.motion.alignPulseUs==62000,"error30 update cannot change current coarse pulse");
+     send(1,STRICT_ALIGN_BAND?90:89);ck(l==LOW_L && r==LOW_R && dut.motion.alignPulseUs==62000,"same-side update cannot change current coarse pulse");
    end
    begin int beforeHigh;beforeHigh=highTurnLines;
      send(1,160);stopped("crossing to high-U stops instead of reversing current pulse");ck(state==6,"opposite side requires ACQUIRE");
      acquired(160);ck(l==LOW_R && r==LOW_L,"fresh stationary high-U lock chooses opposite coarse turn");
      tick(4000);ck(highTurnLines>beforeHigh,"high-U ALIGN emits opposite complete UART JSON");
    end
-   begin int beforeFine;beforeFine=lowFineTurnLines;
+   // Fine pivot is unreachable inside the widened production centre band.
+   // Retain its exact UART/width assertions for the explicit legacy band run.
+   if(STRICT_ALIGN_BAND)begin int beforeFine;beforeFine=lowFineTurnLines;
      send(1,90);stopped("reverse into fine zone also requires a complete stop");acquired(90);
      ck(l==LOW_FINE_L && r==LOW_FINE_R && dut.motion.alignPulseUs==60000,"error30 selects latched 3 cm/s and 60 ms");
      tick(4000);ck(lowFineTurnLines>beforeFine,"fine low-U turn emits exact opposite-sign 0.03 JSON");
@@ -215,42 +226,43 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
      ck(l==LOW_FINE_R && r==LOW_FINE_L && dut.motion.alignPulseUs==60000,"error30 high side uses 3 cm/s");
      tick(4000);ck(highFineTurnLines>beforeFine,"fine high-U turn emits exact opposite-sign 0.03 JSON");
    end
-   send(1,109);stopped("near low target first stops old high-side pulse");acquired(109);
-   ck(state==2 && l==LOW_FINE_L && r==LOW_FINE_R && dut.motion.alignPulseUs==22000,"U109 selects shorter 22 ms fine turn");
-   pulseEnd(22000);acquired(109);
-   send(1,110);tick(3);stopped("reaching centre during a turn cannot immediately translate");ck(state==6,"turn-to-centre waits for stationary fresh lock");
-   acquired(110);ck(state==3 && l==5 && r==5,"stationary U110 inclusive centre permits unchanged forward signs");
-   send(1,130);tick(3);ck(state==3 && l==5 && r==5,"U130 inclusive centre limit keeps forward signs");
+   send(1,NEAR_LOW);stopped("near low target first stops old high-side pulse");acquired(NEAR_LOW);
+   ck(state==2 && l==NEAR_L && r==NEAR_R && dut.motion.alignPulseUs==NEAR_PULSE_US,"outside centre band selects the corresponding latched pivot width and speed");
+   pulseEnd(NEAR_PULSE_US);acquired(NEAR_LOW);
+   send(1,TEST_ALIGN_LOW);tick(3);stopped("reaching centre during a turn cannot immediately translate");ck(state==6,"turn-to-centre waits for stationary fresh lock");
+   distance_mm=1000;
+   acquired(TEST_ALIGN_LOW);ck(state==3 && l==5 && r==5,"stationary lower inclusive centre permits unchanged forward signs");
+   send(1,TEST_ALIGN_HIGH);tick(3);ck(state==3 && l==5 && r==5,"upper inclusive centre limit keeps forward signs");
    begin int beforeLine;logic[31:0] taskStart,spent;
      taskStart=dut.motion.taskStartUs;spent=dut.scanElapsedUs;
-     beforeLine=highSteerLines;send(1,131);tick(3);
-     ck(state==3 && permit && l==LOW_STEER_R && r==LOW_STEER_L,"U131 stays APPROACH with positive high-side 5/3 steering");
+     beforeLine=highSteerLines;send(1,NEAR_HIGH);tick(3);
+     ck(state==3 && permit && l==LOW_STEER_R && r==LOW_STEER_L,"one pixel above centre stays APPROACH with positive high-side 5/3 steering");
      tick(4000);ck(highSteerLines>beforeLine,"high-side forward steering emits complete 5/3 JSON");
-     beforeLine=lowSteerLines;send(1,109);tick(3);
-     ck(state==3 && permit && l==LOW_STEER_L && r==LOW_STEER_R,"U109 stays APPROACH with positive low-side 5/3 steering");
+     beforeLine=lowSteerLines;send(1,NEAR_LOW);tick(3);
+     ck(state==3 && permit && l==LOW_STEER_L && r==LOW_STEER_R,"one pixel below centre stays APPROACH with positive low-side 5/3 steering");
      tick(4000);ck(lowSteerLines>beforeLine,"low-side forward steering emits complete 5/3 JSON");
      send(1,75);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"U75 inclusive error45 keeps forward steering");
      send(1,165);ck(state==3 && l==LOW_STEER_R && r==LOW_STEER_L,"U165 inclusive error45 keeps forward steering");
-     repeat(3)begin tick(35000);send(1,100);ck(state==3 && permit && l>0 && r>0,"small-error APPROACH remains continuous beyond 100 ms ALIGN limit");end
+     repeat(3)begin tick(35000);send(1,80);ck(state==3 && permit && l>0 && r>0,"small-error APPROACH remains continuous beyond 100 ms ALIGN limit");end
      ck(dut.motion.taskStartUs==taskStart && dut.scanElapsedUs==spent,"forward steering does not reset task or consume SEARCH budget");
-     distance_mm=501;send(1,100);ck(l==LOW_STEER_L && r==LOW_STEER_R,"501 mm retains coarse 5/3 steering");
+     distance_mm=501;send(1,80);ck(l==LOW_STEER_L && r==LOW_STEER_R,"501 mm retains coarse 5/3 steering");
      beforeLine=lowFineSteerLines;distance_mm=500;tick();
      ck(state==3 && l==LOW_FINE_STEER_L && r==LOW_FINE_STEER_R,"500 mm inclusive chooses fine low-side 4/3 steering");
      tick(4000);ck(lowFineSteerLines>beforeLine,"fine low-side steering emits complete 4/3 JSON");
-     beforeLine=highFineSteerLines;send(1,140);tick(3);
+     beforeLine=highFineSteerLines;send(1,160);tick(3);
      ck(state==3 && l==LOW_FINE_STEER_R && r==LOW_FINE_STEER_L,"fine high-side steering keeps both wheels forward");
      tick(4000);ck(highFineSteerLines>beforeLine,"fine high-side steering emits complete 4/3 JSON");
-     send(1,110);ck(state==3 && l==3 && r==3,"fine U110 deadband endpoint remains straight 3/3");
-     send(1,130);ck(state==3 && l==3 && r==3,"fine U130 deadband endpoint remains straight 3/3");
+     send(1,TEST_ALIGN_LOW);ck(state==3 && l==3 && r==3,"fine lower centre endpoint remains straight 3/3");
+     send(1,TEST_ALIGN_HIGH);ck(state==3 && l==3 && r==3,"fine upper centre endpoint remains straight 3/3");
    end
-   distance_mm=1000;send(1,100);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before target loss");
+   distance_mm=1000;send(1,80);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before target loss");
    send();stopped("healthy NOT_FOUND immediately removes forward steering");
    ck(state==5 && dut.sourceHealthyFresh && !motionTargetValid,"target loss retains source health but enters LOST");
-   fresh(1,100);tick(1100);acquired(120);
-   send(1,100);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before bad-frame loss");
+   fresh(1,80);tick(1100);acquired(120);
+   send(1,80);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before bad-frame loss");
    send(0,120,0,7);stopped("bad-frame health failure immediately removes forward steering");
    ck(state==5 && !dut.sourceHealthyFresh,"source health failure cannot keep differential motion");
-   fresh(1,100);tick(1100);acquired(120);
+   fresh(1,80);tick(1100);acquired(120);
    // Leaving the steering corridor requires zero completion, dwell and fresh
    // confirmation before the existing pivot pulse; it cannot reverse in place.
    send(1,166);tick(3);stopped("U166 outside error45 stops forward steering");
@@ -261,18 +273,18 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
    ck(state==6,"U74 outside corridor requires stationary acquisition");acquired(74);
    ck(state==2 && l==LOW_L && r==LOW_R && dut.motion.alignPulseUs==92000,"U74 outside error45 returns to latched low-side ALIGN");
    send(1,120);stopped("opposite large-error ALIGN also reacquires before forward");acquired(120);
-   distance_mm=351;send(1,131);
+   distance_mm=351;send(1,NEAR_HIGH);
    ck(state==3 && l==LOW_FINE_STEER_R && r==LOW_FINE_STEER_L,"351 mm off-centre may still steer forward");
    @(negedge clk);distance_mm=350;#1;stopped("350 mm off-centre cuts forward combinationally before state edge");
    tick(3);ck(state==6,"350 mm off-centre stops into ACQUIRE, never DOCKED");stopped("off-centre dock distance remains stationary pending fresh confirmation");
-   acquired(131);ck(state==2 && l==LOW_FINE_R && r==LOW_FINE_L && dut.motion.alignPulseUs==22000,"350 mm fresh off-centre lock chooses original U131 fine pivot");
+   acquired(NEAR_HIGH);ck(state==2 && l==NEAR_R && r==NEAR_L && dut.motion.alignPulseUs==NEAR_PULSE_US,"350 mm fresh off-centre lock chooses pivot instead of forward or DOCKED");
    ck(!(l>0 && r>0),"350 mm off-centre cannot command both wheels forward");
    send(1,120);stopped("350 mm turning-to-centre first stops and reacquires");acquired(120);
    ck(state==4 && !dut.taskActive,"350 mm newly confirmed centred target DOCKED");stopped("centred docking remains zero");
    distance_mm=1000;samples();fresh(1);arm();tick(3);
    ck(state==3 && l==5 && r==5,"stationary centred target approaches");tick(4000);ck(driveLines>0,"approach reaches UART");
    distance_mm=450;tick();ck(l==3 && r==3,"fine approach speed");tick(4000);ck(fineLines>0,"fine straight UART remains -0.03/-0.03");
-   send(1,140);ck(state==3 && l==LOW_FINE_STEER_R && r==LOW_FINE_STEER_L,"fine forward steering active before explicit STOP");
+   send(1,160);ck(state==3 && l==LOW_FINE_STEER_R && r==LOW_FINE_STEER_L,"fine forward steering active before explicit STOP");
    begin int beforeZero;beforeZero=zeroLines;
      stopTask();stopped("explicit STOP still clears corrected direction requests");tick(4000);
      ck(zeroSent && zeroLines>beforeZero && !dut.taskActive,"STOP completes exact zero UART and remains unarmed");
@@ -282,9 +294,9 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
    distance_valid=0;tick(3);distance_valid=1;distance_mm=1000;samples();fresh(1);tick(3);ck(state==4 && !dut.taskActive,"sonar recovery cannot restart DOCKED");
    arm();tick(3);ck(dut.taskActive,"new task after DOCKED without reset");
    @(negedge clk);selection=2;#1;stopped("selection mismatch cancels immediately");tick(15);fresh(1);stopped("new selection requires new ARM");
-   arm();send(1,100);ck(permit && state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"new selected task reaches forward steering");
+   arm();send(1,80);ck(permit && state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"new selected task reaches forward steering");
    injectLeaseValid=0;#1;stopped("lease expiry directly stops");tick(3);injectLeaseValid=1;fresh(1);stopped("lease renewal cannot rearm");
-   arm();send(1,140);ck(state==3 && l==LOW_STEER_R && r==LOW_STEER_L,"fresh task can steer opposite side before IR");
+   arm();send(1,160);ck(state==3 && l==LOW_STEER_R && r==LOW_STEER_L,"fresh task can steer opposite side before IR");
    estop_frame=1;#1;stopped("IR dominates forward steering");tick();estop_frame=0;tick(2);ck(estop,"IR latch retained");
    debugStart=1;tick();debugStart=0;ck(estop,"JTAG cannot release IR");
    power_frame=1;tick();power_frame=0;tick(3);ck(!estop && !dut.taskActive,"first POWER only releases");
@@ -359,6 +371,70 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
    // Keep health fresh while final acquisition expires.
    repeat(25)begin tick(1000);send();end
    ck(state==8 && !dut.taskActive && dut.failureReason==1,"bounded NOT_FOUND disarms");samples();fresh(1);stopped("NOT_FOUND cannot auto-resume");
+
+   // E10 explicitly accepts the wider straight/docking band. The unchanged
+   // outer steering corridor can also be entered from a freshly locked START;
+   // this replaces E9's mandatory far-target pivot, without changing pixels.
+   scanBudgetUs=1000000;
+   for(int entryCase=0;entryCase<8;entryCase++)begin
+     int u;
+     case(entryCase)
+       0:u=TEST_ALIGN_LOW;1:u=TEST_ALIGN_HIGH;2:u=NEAR_LOW;3:u=NEAR_HIGH;
+       4:u=75;5:u=165;6:u=74;default:u=166;
+     endcase
+     stopTask();distance_mm=1000;samples();fresh(1,u);arm();
+     if(entryCase<6)begin
+       ck(state==3 && permit,"fresh locked START in the corridor enters APPROACH directly");
+       if(entryCase<2)ck(l==5 && r==5,"both inclusive centre endpoints start straight without pivot");
+       else if(entryCase==2 || entryCase==4)ck(l==LOW_STEER_L && r==LOW_STEER_R,"low-side entry requests exact positive 5/3 steering");
+       else ck(l==LOW_STEER_R && r==LOW_STEER_L,"high-side entry requests exact positive 3/5 steering");
+     end else begin
+       ck(state==2 && permit,"fresh START just outside the corridor retains latched pivot");
+       if(entryCase==6)ck(l==LOW_L && r==LOW_R,"U74 START pivots in the selected convention");
+       else ck(l==LOW_R && r==LOW_L,"U166 START pivots opposite the selected convention");
+     end
+     tick(2500);stopTask();stopped("entry boundary task remains explicitly cancellable");
+   end
+   // Reacquisition may take the same direct path only after the complete
+   // stationary fence. One or two new reports still cannot move the vehicle.
+   for(int entrySide=0;entrySide<2;entrySide++)begin
+     int u;u=entrySide==0?75:165;
+     fresh();arm();send(1,u,0);ck(state==6,"SEARCH sighting still stops into ACQUIRE");
+     fresh(1,u);stopped("pre-dwell corridor reports cannot bypass stationary confirmation");
+     wait(dut.motion.acquirePhase==2);tick(3);
+     send(1,u);stopped("direct-entry reacquisition still needs more than one new frame");
+     send(1,u);stopped("direct-entry reacquisition still needs more than two new frames");
+     send(1,u);ck(state==3 && permit && !dut.motion.backtrackAuthorized && dut.motion.backtrackSteps==0,
+       "third post-fence corridor frame enters forward approach and clears reverse authority");
+     if(entrySide==0)ck(l==LOW_STEER_L && r==LOW_STEER_R,"low corridor ACQUIRE exit requests exact forward steering");
+     else ck(l==LOW_STEER_R && r==LOW_STEER_L,"high corridor ACQUIRE exit requests exact forward steering");
+     tick(2500);stopTask();
+   end
+   // At 351 mm forward is allowed; at 350 mm the same centre band docks,
+   // while one pixel outside it must pivot without any forward entry.
+   for(int nearCase=0;nearCase<8;nearCase++)begin
+     int u;
+     case(nearCase%4)
+       0:u=TEST_ALIGN_LOW;1:u=TEST_ALIGN_HIGH;2:u=NEAR_LOW;default:u=NEAR_HIGH;
+     endcase
+     distance_mm=nearCase<4?351:350;fresh(1,u);arm();
+     if(nearCase<4)begin
+       ck(state==3 && permit,"351 mm locked corridor target can directly approach");
+       if(nearCase<2)ck(l==3 && r==3,"351 mm inclusive centre enters straight 3/3");
+       else if(nearCase==2)ck(l==LOW_FINE_STEER_L && r==LOW_FINE_STEER_R,"351 mm low-side entry uses exact 4/3");
+       else ck(l==LOW_FINE_STEER_R && r==LOW_FINE_STEER_L,"351 mm high-side entry uses exact 3/4");
+     end else if(nearCase<6)begin
+       ck(state==4 && !dut.taskActive,"350 mm either centre endpoint is accepted as DOCKED");
+       stopped("direct docking never requests forward motion");
+     end else begin
+       ck(state==2 && permit && !(l>0 && r>0),"350 mm off-centre entry pivots without forward or DOCKED");
+       if(nearCase==6)ck(l==NEAR_L && r==NEAR_R,"350 mm low-side pivot respects current centre tolerance");
+       else ck(l==NEAR_R && r==NEAR_L,"350 mm high-side pivot respects current centre tolerance");
+     end
+     tick(2500);stopTask();
+   end
+   ck($bits(dut.motion.boundedAlignMath.scaledPulseUs)==17,"production and legacy centre120 bands retain the narrow arithmetic fast path");
+   if(!STRICT_ALIGN_BAND)ck(lowFineTurnLines==0 && highFineTurnLines==0,"expanded production centre band does not invent fine pivots within tolerance");
 
    // Ordinary approach/alignment acquisition must never invent a SEARCH
    // sighting. This also protects E8's already-passing visible-target path.
@@ -443,7 +519,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1);
        "STOP/IR/selection/mode/raw/lease/reset discard reverse authority and complete zero");
    end
    tick(2500);ck(zeroLines>0 && zeroSent,"completed UART zero observed separately from logical stop");
-   $display("PASS: tb_control_repair TURN_SIGN=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d",TURN_SIGN,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines);$finish;
+   $display("PASS: tb_control_repair TURN_SIGN=%0d STRICT_ALIGN_BAND=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d",TURN_SIGN,STRICT_ALIGN_BAND,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines);$finish;
  end
  initial begin #100000000;$fatal(1,"watchdog state=%0d phase=%0d",state,dut.motion.acquirePhase);end
 endmodule
