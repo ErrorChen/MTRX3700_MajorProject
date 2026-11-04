@@ -230,7 +230,7 @@ R6 establishes the stated model/RTL regression and runtime, **not complete vehic
 
 **中文**
 
-`integrated_blue4_e14_red2_search_to_dock_01.jsonl`保留 **728个C、91个B快照**，真实红2确认使请求tag4→5并ARM进入SEARCH；**host START、合成写入和heartbeat均0**。首次ARM后的观察 **60.0170459秒**，结果 **INCOMPLETE**、未DOCK。已采49个SEARCH运动快照，随后真实近障保护停车；没有采到ACQUIRE、ALIGN、APPROACH或DOCK。搜索命令累计 **6.552069秒**，J3从起步约725 mm进入近距，采到161 mm。最终观察窗到限后STOP→VISION_ONLY收尾，ARM0、左右0、zeroSent、J3 732 mm、HOLD=false，cleanupErrors为空。
+`integrated_blue4_e14_red2_search_to_dock_01.jsonl`保留 **728个C、91个B快照**，真实红2确认使请求tag4→5并ARM进入SEARCH；**host START、合成写入和heartbeat均0**。首次ARM后的观察 **60.0170459秒**，结果 **INCOMPLETE**、未DOCK。完整日志中464个ARM样本为 **64个SEARCH、400个HOLD**，observed/locked均0，没有采到ACQUIRE、ALIGN、APPROACH或DOCK。最终搜索命令累计 **8.230596秒**，尚余 **6.869404秒**，未耗尽15.1秒扫描预算。起步J3约725 mm；主机相对42.473秒先采到49 mm并HOLD，42.793秒FAR后短恢复，43.623秒167 mm进入长HOLD；94.514秒后短暂恢复，直到观察窗结束。最终观察窗到限后STOP→VISION_ONLY收尾，ARM0、左右0、zeroSent、J3 732 mm、HOLD=false，cleanupErrors为空。
 
 用户反馈“超过蓝四没停车”。约38.08秒的一个B快照有蓝候选框x83..170/y48..119，却因reason4被拒绝；它不是接受的蓝4目标，且约1秒间隔的B采样不能证明所有中间帧或唯一失败原因。不能将本轮写成成功抓牌后跟踪、接近或自主停靠。真实红2到新请求/SEARCH链路和近障保护均有板上证据，但完整任务仍未通过。
 
@@ -238,11 +238,17 @@ R6 establishes the stated model/RTL regression and runtime, **not complete vehic
 
 **English**
 
-`integrated_blue4_e14_red2_search_to_dock_01.jsonl` retained **728 C and91 B snapshots**. A real red2 confirmation changed request tag4→5 and armed SEARCH, with **zero host START, synthetic writes or heartbeat commands**. The observation after first ARM lasted **60.0170459 seconds**, ending **INCOMPLETE**, without DOCKED. Forty-nine SEARCH motion snapshots were recorded before real close-obstacle protection stopped motion; no ACQUIRE,ALIGN,APPROACH or DOCK was sampled. Accumulated scan-command time was **6.552069 seconds**. J3 started around725 mm and later sampled161 mm. At the observation limit, STOP→VISION_ONLY cleanup ended disarmed,L0/R0,zeroSent,J3 732 mm,HOLD=false, with no cleanup errors.
+`integrated_blue4_e14_red2_search_to_dock_01.jsonl` retained **728 C and91 B snapshots**. A real red2 confirmation changed request tag4→5 and armed SEARCH, with **zero host START, synthetic writes or heartbeat commands**. The observation after first ARM lasted **60.0170459 seconds**, ending **INCOMPLETE**, without DOCKED. The complete log has464 armed snapshots: **64 SEARCH and400 HOLD**, all targetObserved/locked=false, with no ACQUIRE,ALIGN,APPROACH or DOCK sampled. Final accumulated scan-command time was **8.230596 seconds**, leaving **6.869404 seconds**; the15.1-second scan budget was not exhausted. J3 started around725 mm. At host-relative42.473 seconds it sampled49 mm/HOLD; a FAR reading allowed brief recovery around42.793 seconds, then167 mm at43.623 seconds began a long HOLD. Brief recovery occurred after94.514 seconds until the observation limit. At the observation limit, STOP→VISION_ONLY cleanup ended disarmed,L0/R0,zeroSent,J3 732 mm,HOLD=false, with no cleanup errors.
 
 The operator reported that the robot passed blue4 without stopping for it. One B snapshot around38.08 seconds contained a blue candidate atx83..170/y48..119 rejected withreason4. It was not an accepted blue4 target; roughly one-second B sampling cannot establish every intervening frame or a unique cause. This is not accepted-target tracking, approach or autonomous docking success. Real red2→new request→SEARCH and close-obstacle protection have board evidence; the complete task remains unpassed.
 
 An independent stationary hardware policy write/readback changed all four fields to **50 px/1400 ms/360 mm/550 mm**, then restored **45/1500/350/500**. Both CLI calls exited0 and remained zero, recorded in `e14_policy_stationary_write.json` and `e14_policy_stationary_restore.json`. This verifies writing, reading and restoring the four fields, not their motion performance. Further tuning uses the same E14 SOF and retains each trial separately.
+
+
+
+完整日志复核修正：早先49个SEARCH/6.552069秒来自中途快照，不能当最终统计；现以上述64/400与8.230596秒为准。此次是记录修正，没有重跑或改程序。
+
+Full-log correction: the earlier49 SEARCH/6.552069-second figures came from an intermediate snapshot, not final totals. The64/400 and8.230596-second totals above supersede them. This corrects the record without rerunning hardware or changing the program.
 
 <a id="history"></a>
 

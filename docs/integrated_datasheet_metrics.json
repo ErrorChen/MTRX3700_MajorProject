@@ -821,9 +821,8 @@
           5
         ],
         "actualRed2SearchStartObserved": true,
-        "searchMotionSnapshots": 49,
         "acquireAlignApproachDockObserved": false,
-        "scanElapsedUs": 6552069,
+        "scanElapsedUs": 8230596,
         "startDistanceMm": 725,
         "closeDistanceMm": 161,
         "finalDistanceMm": 732,
@@ -835,7 +834,46 @@
         "finalSonarHold": false,
         "cleanupErrors": [],
         "operatorObservation": "超过蓝四没停车",
-        "scope": "Real red2 start and close-obstacle stop evidence; no full search-to-dock. One sampled blue reason4 rejection is not a complete causal diagnosis."
+        "scope": "Real red2 start and close-obstacle stop evidence; no full search-to-dock. One sampled blue reason4 rejection is not a complete causal diagnosis.",
+        "armedSamples": 464,
+        "armedStateSamples": {
+          "SEARCH": 64,
+          "HOLD": 400
+        },
+        "armedObservedCount": 0,
+        "armedLockedCount": 0,
+        "scanRemainingUs": 6869404,
+        "scanBudgetExhausted": false,
+        "firstHoldDistanceMm": 49,
+        "longHoldEntryDistanceMm": 167,
+        "distanceSequence": [
+          {
+            "hostSeconds": 42.4734272,
+            "state": "HOLD",
+            "distanceMm": 49
+          },
+          {
+            "hostSeconds": 42.792617,
+            "state": "SEARCH",
+            "distanceKind": "FAR"
+          },
+          {
+            "hostSeconds": 43.6226031,
+            "state": "HOLD",
+            "distanceMm": 167
+          },
+          {
+            "hostSeconds": 94.5138016,
+            "state": "SEARCH",
+            "distanceKind": "FAR"
+          },
+          {
+            "hostSeconds": 95.0257638,
+            "state": "SEARCH",
+            "distanceMm": 600
+          }
+        ],
+        "recordCorrection": "Earlier49 SEARCH/6.552069s described intermediate snapshots. Complete-log totals64 SEARCH/400 HOLD and8.230596s supersede them; no rerun/source change."
       },
       "stationaryPolicy": {
         "writeFile": "build/remaining_20261104/e14_policy_stationary_write.json",
