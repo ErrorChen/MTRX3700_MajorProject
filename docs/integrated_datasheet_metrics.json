@@ -12,7 +12,7 @@
   "remaining": "Two-stage ALIGN commands and stationary parameter protocol work; fixed200ms achieved an isolated allowed-heading result. Uneven wheel startup/turn-stop response and target-edge clipping still interrupt continuous approach. An uninterrupted approximately60cm E12 approach and outside-view search-to-dock have NOT passed; the separately restarted approximately41cm task has board DOCKED evidence. tolerance40 left only5px differential windows, but large position jumps also prevent attributing failure solely to tolerance; tolerance30 diagnostic now has continuous 5/4,5/5,4/4 command snapshots and user-confirmed correction; it intentionally stopped at first LOST, so full autonomous docking remains unverified. Exact lost-frame B sample unavailable. Independent trial7 near-target task now observed DOCKED, with J3292mm versus user ruler370mm unresolved. Outside-view trial8 found the target after2.553478s and recovered six sampled losses through ACQUIRE without newSEARCH, but remained INCOMPLETE60.1513566s with repeated alignment. No uninterrupted60cm-to-DOCK or full search-to-dock pass. SEARCH/APPROACH/backscan do not use kick. Existing HOLD-loss limitation, unconfirmed physical backtrack, exact net angle, scene-to-UART latency, SW8 ground comparison and unprovided A/C student IDs remain. Blue5/6 ground tasks waived by user. Trial10 also remained INCOMPLETE60.0024068s; repeated5/5 requests are not proof of physical straight travel. Long physical runs paused for read-only turn-to-forward/startup analysis. Runtime configuration is not a validated recommendation. User additionally confirmed almost only one side actually moved despite equal requests. Installed chassis firmware semantics and wheel speeds remain unverified; two official source paths differ, so no PI/integral or damaged-hardware diagnosis is established.",
   "runtime_protocol": "PASS:193 debug HDL checks/20 synthetic reports in1.5672301s;24 host tests in0.141s;2 production Tcl fake-transport tests in1.037s. CCTL opcode12 with word15 A2 capability and atomic18bit payload; original opcode11/word13 A1 retained. Stationary VISION_ONLY only, complete readback and unchanged speed/scan settings checked. Pulse times use10ms steps: min/max20..300ms,min<=max;kick0..100ms,0 disables;kick speed3..8cm/s. Total includes/truncates kick; later ALIGN speed follows existing tune configuration. Defaults20/100/0/5 preserve E11. Safety can stop earlier than the nominal minimum. Speed requests are not measured wheel speed or torque commands.",
   "hardware_e11": "E11 programmed and ID verified. Stationary tuning seven-sample read/write/default/scan-invalidation test passed without motion. First outside-view search4 trial368C/50B ended NOT_FOUND at28.0071143s: two reverse SEARCH commands sampled and a third150ms charge inferred; user did not observe physical reverse, no APPROACH. Search3/turn4 trial593C/69B ended NOT_FOUND at43.5151717s with brief APPROACH and three LOST->ACQUIRE->ALIGN sequences, all already at exhausted scan budget. User reported right-wheel-only correction and overshoot. Turn3/tolerance40 trial273C/35B was INCOMPLETE at15.1179462s; U40->41 and user saw only jerks. Turn5/tolerance40 trial340C/44B was INCOMPLETE at15.0022591s: U41->82, APPROACH5/5, then U195 and LOST->ACQUIRE with all15.1s scan budget remaining. User saw both wheels move and some advance, then overshoot/right-edge target and left-wheel jerks. Every completed trial cleaned up to VISION_ONLY/disarmed/zero/zeroSent with no cleanup errors. zeroSent establishes UART completion, not physical standstill. Approach4 comparison289C/36B was INCOMPLETE at15.0186774s: repeated U41 then43/46/49/126/140 and NF, with a brief APPROACH4/4. User again saw initial forward jerks then two larger right-wheel movements taking blue4 past the right edge. Final VISION_ONLY/disarmed/zero/zeroSent, J3619mm, cleanupErrors empty. Lowering forward speed did not resolve short-pivot startup/overshoot; no end-to-end search-to-dock PASS.",
-  "experiment": "Same-E12 tune3/4/5/4/30,pulse200/200/60/6,scan15.1s. Trial9 turn4 isolation reported more stable direction but hostSTOP at firstAPPROACH, notDOCK. Trial10 full search INCOMPLETE60.0024068s: repeated logical5/5 plus image-coordinate crossings and user-reported continual lateral adjustments, no physical straight-travel acceptance. Experimental,not a validated recommendation. Long hardware runs paused while read-only command/startup analysis continues; root cause unconfirmed. NoRTL/SOF/build/R6 changes.",
+  "experiment": "SameE12 tune3/4/5/4/30,pulse200/200/60/6,scan15.1 restored after user chassis restart and sameSOF reprogram. StartupOLED UGV Rover/version0.9 confirmed. Stopped RX approximately11kB/s before RAM feedbackflowoff, then no added bytes across5samples; no cross-window counter subtraction. Continuous command trial1 stopped at realD500, incomplete3rdhold and user did not watch. Trial2 oneSTART/3holds5/5->5/4->5/5, user observed faster->slower->faster->stop; not individual wheel-speed/direction acceptance or a matched flow-on causal test. Main search-to-dock still incomplete. Minimal ALIGN->zero/dwell->APPROACH diagnostic next, no result in this snapshot. NoRTL/SOF/build/R6 changes.",
   "hardware_e12_trial6": {
     "log": "build/remaining_20261104/integrated_blue4_e12_tolerance30_approach15s.jsonl",
     "outcome": "APPROACH_INTERRUPTED",
@@ -269,11 +269,11 @@
     }
   },
   "chassis_firmware_semantics": {
-    "status": "INSTALLED_SEMANTICS_UNVERIFIED",
+    "status": "OLED_VERSION_CONFIRMED_RUNTIME_SEMANTICS_UNVERIFIED",
     "checkedDate": "2026-11-05",
     "generalSource": "https://github.com/waveshareteam/ugv_base_general/blob/main/General_Driver/movtion_module.h#L275-L303",
     "rosSource": "https://github.com/waveshareteam/ugv_base_ros/blob/main/ROS_Driver/movtion_module.h#L246-L268",
-    "scope": "Official variants differ; FPGA nominal cm/s requests do not prove installed closed-loop speed semantics or actual wheel speeds. OLED model/version/voltage pending; no PI/integral or motor-damage conclusion, no chassis firmware change.",
+    "scope": "User startupOLED confirms UGV Rover/version0.9, not binary/source identity. Nominal FPGA cm/s is not measured wheel speed. Official sources and timing mechanisms differ; no PI/integral or motor-damage conclusion. RAM automatic feedback disabled by userT131, no chassis flash/PID/PWM/model writes.",
     "oledObserved": {
       "ap": "UGV",
       "st": "OFF",
@@ -281,6 +281,162 @@
       "modelVersion": "NOT_OBSERVED",
       "mac": "OMITTED",
       "scope": "One voltage reading is not a low-voltage diagnosis; no chassis flash or PID/PWM/model writes."
+    },
+    "startupOled": {
+      "modelLabel": "UGV Rover",
+      "versionLabel": "0.9",
+      "scope": "User-read startup display, not binary/source identity proof"
+    },
+    "pageObject": {
+      "T": 1001,
+      "L": 0,
+      "R": 0,
+      "r": -1.184410511,
+      "p": 0.192824244,
+      "v": 11.17282963,
+      "scope": "User-observed page telemetry,not T131 ACK or host live wheel-speed trace"
+    }
+  },
+  "stationary_rx_flowoff": {
+    "beforeFile": "e12_ugv090_rx_preflight.json",
+    "beforeBoardTimesUs": [
+      233294191,
+      233631613,
+      233980951
+    ],
+    "beforeRxCounts": [
+      1523,
+      5232,
+      9079
+    ],
+    "adjacentRatesBpsApprox": [
+      10992.2,
+      11012.3
+    ],
+    "afterFile": "e12_ugv090_rx_after_flowoff.json",
+    "afterBoardTimesUs": [
+      641121327,
+      641512681,
+      641893017,
+      642252710,
+      642654185
+    ],
+    "afterRxCounts": [
+      1230,
+      1230,
+      1230,
+      1230,
+      1230
+    ],
+    "newBytesWithinAfterWindow": 0,
+    "allStoppedV1UnarmedZeroSent": true,
+    "counterScope": "Counter wrapped between files; no cross-file subtraction.",
+    "operation": "User phone GET /js?json={T:131,cmd:0}; RAM feedback flow disabled. FPGA feedback already0; no host T130 query.",
+    "motionOutcome": "TRIAL1_PARTIAL_NO_PHYSICAL_ACCEPTANCE;TRIAL2_THREE_HOLDS_AND_USER_VISIBLE_SPEED_STAGES_STOP_OBSERVED_NOT_CAUSAL_CURE",
+    "sourceCommitReference": "53c25eb5007e73779ad54526c89bb1b738f1dd1d",
+    "scope": "Same E12 reprogrammed/restored after chassis restart. No PID,model,ESP flash or newSOF/R6. RX effect confirmed independently; does not prove motion fix. 100ms PID/60ms kick interaction is mechanism inference only."
+  },
+  "continuous_command_flowoff_trial1": {
+    "log": "build/remaining_20261104/e12_continuous_command_flowoff_trial1.jsonl",
+    "outcome": "INCOMPLETE",
+    "reason": "ProbeStopped: real measured J3 clearance must be >500 mm",
+    "source": "CHASSIS_INJECT synthetic vision -> real C/FSM -> real J3/IR safety -> UART; no direct wheel/sonar writes",
+    "preflightJ3Mm": [
+      717,
+      717
+    ],
+    "preflightRxCount": 1230,
+    "statusSnapshots": 46,
+    "startCommands": 1,
+    "completedPhaseRequests": [
+      {
+        "phase": 1,
+        "u": 120,
+        "wheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.0229965
+      },
+      {
+        "phase": 2,
+        "u": 80,
+        "wheels": [
+          5,
+          4
+        ],
+        "observedHoldSeconds": 1.028899
+      }
+    ],
+    "phase3": {
+      "sampled5_5Count": 4,
+      "snapshotSpanMsApprox": 198.598,
+      "fullOneSecondHoldCompleted": false
+    },
+    "final": "VISION_ONLY,disarmed,permit0,L/R0,zeroSenttrue,J3500,IR0,HOLD0,RX1230",
+    "cleanupErrors": [],
+    "physicalFeedback": "USER_DID_NOT_WATCH_CLOSELY_NO_PHYSICAL_ACCEPTANCE",
+    "scope": "Diagnostic >500mm clearance guard, not HOLD/IR or docking failure. No precise217mm displacement/speed inference. Four-second host budget is not measured physical stop deadline. Helper/fake7 tests ignored-build experimental only; no production RTL/SOF/R6 change."
+  },
+  "continuous_command_flowoff_trial2": {
+    "log": "build/remaining_20261104/e12_continuous_command_flowoff_trial2.jsonl",
+    "outcome": "THREE_PHASE_REQUESTS_OBSERVED",
+    "statusSnapshots": 60,
+    "startCommands": 1,
+    "phases": [
+      {
+        "phase": 1,
+        "u": 120,
+        "logicalWheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.040495
+      },
+      {
+        "phase": 2,
+        "u": 80,
+        "logicalWheels": [
+          5,
+          4
+        ],
+        "observedHoldSeconds": 1.0156123
+      },
+      {
+        "phase": 3,
+        "u": 120,
+        "logicalWheels": [
+          5,
+          5
+        ],
+        "observedHoldSeconds": 1.0268218
+      }
+    ],
+    "final": "VISION_ONLY,disarmed,permit0,L/R0,zeroSenttrue,J3855,RX1230,IR0,HOLD0",
+    "cleanupErrors": [],
+    "physicalFeedback": "USER_OBSERVED_FASTER_SLOWER_FASTER_STOPPED",
+    "scope": "One active CHASSIS_INJECT task through real C/FSM/J3/IR/UART; no direct wheel/distance writes. Three holds and user-visible faster/slower/faster/stop observed. Not exact wheel-speed or camera-docking acceptance, no causal attribution to flow-off.",
+    "operatorObservation": "机器人较快行驶一段→较慢行驶一段→恢复此前较快行驶→目前已停",
+    "physicalScope": "Continuous request changes visibly affected motion, not individually verified wheel speeds/direction or quantitative5/4. No matched flow-on comparison; no causal repair claim.",
+    "audit": {
+      "armedSamples": 54,
+      "allArmedState": "APPROACH",
+      "armedSourceLockLeaseValid": true,
+      "irHoldFatalObserved": false,
+      "rxAll60Samples": 1230,
+      "startRequestToStopRequestSeconds": 3.4557113,
+      "startRequestToFinalZeroConfirmationSecondsApprox": 3.5274695,
+      "templateAckToNewRequestObservedMsApprox": [
+        132.4,
+        141.3
+      ],
+      "replayPreflight": {
+        "file": "e12_continuous_command_replay_preflight.json",
+        "healthyBlue4Samples": 2,
+        "u": 84,
+        "j3Mm": 1249
+      },
+      "scope": "ACK-to-observation includes host sampling/report formation, not chassis delay. Timings are not mechanical stopping. Range change is not exact displacement."
     }
   }
 }
