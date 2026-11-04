@@ -707,11 +707,11 @@
     }
   },
   "source_build_id": "E7070014",
-  "published_build_id": "E7070012",
-  "programmed_build_id": "E7070012",
+  "published_build_id": "E7070014",
+  "programmed_build_id": "E7070014",
   "candidate_e14": {
     "buildId": "E7070014",
-    "status": "SOURCE_FROZEN_QUARTUS_FITTING_R6_TRIAL2_DEADLINE_FAIL_HARDWARE_PENDING",
+    "status": "BUILD_R6_PROGRAM_PREFLIGHT_PASS_FULL_PHYSICAL_FLOW_PENDING",
     "changes": [
       "Bounded original ALIGN gap at total <=200ms, no extension/re-kick/reversal; other safety priority retained",
       "Whole zero then one RAM T131 flowoff initialization; local completion gates new starts, not an execution ACK",
@@ -764,10 +764,57 @@
       "One uninterrupted physical SW/new-red2 outside-view search-to-DOCK task, no synthetic vision/host START",
       "Real near-obstacle HOLD/release and IR latch/release, ending stopped"
     ],
-    "build": null,
-    "r6": null,
+    "build": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T220114_044911Z_build/result.json",
+      "compileSeconds": 1333.597,
+      "postFitSeconds": 25.925,
+      "errors": 0,
+      "warnings": 93,
+      "worstSetupNs": 1.136,
+      "worstHoldNs": 0.118,
+      "analysedChecks": 88,
+      "unconstrainedCountsAllZero": true,
+      "almUsed": 31016,
+      "almTotal": 32070,
+      "registers": 41154,
+      "ramBlocks": 357,
+      "dspBlocks": 51,
+      "plls": 2,
+      "synchroniserCoverage": "PASS",
+      "mtbfAcceptance": "NOT_ASSESSED"
+    },
+    "r6": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T222424_503862Z_verilator_course/result.json",
+      "elapsedSeconds": 233.259611,
+      "targetSeconds": 285,
+      "headroomSeconds": 51.740389,
+      "targetMet": true,
+      "exitCode": 0,
+      "cleanBuild": true,
+      "sourceCommit": "24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d",
+      "freshSources": 65,
+      "actualCompilations": 17,
+      "normalPass": 17,
+      "mutant": "CAUGHT",
+      "timeouts": 0,
+      "jobs": 4,
+      "compilerConcurrency": 1,
+      "simulationConcurrency": 2,
+      "hardDeadlineSeconds": 300,
+      "reuse": "Only overload from same-run exact-input continuous binary; no cross-run cache",
+      "scope": "Complete formal RTL regression pass; not end-to-end physical acceptance"
+    },
     "hardware": null,
-    "releaseSof": null,
+    "releaseSof": {
+      "path": "firmware/E7070014/PartBDebug.sof",
+      "bytes": 6706155,
+      "sha256": "f74a3ff85a8543ac6a204d48d4a0a578189ca77a134c444a92d4a2c7920e5aba",
+      "currentSourceBuildBinding": "PASS",
+      "byteMatchesOriginalBuild": true,
+      "scope": "Build-verified copy; actual programming and physical task acceptance separate"
+    },
     "focused": {
       "status": "PASS",
       "result": "build/remaining_20261104/motion_policy_20261104T220025097074Z/result.json",
@@ -810,6 +857,28 @@
         "laterScenariosCompleted": false,
         "overlappedQuartusFit": true,
         "scope": "Whole-suite deadline, not full17PASS. Contention under investigation; final fresh no-fit-contention run still required."
+      },
+      {
+        "status": "PASS",
+        "result": "build/member_b/20261104T222424_503862Z_verilator_course/result.json",
+        "elapsedSeconds": 233.259611,
+        "targetSeconds": 285,
+        "headroomSeconds": 51.740389,
+        "targetMet": true,
+        "exitCode": 0,
+        "cleanBuild": true,
+        "sourceCommit": "24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d",
+        "freshSources": 65,
+        "actualCompilations": 17,
+        "normalPass": 17,
+        "mutant": "CAUGHT",
+        "timeouts": 0,
+        "jobs": 4,
+        "compilerConcurrency": 1,
+        "simulationConcurrency": 2,
+        "hardDeadlineSeconds": 300,
+        "reuse": "Only overload from same-run exact-input continuous binary; no cross-run cache",
+        "scope": "Complete formal RTL regression pass; not end-to-end physical acceptance"
       }
     ],
     "r6CompatibilityFix": {
@@ -823,7 +892,7 @@
       "approxSeconds": 8.21
     },
     "publication": {
-      "scope": "User-requested candidate source push during compilation; actual hardware results may follow separately",
+      "scope": "Second evidence update after final R6; build-verified E14 SOF and actual programming/zero-preflight, full physical task still pending",
       "readme": "Single section-paired bilingual README.md; README_EN removed",
       "publicationChecks": {
         "submissionTests": 14,
@@ -834,8 +903,40 @@
         "dependencies": 60,
         "rtlBenches": 53
       },
-      "sofPublished": false,
+      "sofPublished": true,
       "finalValidatedZip": false
+    },
+    "programming": {
+      "status": "PASS",
+      "result": "build/member_b/20261104T222420_281401Z_program/result.json",
+      "finishedUtc": "2026-11-04T22:24:28.724781+00:00",
+      "programmerSucceeded": true,
+      "buildIdVerified": true
+    },
+    "stationaryPreflight": {
+      "file": "build/remaining_20261104/e14_initial_preflight.json",
+      "samples": 4,
+      "healthyObservedLockedCalibrated": 4,
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "leftCmS": 0,
+      "rightCmS": 0,
+      "zeroSent": true,
+      "initSupported": true,
+      "initSent": true,
+      "rxCounts": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "bootProfileReadback": "PASS",
+      "distanceRangeMm": [
+        167,
+        180
+      ],
+      "sonarHold": true,
+      "scope": "Real read-only zero preflight; no task started because close real range; not full-flow acceptance"
     }
   }
 }

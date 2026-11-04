@@ -4,11 +4,11 @@
 
 ## E14 当前进度
 
-最终候选源码E7070014已冻结，定向验证通过，完整构建和fresh R6运行中，下载及真实SW→红2→搜索→DOCK仍待。E13时序FAIL、未下载；最后确认实板仍E12。完整E14参数/初始化说明及独立结果见本文末段。
+最终E7070014源码已冻结，定向、完整构建/四角时序及实际下载/零速预检通过；最终fresh R6已PASS233.259611秒，真实SW→红2→搜索→DOCK仍待。E13时序FAIL、未下载；当前实板已确认E14。完整E14参数/初始化说明及独立结果见本文末段。
 
 ### E14 已完成的定向验证（尚非整板或实机验收）
 
-冻结源码的定向结果 `motion_policy_20261104T220025097074Z/result.json` 为PASS、18.9839668秒：四字段策略覆盖11616种合法组合、11687项检查；debug251项；真实adapter/control基线2049项及500条完整UART；初始化启动门47项。随后 `motion_policy_20261104T220112003036Z/result.json` 的最终debug254项另覆盖生产启动值与KEY0恢复。主机工具31项、HOST_RUNNER18项通过。正式R6已扩为17个正常场景加mutant，正在独立执行；最终Quartus时序与实机仍待，不以定向结果替代。
+冻结源码的定向结果 `motion_policy_20261104T220025097074Z/result.json` 为PASS、18.9839668秒：四字段策略覆盖11616种合法组合、11687项检查；debug251项；真实adapter/control基线2049项及500条完整UART；初始化启动门47项。随后 `motion_policy_20261104T220112003036Z/result.json` 的最终debug254项另覆盖生产启动值与KEY0恢复。主机工具31项、HOST_RUNNER18项通过。正式R6的17个正常场景加mutant已在最终fresh运行通过（233.259611秒），最终Quartus时序也另行通过；完整实机仍待，不以仿真替代。
 
 ## E12 与较早版本的历史结论与证据边界
 
@@ -1218,7 +1218,7 @@ E13的完整编译已结束，最终为 **FAIL**：`build/member_b/20261104T2125
 
 ## E14 最终源码与当前交付状态
 
-当前开发源码为 **E7070014（最终迭代候选）**，完整构建、时序、R6及实机全流程仍待本轮完成。当前已经发布且最后确认在板运行的是 **E7070012**。**E7070013 的定向仿真和 R6 通过，但 Full Compilation 的时序检查失败，未下载、未实机测试，不能使用其 SOF。** 以下 E12 及更早结果均属于各自历史版本，不能升级为 E14 的成绩。
+当前开发源码为 **E7070014（最终迭代候选）**，完整构建、四角时序及最终fresh R6（233.259611秒）已PASS；实机全流程仍待本轮完成。E14完整构建和实际下载已通过，板上确认为 **E7070014**；完整红2运动任务仍待，E12保留为历史回滚。**E7070013 的定向仿真和 R6 通过，但 Full Compilation 的时序检查失败，未下载、未实机测试，不能使用其 SOF。** 以下 E12 及更早结果均属于各自历史版本，不能升级为 E14 的成绩。
 
 E14 将用户同意的最多 200 ms 有限短转继续、最终启动配置、底盘自动反馈初始化、UART 字符查表时序修正和停车调参合并。主要验收仍是一次真实、连续的 **实体拨码选择 → 新呈现红2 → 自动搜索 → 停稳确认/跟踪 → 接近 → 自主 DOCKED 停车**，以及真实 J3 近障保护和 IR A 急停。主机观察到时限后发送 STOP 不算自主停靠；各段独立成功不能拼成完整任务。
 
@@ -1278,10 +1278,60 @@ CCTL 保持 16 个状态字。`policy` 为 opcode13，word10 高位具有能力�
 
 第二轮fresh R6 `build/member_b/20261104T220649_240451Z_verilator_course/result.json`仍为 **FAIL，301.821791秒、exit1、targetMet=false**。已完成10项PASS，包括全部新增场景、debug/red2和continuous；`perceptionCoreOverload_tb`运行时触及整个套件300秒时限而终止，后续场景未完成。不能写成17项PASS或285秒达标，且前两轮失败均保留。
 
-该轮与Quartus拟合并行；主机争用是待核对的耗时因素，不是已确认唯一原因。计划拟合结束后、生产源码不变时重新执行完整fresh R6，再独立记录实际总耗时。未删除负载场景、未降低帧数/断言、未改285秒目标，也不跨运行复用旧二进制冒充clean build。E14仍未下载。
+该轮与Quartus拟合并行；主机争用是待核对的耗时因素，不是已确认唯一原因。计划拟合结束后、生产源码不变时重新执行完整fresh R6，再独立记录实际总耗时。未删除负载场景、未降低帧数/断言、未改285秒目标，也不跨运行复用旧二进制冒充clean build。该第二轮结束时E14尚未下载；后续下载结果另列。
 
 ### E14 candidate source publication / E14候选源码推送
 
 按用户要求，编译进行时先推送当前冻结候选源码，后续实测结果可独立追加。README已合并成单个逐节中英对应文件，独立英文文件删除；保留15个主节、37个子节和原英文独有说明。发布白名单/fixture同步，submission14项(0.287s)、结构6项(2.038s)和实际60依赖/53bench结构检查PASS。当前仍是E14构建运行中、未下载；R6两轮FAIL如实保留。不发布未过时序的E14 SOF，不生成已验收最终ZIP。
 
 At the user’s request, publish the frozen candidate sources during compilation; later hardware results may follow in another commit. One section-paired bilingual README retains15 main sections,37 subsections and all English-only content. The export/structure contract was updated;14 submission tests(0.287s),6 structure tests(2.038s) and the actual60-dependency/53-bench structural check passed. E14 compilation is still running and it is not programmed; both R6 failures remain recorded. No unqualified E14 SOF or validated final ZIP is published.
+
+### E14完整构建与四角时序通过 / E14 full build and four-corner timing passed
+
+**中文**
+
+最终E14 `build/member_b/20261104T220114_044911Z_build/result.json`已 **PASS**：Full Compilation **1333.597秒**，独立post-fit门检 **25.925秒**，0 errors、93 warnings。四角最差setup **+1.136 ns**、hold **+0.118 ns**；reportGate检查88项、未约束项目全0。ALM **31016/32070（97%）**、41154寄存器、357/397 RAM、51/87 DSP、2 PLL。资源余量较小；同步链覆盖通过，但MTBF仍未评估。E13负裕量失败不被改写，这次E14自己的完整拟合/门检才提供时序通过证据。
+
+[E14 SOF](../firmware/E7070014/PartBDebug.sof)为成功build原始产物的逐字节副本，**6706155字节**，SHA256 `f74a3ff85a8543ac6a204d48d4a0a578189ca77a134c444a92d4a2c7920e5aba`。复制前执行当前源码/成功build绑定校验，未重新生成或改写SOF。E12副本保留为历史回滚；E14下载、板上身份及真实任务结果须另列，不因build通过自动成立。R6两轮失败保留，拟合结束后的fresh完整复跑与真实红2全流程仍待其自身结果；不生成“已完成整机验收”的ZIP。
+
+**English**
+
+Final E14 `build/member_b/20261104T220114_044911Z_build/result.json` is **PASS**: Full Compilation **1333.597 seconds**, independent post-fit gate **25.925 seconds**,0 errors and93 warnings. Across four corners, worst setup is **+1.136 ns**, hold **+0.118 ns**; reportGate evaluated88 checks with all unconstrained categories zero. Resources: **31016/32070 ALMs(97%)**,41154 registers,357/397 RAM blocks,51/87 DSPs and2 PLLs. Logic headroom is small; synchronizer coverage passed, while MTBF remains unassessed. E13's negative-slack failure is preserved; these are E14's own accepted fit/timing results.
+
+The [E14 SOF](../firmware/E7070014/PartBDebug.sof) byte-matches the successful original artifact: **6706155 bytes**, SHA256 `f74a3ff85a8543ac6a204d48d4a0a578189ca77a134c444a92d4a2c7920e5aba`. Current-source/successful-build binding was checked before copying; no SOF content was regenerated or modified. E12 remains a historical rollback copy. Programming, board identity and physical task results require separate evidence. Both failed R6 attempts remain; the fresh complete run after fitting and real red2 end-to-end task await their own results. No archive is labelled as fully hardware-accepted.
+
+### E14实际下载与零速预检 / E14 programming and stationary preflight
+
+**中文**
+
+`build/member_b/20261104T222420_281401Z_program/result.json`记录E14实际下载 **PASS**，`programmerSucceeded=true`、`buildIdVerified=true`，完成于2026-11-05 **09:24 AEDT**（UTC2026-11-04T22:24:28.724781）。实际板上已更新为 **E7070014**，不是仅复制SOF。
+
+独立只读 `e14_initial_preflight.json` 的4/4真实蓝4样本均observed、locked、sourceHealthyFresh、calibrated；VISION_ONLY、ARM0、无许可、左右0、zeroSent。初始化supported/sent均true，RX计数四次均0；这说明初始化本地完成及该窗口接收静默，不是底盘ACK或长期流量保证。生产启动tune3/4/5/4/30、pulse200/200/60/6、scan15.1 s且资格true、policy45/1500/350/500全部读回一致。
+
+J3当时真实读数 **167–180 mm**、HOLD=true，所以没有启动最终搜索；该预检不证明完整红2搜索停靠通过，也不把近距遮挡当成软件失败。后续运动结果独立记录。
+
+**English**
+
+`build/member_b/20261104T222420_281401Z_program/result.json` records actual E14 programming **PASS**, with `programmerSucceeded=true` and `buildIdVerified=true`, completed **09:24 AEDT on5 November2026** (UTC2026-11-04T22:24:28.724781). The board is now **E7070014**, beyond merely copying its SOF.
+
+Independent read-only `e14_initial_preflight.json` retained4/4 actual blue4 observations, all observed, locked, sourceHealthyFresh and calibrated. All were VISION_ONLY/disarmed/no permit/L0/R0/zeroSent. Initialization supported/sent were true and RX remained0 in all four polls: local completion and a quiet observed window, not a chassis ACK or long-term traffic guarantee. Readback matched production tune3/4/5/4/30, pulse200/200/60/6, qualified15.1-second scan, and policy45/1500/350/500.
+
+Actual J3 was **167–180 mm**, with HOLD=true; the final search was therefore not started. This stationary preflight does not establish a complete red2 search-to-dock task or diagnose the close reflection as a software failure. Subsequent motion results remain separate.
+
+### E14最终fresh R6通过233.259611秒 / Final fresh E14 R6 passed in233.259611 seconds
+
+**中文**
+
+`build/member_b/20261104T222424_503862Z_verilator_course/result.json`记录正式 **PASS，233.259611秒**，`targetMet=true`、exit0、cleanBuild=true；比用户285秒目标少 **51.740389秒**。**17个正常场景全部PASS，破坏锁定的`targetTracker_broken_lock`被CAUGHT**，共18项，无超时。运行源码提交为 `24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d`；65个fresh源文件、17次真实编译，overload仅复用本次continuous精确相同编译输入的二进制。
+
+沿用原wrapper、jobs4、单编译器/最多两并行仿真和300秒硬限，没有跨运行缓存、移除负载/负测试或减少帧数/断言。新增有限ALIGN、初始化、启动门与policy场景均通过；初始化的4939项检查及32768种ASCII等价组合保留。此前首轮工具崩溃FAIL104.45794秒、第二轮整体deadline FAIL301.821791秒仍保留，第三轮在Quartus全部退出、启动前CPU约17%时独立通过，不用新PASS覆盖原FAIL。
+
+正式R6证明本次软件模型/RTL回归范围及用时，**不是整车全流程实测通过**。E14已另有完整构建/四角时序、实际下载/身份、4/4零速视觉及启动参数读回证据；真实SW→红2→画外搜索→接近→DOCK和最终近障实测仍由主线独立记录。本次按用户要求立即补记录并推送，不等待整轮运动测试结束。
+
+**English**
+
+`build/member_b/20261104T222424_503862Z_verilator_course/result.json` records formal **PASS in233.259611 seconds**, `targetMet=true`,exit0 andcleanBuild=true, **51.740389 seconds below the requested285-second target**. **All17 normal scenarios passed; `targetTracker_broken_lock` was CAUGHT**,18 total with zero timeouts. The run used source commit `24f7abcdf7c0f777a596dfc8e9aeea13c3b3d03d`:65 fresh source files and17 actual compilations. Overload reused only this same run's continuous binary with exactly matching compilation inputs.
+
+The original wrapper,jobs4,one compiler/at most two concurrent simulations and300-second hard deadline were retained. No cross-run cache, overload/negative-test removal or reduced frame/assertion coverage was used. Bounded ALIGN, initialization,start gate and policy scenarios passed;4939 initialization checks and32768 ASCII-equivalence combinations remain. The earlier104.45794-second tool-crash FAIL and301.821791-second suite-deadline FAIL are preserved. This third run passed independently after all Quartus processes had exited, with approximately17% CPU before launch; it does not overwrite failed attempts.
+
+R6 establishes the stated model/RTL regression and runtime, **not complete vehicle acceptance**. E14 separately has full-build/four-corner timing, actual programming/identity and4/4 stationary vision/startup-readback evidence. Physical SW→red2→outside-view search→approach→DOCK and final obstacle trials are recorded independently by the hardware task. Per the user's instruction, these R6 results are pushed immediately without waiting for all motion testing.
