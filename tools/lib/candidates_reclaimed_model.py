@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Independent ECHO-7 V2 row-reclaimed CCL oracle; no union-find or RTL simulation.
 
-Human owner: Member A (name/SID pending). AI-assisted by OpenAI Codex.
+Human owner: Member A, Hajin Paek (SID 540287235). AI-assisted by OpenAI Codex.
 
 Each row is a bipartite graph: completed-prefix components touching the previous
 row, and horizontal foreground runs in the current row. Overlapping columns add

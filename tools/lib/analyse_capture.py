@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Software predictions for native RGB565 captures, NOT hardware candidate evidence."""
+"""Software predictions for native RGB565 captures, NOT hardware candidate evidence.
+
+ECHO-7 Part A, Member A Hajin Paek (SID 540287235), AI-assisted by OpenAI Codex.
+"""
 import argparse
 import hashlib
 import json
