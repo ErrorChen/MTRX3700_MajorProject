@@ -78,11 +78,11 @@ story.append(table([
  ['Pixel-to-UART system','PASS: 12 fixed-rate 25 fps frames through perceptionCore, real C and UART. Synthetic pixels; not a live-camera acceptance.'],
  ['Course R6',field('r6','PENDING - fresh Verilator 5.050 clean-copy run; 300 s limit')],
  ['Quartus fit / timing',field('fit')],
- ['Current-board red2 / vision',field('hardware')],
+ ['Current-board raised checks',field('hardware')],
  ['Earlier wheel / IR checks',field('hardware_prior','PENDING')],
 ],[132,width-132],True))
 story.append(Spacer(1,7))
-story.append(p('<b>Unmeasured:</b> floor 360-degree repeatability, six-bay closed-loop trials, physical docking error, scene-to-UART latency and SW8 comparison. Transient visual loss/reacquisition and historical frame30321 blue6 fragmentation remain limitations.','small'))
+story.append(p('<b>Unmeasured:</b> floor 360-degree repeatability, six-bay closed-loop trials, physical docking error, scene-to-UART latency, real no-echo response and SW8 comparison. Transient visual loss and historical frame30321 blue6 fragmentation remain limitations.','small'))
 story.append(p('<b>Current SOF:</b> '+field('sof','PENDING - use only the successful current compilation output')+'<br/><b>Reproduction:</b> README.md / README_EN.md; docs/REPAIR_RESULT.md; tools/render_integrated_datasheet.py. No direct wheel or synthetic-distance override.','small'))
 
 def decorate(canvas,doc):
