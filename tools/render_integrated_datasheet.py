@@ -131,6 +131,8 @@ left = [
     ], [64, COL - 64], padding=3), Spacer(1, 5),
     p("<b>Remote POWER:</b> start. <b>A:</b> latched emergency stop. After A, the first fresh POWER only "
       "releases the stop; release the key, then press POWER again to start. Holding POWER does not do both."),
+    p("<b>PC/JTAG motion tuning:</b> VISION_ONLY only, disarmed and stopped. Settings and limits: README. "
+      "Safety distance thresholds stay fixed.", "small"),
 ]
 
 right = [
@@ -167,13 +169,14 @@ columns.setStyle(TableStyle([
 ]))
 story.extend([columns, Spacer(1, 6)])
 limits = table([
-    ["<b>APPROACH / STOP</b>  Nominally 5 cm/s, slowing to 3 cm/s inside 500 mm. Within +/-30 pixels of image centre, "
-     "a locked target allows straight approach and ends the task at 350 mm or closer; restart to move again. At 250 mm or less, invalid/stale range, "
-     "or IR A, motion stops. Obstacle HOLD can recover after three new readings at least 300 mm; losing the target stops forward travel."],
+    ["<b>APPROACH / STOP</b>  Default speeds: 5 cm/s, 3 cm/s within 500 mm. A locked target within +/-30 pixels of centre "
+     "allows straight approach and docks at &lt;=350 mm; restart to move again. Stop at &lt;=250 mm, invalid/stale range or IR A. "
+     "Obstacle HOLD can release after three fresh &gt;=300 mm readings. Target loss: fully stop for 1.5 s, then reconfirm from fresh frames before searching."],
     ["<b>SEARCH / RESET</b>  An unseen target uses bounded low-speed search. After a search sighting: stop, wait and reconfirm. "
-     "If confirmation fails after losing the target, up to three 150 ms reverse steps may recover it; each stops to reconfirm "
-     "and spends the same scan budget. Reset/power loss clears colour and floor scan calibration: restore the scan setting from the PC before "
-     "unseen-target search. Visible, locked targets can still be approached. Search is approximate, not an angle-controlled 360-degree guarantee."],
+     "If the sighting is lost, up to three 150 ms reverse steps may recover it; each stops to reconfirm within the same scan budget. "
+     "Search is approximate, not a guaranteed 360 degrees. Changing search speed requires new floor scan calibration. "
+     "Reset/power loss restores tuning defaults and clears colour/scan calibration; restore the scan setting from the PC before "
+     "unseen-target search. Visible, locked targets can still be approached."],
 ], [WIDTH], padding=7)
 limits.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), AMBER),
     ("BOX", (0, 0), (-1, -1), 0.45, colors.HexColor("#E5CF9E"))]))

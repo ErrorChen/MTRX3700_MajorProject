@@ -8,9 +8,11 @@
 
 ## 当前版本与验收范围
 
-本次发布源码、SOF及实际板上读回为 **E7070010**，实测收尾VISION_ONLY、未ARM、零速。用户接受较宽的居中范围后，本版默认改为U90–150（相对120为±30），并允许350 mm以外、已经新鲜锁定且U75–165的目标在START或完整ACQUIRE确认后直接进入APPROACH，减少不必要的停车原地对准。本版定向回归已PASS：默认正/负两sign各804检查/275UART、旧严格参数817/278，共29.1663517秒。正式R6已独立PASS271.31444秒、13 PASS＋CAUGHT，达到285秒目标；Full Compilation1260.493秒及post-fit25.832秒已独立PASS，setup/hold最差+0.909/+0.118 ns，实际下载和E10身份核对通过；蓝4零速校色预检4/4锁定。实机已从画外发现并锁定蓝4，短暂APPROACH后LOST并重启搜寻，最终 **NOT_FOUND/SCAN_BUDGET**；观察任务约22.21秒，未DOCK、未触发反向SEARCH。用户确认纸板固定、最后车轮停止；画外搜索停靠尚未通过。下面保留E9和更早版本的独立证据。
+当前源码、最新成功构建及实际板上读回为 **E7070011**，已保持VISION_ONLY、未ARM、零速；本次发布为E11，默认参数与最后会话实验配置分开记录。E11加入停车调参及失锁后完整停车重确认。控制定向runtime两sign各996检查/358完整UART、旧参数847/289通过；正式R6首轮302.015209秒超时FAIL保留，优化调度后的全新第二轮 **219.199994秒、13 PASS＋CAUGHT、targetMet=true**。Full Compilation1375.853秒＋post-fit26.278秒PASS，setup/hold +0.237/+0.120 ns，实际下载E11已核对。实板停车五项参数写入/独立读回、search改变使扫描标定失效及默认恢复均PASS；初始停车调参阶段未运动；后续已有真实地面试验，首轮与search3搜索均NOT_FOUND，turn3隔离仅抽动/INCOMPLETE。当前只调参、不改E11 RTL；最终实验3/5/4/3/40、扫描15.1秒；turn5和approach4对照均INCOMPLETE，降速未解决抽动/过冲。本轮停止追加测试，组合仅作实验记录，不能称实测轮速或停靠通过。
 
-此前完成构建、下载并发布的版本为 **E7070009**，CCTL接口标识仍为 **E7070001**。E9两种TURN_SIGN各696检查/245条完整UART通过；正式R6独立 **PASS，274.530007秒、13项PASS＋CAUGHT、targetMet=true**。Full Compilation **1218.109秒**及post-fit门检 **26.779秒PASS**，ALM29699/32070（93%），最差setup **+0.629 ns**、hold **+0.117 ns**，未约束项0。原始E9 SOF已经实际下载并核对身份；下载后的蓝4居中预检4/4健康锁定、J3约663–664 mm、已校色且保持零速。E9画外蓝4实机为 **INCOMPLETE**：曾搜索到并锁定，随后反复对准，60秒观察窗内未停靠，主机STOP后回到VISION_ONLY零速；未发生反向SEARCH，本轮没有验证回扫物理效果。E9属于历史发布；构建与失败记录保留。
+历史E7070010已完成独立构建、下载及当时发布，实测收尾VISION_ONLY、未ARM、零速。用户接受较宽的居中范围后，本版默认改为U90–150（相对120为±30），并允许350 mm以外、已经新鲜锁定且U75–165的目标在START或完整ACQUIRE确认后直接进入APPROACH，减少不必要的停车原地对准。本版定向回归已PASS：默认正/负两sign各804检查/275UART、旧严格参数817/278，共29.1663517秒。正式R6已独立PASS271.31444秒、13 PASS＋CAUGHT，达到285秒目标；Full Compilation1260.493秒及post-fit25.832秒已独立PASS，setup/hold最差+0.909/+0.118 ns，实际下载和E10身份核对通过；蓝4零速校色预检4/4锁定。实机已从画外发现并锁定蓝4，短暂APPROACH后LOST并重启搜寻，最终 **NOT_FOUND/SCAN_BUDGET**；观察任务约22.21秒，未DOCK、未触发反向SEARCH。用户确认纸板固定、最后车轮停止；画外搜索停靠尚未通过。下面保留E9和更早版本的独立证据。
+
+历史E7070009完成过构建、下载与发布，该版CCTL接口标识为 **E7070001**；E11现已改为真实BUILD_ID。E9两种TURN_SIGN各696检查/245条完整UART通过；正式R6独立 **PASS，274.530007秒、13项PASS＋CAUGHT、targetMet=true**。Full Compilation **1218.109秒**及post-fit门检 **26.779秒PASS**，ALM29699/32070（93%），最差setup **+0.629 ns**、hold **+0.117 ns**，未约束项0。原始E9 SOF已经实际下载并核对身份；下载后的蓝4居中预检4/4健康锁定、J3约663–664 mm、已校色且保持零速。E9画外蓝4实机为 **INCOMPLETE**：曾搜索到并锁定，随后反复对准，60秒观察窗内未停靠，主机STOP后回到VISION_ONLY零速；未发生反向SEARCH，本轮没有验证回扫物理效果。E9属于历史发布；构建与失败记录保留。
 
 E8保留独立实物结果：蓝1、蓝3、蓝4从已见目标完成接近和停靠，首见ARM至DOCKED分别29.315066、15.726722、26.139371秒，终态J3分别329、321、316 mm。蓝1/4由一次主机START启动，蓝3由实体POWER启动；用户确认前进和停止，但蓝1/4末段微调约25/17秒，蓝4起步抽动、偏右及最终仍略偏右尚在。蓝2只有红2链路、窗口外人工前进反馈与事后终态的分段证据，没有完整运动日志。用户已取消蓝5/6单独地面任务；六牌静态覆盖不等于两牌地面任务通过。
 
@@ -26,9 +28,10 @@ E8最后的蓝4画外搜索扫过两次却未持续锁定，近距暂停、用�
 | E7070007，历史已下载版本 | 针对实际STA路径，将默认脉宽计算改为数值等价的窄位实现 | 默认256种U值一致、两种TURN_SIGN各338检查/53完整UART PASS；正式R6 **265.276162秒、13PASS＋CAUGHT**。Full Compilation/post-fit及实际下载读回PASS；真实蓝1第01–05轮未完成停靠，短促动作不对称/过冲仍在；连续直行隔离试验实际向前且基本直行 |
 | E7070008，历史已验证版本 | 已处于APPROACH时，在U75–165内用同向5/3或4/3 cm/s连续纠偏；超出范围或近距未居中先完整停车、重确认再转向 | 两种TURN_SIGN各433检查/88完整UART PASS；正式R6 **270.641086秒、13PASS＋CAUGHT**，14帧像素→UART确认前进右纠偏3/5。Full Compilation/post-fit与实际下载读回PASS；零速蓝1预检4/4锁定。真实蓝1任务已记录板上DOCKED及零速驻留，用户确认持续前进、无明显偏转，探头前端终距约335 mm。蓝3实体POWER启动及真实接近/减速/微调/停靠已记录，用户确认稳定向前及约31 cm终距。蓝4从预锁定目标开始的真实接近与停靠已记录，起步抽动/偏右及末段修正耗时仍在；另一次画外搜索最终NOT_FOUND，未通过搜索闭环。蓝2另有红2链路及窗口外人工观察、事后终态，缺完整运动记录；用户取消本轮蓝5/6单测 |
 | E7070009，历史已发布版本 | 正向SEARCH曾观察目标但停车确认超时且目标已离开时，有限反向小步回扫，每步后停车重确认 | 4 cm/s、150 ms、每任务最多3步，同一扫描预算与总任务计时；两种TURN_SIGN各696检查/245完整UART PASS；正式R6独立PASS274.530007秒、13PASS＋CAUGHT；Full Compilation1218.109秒＋post-fit26.779秒PASS，实际下载/身份读回PASS。画外搜索实机INCOMPLETE：发现/锁定后反复对准，60秒观察窗内未DOCK；主机STOP收尾，未触发反向SEARCH，回扫物理效果未验证 |
-| E7070010，当前已下载版本 | 默认居中U90–150；>350 mm且新鲜锁定U75–165可在START/完整ACQUIRE后直接APPROACH | 定向PASS：默认两sign各804/275、旧严格参数817/278，29.1663517秒；正式R6独立PASS271.31444秒、13 PASS＋CAUGHT；Full Compilation1260.493秒＋post-fit25.832秒PASS；原始SOF6706157字节实际下载并核对E10。蓝4实机发现/锁定后短暂APPROACH，再LOST/SEARCH，22.2096082秒观察后NOT_FOUND/SCAN_BUDGET，未DOCK、无反向SEARCH，已零速收尾 |
+| E7070010，历史已发布版本 | 默认居中U90–150；>350 mm且新鲜锁定U75–165可在START/完整ACQUIRE后直接APPROACH | 定向PASS：默认两sign各804/275、旧严格参数817/278，29.1663517秒；正式R6独立PASS271.31444秒、13 PASS＋CAUGHT；Full Compilation1260.493秒＋post-fit25.832秒PASS；原始SOF6706157字节实际下载并核对E10。蓝4实机发现/锁定后短暂APPROACH，再LOST/SEARCH，22.2096082秒观察后NOT_FOUND/SCAN_BUDGET，未DOCK、无反向SEARCH，已零速收尾 |
+| E7070011，当前已下载版本 | 停车V1五项调参；LOST必经完整ACQUIRE，确认义务跨HOLD/源失效 | runtime两sign各996/358、legacy847/289；首R6 FAIL302.015209保留，最终fresh R6 PASS219.199994秒/13 PASS＋CAUGHT。Full Compilation1375.853秒＋门检26.278秒PASS、实际下载和停车调参PASS；首轮/search3搜索NOT_FOUND，turn3/turn5均INCOMPLETE；最终3/5/4/3/40对照仍INCOMPLETE，降速未消除抽动/过冲；停止追加测试 |
 
-已经完成真实硬件纠正及当前塑胶地面的三次整圈观察，但六车位落地闭环和精确360°扫描尚未验收。早期实机主要在底盘架空条件下完成，后续地面记录另行标明；本README把现有实现、对应版本的实际证据和后续操作分别说明。后续复现实验的操作步骤也不代表已执行结果。
+已经完成真实硬件纠正及历史search4参数下塑胶地面的三次整圈观察，但六车位落地闭环和精确360°扫描尚未验收。早期实机主要在底盘架空条件下完成，后续地面记录另行标明；本README把现有实现、对应版本的实际证据和后续操作分别说明。后续复现实验的操作步骤也不代表已执行结果。
 
 E5按新的实物反馈及用户要求，将生产`TURN_SIGN`改为−1，并把正常结束的超量程ECHO发布为FAR，保留信号异常保护。生产负号配置控制269检查、原12帧像素→UART及超声完整引脚专项46检查已分别通过。E5完整编译 **1173.143秒PASS**、post-fit门检 **25.799秒PASS**；最终R6 **239.403059秒PASS**，实际下载及E7070005读回通过。已取得的FAR/视觉零速实机结果与尚未完成的地面任务分别列出，首轮R6失败保留。
 
@@ -195,6 +198,36 @@ U坐标是旋转后画面的 `0..239`，V是 `0..319`；U=80/120/160分别表示
 
 建议同时观察`mode`、`inputSource`、`selection`、`digit`、`requestTag`、`frameId`、`sourceHealthyFresh`、`targetObserved`、`targetLockedFresh`、`taskArmed`、`motionPermit`、`distanceValid`、`sonarHold`、`irEstop`、`failure`与`zeroSent`。命令ACK、读到新帧、目标锁定、任务授权和物理运动是不同事实；不能只用其中一个字段宣布整条链已通过。
 
+## E11：停车状态下的小范围调参
+
+此节对应已下载的E11；旧版E10没有调参能力，配套新工具读取旧板时会拒绝写入，不会把旧状态字当作新调参寄存器。`tune`无参数只读状态，查看`tuningSupported`与`tuning`；指定任意字段时，先读当前五项、合并本次修改，再一次原子写入整组并读回核对。所有值必须是表内整数，且`approach > fine`。这些是控制器的逻辑cm/s请求与像素容差，不是电机PWM、实测轮速或遥控车轮接口。
+
+**固件默认与当前实验不同：**复位默认4/4/5/3/30；当前同一E11会话为3/5/4/3/40、扫描15.1秒。参数不会写回SOF；turn5已完成但仍INCOMPLETE，approach4对照也已INCOMPLETE，当前组合属于实验记录，不是验证推荐。
+
+| CLI字段 | 范围 / 默认值 | 作用 |
+|---|---|---|
+| `--search` | 3–5 cm/s / 4 | 正常SEARCH及有限反向SEARCH的等幅转动请求；改变会使扫描时间标定失效 |
+| `--turn` | 3–5 cm/s / 4 | 大误差ALIGN短转速度；误差≤30且仍在容差带外的细转保留固定3 cm/s |
+| `--approach` | 4–8 cm/s / 5 | >500 mm时的居中前进速度与差速快轮；必须大于fine |
+| `--fine` | 3–4 cm/s / 3 | 350–500 mm居中前进速度及差速慢轮；近距差速快轮为fine+1 |
+| `--tolerance` | 10–40像素 / 30 | U120两侧可接受居中范围，默认U90–150；也用于停靠居中判定 |
+
+写入必须已处于 **VISION_ONLY、未ARM、无运动许可、左右命令均0且zeroSent=true**。CLI不会自动STOP、切模式、ARM、续租或启动；FPGA也独立检查停车条件。操作时先明确停车并切VISION_ONLY，再确认实物停稳和状态。例子中的读写命令只改参数，不会自动开始任务：
+
+```powershell
+& $pythonExe tools/chassis_debug.py tune
+& $pythonExe tools/chassis_debug.py mode vision
+& $pythonExe tools/chassis_debug.py status
+& $pythonExe tools/chassis_debug.py tune --turn 4 --tolerance 30
+& $pythonExe tools/chassis_debug.py tune --defaults
+```
+
+`--defaults`一次恢复`search/turn/approach/fine/tolerance = 4/4/5/3/30`，不能与单项选项混用。写后返回状态中的五项必须与期望相同；读回不匹配属于未确认，不是已生效。参数仅保存在当前FPGA会话，KEY0、掉电或重新下载后恢复默认，不写入永久存储。
+
+**只要search值发生变化（包括恢复默认时改变search），scanCalibrated便清除。** 新速度不能沿用或按比例换算旧13.6秒；须在实际场地和当前速度重新验证地面扫描用时后再设置`scan --seconds ... --calibrated`。恢复到已有实测记录的原速度时，也须确认场地/配置仍适用并显式恢复该记录，默认恢复本身不恢复标定。修改其余四项保留扫描标定；改变场地、供电、轮胎等实际条件仍需重新评估适用性。调参不提供修改250/300/350/500 mm距离边界、IR急停、视觉时效/三帧资格、1.5秒驻留或120秒任务上限的入口。
+
+传输使用CCTL opcode11单个32位配置字，STATUS word13以高字节`0xA1`声明能力、低22位读回五项。E11顶层传入实际设计ID，Tcl改为接受E707设计族，同时严格保留CCTL magic、协议meta和16字数量检查；旧版无A1能力则`tuningSupported=false`，写操作在发送前拒绝。身份兼容检查放宽到设计族不等于绕过协议或给旧固件增加调参能力。 E11必须配套新版`tools/tcl/chassis_session.tcl`；旧主机硬编码E7070001，会拒绝新的实板身份。新主机可读取旧E707板卡，但没有A1能力就不能写调参。
+
 ## 搜索、对准、停车与恢复
 
 `IDLE → SEARCH → ACQUIRE → ALIGN → APPROACH → DOCKED`，另有 `LOST`、`HOLD`、`NOT_FOUND`。未启动时只追踪。E5生产参数`TURN_SIGN=-1`，SEARCH仅在新鲜健康帧、真实安全保护和有效预算同时满足时以逻辑左右轮 `+4/-4 cm/s` 原地旋转；健康NOT_FOUND报告可以提供搜索活性，不要求目标锁定。E4旧方向为−4/+4，其历史记录保留。
@@ -211,7 +244,7 @@ E8只在**已经进入APPROACH**、目标仍健康锁定且距离>350 mm时增�
 
 E9只由**正常正向SEARCH中的目标observed**触发ACQUIRE时授予回扫资格。确认超时且目标已经离开，才反向4 cm/s回扫150 ms；每任务最多3步，复用SEARCH状态但改变方向。获准的反向逻辑转动时间同样计入`scanElapsedUs`，沿用任务总预算和`taskStart`，不重新计时。每步后等完整零速UART，再等1.5秒、建立新采集边界，要求三个新帧确认目标。锁定成功、源失效、HOLD或取消清除授权，HOLD不会补回已用次数；没有先看到目标的普通空场搜索不触发回扫。其他ALIGN/APPROACH、安全与FAR行为沿用E8。该实现和TB已冻结，定向控制、正式R6、Full Compilation/post-fit及下载身份读回均已通过；画外搜索实机已记录INCOMPLETE：发现/锁定后对准反复，60秒观察窗未DOCK，主机STOP正常收尾；未触发反向SEARCH，回扫物理效果未验证。
 
-现有13.6秒来自**连续正向扫描**的三次实物圈观察。E9反向回扫也消耗同一总预算，净正向扫角会更小；它仍是有界运动时间，不是精确360°，原圈数据不能保证开启回扫后覆盖整圈。E9已下载，并在VISION_ONLY零速状态恢复该13.6秒预算；实际扫描/回扫效果另行验证。
+历史search4的13.6秒来自**连续正向扫描**的三次实物圈观察。E9反向回扫也消耗同一总预算，净正向扫角会更小；它仍是有界运动时间，不是精确360°，原圈数据不能保证开启回扫后覆盖整圈。E9当时恢复了该13.6秒记录；当前E11已改search3并基于两次单圈与一次双圈参考设置15.1秒，证据另列，不能继续把13.6秒称作当前实验预算。
 
 E5对准时U<110给逻辑`+4/-4`，U>130给`-4/+4`。B端固定坐标为`U=floor((native yMin+yMax)/2)`、`V=floor((638-native xMin-native xMax)/2)`；VGA经过90°旋转后，屏幕左右对应U，非V，`orientationProfile`只影响字形/anchor读取。实物静态检查已确认车体前左蓝1约U80、前右约U174而V约158稳定；E4的−4/+4曾实际俯视顺时针，故E5修正转向符号。E5首圈已由用户确认逻辑+4/−4实际逆时针，证明实物转向纠正；仍未独立确定底层P1/P2物理线序原因，真实目标对准闭环需另验，B坐标未改。
 
@@ -220,11 +253,11 @@ E5对准时U<110给逻辑`+4/-4`，U>130给`-4/+4`。B端固定坐标为`U=floor
 默认10秒仅是未标定的有界底盘调试预算，状态为 `SCAN_UNCALIBRATED`。INTEGRATED未标定时禁止无目标正式扫描，已可靠可见目标仍可对准接近。要得到“标定后的近似360°扫描”，先在同一清空场地和固定轮速下做三次地面方向标记实测，记录转一圈用时与重复误差，再设置实际测得的时间：
 
 ```powershell
-# 本次塑胶地面三次观察后采用13.6秒；换场地或恢复会话前须确认实际适用性。
-& $pythonExe tools/chassis_debug.py scan --seconds 13.6 --calibrated
+# 仅适用本轮search3/塑胶地面：两次单圈+一次双圈参考得到15.1秒，并非三次精确单圈。
+& $pythonExe tools/chassis_debug.py scan --seconds 15.1 --calibrated
 ```
 
-`scan`修改会停车；`--calibrated`是操作者对真实测量的确认。本次三圈用户观察后已实际设置13.6秒，读回`scanBudgetUs=13600000`、`scanBasis=CALIBRATED_TIME`及`scanCalibrated=true`。这是当前塑胶地面的有界近似扫描预算，不是精确角度反馈，实验室环氧树脂地面尚未测试。标定状态保存在当前FPGA会话，KEY0/重新配置后失效；恢复前须重新确认实测记录、当前地面与底盘条件仍适用，再设置该值，不能盲目复制。扫描结束还会最终驻留确认，仍无目标则NOT_FOUND。
+`scan`修改会停车；`--calibrated`是操作者对实际测量条件的确认。上例仅对应本轮search3、同一塑胶地面的15.1秒实验预算（`scanBudgetUs=15100000`），依据为两次单圈14.093147/14.691960秒及一次双圈30.014554秒参考，不能称三次精确单圈或精准360°。旧search4的13.6秒保留历史范围。预算和调参都在当前FPGA会话，KEY0/重新配置后失效；恢复时须重新核对速度、场地、供电和已有记录，不盲目复制。反向回扫消耗同一预算，实验室环氧地面未测；最终驻留后无目标仍NOT_FOUND。
 
 用户后续明确要求正常空旷/无反射按障碍很远处理。E5区分三类J3结果：20–3999 mm为实际测距；本次确有TRIG、脉冲达到驱动约23.3 ms量程上限且ECHO在事务80 ms期限前真实回低时，发布`4000,true`的FAR哨兵；没有上升沿、预先高电平导致未触发、期限内仍卡高、非法短脉冲<20 mm或接收数据过期仍为INVALID。FAR不靠时间一到就伪造，也不把39 ms写死为唯一正常长度；专项覆盖24/39/75 ms已结束脉冲。
 
@@ -246,11 +279,11 @@ UART为115200、8N1、完整 `T:1` JSON，正常心跳200 ms；停车优先排�
 
 ## 构建与验证
 
-本次发布E10的成功构建位于`build/member_b/20261104T175030_045504Z_build/`，原始产物为该目录下`source/quartus/output_files/PartBDebug.sof`，**6706157字节**；已实际下载并核对E7070010身份。仓库仅保留当前发布副本`firmware/E7070010/PartBDebug.sof`，与原产物逐字节一致。E9旧发布副本已替换，历史构建与实机记录保留。
+本次发布E11的成功构建位于`build/member_b/20261104T182211_444905Z_build/`，原始SOF为该目录下`source/quartus/output_files/PartBDebug.sof`，**6706153字节**；已实际下载并核对E7070011身份。当前发布副本为`firmware/E7070011/PartBDebug.sof`，来自本版成功原产物。E10旧发布副本由E11替换；历史构建、成功与失败实机记录保留。
 
 E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的最终`result.json`为 **FAIL**。Quartus编译工具退出0、耗时1183.703秒且fit成功，但两条critical timing warnings在构建警告检查时导致拒收，**未执行独立`timing_gate`步骤，也未生成`timing.json`**；工具退出0不等于本工程时序验收通过。实际STA路径随后定位并用于E7修正，E7独立构建现已通过。E6失败仍保留，E6从未下载，不把新结果回写成旧版通过。
 
-本次发布buildId为 **E7070010**。本版定向控制、正式R6、Full Compilation/post-fit及实际下载身份均有独立结果；原始成功SOF为`build/member_b/20261104T175030_045504Z_build/source/quartus/output_files/PartBDebug.sof`，6706157字节。发布副本`firmware/E7070010/PartBDebug.sof`来自同一产物；`echo7.py program`仍核对当前源码与本机成功构建记录，不将旧SOF当作新版本。构建通过不覆盖本次实机NOT_FOUND失败。
+本次发布buildId为 **E7070011**；BCTL和新版CCTL均由生产顶层传入实际设计ID，须使用配套新版主机/Tcl。本版控制、最终R6、Full Compilation/post-fit、实际下载和停车调参均有独立证据；原始成功SOF为`build/member_b/20261104T182211_444905Z_build/source/quartus/output_files/PartBDebug.sof`、6706153字节，发布路径`firmware/E7070011/PartBDebug.sof`。`echo7.py program`仍核对源码和本机成功构建记录，不接受旧SOF冒充新版本；构建通过不覆盖地面搜索停靠失败。
 
 先确认Python路径与Quartus工具可用；如尚未安装工程Python依赖，可执行`& $pythonExe -m pip install -r requirements.txt`。依赖安装不属于R6计时。
 
@@ -262,7 +295,7 @@ E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的
 
 也可在Quartus打开QPF执行Full Compilation；`quartus/output_files/PartBDebug.sof`是直接工程编译的默认位置。`echo7.py build`使用独立本次构建目录，实际SOF路径以成功记录为准。上面的`program`自动使用本机最近一次成功构建记录的SOF，也可用`--sof`显式提供该记录对应的绝对路径；它核对本次构建来源和产物，不能用旧SOF代表新功能。
 
-发布文件使用固定路径：[E7070010 FPGA程序](firmware/E7070010/PartBDebug.sof)、[集成版数据表PDF](docs/ECHO7_Integrated_Datasheet.pdf)。E10 SOF为**6706157字节**，复制自成功构建且已实际下载的E9产物。直接使用发布SOF时，在Quartus Programmer选择实际USB-Blaster和FPGA链位置2，添加该SOF并执行Program/Configure；本板下载后应由BCTL读回`buildId=0xE7070010`。链位置2是这块实际DE1-SoC的枚举结果，换板时先确认设备链。
+发布文件使用固定路径：[E7070011 FPGA程序](firmware/E7070011/PartBDebug.sof)、[集成版数据表PDF](docs/ECHO7_Integrated_Datasheet.pdf)。E11 SOF为**6706153字节**，复制自成功构建且已实际下载的E11产物。直接使用发布SOF时，在Quartus Programmer选择实际USB-Blaster和FPGA链位置2，添加该SOF并执行Program/Configure；本板下载后应由BCTL读回`buildId=0xE7070011`。链位置2是这块实际DE1-SoC的枚举结果，换板时先确认设备链。
 
 预编译SOF不包含本机`echo7.py`成功构建记录，因此直接下载采用Quartus Programmer；`echo7.py program`仍只接受与本机成功构建记录相符的指定产物，不放松其来源保护。SOF配置是易失的；掉电后需重新配置，本文没有声称完成永久启动镜像部署。
 
@@ -281,7 +314,7 @@ E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的
 & $pythonExe tools/export_submission.py --out build/echo7_submission.zip --datasheet docs/ECHO7_Integrated_Datasheet.pdf
 ```
 
-导出核对当前源与成功构建，拒绝旧SOF或覆盖已有ZIP。包中仅有一份SOF，使用对应成功构建的`firmware/<BUILD_ID>/PartBDebug.sof`；本次发布文件为`firmware/E7070010/PartBDebug.sof`，以E10自己的成功构建记录和原始SOF导出，不使用E9产物。不再另放`verified/PartBDebug.sof`副本。保留中英文README、工程/RTL/TB/工具、真实回放输入和文档；排除编译数据库、私有工具链与无关运行缓存。一页PDF不要求SHA sidecar，压缩包做CRC检查；对话记录只有显式指定已检查的导出manifest才会加入。新的克隆没有本机成功构建记录时，应先自行构建再运行导出器。ZIP完整性通过不增加任何实机验收结论，也不执行Git提交或上传。
+导出核对当前源与成功构建，拒绝旧SOF或覆盖已有ZIP。包中仅有一份SOF，使用对应成功构建的`firmware/<BUILD_ID>/PartBDebug.sof`；本次发布文件为`firmware/E7070011/PartBDebug.sof`，以E11自己的成功构建记录和原始SOF导出，不使用E10产物。不再另放`verified/PartBDebug.sof`副本。保留中英文README、工程/RTL/TB/工具、真实回放输入和文档；排除编译数据库、私有工具链与无关运行缓存。一页PDF不要求SHA sidecar，压缩包做CRC检查；对话记录只有显式指定已检查的导出manifest才会加入。新的克隆没有本机成功构建记录时，应先自行构建再运行导出器。ZIP完整性通过不增加任何实机验收结论，也不执行Git提交或上传。
 
 | 已实际生成的版本 | 本次独立构建产物路径 | 构建状态 |
 |---|---|---|
@@ -292,7 +325,8 @@ E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的
 | E7070007 | `build/member_b/20261104T151422_461823Z_build/source/quartus/output_files/PartBDebug.sof`，6706155字节；历史原始产物保留，旧发布副本已替换 | Full Compilation/post-fit、实际下载及BCTL E7070007读回 **PASS**；随后真实任务未完成停靠，详见第01–05轮记录 |
 | E7070008 | `build/member_b/20261104T160829_127927Z_build/source/quartus/output_files/PartBDebug.sof`；6706156字节，历史原产物保留，旧发布副本由E9替换 | Full Compilation/post-fit、实际下载及BCTL E7070008读回 **PASS**；真实蓝1任务板上DOCKED及零速驻留已记录，用户确认持续前进、无明显偏转，探头前端终距约335 mm |
 | E7070009 | `build/member_b/20261104T171519_480274Z_build/source/quartus/output_files/PartBDebug.sof`；6706161字节，历史原产物保留，旧发布副本由E10替换 | Full Compilation/post-fit、实际下载及BCTL E7070009读回 **PASS**；画外蓝4实机 **INCOMPLETE**，曾发现/锁定但60秒观察窗内未DOCK；反向SEARCH未触发，主机STOP零速收尾 |
-| E7070010 | `build/member_b/20261104T175030_045504Z_build/source/quartus/output_files/PartBDebug.sof`；当前发布`firmware/E7070010/PartBDebug.sof`，6706157字节 | Full Compilation/post-fit、下载及版本核对PASS；画外蓝4实机NOT_FOUND/SCAN_BUDGET、未DOCK，无反向SEARCH；V1未ARM零速收尾 |
+| E7070010 | `build/member_b/20261104T175030_045504Z_build/source/quartus/output_files/PartBDebug.sof`；6706157字节，历史原产物保留，旧发布副本由E11替换 | Full Compilation/post-fit、下载及版本核对PASS；画外蓝4实机NOT_FOUND/SCAN_BUDGET、未DOCK，无反向SEARCH；V1未ARM零速收尾 |
+| E7070011 | `build/member_b/20261104T182211_444905Z_build/source/quartus/output_files/PartBDebug.sof`；当前发布`firmware/E7070011/PartBDebug.sof`，6706153字节 | Full Compilation/post-fit、实际下载/身份、停车调参PASS；真实搜索两轮NOT_FOUND、短时对照三轮INCOMPLETE。实验参数未固化进SOF，默认4/4/5/3/30不变 |
 
 课程R6正式入口仍为 `./run_all_tests.sh`，要求clean copy、Verilator **5.050**、模块与系统自检、故意坏模块输出CAUGHT；本次用户目标为≤285秒（课程门槛300秒）。本机可用下列包装命令调用同一Bash入口，默认4任务编译；本轮完全相同的编译输入通过内部哈希缓存共享一次新编译，所有场景仍独立运行断言，不读取往轮二进制：
 
@@ -481,7 +515,7 @@ E9已找到并锁定蓝4，但60秒观察窗内反复原地修正而未停靠，
 
 `START`已有新鲜锁定目标时，或`ACQUIRE`完成完整零速UART、1.5秒驻留、新采集边界及三帧确认后，只要距离>350 mm且U75–165，就可直接APPROACH。正常搜索见到目标仍必须先停车确认，不能用一次observed绕过三帧资格。默认±30已覆盖原3 cm/s细转范围，所以默认生产分支不再为了这段误差原地细转；较大误差仍用原4 cm/s短转和20–100 ms逻辑脉宽。原110–130严格区间作为参数兼容场景保留，不能把它写成E10默认。
 
-因此E10远距注入示例`x=80/160`分别应是同向5/3、3/5前进纠偏，350–500 mm内为4/3、3/4，不应再按两轮反向原地转来验收。`x=120`为同速前进。该解释对应当前E10板上默认；历史E9仍属于旧严格居中行为。E9有限回扫、同一13.6秒扫描预算、120秒总任务限制、IR/J3/FAR、来源健康/时效、租约及所有取消条件保持。
+因此E10远距注入示例`x=80/160`分别应是同向5/3、3/5前进纠偏，350–500 mm内为4/3、3/4，不应再按两轮反向原地转来验收。`x=120`为同速前进。该解释仅对应E10及未调参E11的默认容差30；当前实验容差40时U80/160已在居中带内，会请求同速前进。历史E9仍属于旧严格居中行为。E9有限回扫、同一13.6秒扫描预算、120秒总任务限制、IR/J3/FAR、来源健康/时效、租约及所有取消条件保持。
 
 本版保留原14帧、固定25 fps的合成像素层输入与顺序（通过真实生产感知核，并非实相机）；像素到UART回归的初始U80期望改为生产默认5/3前进，并加入禁止该段ALIGN的检查，本版实际像素→UART结果已随正式R6通过。居中范围变大是用户接受的行为取舍，不是已测横向停车精度或机械不对称修复。当前定向控制回归、正式R6、Full Compilation/post-fit及下载身份均已独立PASS，实际画外搜索结果为NOT_FOUND/SCAN_BUDGET，短暂APPROACH后失锁重搜，未完成停靠；详情单列。
 
@@ -519,10 +553,102 @@ E9已找到并锁定蓝4，但60秒观察窗内反复原地修正而未停靠，
 
 用户原话：“**搜到后停止了，此时蓝四在正中。随后又重新开始搜索，再一次掠过蓝四后停止**”。后续确认短暂前进再转离、纸板一直固定、两轮最终已经停止。清理回VISION_ONLY、未ARM、左右0、zeroSent=true，`cleanupErrors=[]`。因此E10已验证放宽居中可进入前进路径，但**失锁后恢复搜寻导致再次掠过目标的问题仍在，画外搜索停靠未通过**。本次发布完整保留该失败；后续修正另行验证。
 
-## 已知限制与待完成测量
+### E11：失锁后完整停车重确认与调参接口验证
+
+E10曾在U121短暂进入APPROACH，随后LOST约300 ms即回SEARCH，固定目标再次掠过且未停靠。E11将LOST等待结束后的出口统一改为ACQUIRE，无论此时是否为健康NOT_FOUND，都先完成零速UART、1.5秒驻留、新采集边界及三帧确认，再决定接近、对准或继续搜索。`stationaryRecoveryRequired`保留该停车确认义务，跨HOLD和来源中断仍有效，包括丢牌与HOLD同一周期发生；一旦该义务已建立，就不能因安全恢复或暂时无目标跳过确认。普通跟踪失锁不新授予E9反向回扫资格，同一搜索预算、已用回扫次数及120秒任务计时不重置。这是针对真实失败的修正实现，已通过独立控制验证并下载；后续实机已采到预算未耗尽时的LOST→ACQUIRE，但抽动与过冲仍在，未完成画外搜索停靠。
+
+该新义务仅在ALIGN/APPROACH失效时建立，包括失效与HOLD同周期发生。若目标仍有效时先进入HOLD，随后才在HOLD内丢牌，则沿用旧分支：障碍和来源条件恢复后，健康NOT_FOUND仍可能直接回SEARCH。这个先HOLD、后丢牌的顺序没有纳入本轮修复，保留为已知边界，不称全部HOLD恢复都已强制停车确认。
+
+调参端点独立聚焦记录为`build/remaining_20261104/tuning_e11_20261104T182254Z/result.json`：ModelSim **128检查/20报告PASS，1.5052586秒，0错误/0警告**。主机测试`build/remaining_20261104/tuning_e11_host_tests.log`为 **18测试PASS，0.155秒**；实际生产Tcl脚本配mock传输测试`tuning_e11_tcl_tests.log`为 **2测试PASS，0.938秒**。Tcl结果验证脚本协议检查及设计族识别，没有使用实物USB-Blaster，不是实机调参或JTAG运动验证。
+
+E7070011冻结源码已通过独立主控制定向、正式R6最终轮、Full Compilation/post-fit与实际下载，停车调参也已获得真实JTAG读回证据；地面首轮及search3搜索均NOT_FOUND，三个短时对照均INCOMPLETE；发布保留全部失败，未完成画外搜索停靠。保持用户取消蓝5/6单独地面测试的范围，不用旧版停靠成功覆盖E11的新行为。
+
+### E11独立控制验证、R6失败与调度修正
+
+控制定向最终记录`build/remaining_20261104/control_e11_20261104T182830Z/result.json`为 **PASS，34.258085秒**，一次ModelSim编译、三个配置，0错误/0警告。runtime开启的生产负sign和泛型正sign各 **996检查/358条完整UART**，其中runtime专属28条；runtime关闭、旧110–130严格参数且tuning输入为X的兼容配置 **847检查/289 UART**。覆盖持续NOT_FOUND下LOST仍必须ACQUIRE、失锁与HOLD同周期、来源中断后重新驻留、确认超时才恢复SEARCH、STOP取消，以及五项调参边界、75–165前进范围、fine+1差速和非法参数零运动门控。配置检查数不相加冒充独立功能数。
+
+前置`control_e11_20261104T182549Z`因TB末尾打印参数不足失败，`182629Z`及diagnostic因期望串中`%s`空正号多产生空格失败；实际UART内容正确，修正只涉及TB格式，不是生产RTL功能失败。原失败日志保留，不能写成“没有失败尝试”；最终通过来自上述单独完整运行。
+
+第一次正式R6 `build/member_b/20261104T182917_566351Z_verilator_course/result.json`为 **FAIL，302.015209秒、退出1、targetMet=false**。13个正常场景均PASS，但最后故意坏锁定mutant的编译达到300秒总期限，未得到CAUGHT，不能将此轮标为完整通过。随后仅优化`tools/lib/verilator_suite.py`调度：首对长仿真运行期间，主线程按顺序预编译后续场景；始终最多两个仿真、一个编译进程、jobs4及原300秒总期限。保留本次fresh源码/精确输入哈希缓存，已准备二进制使用前再次核对字节；未删场景、帧数或断言，也不复用往轮二进制。
+
+runner最终 **18项HOST_RUNNER测试PASS，1.962秒**，日志`r6_e11_overlap_host_tests_final.log`；最初sandbox临时目录WinError5及先前native通过日志保留，不混为RTL失败。全新第二轮`build/member_b/20261104T184126_548104Z_verilator_course/result.json`独立 **PASS，219.199994秒、退出0、13 PASS＋mutation CAUGHT、cleanBuild=true、targetMet=true**，61个新源文件、11个场景预编译，仍单编译/最多2模拟。此实测满足285秒目标，首轮失败未覆盖；生产RTL冻结不因runner调度修改而改变。
+
+### E11完整构建、实际下载与停车调参实测
+
+`build/member_b/20261104T182211_444905Z_build/result.json`最终 **PASS**：Full Compilation **1375.853秒**、post-fit门检 **26.278秒**，0错误、92警告、0 critical。ALM **29403/32070（92%）**、寄存器41147、M10K357/397、存储位2802640、DSP51/87、PLL2/6。四角setup/hold/recovery/removal最差分别 **+0.237/+0.120/+26.616/+0.471 ns**；报告门检88项、非法及未约束项0，同步链每角63/63覆盖PASS、MTBF未评估。Gray写/读/时间9/9/32位覆盖；resultToCamera1589、requestCdc22、resultToDisplay979物理端点覆盖完整；max-skew/net-delay约束最差裕量18.670/12.457 ns，不是实测传播时间。
+
+构建完成UTC **2026-11-04 18:45:34.129044**；原始SOF为该目录`source/quartus/output_files/PartBDebug.sof`，**6706153字节**。`program_e11_console.log`记录实际编程及E7070011读回 **PASS**，完成UTC **18:46:11.345908**（AEDT次日05:46:11.345908）。本版成功与E10时序/原产物分开，旧失败不改写。
+
+`build/remaining_20261104/e11_tuning_hardware.json`为 **真实JTAG停车调参PASS**，不是合成传输测试。整个序列VISION_ONLY、未ARM、无运动许可、左右0、zeroSent=true，START/合成写入/心跳均0：
+
+| 实际步骤 | 独立读回与范围 |
+|---|---|
+| 初始默认 | search/turn/approach/fine/tolerance = 4/4/5/3/30，A1能力可读 |
+| 恢复已验证的search4基准 | 同塑胶地面原三圈13.6秒，scanCalibrated=true |
+| 写turn3、approach6、fine4、tolerance35 | 得到4/3/6/4/35，另一次独立读回一致，search未变所以扫描标定保留 |
+| 写search3 | 得到3/3/6/4/35，scanCalibrated=false；没有以3 cm/s启动车辆或测转圈 |
+| 恢复默认 | 读回4/4/5/3/30，但scanCalibrated仍false，默认恢复不会自动恢复资格 |
+| 恢复原search4标定记录并收尾 | 显式恢复同场地既有13.6秒基准，最终STOP、未ARM、零速；不是替search3建立标定 |
+
+该实测证明参数写入、保持、读回、能力及标定失效行为；没有在调整后的速度下运动，不证明实测速度、稳定性或停靠效果。`e11_blue4_calibration_preflight.json`的4/4独立C/B样本健康锁定蓝4，U116、J3约660 mm、cfg1已校色，全部调参默认且scanCalibrated=true，保持零速。后续画外搜索与短时对照的失败结果另列；运行日志位于`build/remaining_20261104/`。
+
+### E11同一固件的地面试验与会话调参
+
+用户明确要求不再生成新版本，本段始终使用同一 **E7070011** 生产RTL和已通过构建的SOF，仅通过停车`tune`与`scan`改变会话参数，没有另做RTL修复或用新编译覆盖旧失败。固件复位默认仍为 **search/turn/approach/fine/tolerance = 4/4/5/3/30**。本段最新实验设置为 **3/5/4/3/40**，即search3、turn5、approach4、fine3、容差±40（U80–160），扫描预算 **15.1秒**；该配置是volatile现场设置，KEY0/掉电/重下载后不会保留。turn5（当时approach5）已观察到动作但仍过冲/INCOMPLETE；approach4同场景也已INCOMPLETE，降速未消除抽动/过冲；本轮停止追加测试。
+
+**首次地面搜索未通过。** `integrated_blue4_e11_search_01.jsonl`记录368个CCTL、50个BCTL快照，实体POWER、0主机START/合成写入/心跳；观察器任务时长 **28.0071143秒**，终态 **NOT_FOUND/SCAN_BUDGET**，清理至VISION_ONLY、未ARM、zeroSent、J3398 mm。C轮询直接采到两次reverse SEARCH（−4,+4）；另一次149999 μs扫描计数增量与第三个短步相符，但这是推断，不是第三步完整波形或机械回转测量。用户看到停后仍逆时针，未观察到回调，故仅能确认反向命令出现，不能说机械回扫奏效。本轮未进入ALIGN、APPROACH或LOST，尚未实机触发LOST修正。
+
+该轮50个B帧均fresh/good，cfg1红45/蓝24，与E10配置不同；采样中候选位于边缘或发生方向拒识，没有B accepted targetU。C第二次短暂observed/locked与B稀疏轮询未采中并不矛盾，不能据此说从未识别、每帧都锁定或已证实处理吞吐不足。用户停后把车复原，后续场景应各自记录。
+
+**search3转圈计时及15.1秒依据。** 修改search4→3后scanCalibrated确实清除。计时使用CHASSIS_INJECT的合成健康无目标报告，经真实控制/J3/IR/UART驱动落地底盘，由用户按A停止；这些是地面转动观察，不是实相机搜牌任务。下表时间是停止时FPGA累计获准SEARCH请求时间，不是航向传感器或独立机械停稳计时，包含人工按键反应影响：
+
+| 原始记录（均在build/remaining_20261104） | 累计SEARCH时间 | 用户观察及结论 |
+|---|---|---|
+| `ground_e11_search3_circle1.jsonl` | **30.014554秒** | 实际两圈再多约10°，后退约3 cm；不能写成一个单圈。除2得到15.007277秒仅作每圈平均参考 |
+| `ground_e11_search3_circle2.jsonl` | 无有效转圈时间 | IR未解除，2个状态样本、无运动，**TRIAL_INVALID**，保留失败，不计入有效圈数 |
+| `ground_e11_search3_circle2_retry.jsonl` | **14.093147秒** | 一圈约多7.5°，右轮多走约1 cm |
+| `ground_e11_search3_circle3.jsonl` | **14.691960秒** | 一圈约多3°，后退约4 cm |
+
+根据**两次单圈和一次双圈参考**写入保守15.1秒有界预算，`e11_search3_scan_15100ms.json`保存结果。不能称三次精确单圈标定、精准360°或已经量得自动停车角误差。原13.6秒属于search4条件，不能套给search3；当前15.1秒也不能在复位回search4后盲目沿用。反向回扫同样消耗该总预算，净向前转角不等于总累计命令时间；实验室环氧地面仍未验证。
+
+**慢速搜索仍未停靠。** `integrated_blue4_e11_search3_02.jsonl`记录 **593 C/69 B、43.5151717秒任务观察、NOT_FOUND/SCAN_BUDGET**，实体POWER、无主机START/合成/心跳，cleanupErrors为空。用户描述首圈漏牌、第二圈发现，回修时只有右轮动作且过冲；该“首圈/第二圈”保留为用户描述，不转写为精确转角或两个经过计时的完整圈。日志观察到三段LOST→ACQUIRE→ALIGN，但全在预算耗尽后，旧budgetDone分支也会这样恢复，不能单凭该轮证明新LOST修复。它更不等于已消除机械过冲或完成停靠；不以稀疏快照补造轮速或动作时长。
+
+**低转速隔离检查未完成对准。** `integrated_blue4_e11_turn3_15s.jsonl`使用search3、turn3、approach5、fine3、tolerance40，记录 **273 C/35 B**，15秒观察上限、实际taskObservationSeconds **15.1179462**，最终 **INCOMPLETE**，host STOP后零速清理且cleanupErrors为空。蓝4 U约40→41，用户只看到抽动，没有取得有效对准。随后turn5试验仍用同一固件及 **3/5/5/3/40**，实际结果另列；参数写入成功不替代机械效果。
+
+### E11 turn5同场景对照：能够转动，但仍过冲
+
+`integrated_blue4_e11_turn5_15s.jsonl`在同一固件、search3/turn5/approach5/fine3/tolerance40下完成 **340 C/44 B**、taskObservationSeconds **15.002259秒**，结果 **INCOMPLETE**。结束由15秒主机观察期限收尾，cleanupErrors为空，最终VISION_ONLY、未ARM、左右0、zeroSent、J3596 mm；没有完成搜索停靠，也不是生产120秒任务限到期。
+
+目标U由41→44→50→53→82；主机37.748570–38.379696秒采到APPROACH +5/+5，38.501820秒为LOST/0/0，38.813秒进入ACQUIRE，40.472秒为ALIGN −5/+5。B在38.983秒已采到U195，随后197/198，目标再次到右边缘。**整个观察中scanRemaining均为15100000 μs**，所以本轮在扫描预算未耗尽时实际出现LOST→ACQUIRE，而非直接回SEARCH，是E11新增恢复路径的板上证据；该状态顺序不证明车身已机械停稳，也没有消除越过中心或失锁。
+
+用户原话：“**最开始右轮短抽，然后动了一下几乎回正，然后又在右偏（两侧轮子都有动作），然后4到了右侧边缘，随后左轮抽动，或是因为超时而停止。整体是由前进一些距离的**”。较turn3只有抽动，本轮用户确实看到双轮动作与一段前进，但对准/接近仍未完成；不能把这一观察写成轮速匹配、稳定对准或成功停靠。
+
+此前`search3_02`的三段LOST→ACQUIRE→ALIGN均发生在扫描预算耗尽后，旧budgetDone路径也会进入ACQUIRE，**不能单独用那轮证明本次LOST修复**；本轮未耗尽预算的序列提供了不同范围的证据。
+
+接着只通过停车调参将approach5降至4，最新会话参数为 **3/5/4/3/40**，15.1秒预算保留；默认仍4/4/5/3/30、生产RTL及E7070011不变。随后的15秒对照也已INCOMPLETE，详情见下一节；减速未解决本轮过冲。
+
+### E11最后一轮approach4：减速未消除抽动和过冲，停止追加测试
+
+`integrated_blue4_e11_turn5_approach4_15s.jsonl`使用同一E7070011及 **search3/turn5/approach4/fine3/tolerance40**，保留 **289个CCTL、36个BCTL快照**，实体POWER、0主机START/合成写入/心跳。15秒主机观察期限下，taskObservationSeconds为 **15.0186774秒**，结果 **INCOMPLETE**；cleanupErrors为空，最终VISION_ONLY、未ARM、左右0、zeroSent=true、J3619 mm。没有DOCKED，不能把主机到限收尾写成自主停靠完成或120秒任务期限触发。
+
+蓝4在U41停留多个采样周期，随后43→46→49→126→140，再变为NOT_FOUND。主机36.730秒采到APPROACH +4/+4，37.366秒为ACQUIRE。用户原话：“**最开始两轮一起往前抽动，随后右轮抽了波大的，让蓝四几乎居中，然后又抽了波大的，导致蓝四有些超出右边缘**”。降低前进请求速度没有在本轮解决短转起步不均、抽动或过冲；不据局部坐标改变推算实际轮速、位移或精确转角。
+
+| 本版真实相机地面轮次 | 任务观察时长 | 实际终态 |
+|---|---:|---|
+| 原search4/默认参数搜索 | 28.0071143秒 | NOT_FOUND/SCAN_BUDGET；直接采到反向SEARCH命令，机械回扫效果未确认 |
+| search3、15.1秒预算搜索 | 43.5151717秒 | NOT_FOUND/SCAN_BUDGET；预算耗尽后的LOST→ACQUIRE不单独证明新修复 |
+| turn3、approach5、tolerance40隔离 | 15.1179462秒 | INCOMPLETE，只有抽动，未有效对准 |
+| turn5、approach5、tolerance40隔离 | 15.002259秒 | INCOMPLETE；未耗尽预算下LOST→ACQUIRE有板上证据，仍过冲失锁 |
+| turn5、approach4、tolerance40隔离 | 15.0186774秒 | INCOMPLETE，降速仍抽动并越过目标 |
+
+本轮到此停止追加测试，未增加RTL修改、编译或新版本。最终维持E7070011、VISION_ONLY、未ARM、零速；会话实验参数 **3/5/4/3/40、15.1秒**暂时保留，**只是已试组合，不是经过验证的推荐配置**。固件默认仍 **4/4/5/3/30**，KEY0/掉电/重下载恢复默认并丢失运行时扫描标定。停车调参与标定失效链已实机通过，LOST恢复路径有特定条件的板上证据；机械过冲、持续捕获和外视野搜索到停靠仍未通过。E8蓝1/3/4从已见目标停靠的历史成功保留，不能作为本版完整任务通过。
+
+## 已知限制与未验证范围
+
+- E11首轮与search3搜索均NOT_FOUND，turn3/turn5隔离均INCOMPLETE；turn5未耗尽预算时已采到LOST→ACQUIRE，仍有单侧抽动、跨中心、丢牌。最后3/5/4/3/40会话对照同样INCOMPLETE，未改RTL；已停止本轮测试，搜索停靠尚未通过。
 
 - E10从画外发现并锁定目标、短暂进入APPROACH后仍会失锁重搜，本轮最终NOT_FOUND/SCAN_BUDGET，未完成停靠。用户确认固定目标及最后停止；反向SEARCH没有触发，有限回扫实物效果尚未验证。
-- 已完成当前塑胶地面三次整圈观察并设13.6秒近似扫描预算；精确360°与固定时间自动停止角误差尚未测，实验室环氧地面未测。前两次起步单侧前冲、前移3.5/2 cm，根因未定位。蓝5/6没有单独地面任务证据（用户已取消本轮单测）；350mm精确停车误差、完整任务时间及图像变化到UART响应延迟仍未全面测量；累计命令时间不是航向反馈。
+- 历史search4有三次整圈观察及13.6秒记录；当前search3仅两次单圈加一次双圈参考、采用15.1秒保守预算。精确360°与固定时间自动停止角误差尚未测，实验室环氧地面未测。前两次起步单侧前冲、前移3.5/2 cm，根因未定位。蓝5/6没有单独地面任务证据（用户已取消本轮单测）；350mm精确停车误差、完整任务时间及图像变化到UART响应延迟仍未全面测量；累计命令时间不是航向反馈。
 - E5真实蓝1任务未停靠，已观察对准摆动、失锁和扫描预算耗尽；E7真实第01–05轮同样未完成停靠，保留POWER窗口无ARM、线缆近距中断、单侧短促动作和跨中心等事实。E6功能仿真通过但时序FAIL，从未下载；E7独立R6、Full Compilation/post-fit及下载通过，解决时序验收问题但未证明实物控制问题解决。两秒连续直行的“基本是直的”是隔离证据；E8连续差速纠偏已通过本版聚焦检查、270.641086秒正式R6、Full Compilation/post-fit及下载读回；零速预检蓝1锁定4/4。真实蓝1首轮已取得板上DOCKED和约3.18秒未ARM/零速驻留，用户确认持续向前、无明显偏转及约335 mm终距；末段对准/重确认约25秒仍需改善，左轮多走约1 cm只是用户不确定估计。蓝2已记录红2事件/重锁/ARM，另有窗口外用户前进停车观察和事后终态，但缺连续运动日志，不补造完整闭环或精确误差。蓝3实体POWER及真实接近/减速/差速微调/停靠已有完整本轮记录与用户反馈；蓝4也完成停靠，但起步抽动/偏右、末端约17.1秒修正和最终仍略偏右保留。用户已取消本轮蓝5/6单独地面任务，不再作为待执行项；两者仍只有静态视觉覆盖、没有单独地面task证据。蓝4画外搜索已实际执行，但未持续锁定，最终SCAN_BUDGET/NOT_FOUND，自动撤权/归零；此闭环项未通过，E9有限反向回扫源码已冻结、定向回归及正式R6通过，Full Compilation/post-fit与下载身份读回也已通过，实机仍未完成画外搜索停靠：E9发现/锁定后反复对准，60秒观察窗到限由主机STOP，未到DOCK；本轮没有反向SEARCH，回扫物理效果未验证，不能用预锁定目标的停靠成功覆盖。
 - 实物J3近停、滞回、恢复和停靠状态已有上述E4架空证据。E4地面首轮已记录真实invalid距离触发HOLD/零速；E5真实空旷6/6读回FAR且用户确认显示，三圈分别记录10/13/15个FAR运动快照且无HOLD。长期连续性及真实视觉闭环仍需验证；经尺子核定的250/300/350mm边界与绝对精度仍待完成，FAR不能读作实测4米，旧4000/validfalse也不能确认唯一电气原因。
 - SW6颜色信息与两页自动交替、SW7空隙“无标牌”及蓝1覆盖中心的`ID:B1`已获实物确认；UNKNOWN/拒识原因的实际显示、16槽同时占满和中心歧义仍待验证。
@@ -552,7 +678,7 @@ J3使用RCWL-1601、3.3 V和共地；FPGA TX接底盘RX，FPGA RX接底盘TX；�
 | `tests/`、`run_all_tests.sh` | 模块/系统自检、真实输入fixture、正式R6入口 |
 | `tools/chassis_debug.py`、`tools/echo7.py` | 持久JTAG会话、注入、构建、下载、校色及真实抓帧 |
 | `tools/compare_observations.py`、`tools/export_submission.py` | 实体选择观测的三对SW8离线摘要、整项目单SOF交接ZIP |
-| `firmware/E7070010/PartBDebug.sof` | 当前E10发布SOF，来自成功构建且已实际下载的产物；画外搜索停靠缺陷如实保留 |
+| `firmware/E7070011/PartBDebug.sof` | 当前E11发布SOF，来自成功构建且已实际下载的产物；画外搜索停靠缺陷如实保留 |
 | `docs/ECHO7_Integrated_Datasheet.pdf` | 当前集成版数据表 |
 | `docs/REPAIR_RESULT.md`、`VERSION_README.md`、`OWNERS.md` | 分版本结果、迭代记录及来源/成员归属 |
 

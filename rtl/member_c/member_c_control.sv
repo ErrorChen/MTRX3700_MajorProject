@@ -1,4 +1,5 @@
 module member_c_control #(
+ parameter bit RUNTIME_TUNING=0,
  parameter int ULTRASONIC_ESTOP_MM=250,TURN_SIGN=1,
  parameter int ALIGN_LOW=90,ALIGN_HIGH=150,
  parameter int SELECTION_STABLE_CLKS=1_000_000,
@@ -14,6 +15,7 @@ module member_c_control #(
  input logic [1:0] mode,
  input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
  input logic [31:0] scanBudgetUs,timeUs,
+ input logic [31:0] tuningWord,
  input logic cameraFifoFault,cameraAbandonEvent,
  input perception_pkg::perceptionStatus_t status,
  output perception_pkg::targetRequest_t targetRequest,
@@ -80,7 +82,7 @@ module member_c_control #(
    .selectionConflict(selectionConflict),.selectionMatches(selectionMatches),.centreU(centreU),
    .sourceHealthyFresh(sourceHealthyFresh),.targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .requestTag(requestTag),.frameId(frameId),.inputAgeUs(inputAgeUs),.fatalFault(fatalFault));
- motion_fsm #(.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(ALIGN_LOW),.ALIGN_HIGH(ALIGN_HIGH),
+ motion_fsm #(.RUNTIME_TUNING(RUNTIME_TUNING),.SAFETY_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(ALIGN_LOW),.ALIGN_HIGH(ALIGN_HIGH),
    .APPROACH_TRACK_ERROR(APPROACH_TRACK_ERROR),.FINE_STEER_CM_S(FINE_STEER_CM_S),
    .BACKTRACK_PULSE_US(BACKTRACK_PULSE_US),.BACKTRACK_MAX_STEPS(BACKTRACK_MAX_STEPS),
    .ALIGN_FINE_CM_S(ALIGN_FINE_CM_S),.ALIGN_FINE_ERROR(ALIGN_FINE_ERROR),
@@ -91,7 +93,7 @@ module member_c_control #(
    .safetyHalt(estop_frame || estop || sonar_stop),.sourceHealthyFresh(sourceHealthyFresh),
    .targetObserved(targetObserved),.motionTargetValid(motionTargetValid),
    .distance_valid(distance_valid),.distance_mm(distance_mm),.centreU(centreU),
-   .scanAllowed(scanAllowed),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),
+   .scanAllowed(scanAllowed),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),
    .zeroSent(zeroSent),.motionApplied(permit && motionState==1),
    .left_cm_s(reqL),.right_cm_s(reqR),.state(motionState),.acquireFencePulse(acquireFencePulse),
    .taskDone(taskDone),.scanElapsedUs(scanElapsedUs),.scanRemainingUs(scanRemainingUs),.failureReason(failureReason));

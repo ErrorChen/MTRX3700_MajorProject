@@ -1,5 +1,6 @@
 `timescale 1ns/1ps
-module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN_BAND=0);
+module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN_BAND=0,
+ parameter bit RUNTIME_TUNING=1);
  import perception_pkg::*;
  logic clk=0,reset=1,power_frame=0,estop_frame=0;
  always #10 clk=~clk;
@@ -9,6 +10,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  logic [1:0] mode=2;
  logic debugStart=0,debugStop=0,modeChanged=0,rawMode=0,injectLeaseValid=1,scanCalibrated=0,visualStart=0;
  logic [31:0] scanBudgetUs=100000;
+ logic [31:0] tuningWord=RUNTIME_TUNING?(STRICT_ALIGN_BAND?32'h000a3544:32'h001e3544):32'hxxxxxxxx;
  logic cameraFifoFault=0,cameraAbandonEvent=0;
  perceptionStatus_t status;
  targetRequest_t req,held;
@@ -24,6 +26,8 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  int checks=0,frame=0,lineCount=0,spinLines=0,driveLines=0,zeroLines=0;
  int lowTurnLines=0,highTurnLines=0,lowFineTurnLines=0,highFineTurnLines=0,fineLines=0;
  int lowSteerLines=0,highSteerLines=0,lowFineSteerLines=0,highFineSteerLines=0;
+ int runtimeLines=0,runtimeAllowedCount=0;
+ string runtimeAllowed[0:31];
  localparam int TEST_SETTLE_US=1500; // Accelerated protocol dwell; production is 1500000 us.
  localparam int TEST_BACKTRACK_US=150000; // Keep the production reverse duration.
  localparam int TEST_ALIGN_LOW=STRICT_ALIGN_BAND?110:90,TEST_ALIGN_HIGH=STRICT_ALIGN_BAND?130:150;
@@ -43,14 +47,14 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  localparam string LOW_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n" : "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n";
  localparam string HIGH_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n" : "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n";
  string lines[0:511];
- // Default follows the E7070010 production top; +1 remains an explicit
+ // Default follows the E7070011 runtime-enabled production top; +1 remains an explicit
  // generic convention regression, not the corrected hardware configuration.
- member_c_control #(.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(TEST_ALIGN_LOW),.ALIGN_HIGH(TEST_ALIGN_HIGH),
+ member_c_control #(.RUNTIME_TUNING(RUNTIME_TUNING),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(TEST_ALIGN_LOW),.ALIGN_HIGH(TEST_ALIGN_HIGH),
    .SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
    .ACQUIRE_TIMEOUT_US(20000),.LOST_WAIT_US(1000),.TASK_TIMEOUT_US(2000000)) dut(
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),.selection(selection),
    .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),.rawMode(rawMode),
-   .injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),
+   .injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),
    .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.status(status),
    .targetRequest(req),.targetRequestValid(qv),.targetRequestReady(qr),
    .targetReport(rpt),.targetReportValid(rv),.targetReportReady(rr),
@@ -83,6 +87,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
      8:begin rpt.frameGood=0;rpt.observed=0;rpt.locked=0;rpt.reason=REPORT_RESOURCE_DROP;end
      9:rpt.captureStartUs=dut.adapter.requestFenceUs;
      10:rpt.captureStartUs=dut.adapter.targetFenceUs;
+     11:distance_mm=240; // Loss and near range arrive on this same sampling edge.
    endcase
    rv=1;tick();ck(rr,"report consumed");@(negedge clk);rv=0;tick(3);
  endtask
@@ -100,6 +105,43 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  task automatic acquired(input int u=120);
    // Wait for a complete UART zero and the subsequent dwell/fence.
    wait(dut.motion.acquirePhase==2);tick(3);fresh(1,u);tick(4);
+ endtask
+ function automatic string wheelJson(input int logicalL,input int logicalR);
+   int wl,wr;string leftText,rightText;wl=-logicalL;wr=-logicalR;
+   leftText=$sformatf("0.0%0d",wl<0?-wl:wl);rightText=$sformatf("0.0%0d",wr<0?-wr:wr);
+   if(wl<0)leftText={"-",leftText};if(wr<0)rightText={"-",rightText};
+   return {"{\"T\":1,\"L\":",leftText,",\"R\":",rightText,"}\n"};
+ endfunction
+ function automatic bit allowedRuntimeLine(input string line);
+   for(int i=0;i<runtimeAllowedCount;i++)if(line==runtimeAllowed[i])return 1;
+   return 0;
+ endfunction
+ task automatic allowRuntimeWheels(input int expectedL,input int expectedR);
+   string expected;expected=wheelJson(expectedL,expectedR);
+   if(!allowedRuntimeLine(expected))begin
+     ck(runtimeAllowedCount<32,"bounded runtime UART expectation table");
+     runtimeAllowed[runtimeAllowedCount]=expected;runtimeAllowedCount++;
+   end
+ endtask
+ task automatic verifyRuntimeWheels(input int expectedL,input int expectedR,input string label);
+   int first;bit found;string expected;
+   ck(permit && l==expectedL && r==expectedR,label);
+   first=lineCount;expected=wheelJson(expectedL,expectedR);tick(12000);found=0;
+   for(int i=first;i<lineCount;i++)if(lines[i]==expected)found=1;
+   if(!found)begin
+     $display("RUNTIME UART expected=[%s] first=%0d end=%0d",expected,first,lineCount);
+     for(int i=first;i<lineCount;i++)$display("RUNTIME UART actual=[%s]",lines[i]);
+   end
+   ck(found,"runtime command reaches a complete exact UART JSON line");
+ endtask
+ task automatic configureTuning(input int search,input int turn,input int drive,input int fine,input int tolerance);
+   stopTask();wait(zeroSent && !uartBusy);
+   @(negedge clk);tuningWord={10'd0,6'(tolerance),4'(fine),4'(drive),4'(turn),4'(search)};tick(3);
+   ck(dut.motion.tuningValid,"valid runtime tuple accepted by controller datapath");
+ endtask
+ task automatic runtimeStart(input int u,input int mm,input int expectedL,input int expectedR,input string label);
+   stopTask();wait(zeroSent && !uartBusy);distance_mm=12'(mm);samples();fresh(1,u);
+   allowRuntimeWheels(expectedL,expectedR);arm();verifyRuntimeWheels(expectedL,expectedR,label);
  endtask
  task automatic pulseEnd(input int expectedUs);
    logic[31:0] began,taskStart,spent;
@@ -134,7 +176,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    remainingUs=TEST_BACKTRACK_US-int'(timeUs-began)-1;ck(remainingUs>0,"reverse deadline checked before expiry");
    tick(remainingUs);ck(dut.motion.backtracking && permit,"reverse remains permitted immediately before 150 ms limit");
    tick();stopped("reverse expiry removes wheel request combinationally");tick();
-   ck(state==6 && !dut.motion.backtracking && dut.motion.backtrackRecoveryRequired,"reverse always enters full stationary acquisition");
+   ck(state==6 && !dut.motion.backtracking && dut.motion.stationaryRecoveryRequired,"reverse always enters full stationary acquisition");
    ck(dut.scanElapsedUs-spent>=expectedBudgetUs-10 && dut.scanElapsedUs-spent<=expectedBudgetUs+2,
      "reverse logical motion consumes the original scan budget");
    ck(dut.motion.taskStartUs==taskStart,"reverse step cannot reset total-task wall time");
@@ -160,6 +202,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
        else if(line==HIGH_FINE_STEER_JSON)begin driveLines++;highFineSteerLines++;end
        else if(line=="{\"T\":1,\"L\":-0.05,\"R\":-0.05}\n")driveLines++;
        else if(line=="{\"T\":1,\"L\":-0.03,\"R\":-0.03}\n")begin driveLines++;fineLines++;end
+       else if(RUNTIME_TUNING && allowedRuntimeLine(line))runtimeLines++;
        else $fatal(1,"Malformed or unexpected UART JSON: %s",line);
        return;
      end
@@ -258,11 +301,44 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    distance_mm=1000;send(1,80);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before target loss");
    send();stopped("healthy NOT_FOUND immediately removes forward steering");
    ck(state==5 && dut.sourceHealthyFresh && !motionTargetValid,"target loss retains source health but enters LOST");
-   fresh(1,80);tick(1100);acquired(120);
+   begin logic[31:0] originalTask,spent;int beforeSpin;
+     originalTask=dut.motion.taskStartUs;spent=dut.scanElapsedUs;beforeSpin=spinLines;
+     tick(1100);ck(state==6 && dut.motion.stationaryRecoveryRequired,
+       "continued NOT_FOUND past LOST wait enters stationary acquisition, never immediate SEARCH");
+     stopped("lost target remains zero while waiting for UART completion");
+     wait(dut.motion.acquirePhase==1);tick(2);fresh(1,120);
+     stopped("target returning before stationary dwell cannot resume motion");
+     ck(dut.motion.acquirePhase==1,"returning target does not shorten loss recovery dwell");
+     wait(dut.motion.acquirePhase==2);tick(3);
+     send(1,120,1,10);stopped("capture at loss-recovery fence cannot qualify");
+     send(1);stopped("first fresh target after loss fence stays stopped");
+     send(1);stopped("second fresh target after loss fence stays stopped");send(1);tick(3);
+     ck(state==3 && permit && l==5 && r==5 && !dut.motion.stationaryRecoveryRequired,
+       "third new frame resumes approach without a search pulse");
+     ck(dut.motion.taskStartUs==originalTask && dut.scanElapsedUs==spent && spinLines==beforeSpin,
+       "stationary loss recovery neither turns nor refunds task/search budget");
+   end
    send(1,80);ck(state==3 && l==LOW_STEER_L && r==LOW_STEER_R,"forward steering active before bad-frame loss");
    send(0,120,0,7);stopped("bad-frame health failure immediately removes forward steering");
    ck(state==5 && !dut.sourceHealthyFresh,"source health failure cannot keep differential motion");
-   fresh(1,80);tick(1100);acquired(120);
+   tick(1100+TEST_SETTLE_US);ck(state==6 && dut.motion.acquirePhase==0 && dut.motion.stationaryRecoveryRequired,
+     "unhealthy loss cannot consume stationary recovery dwell");
+   fresh();wait(dut.motion.acquirePhase==1);tick(2);stopped("healthy NOT_FOUND starts a full stationary dwell");
+   acquired(120);
+   send(0,120,0,11);ck(state==7 && dut.motion.stationaryRecoveryRequired,
+     "simultaneous near-range HOLD and target loss retains recovery obligation");
+   stopped("simultaneous obstacle and target loss remains zero");
+   distance_mm=1000;samples();tick(3);
+   ck(state==6 && dut.motion.stationaryRecoveryRequired && !dut.targetObserved,
+     "HOLD release with no target cannot bypass stationary reacquisition");
+   acquired(120);
+   send();tick(1100);wait(dut.motion.acquirePhase==2);tick(20003);
+   ck(state==1 && permit && !dut.motion.backtracking && !dut.motion.backtrackAuthorized &&
+      !dut.motion.stationaryRecoveryRequired && dut.motion.backtrackSteps==0,
+      "continued absence resumes ordinary SEARCH only after full stationary confirmation timeout");
+   stopTask();fresh(1);arm();send();stopTask();fresh(1);tick(3000);
+   ck(!dut.taskActive && !dut.motion.stationaryRecoveryRequired,"STOP cancels pending loss recovery without auto-restart");
+   arm();tick(3);
    // Leaving the steering corridor requires zero completion, dwell and fresh
    // confirmation before the existing pivot pulse; it cannot reverse in place.
    send(1,166);tick(3);stopped("U166 outside error45 stops forward steering");
@@ -469,7 +545,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    fresh(1);stopped("pre-settle reports after reverse cannot directly move forward");
    wait(dut.motion.acquirePhase==2);tick(3);send(1);stopped("reverse recovery first post-fence target stays stopped");
    send(1);stopped("reverse recovery second post-fence target stays stopped");send(1);tick(4);
-   ck(state==3 && permit && l==5 && r==5 && !dut.motion.backtrackAuthorized && !dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1,
+   ck(state==3 && permit && l==5 && r==5 && !dut.motion.backtrackAuthorized && !dut.motion.stationaryRecoveryRequired && dut.motion.backtrackSteps==1,
      "third new target completes recovery and clears authority without refunding attempts");
    // A short remaining scan allowance truncates a reverse pulse before its
    // nominal duration and finishes through the existing final ACQUIRE.
@@ -484,7 +560,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    // Source interruption revokes authority, retains the spent attempt, and
    // cannot fall through LOST directly into forward motion before full dwell.
    startMissedSighting();tick(2500);send(0,120,0,7);stopped("source failure immediately cancels reverse output");
-   ck(state==6 && !dut.motion.backtrackAuthorized && dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1,
+   ck(state==6 && !dut.motion.backtrackAuthorized && dut.motion.stationaryRecoveryRequired && dut.motion.backtrackSteps==1,
      "source interruption retains required stationary recovery and spent count");
    tick(TEST_SETTLE_US+1000);ck(dut.motion.acquirePhase==0,"unhealthy source cannot consume the recovery dwell");
    fresh();wait(dut.motion.acquirePhase==1);tick(2);stopped("restored source begins a full zero-confirmed dwell");
@@ -494,10 +570,10 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    // Near/invalid protection must not bypass that same stationary recovery.
    startMissedSighting();tick(2500);distance_mm=200;#1;stopped("hazard immediately stops reverse");tick(3);
    begin logic[31:0] spent;spent=dut.scanElapsedUs;tick(5000);
-     ck(state==7 && !dut.motion.backtrackAuthorized && dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==1 && dut.scanElapsedUs==spent,
+     ck(state==7 && !dut.motion.backtrackAuthorized && dut.motion.stationaryRecoveryRequired && dut.motion.backtrackSteps==1 && dut.scanElapsedUs==spent,
        "HOLD keeps reverse authority revoked, count spent and scan time paused");
    end
-   distance_mm=1000;samples();tick(3);ck(state==6 && dut.motion.backtrackRecoveryRequired,"HOLD recovery cannot jump directly from reverse to forward SEARCH");
+   distance_mm=1000;samples();tick(3);ck(state==6 && dut.motion.stationaryRecoveryRequired,"HOLD recovery cannot jump directly from reverse to forward SEARCH");
    wait(dut.motion.acquirePhase==2);tick(3);send();tick(20003);
    ck(state==1 && !dut.motion.backtracking && dut.motion.backtrackSteps==1 && l==LOW_L && r==LOW_R,"HOLD recovery completes stationary confirmation without refund");
    send(1,80,0);send();wait(dut.motion.acquirePhase==2);tick(3);send();wait(dut.motion.backtracking);tick(2);
@@ -515,11 +591,72 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
        6:begin reset=1;tick(3);reset=0;tick(20);samples();end
      endcase
      fresh();tick(2500);stopped("cancellation and safe restoration cannot resurrect a reverse task");
-     ck(!dut.taskActive && !dut.motion.backtracking && !dut.motion.backtrackAuthorized && !dut.motion.backtrackRecoveryRequired && dut.motion.backtrackSteps==0 && zeroSent,
+     ck(!dut.taskActive && !dut.motion.backtracking && !dut.motion.backtrackAuthorized && !dut.motion.stationaryRecoveryRequired && dut.motion.backtrackSteps==0 && zeroSent,
        "STOP/IR/selection/mode/raw/lease/reset discard reverse authority and complete zero");
    end
+   if(RUNTIME_TUNING && !STRICT_ALIGN_BAND)begin
+     // Datapath tests deliberately drive the register input directly. CCTL's
+     // VISION_ONLY/write validation is independently tested at that endpoint.
+     configureTuning(3,5,8,4,40);distance_mm=1000;samples();scanBudgetUs=1000000;fresh();
+     allowRuntimeWheels(-3*TURN_SIGN,3*TURN_SIGN);allowRuntimeWheels(3*TURN_SIGN,-3*TURN_SIGN);
+     arm();verifyRuntimeWheels(-3*TURN_SIGN,3*TURN_SIGN,"runtime SEARCH uses search3 independently of turn5");
+     send(1,80,0);send();wait(dut.motion.acquirePhase==2);tick(20003);
+     ck(dut.motion.backtracking && dut.motion.backtrackSteps==1,"runtime search still grants only bounded missed-sighting recovery");
+     verifyRuntimeWheels(3*TURN_SIGN,-3*TURN_SIGN,"runtime reverse uses the same search3 magnitude");
+     runtimeStart(80,1000,8,8,"runtime tolerance40 lower boundary permits drive8 straight");
+     runtimeStart(160,1000,8,8,"runtime tolerance40 upper boundary permits drive8 straight");
+     runtimeStart(120,500,4,4,"runtime fine4 applies at inclusive500 mm");
+     runtimeStart(120,501,8,8,"runtime drive8 applies above500 mm");
+     runtimeStart(79,1000,TURN_SIGN==-1?8:4,TURN_SIGN==-1?4:8,"runtime far low correction uses drive8/fine4");
+     runtimeStart(161,1000,TURN_SIGN==-1?4:8,TURN_SIGN==-1?8:4,"runtime far high correction uses fine4/drive8");
+     runtimeStart(75,500,TURN_SIGN==-1?5:4,TURN_SIGN==-1?4:5,"runtime near low correction retains U75 corridor and fine+1");
+     runtimeStart(165,500,TURN_SIGN==-1?4:5,TURN_SIGN==-1?5:4,"runtime near high correction retains U165 corridor and fine+1");
+     runtimeStart(74,1000,-5*TURN_SIGN,5*TURN_SIGN,"runtime U74 remains outside corridor and uses turn5");
+     runtimeStart(166,1000,5*TURN_SIGN,-5*TURN_SIGN,"runtime U166 remains outside corridor and uses turn5");
+     stopTask();wait(zeroSent && !uartBusy);distance_mm=350;samples();fresh(1,80);arm();tick(4);
+     ck(state==4 && !dut.taskActive,"runtime tolerance40 lower endpoint docks at350 mm");
+     configureTuning(5,3,4,3,10);distance_mm=1000;samples();fresh();
+     allowRuntimeWheels(-5*TURN_SIGN,5*TURN_SIGN);arm();
+     verifyRuntimeWheels(-5*TURN_SIGN,5*TURN_SIGN,"runtime SEARCH upper bound5 is independent of turn3");
+     runtimeStart(74,1000,-3*TURN_SIGN,3*TURN_SIGN,"runtime coarse ALIGN lower speed bound3");
+     runtimeStart(110,1000,4,4,"runtime tolerance10 lower endpoint uses drive4");
+     runtimeStart(130,1000,4,4,"runtime tolerance10 upper endpoint uses drive4");
+     runtimeStart(109,1000,TURN_SIGN==-1?4:3,TURN_SIGN==-1?3:4,"runtime outside lower tolerance steers with drive4/fine3");
+     runtimeStart(131,1000,TURN_SIGN==-1?3:4,TURN_SIGN==-1?4:3,"runtime outside upper tolerance steers with fine3/drive4");
+     configureTuning(5,5,4,3,10);
+     runtimeStart(109,350,-3*TURN_SIGN,3*TURN_SIGN,"runtime near-target fine ALIGN remains3 despite coarse turn5");
+     runtimeStart(131,350,3*TURN_SIGN,-3*TURN_SIGN,"runtime high-side fine ALIGN retains3 and corrected sign");
+     stopTask();wait(zeroSent && !uartBusy);distance_mm=350;samples();fresh(1,130);arm();tick(4);
+     ck(state==4 && !dut.taskActive,"runtime tolerance10 upper endpoint docks at350 mm");
+     // Even if a writer bypassed CCTL, no malformed tuple can reach the wheels.
+     configureTuning(4,4,5,3,30);distance_mm=1000;samples();fresh();arm();
+     begin logic[31:0] invalidWord,spent;
+       for(int invalidCase=0;invalidCase<12;invalidCase++)begin
+         invalidWord=32'h001e3544;
+         case(invalidCase)
+           0:invalidWord[3:0]=2;1:invalidWord[3:0]=6;
+           2:invalidWord[7:4]=2;3:invalidWord[7:4]=6;
+           4:invalidWord[11:8]=3;5:invalidWord[11:8]=9;
+           6:invalidWord[15:12]=2;7:invalidWord[15:12]=5;
+           8:invalidWord[21:16]=9;9:invalidWord[21:16]=41;
+           10:invalidWord[15:8]=8'h44;
+           11:invalidWord[22]=1;
+         endcase
+         @(negedge clk);tuningWord=invalidWord;#1;stopped("malformed runtime word gates SEARCH combinationally");
+         tick(2);spent=dut.scanElapsedUs;tick(3);
+         ck(!dut.motion.tuningValid && dut.scanElapsedUs==spent,"invalid word neither permits nor charges scan motion");
+       end
+     end
+     configureTuning(4,4,5,3,30);fresh(1);arm();
+     @(negedge clk);tuningWord=0;#1;stopped("invalid word also gates live APPROACH");
+     configureTuning(4,4,5,3,30);fresh(1,30);arm();
+     @(negedge clk);tuningWord=0;#1;stopped("invalid word also gates latched ALIGN speed");
+     configureTuning(4,4,5,3,30);stopped("restoring tuning while stopped cannot ARM");
+   end else if(!RUNTIME_TUNING)begin
+     ck(dut.motion.tuningValid,"legacy parameter path ignores even an unknown omitted runtime word");
+   end
    tick(2500);ck(zeroLines>0 && zeroSent,"completed UART zero observed separately from logical stop");
-   $display("PASS: tb_control_repair TURN_SIGN=%0d STRICT_ALIGN_BAND=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d",TURN_SIGN,STRICT_ALIGN_BAND,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines);$finish;
+   $display("PASS: tb_control_repair TURN_SIGN=%0d STRICT_ALIGN_BAND=%0d RUNTIME_TUNING=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d runtime=%0d",TURN_SIGN,STRICT_ALIGN_BAND,RUNTIME_TUNING,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines,runtimeLines);$finish;
  end
  initial begin #100000000;$fatal(1,"watchdog state=%0d phase=%0d",state,dut.motion.acquirePhase);end
 endmodule

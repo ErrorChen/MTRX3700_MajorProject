@@ -9,6 +9,7 @@ module memberCBoard #(
     parameter int LEFT_POLARITY = -1, RIGHT_POLARITY = -1,
     // Candidate image-to-turn convention: must be checked with wheels raised.
     parameter int TURN_SIGN = 1,
+    parameter bit RUNTIME_TUNING = 0,
     // Single safety threshold in mm; stop at distance <= this value.
     parameter int ULTRASONIC_ESTOP_MM = 250, // EB STOP DISTANCE mm
     parameter int HEARTBEAT_CLKS = 10_000_000, // 200 ms at 50 MHz
@@ -24,7 +25,7 @@ module memberCBoard #(
     input wire [5:0] SW,
     input logic [1:0] mode,
     input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
-    input logic [31:0] scanBudgetUs,
+    input logic [31:0] scanBudgetUs,tuningWord,
     output logic [511:0] statusWords,
     // Internal public v3 link to perceptionCore, all synchronous to CLOCK_50.
     input logic [31:0] timeUs,
@@ -148,11 +149,12 @@ module memberCBoard #(
     wire [511:0] controlStatusWords;
     wire signed [6:0] logicalL,logicalR;
     member_c_control #(.ULTRASONIC_ESTOP_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+      .RUNTIME_TUNING(RUNTIME_TUNING),
       .SELECTION_STABLE_CLKS(SELECTION_STABLE_CLKS),.ACQUIRE_SETTLE_US(ACQUIRE_SETTLE_US),
       .ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US)) control_u(
       .clk(CLOCK_50),.reset(reset50),.power_frame(power_frame),.estop_frame(estop_frame),
       .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
-      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),
+      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),.tuningWord(tuningWord),
       .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
       .rawMode(rawMode),.injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),
       .distanceSample(sample_pulse),.zeroSent(zeroSent),.uartBusy(chassis_busy),.statusWords(controlStatusWords),

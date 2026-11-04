@@ -268,7 +268,7 @@ def main(argv=None):
     outputDir.mkdir(parents=True, exist_ok=False)
     result = {"schema": "echo7-verilator-course-v1", "status": "RUNNING", "level": "RTL_SIM",
               "requiredVersion": REQUIRED_VERSION, "maximumSeconds": 300, "cleanBuild": True,
-              "targetSeconds": 285, "simulationConcurrency": 2,
+              "targetSeconds": 285, "simulationConcurrency": 2, "compilerConcurrency": 1,
               "compileJobs": args.jobs,
               "scope": "B+C modules, scanning/safety/CCTL, real-timing sonar TRIG/ECHO and actual perceptionCore pixels through C and UART", "tests": [], "commands": [],
               "compilations": [], "compilationReuse": "EXACT_INPUTS_WITHIN_THIS_FRESH_RUN_ONLY"}
@@ -336,10 +336,13 @@ def main(argv=None):
         # scenario still executes independently with its own log and verdict.
         compiled = CurrentRunCompilations(outputDir)
         result["parallelGroups"] = []
+        result["compileSimulationOverlap"] = "SERIAL_PRECOMPILE_DURING_FIRST_SIMULATION_PAIR"
+        result["prefetchedScenarios"] = []
 
         def prepareScenario(test):
-            # Preparation stays serial. Both independent binaries in a pair
-            # must finish compilation before either simulation is launched.
+            # Preparation stays on the main thread: at most one compiler
+            # process (with args.jobs children), even while simulations run.
+            # Both binaries in a simulation pair are compiled before launch.
             mutant = test.get("mutant", False)
             name = "targetTracker_broken_lock" if mutant else test["name"]
             folder = outputDir / name
@@ -388,12 +391,22 @@ def main(argv=None):
             return (test, name, folder, compiledBinary), command, compileKey, top
 
         completedPairs = set()
-        for test in [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]:
+        scenarios = [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]
+        prefetched = {}
+        for test in scenarios:
             mutant = test.get("mutant", False)
             name = "targetTracker_broken_lock" if mutant else test["name"]
             if name in completedPairs:
                 continue
-            prepared, command, compileKey, top = prepareScenario(test)
+            if name in prefetched:
+                prepared, command, compileKey, top = prefetched.pop(name)
+                # Precompilation may precede execution by many seconds. Recheck
+                # the owned binary rather than trusting stale cached metadata.
+                checkedBinary = compiled.lookup(compileKey)
+                if checkedBinary is None or checkedBinary["path"] != prepared[3]["path"]:
+                    raise RuntimeError("prepared simulator no longer matches its current-run compilation")
+            else:
+                prepared, command, compileKey, top = prepareScenario(test)
             group = [prepared]
             if name == "tb_pixel_uart_repair":
                 # Independent production pixel/UART and real-clock sonar
@@ -432,10 +445,34 @@ def main(argv=None):
                 return runProcess([Path(scenarioBinary["path"]), "+VECTOR_DIR=" + vectors.as_posix(), *plusargs],
                                   scenarioFolder, scenarioFolder / "simulation.log", deadline)
 
+            preparationError = None
             if len(group) == 2:
                 result["parallelGroups"].append([item[1] for item in group])
                 with ThreadPoolExecutor(max_workers=2) as pool:
                     futures = [pool.submit(runScenario, item) for item in group]
+                    if name == "tb_pixel_uart_repair":
+                        # Hide serial compilation behind the long, independent
+                        # pixel/sonar simulations. No third simulator is started,
+                        # no earlier-run binary is loaded, and the prepared
+                        # scenarios still run in the original order below.
+                        # The overload partner retains its explicit exact-input
+                        # check/reuse path when the continuous pair is reached.
+                        try:
+                            for later in scenarios:
+                                laterName = "targetTracker_broken_lock" if later.get("mutant", False) else later["name"]
+                                if laterName in ("tb_pixel_uart_repair", "tb_sonar_guard", "perceptionCoreOverload_tb"):
+                                    continue
+                                # Stop starting compilers once an already
+                                # completed first-pair simulation has failed.
+                                if any(future.done() and not simulationPassed(*future.result(), item[0]["passMarker"])
+                                       for item, future in zip(group, futures)):
+                                    break
+                                prefetched[laterName] = prepareScenario(later)
+                                result["prefetchedScenarios"].append(laterName)
+                        except (OSError, RuntimeError, TimeoutError, KeyError, ValueError) as error:
+                            # Retain the independent simulation verdicts/logs
+                            # before reporting a failed overlapped preparation.
+                            preparationError = error
                     outcomes = [future.result() for future in futures]
             else:
                 outcomes = [runScenario(group[0])]
@@ -452,6 +489,8 @@ def main(argv=None):
                     failed.append(scenarioName)
             if failed:
                 raise RuntimeError(f"{', '.join(failed)}: missing expected assertion/PASS, failed simulation or timeout")
+            if preparationError is not None:
+                raise preparationError
         changed = [path for path, digest in sourceHashes.items() if fileHash(ROOT / path) != digest]
         if changed:
             raise RuntimeError("sources changed during clean suite: " + ", ".join(changed))

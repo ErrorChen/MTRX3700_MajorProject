@@ -139,18 +139,18 @@ module echo7IntegratedTop #(
     wire syntheticRequestReady,syntheticReportValid;
     wire [1:0] controlMode;
     wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
-    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1;
+    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord;
     wire [511:0] chassisStatusWords;
     assign requestReady=!modeChanged && (controlMode==2 ? syntheticRequestReady : realRequestReady);
     assign targetReport=controlMode==2 ? syntheticReport : realReport;
     assign reportValid=!modeChanged && (controlMode==2 ? syntheticReportValid : realReportValid);
     assign realReportReady=controlMode==2 || modeChanged ? 1'b1 : reportReady;
     assign activeStatus=controlMode==2 ? syntheticStatus : status;
-    chassisDebug chassisDebugControl(
+    chassisDebug #(.BUILD_ID(`MEMBER_B_BUILD_ID)) chassisDebugControl(
         .clk(CLOCK_50),.reset(reset50),.timeUs(timeUs),.statusWords(chassisStatusWords),
         .mode(controlMode),.modeChanged(modeChanged),.debugStart(debugStart),.debugStop(debugStop),
         .injectLeaseValid(injectLeaseValid),.leaseAgeUs(leaseAgeUs),.scanCalibrated(scanCalibrated),
-        .scanBudgetUs(scanBudgetUs),.observation0(observation0),.observation1(observation1),.templateValid(templateValid));
+        .scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.observation0(observation0),.observation1(observation1),.templateValid(templateValid));
     syntheticPerception syntheticSource(
         .clk(CLOCK_50),.reset(reset50),.enabled(controlMode==2),.sourceChanged(modeChanged),
         .leaseValid(injectLeaseValid),.templateValid(templateValid),.timeUs(timeUs),
@@ -210,13 +210,13 @@ module echo7IntegratedTop #(
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .debugWords(coreWords),.completedFrame(completedFrame),.completedFrameId(completedFrameId));
     memberCBoard #(.LEFT_POLARITY(LEFT_POLARITY),.RIGHT_POLARITY(RIGHT_POLARITY),
-        .TURN_SIGN(TURN_SIGN),.ULTRASONIC_ESTOP_MM(250)) chassis (
+        .TURN_SIGN(TURN_SIGN),.RUNTIME_TUNING(1),.ULTRASONIC_ESTOP_MM(250)) chassis (
         .CLOCK_50(CLOCK_50),.reset50(reset50),.KEY(KEY[1:0]),.SW(SW[5:0]),.IRDA_RXD(IRDA_RXD),
         .timeUs(timeUs),.perceptionStatus(activeStatus),
         .mode(controlMode),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
         .visualStart(visualStart),
         .rawMode(rawProcessingSync),.injectLeaseValid(injectLeaseValid),
-        .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.statusWords(chassisStatusWords),
+        .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.statusWords(chassisStatusWords),
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),

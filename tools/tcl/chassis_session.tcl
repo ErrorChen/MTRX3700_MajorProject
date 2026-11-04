@@ -57,7 +57,9 @@ proc probe {} {
         set b [read_probe_data -instance_index $::instance]
         if {$a eq $b} {
             set value [number $a]
-            if {($value >> 96) != 0x4343544c || (($value >> 64) & 0xffffffff) != 0xe7070001 ||
+            # The build field is now the actual E707 firmware identifier;
+            # protocol compatibility remains the independent v1/16-word meta.
+            if {($value >> 96) != 0x4343544c || (($value >> 64) & 0xffff0000) != 0xe7070000 ||
                 (($value >> 48) & 0xffff) != 0x0110} { error "unsupported CCTL magic/version/schema/count" }
             return $value
         }
@@ -147,7 +149,7 @@ while {[gets stdin line] >= 0} {
             TX {
                 if {[llength $fields] != 4} { error "TX needs opcode and payload" }
                 set opcode [lindex $fields 2]; set payload [lindex $fields 3]
-                if {![string is integer -strict $opcode] || $opcode < 1 || $opcode > 10 ||
+                if {![string is integer -strict $opcode] || $opcode < 1 || $opcode > 11 ||
                     ![string is wideinteger -strict $payload] || $payload < 0 || $payload > 0xffffffff} { error "invalid TX arguments" }
                 set answer [command $opcode $payload]
             }

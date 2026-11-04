@@ -36,12 +36,12 @@ module tb_pixel_uart_repair;
  wire tx,uartBusy,zeroSent;
  // E7070005 production convention, verified against real body-left low U.
  // Pixel input and the public U/V contract remain unchanged.
- member_c_control #(.TURN_SIGN(-1),.SELECTION_STABLE_CLKS(4),.ACQUIRE_SETTLE_US(1000),
+ member_c_control #(.TURN_SIGN(-1),.RUNTIME_TUNING(1),.SELECTION_STABLE_CLKS(4),.ACQUIRE_SETTLE_US(1000),
    .ACQUIRE_TIMEOUT_US(300000),.LOST_WAIT_US(80000),.TASK_TIMEOUT_US(1500000)) control(
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(1'b0),.visualStart(1'b0),
    .selection(6'b000001),.mode(2'd0),.debugStart(1'b0),.debugStop(debugStop),
    .modeChanged(1'b0),.rawMode(1'b0),.injectLeaseValid(1'b0),
-   .scanCalibrated(1'b1),.scanBudgetUs(32'd700000),.timeUs(timeUs),
+   .scanCalibrated(1'b1),.scanBudgetUs(32'd700000),.timeUs(timeUs),.tuningWord(32'h001e3544),
    .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.status(status),
    .targetRequest(targetRequest),.targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
    .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),

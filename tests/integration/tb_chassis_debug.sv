@@ -6,7 +6,7 @@ module tb_chassis_debug;
  logic [511:0] statusWords='0;
  wire [1:0] mode;
  wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
- wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1;
+ wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord;
  chassisDebug #(.LEASE_US(500)) dut(.*);
  targetRequest_t targetRequest;
  logic targetRequestValid=0;
@@ -48,7 +48,38 @@ module tb_chassis_debug;
  initial begin
   tick(4);reset=0;tick(12);
   check(mode==0&&!injectLeaseValid&&starts==0,"safe integrated reset");
+  check(tuningWord==32'h001e3544,"runtime tuning reset defaults");
+  command(11,32'h00284855,5);check(tuningWord==32'h001e3544,"integrated tuning rejected");
   command(1,1);command(3,0,3);check(starts==0,"vision must never arm");
+  command(11,32'h00284855,5);check(tuningWord==32'h001e3544,"zeroSent required");
+  statusWords[8*32+15]=1;
+  command(10,1);command(11,32'h001e3554);
+  check(tuningWord==32'h001e3554&&scanCalibrated&&starts==0&&!injectLeaseValid,
+    "stationary atomic change preserves calibration and cannot arm");
+  command(2);check(dut.frozenWords[13*32+:32]==32'ha11e3554,"tuning capability and frozen readback");
+  command(11,32'h00284855);
+  check(tuningWord==32'h00284855&&!scanCalibrated,"search speed invalidates scan calibration");
+  check(dut.frozenWords[13*32+:32]==32'ha11e3554,"prior snapshot immutable across tuning commit");
+  command(2);check(dut.frozenWords[13*32+:32]==32'ha1284855,"new snapshot shows complete tuning word");
+  // Each invalid field must reject the whole transaction, not partially write.
+  command(11,32'h005e3544,2); // reserved bit22
+  command(11,32'h001e3542,2);command(11,32'h001e3546,2);
+  command(11,32'h001e3524,2);command(11,32'h001e3564,2);
+  command(11,32'h001e3344,2);command(11,32'h001e3944,2);
+  command(11,32'h001e2544,2);command(11,32'h001e5544,2);
+  command(11,32'h001e4444,2); // approach must exceed fine
+  command(11,32'h00093544,2);command(11,32'h00293544,2);
+  check(tuningWord==32'h00284855,"invalid payloads leave all parameters unchanged");
+  statusWords[20]=1;command(11,32'h001e3544,5);statusWords[20]=0;
+  statusWords[28]=1;command(11,32'h001e3544,5);statusWords[28]=0;
+  statusWords[7*32+:7]=3;command(11,32'h001e3544,5);statusWords[7*32+:7]=0;
+  statusWords[7*32+8+:7]=7'h7d;command(11,32'h001e3544,5);statusWords[7*32+8+:7]=0;
+  statusWords[8*32+15]=0;command(11,32'h001e3544,5);statusWords[8*32+15]=1;
+  check(tuningWord==32'h00284855&&starts==0,"each motion boundary rejects tuning without ARM");
+  command(1,2);command(11,32'h001e3544,5);
+  command(1,1);command(11,32'h000a3433);
+  check(tuningWord==32'h000a3433,"minimum runtime field boundaries accepted");
+  command(11,32'h001e3544);statusWords='0;
   command(1,2);command(7,0,4);
   command(5,(200<<24)|(1<<20)|(1<<19)|(1<<17)|(160<<8)|80);
   command(7,0,4);check(!templateValid,"half template cannot commit");
@@ -74,7 +105,8 @@ module tb_chassis_debug;
   command(10,1);check(scanCalibrated,"explicit calibration acknowledgement");
   command(1,0);check(!templateValid&&!injectLeaseValid,"mode flush");
   command(3);begin int prior;prior=starts;reset=1;tick(5);reset=0;tick(15);
-   check(starts==prior,"old JTAG ARM not replayed after reset");end
+   check(starts==prior,"old JTAG ARM not replayed after reset");
+   check(tuningWord==32'h001e3544&&!scanCalibrated,"reset restores tuning defaults and clears calibration");end
   $display("PASS tb_chassis_debug checks=%0d reports=%0d",checks,reports);$finish;
  end
  initial begin #1000000;$fatal(1,"CCTL watchdog");end

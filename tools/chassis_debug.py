@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """CCTL chassis debugging through one persistent Quartus STP session.
 
-Physical SW0-SW5 always select the bay. This tool never writes wheel speeds or
-sonar values. `stop` is standalone only when the JTAG link is idle; use Ctrl+C
+Physical SW0-SW5 always select the bay. This tool never overrides wheel outputs
+or sonar values. `tune` changes bounded controller parameters only while stopped
+in VISION_ONLY; settings reset on KEY0/power loss/reprogramming. Changing search
+speed invalidates the floor scan calibration. `stop` is standalone only when the JTAG link is idle; use Ctrl+C
 in an active injection session. A lost process is stopped by the FPGA lease.
 """
 from __future__ import annotations
@@ -22,6 +24,55 @@ import time
 import echo7
 
 MODES = {"integrated": 0, "vision": 1, "chassis": 2}
+TUNING_DEFAULTS = {"search": 4, "turn": 4, "approach": 5, "fine": 3, "tolerance": 30}
+TUNING_FIELDS = {"search": (0, 15, 3, 5), "turn": (4, 15, 3, 5),
+                 "approach": (8, 15, 4, 8), "fine": (12, 15, 3, 4),
+                 "tolerance": (16, 63, 10, 40)}
+
+
+def tuning_word(**values):
+    """Encode one atomic controller configuration; speeds are cm/s, tolerance pixels."""
+    if set(values) != set(TUNING_FIELDS):
+        raise ValueError("tuning needs search, turn, approach, fine and tolerance")
+    word = 0
+    for name, (shift, _, low, high) in TUNING_FIELDS.items():
+        value = values[name]
+        if type(value) is not int or not low <= value <= high:
+            raise ValueError(f"{name} must be an integer in {low}..{high}")
+        word |= value << shift
+    if values["approach"] <= values["fine"]:
+        raise ValueError("approach speed must exceed fine speed")
+    return word
+
+
+def tune(session, *, defaults=False, **changes):
+    """Read parameters or commit one bounded word, with no mode/ARM/lease commands."""
+    if set(changes) - set(TUNING_FIELDS):
+        raise ValueError("unknown tuning parameter")
+    changes = {name: value for name, value in changes.items() if value is not None}
+    if defaults and changes:
+        raise ValueError("--defaults cannot be combined with parameter changes")
+    before = session.status(maintain_lease=False)
+    if not defaults and not changes:
+        return before
+    if not before.get("tuningSupported"):
+        raise RuntimeError("this firmware does not support runtime tuning; no write sent")
+    if (before["mode"] != "VISION_ONLY" or before["taskArmed"] or before["motionPermit"] or
+            before["leftCmS"] != 0 or before["rightCmS"] != 0 or not before["zeroSent"]):
+        raise RuntimeError("tuning requires VISION_ONLY, disarmed, zero wheel commands and zeroSent; no write sent")
+    desired = dict(TUNING_DEFAULTS if defaults else before["tuning"])
+    desired.update(changes)
+    payload = tuning_word(**desired)
+    session.tx(11, payload)
+    after = session.status(maintain_lease=False)
+    if not after.get("tuningSupported") or after["tuning"] != desired:
+        raise RuntimeError("tuning readback mismatch; write delivery or retention is unconfirmed")
+    if (after["mode"] != "VISION_ONLY" or after["taskArmed"] or after["motionPermit"] or
+            after["leftCmS"] != 0 or after["rightCmS"] != 0 or not after["zeroSent"]):
+        raise RuntimeError("stationary boundary changed after tuning; no start was sent")
+    if desired["search"] != before["tuning"]["search"] and after["scanCalibrated"]:
+        raise RuntimeError("search speed changed but scan calibration was not invalidated")
+    return after
 
 
 def observation_words(x=120, y=160, visible=True, quality=255, width=40, height=50,
@@ -46,6 +97,7 @@ def decode_status(words):
     # E7070005 reserves valid+4000 for a completed out-of-range echo pulse.
     # Older invalid+4000 records remain INVALID, not evidence of clear space.
     distance_far = distance_valid and distance == 4000
+    tuning_supported = words[13] & 0xffc00000 == 0xa1000000
     return {"mode": {0: "INTEGRATED", 1: "VISION_ONLY", 2: "CHASSIS_INJECT"}.get(mode, "INVALID"),
             "inputSource": "SYNTHETIC" if mode == 2 else "REAL_CAMERA",
             "switchMask": (words[0] >> 2) & 63, "stableMask": (words[0] >> 8) & 63,
@@ -79,6 +131,9 @@ def decode_status(words):
             "templateValid": bool(words[15] & (1 << 30)),
             "scanCalibrated": bool(words[15] & (1 << 29)),
             "framesEnabled": bool(words[15] & (1 << 28)),
+            "tuningSupported": tuning_supported,
+            "tuning": {name: (words[13] >> shift) & mask
+                       for name, (shift, mask, _, _) in TUNING_FIELDS.items()} if tuning_supported else None,
             "words": [f"0x{word:08x}" for word in words]}
 
 
@@ -379,6 +434,11 @@ def main(argv=None):
     scan = commands.add_parser("scan", help="set bounded turn duration; calibrated requires three measured trials")
     scan.add_argument("--seconds", type=float, required=True)
     scan.add_argument("--calibrated", action="store_true", help="affirm actual three-trial floor calibration, not simulation")
+    tuning = commands.add_parser("tune", help="read parameters; writes require stopped VISION_ONLY, no auto-start")
+    for name, (_, _, low, high) in TUNING_FIELDS.items():
+        tuning.add_argument("--" + name, type=int, metavar=f"{low}..{high}",
+                            help="pixels from U120" if name == "tolerance" else "logical cm/s")
+    tuning.add_argument("--defaults", action="store_true", help="restore 4/4/5/3 cm/s and +/-30 pixels; cannot mix with changes")
     shot = commands.add_parser("inject")
     shot.add_argument("--x", type=int, default=120)
     shot.add_argument("--y", type=int, default=160)
@@ -425,6 +485,14 @@ def main(argv=None):
                 observation_words(x=row.get("x", 120), y=row.get("y", 160), quality=row.get("quality", 255))
         if args.command == "scan" and not 1 <= args.seconds <= 120:
             raise ValueError("scan duration must be 1..120 seconds")
+        if args.command == "tune":
+            changes = {name: getattr(args, name) for name in TUNING_FIELDS if getattr(args, name) is not None}
+            if args.defaults and changes:
+                raise ValueError("--defaults cannot be combined with parameter changes")
+            for name, value in changes.items():
+                low, high = TUNING_FIELDS[name][2:]
+                if not low <= value <= high:
+                    raise ValueError(f"{name} must be in {low}..{high}")
         with Session(args) as session:
             if args.command == "mode":
                 session.tx(1, MODES[args.mode]); print(json.dumps(session.status(), indent=2))
@@ -433,6 +501,8 @@ def main(argv=None):
             elif args.command == "scan":
                 session.tx(9, round(args.seconds * 1_000_000))
                 session.tx(10, int(args.calibrated)); print(json.dumps(session.status(), indent=2))
+            elif args.command == "tune":
+                print(json.dumps(tune(session, defaults=args.defaults, **changes), indent=2))
             elif args.command == "status":
                 while True:
                     print(json.dumps(session.status()), flush=True)

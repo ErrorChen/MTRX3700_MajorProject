@@ -37,17 +37,28 @@ class VerilatorRunnerTests(unittest.TestCase):
             barriers.update({name: barrier for name in pair})
         activeSimulations = set()
         callsLock = threading.Lock()
+        firstPairRunning = threading.Event()
+        firstPrefetchStarted = threading.Event()
 
         def process(arguments, cwd, logPath, deadline):
             command = [str(value) for value in arguments]
             logPath = Path(logPath)
             name = Path(cwd).name
             simulation = logPath.name == "simulation.log"
+            # Make overlap deterministic without timing sleeps: the first
+            # simulations remain live until the first serial precompile starts.
+            if "--binary" in command and name == "tb_control_repair":
+                if not firstPairRunning.wait(timeout=5):
+                    raise RuntimeError("first pair did not overlap precompilation")
             with callsLock:
                 if simulation:
                     activeSimulations.add(name)
+                    if {"tb_pixel_uart_repair", "tb_sonar_guard"} <= activeSimulations:
+                        firstPairRunning.set()
                 calls.append({"arguments": command, "cwd": str(cwd), "log": str(logPath), "deadline": deadline,
                               "threadId": threading.get_ident(), "activeSimulations": len(activeSimulations)})
+            if "--binary" in command and name == "tb_control_repair":
+                firstPrefetchStarted.set()
             code = 0
             timedOut = False
             if logPath.name == "version.log":
@@ -73,6 +84,9 @@ class VerilatorRunnerTests(unittest.TestCase):
                 try:
                     if name in barriers:
                         barriers[name].wait(timeout=5)
+                    if name in ("tb_pixel_uart_repair", "tb_sonar_guard"):
+                        if not firstPrefetchStarted.wait(timeout=5):
+                            raise RuntimeError("runner waited for simulations instead of precompiling")
                     if name == "targetTracker_broken_lock":
                         code, text = 1, "%Error: Assertion failed: three-frame lock HOST_RUNNER_DOUBLE_ONLY\n"
                     elif name == failedScenario:
@@ -262,7 +276,13 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertEqual((len(compilations), len(simulations)), (len(suite.SUITE_NAMES), len(suite.SUITE_NAMES)+1))
             self.assertEqual(len({call["cwd"] for call in simulations}), len(simulations))
             self.assertEqual(max(call["activeSimulations"] for call in calls), 2)
-            self.assertTrue(all(call["activeSimulations"] == 0 for call in compilations))
+            overlapped = next(call for call in compilations if Path(call["cwd"]).name == "tb_control_repair")
+            self.assertEqual(overlapped["activeSimulations"], 2)
+            self.assertEqual(len({call["threadId"] for call in compilations}), 1)
+            self.assertEqual(result["compilerConcurrency"], 1)
+            self.assertEqual(result["compileSimulationOverlap"], "SERIAL_PRECOMPILE_DURING_FIRST_SIMULATION_PAIR")
+            self.assertEqual(len(result["prefetchedScenarios"]), len(suite.SUITE_NAMES)-2)
+            self.assertEqual(len(set(result["prefetchedScenarios"])), len(result["prefetchedScenarios"]))
             self.assertEqual(result["simulationConcurrency"], 2)
             self.assertEqual(result["parallelGroups"], [["tb_pixel_uart_repair", "tb_sonar_guard"],
                                                        ["perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"]])
@@ -323,7 +343,11 @@ class VerilatorRunnerTests(unittest.TestCase):
             failed = result["tests"][-1]
             self.assertEqual(failed["compiledBinary"]["reusedFrom"], "perceptionCoreContinuous_tb")
             self.assertIn("FAIL injected", (output / failed["name"] / "simulation.log").read_text())
-            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), beforeFailure)
+            # Precompilation may finish later binaries, but no simulation after
+            # the failed pair is permitted to run or acquire a PASS verdict.
+            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), len(suite.SUITE_NAMES))
+            simulations = [call for call in calls if Path(call["log"]).name == "simulation.log"]
+            self.assertEqual(len(simulations), beforeFailure+1)
 
     def testSonarFailureCannotBecomeCoursePass(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -335,14 +359,15 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertEqual(result["tests"][-1]["status"], "FAIL")
             self.assertIn("FAIL injected", (output / "tb_sonar_guard/simulation.log").read_text())
 
-    def testPixelFailureRetainsBothIndependentVerdictsAndStopsLaterWork(self):
+    def testPixelFailureRetainsBothIndependentVerdictsAndStopsLaterSimulations(self):
         with tempfile.TemporaryDirectory() as folder:
             output = Path(folder) / "failed pixel"
             exitCode, result, calls = self.runHostDouble(output, "tb_pixel_uart_repair")
             self.assertEqual((exitCode, result["status"]), (1, "FAIL"))
             self.assertEqual([(item["name"], item["status"]) for item in result["tests"]],
                              [("tb_pixel_uart_repair", "FAIL"), ("tb_sonar_guard", "PASS")])
-            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), 2)
+            self.assertEqual(sum(Path(call["log"]).name == "simulation.log" for call in calls), 2)
+            self.assertFalse(any(item["name"] == "targetTracker_broken_lock" for item in result["tests"]))
             for name in ("tb_pixel_uart_repair", "tb_sonar_guard"):
                 self.assertTrue((output / name / "simulation.log").is_file())
 
@@ -368,6 +393,20 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertFalse(any(Path(call["log"]).name == "simulation.log" for call in calls))
             self.assertEqual(len(result["compilations"]), 1)
             self.assertIn("FAIL injected", (output / "tb_sonar_guard/compile.log").read_text())
+
+    def testOverlappedCompileFailureRetainsFirstPairAndNeverInventsMutationCatch(self):
+        with tempfile.TemporaryDirectory() as folder:
+            for name in ("tb_control_repair", "targetTracker_broken_lock"):
+                with self.subTest(scenario=name):
+                    output = Path(folder) / name
+                    exitCode, result, calls = self.runHostDouble(output, failedCompile=name)
+                    self.assertEqual((exitCode, result["status"], result["targetMet"]), (1, "FAIL", False))
+                    self.assertEqual([(item["name"], item["status"]) for item in result["tests"]],
+                                     [("tb_pixel_uart_repair", "PASS"), ("tb_sonar_guard", "PASS")])
+                    self.assertIn(name + " compilation failed", result["error"])
+                    self.assertIn("FAIL injected", (output / name / "compile.log").read_text())
+                    self.assertEqual(sum(Path(call["log"]).name == "simulation.log" for call in calls), 2)
+                    self.assertNotIn("CAUGHT", [item["status"] for item in result["tests"]])
 
 
 if __name__ == "__main__":
