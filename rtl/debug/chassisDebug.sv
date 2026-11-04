@@ -14,6 +14,7 @@ module chassisDebug #(
  output logic scanCalibrated,
  output logic [31:0] scanBudgetUs,
  output logic [31:0] tuningWord,
+ output logic [31:0] alignTimingWord,
  output logic [31:0] observation0,observation1,
  output logic templateValid
 );
@@ -40,6 +41,12 @@ module chassisDebug #(
    sourceWord[11:8]>=4 && sourceWord[11:8]<=8 &&
    sourceWord[15:12]>=3 && sourceWord[15:12]<=4 && sourceWord[11:8]>sourceWord[15:12] &&
    sourceWord[21:16]>=10 && sourceWord[21:16]<=40;
+ // Timing values are 10 ms units. Kick and total duration are independent:
+ // the controller truncates an enabled kick at the selected total duration.
+ wire pulsePayloadValid=sourceWord[31:18]==0 && sourceWord[3:0]<=10 &&
+   sourceWord[8:4]>=2 && sourceWord[8:4]<=30 &&
+   sourceWord[13:9]>=sourceWord[8:4] && sourceWord[13:9]<=30 &&
+   sourceWord[17:14]>=3 && sourceWord[17:14]<=8;
  always_comb begin
    selectedWord=0;
    if(stableSource[55:48]<16) selectedWord=frozenWords[stableSource[51:48]*32+:32];
@@ -50,6 +57,7 @@ module chassisDebug #(
      ackToggle<=0;errorCode<=0;mode<=0;modeChanged<=0;debugStart<=0;debugStop<=0;
      leaseSeen<=0;heartbeatUs<=0;scanCalibrated<=0;scanBudgetUs<=10000000;
      tuningWord<=32'h001e3544; // search4, turn4, approach5, fine3, tolerance30
+     alignTimingWord<=32'h00015420; // kick0, total20..100 ms, kick speed5
      stage0<=0;stage1<=0;staged<=0;observation0<=0;observation1<=0;templateValid<=0;frozenWords<=0;
    end else begin
      modeChanged<=0;debugStart<=0;debugStop<=0;
@@ -73,7 +81,8 @@ module chassisDebug #(
                  frozenWords<=statusWords;
                  frozenWords[13*32+:32]<={8'ha1,2'b0,tuningWord[21:0]};
                  frozenWords[14*32+:32]<=leaseAgeUs;
-                 frozenWords[15*32+:32]<={injectLeaseValid,templateValid,scanCalibrated,observation0[20],26'd0,mode};
+                 frozenWords[15*32+:32]<={injectLeaseValid,templateValid,scanCalibrated,observation0[20],
+                   8'ha2,alignTimingWord[17:0],mode};
                end
              3: if(mode==1 || (mode==2 && (!injectLeaseValid || !templateValid)))errorCode<=3;
                 else debugStart<=1;
@@ -98,6 +107,9 @@ module chassisDebug #(
                    // turn duration. Other fields do not change that basis.
                    if(sourceWord[3:0]!=tuningWord[3:0])scanCalibrated<=0;
                  end
+             12: if(!tuneStationary)errorCode<=5;
+                 else if(!pulsePayloadValid)errorCode<=2;
+                 else begin alignTimingWord<=sourceWord[31:0];debugStop<=1;end
              default:errorCode<=1;
            endcase
          end

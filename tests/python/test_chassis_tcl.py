@@ -10,7 +10,7 @@ import echo7
 
 
 class ChassisTclTests(unittest.TestCase):
-    def invoke(self, build_id=0xe7070011):
+    def invoke(self, build_id=0xe7070012):
         tool = echo7.discover("quartus_sh")
         echo7.WORK.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=echo7.WORK, prefix="cctl_tuning_tcl_") as folder:
@@ -51,7 +51,7 @@ close $trace
                               ("SCRIPT", echo7.ROOT / "tools/tcl/chassis_session.tcl")):
                 fixture = fixture.replace(key, "{" + path.as_posix() + "}")
             driver.write_text(fixture, encoding="utf-8")
-            run = subprocess.run([tool, "-t", str(driver)], input="1\tTX\t11\t1979716\n2\tTX\t12\t0\n3\tQUIT\n",
+            run = subprocess.run([tool, "-t", str(driver)], input="1\tTX\t11\t1979716\n2\tTX\t12\t87072\n3\tTX\t13\t0\n4\tQUIT\n",
                                  text=True, capture_output=True, timeout=20)
             replies = response.read_text(encoding="utf-8") if response.exists() else ""
             trace = (folder / "writes.txt").read_text() if (folder / "writes.txt").exists() else ""
@@ -61,9 +61,10 @@ close $trace
         code, replies, trace, log = self.invoke()
         self.assertEqual(code, 0, log)
         self.assertIn("CCTL_OK\t1\t0", replies)
-        self.assertIn("CCTL_ERROR\t2\tinvalid TX arguments", replies)
-        self.assertIn("CCTL_OK\t3\tBYE", replies)
-        self.assertEqual(trace.strip(), "11")
+        self.assertIn("CCTL_OK\t2\t0", replies)
+        self.assertIn("CCTL_ERROR\t3\tinvalid TX arguments", replies)
+        self.assertIn("CCTL_OK\t4\tBYE", replies)
+        self.assertEqual(trace.strip(), "11 12")
 
     def test_unknown_build_family_rejected_before_any_write(self):
         code, replies, trace, log = self.invoke(0x12340011)

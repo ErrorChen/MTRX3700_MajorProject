@@ -15,7 +15,7 @@ module motion_fsm #(
  input logic sourceHealthyFresh,targetObserved,motionTargetValid,distance_valid,
  input logic scanAllowed,zeroSent,motionApplied,
  input logic [31:0] timeUs,scanBudgetUs,
- input logic [31:0] tuningWord,
+ input logic [31:0] tuningWord,alignTimingWord,
  input logic [7:0] centreU,input logic [11:0] distance_mm,
  output logic signed [6:0] left_cm_s,right_cm_s,
  output logic [3:0] state,
@@ -34,17 +34,26 @@ module motion_fsm #(
  localparam int FINE_STEER=(FINE_STEER_CM_S>=3 && FINE_STEER_CM_S<=5)?FINE_STEER_CM_S:0;
  // CCTL only changes this word while stationary. Keep the runtime datapath
  // narrow; an invalid word also inhibits every wheel request at this boundary.
- wire tuningValid;
+ wire tuningValid,alignTimingValid;
  wire signed [6:0] searchTurn,coarseTurn,fineTurn,driveSpeed,fineSpeed,fineSteerSpeed;
+ wire signed [6:0] kickTurn;
+ wire [16:0] requestedKickUs;
  wire [7:0] alignLowBound,alignHighBound;
  generate
    if(RUNTIME_TUNING)begin: runtimeTuning
      wire [3:0] searchValue=tuningWord[3:0],turnValue=tuningWord[7:4];
      wire [3:0] driveValue=tuningWord[11:8],fineValue=tuningWord[15:12];
      wire [5:0] tolerance=tuningWord[21:16];
+     wire [3:0] kickUnits=alignTimingWord[3:0],kickValue=alignTimingWord[17:14];
+     wire [4:0] minimumUnits=alignTimingWord[8:4],maximumUnits=alignTimingWord[13:9];
      wire signed [6:0] searchMagnitude={3'd0,searchValue};
      wire signed [6:0] turnMagnitude={3'd0,turnValue};
-     assign tuningValid=tuningWord[31:22]==0 &&
+     wire signed [6:0] kickMagnitude={3'd0,kickValue};
+     wire [16:0] kickWide={13'd0,kickUnits};
+     assign alignTimingValid=alignTimingWord[31:18]==0 && kickUnits<=10 &&
+       minimumUnits>=2 && minimumUnits<=30 && maximumUnits>=minimumUnits && maximumUnits<=30 &&
+       kickValue>=3 && kickValue<=8;
+     assign tuningValid=alignTimingValid && tuningWord[31:22]==0 &&
        searchValue>=3 && searchValue<=5 && turnValue>=3 && turnValue<=5 &&
        driveValue>=4 && driveValue<=8 && fineValue>=3 && fineValue<=4 &&
        driveValue>fineValue && tolerance>=10 && tolerance<=40 &&
@@ -52,6 +61,9 @@ module motion_fsm #(
      assign searchTurn=TURN_SIGN==-1?-searchMagnitude:searchMagnitude;
      assign coarseTurn=TURN_SIGN==-1?-turnMagnitude:turnMagnitude;
      assign fineTurn=TURN_SIGN==-1?-7'sd3:7'sd3;
+     assign kickTurn=TURN_SIGN==-1?-kickMagnitude:kickMagnitude;
+     // 10 ms units, max 100 ms; shifts keep this off a wide variable multiplier.
+     assign requestedKickUs=(kickWide<<13)+(kickWide<<10)+(kickWide<<9)+(kickWide<<8)+(kickWide<<4);
      assign driveSpeed={3'd0,driveValue};
      assign fineSpeed={3'd0,fineValue};
      assign fineSteerSpeed={3'd0,fineValue}+7'd1;
@@ -59,9 +71,12 @@ module motion_fsm #(
      assign alignHighBound=8'd120+{2'd0,tolerance};
    end else begin: fixedTuning
      assign tuningValid=1'b1;
+     assign alignTimingValid=1'b1;
      assign searchTurn=7'(TURN);
      assign coarseTurn=7'(TURN);
      assign fineTurn=7'(FINE_TURN);
+     assign kickTurn=7'sd0;
+     assign requestedKickUs=17'd0;
      assign driveSpeed=7'(DRIVE);
      assign fineSpeed=7'(FINE);
      assign fineSteerSpeed=7'(FINE_STEER);
@@ -80,7 +95,9 @@ module motion_fsm #(
  logic [1:0] backtrackSteps;
  logic alignTurn,alignLow;
  logic signed [6:0] alignSpeed;
+ logic signed [6:0] alignKickSpeed;
  logic [31:0] alignPulseUs;
+ logic [16:0] alignKickUs;
  wire [31:0] deltaUs=timeUs-lastTimeUs;
  // The fixed branch retains the original full-width parameter comparisons.
  wire centred=RUNTIME_TUNING ? centreU>=alignLowBound && centreU<=alignHighBound :
@@ -88,7 +105,20 @@ module motion_fsm #(
  wire belowAlign=RUNTIME_TUNING ? centreU<alignLowBound : centreU<ALIGN_LOW;
  wire [31:0] alignErrorPixels,nextAlignPulseUs;
  generate
-   if((RUNTIME_TUNING || ALIGN_LOW+ALIGN_HIGH==240) && ALIGN_US_PER_PIXEL==2000 &&
+   if(RUNTIME_TUNING)begin: runtimeAlignMath
+     // Convert 10 ms limits into 2 ms units before clamping. All U values,
+     // including the default 20..100 ms profile, use narrow shift/add math.
+     wire [7:0] errorPixels=centreU < 8'd120 ? 8'd120-centreU : centreU-8'd120;
+     wire [7:0] minUnitsWide={3'd0,alignTimingWord[8:4]};
+     wire [7:0] maxUnitsWide={3'd0,alignTimingWord[13:9]};
+     wire [7:0] minPixels=(minUnitsWide<<2)+minUnitsWide;
+     wire [7:0] maxPixels=(maxUnitsWide<<2)+maxUnitsWide;
+     wire [7:0] boundedPixels=errorPixels<minPixels?minPixels:errorPixels>maxPixels?maxPixels:errorPixels;
+     wire [18:0] pixelsWide={11'd0,boundedPixels};
+     wire [18:0] scaledPulseUs=(pixelsWide<<11)-(pixelsWide<<5)-(pixelsWide<<4);
+     assign alignErrorPixels={24'd0,errorPixels};
+     assign nextAlignPulseUs=centred?32'd0:{13'd0,scaledPulseUs};
+   end else if(ALIGN_LOW+ALIGN_HIGH==240 && ALIGN_US_PER_PIXEL==2000 &&
       ALIGN_MIN_PULSE_US==20000 && ALIGN_MAX_PULSE_US==100000)begin: boundedAlignMath
      // Exact default mapping for all 256 U values. Clamp before scaling so
      // the report/fence mux does not feed a pair of serial 32-bit DSPs.
@@ -125,6 +155,8 @@ module motion_fsm #(
    (alignLow ? centreU>=alignLowBound : centreU<=alignHighBound) :
    (alignLow ? centreU>=ALIGN_LOW : centreU<=ALIGN_HIGH);
  wire alignExpired=timeUs-stateStartUs>=alignPulseUs;
+ wire signed [6:0] appliedAlignSpeed=timeUs-stateStartUs<{15'd0,alignKickUs}?alignKickSpeed:alignSpeed;
+ wire [16:0] nextKickUs=nextAlignPulseUs<{15'd0,requestedKickUs}?nextAlignPulseUs[16:0]:requestedKickUs;
  wire safeRange=distance_valid && distance_mm>SAFETY_MM && !safetyHalt;
  wire budgetDone=scanElapsedUs>=scanBudgetUs || scanBudgetUs==0;
  wire backtrackExpired=backtracking && timeUs-stateStartUs>=BACKTRACK_PULSE_US;
@@ -134,7 +166,7 @@ module motion_fsm #(
    if(reset)begin
      state<=IDLE;taskStartUs<=0;stateStartUs<=0;settleStartUs<=0;lastTimeUs<=0;
      acquirePhase<=0;acquireFencePulse<=0;scanElapsedUs<=0;finalAcquire<=0;failureReason<=0;
-     alignTurn<=0;alignLow<=0;alignSpeed<=0;alignPulseUs<=0;
+     alignTurn<=0;alignLow<=0;alignSpeed<=0;alignPulseUs<=0;alignKickSpeed<=0;alignKickUs<=0;
      backtracking<=0;backtrackAuthorized<=0;backtrackSteps<=0;stationaryRecoveryRequired<=0;
    end else begin
      acquireFencePulse<=0;lastTimeUs<=timeUs;
@@ -158,6 +190,7 @@ module motion_fsm #(
        if(motionTargetValid)begin
          state<=approachEntry?APPROACH:ALIGN;alignTurn<=!centred;alignLow<=belowAlign;
          alignSpeed<=(alignErrorPixels<=ALIGN_FINE_ERROR)?fineTurn:coarseTurn;alignPulseUs<=nextAlignPulseUs;
+         alignKickSpeed<=kickTurn;alignKickUs<=nextKickUs;
        end
        else if(!scanAllowed)begin state<=NOT_FOUND;failureReason<=3;end
        else if(targetObserved)begin state<=ACQUIRE;acquirePhase<=0;end
@@ -194,6 +227,7 @@ module motion_fsm #(
              if(motionTargetValid && !acquireFencePulse)begin
                state<=approachEntry?APPROACH:ALIGN;stateStartUs<=timeUs;alignTurn<=!centred;alignLow<=belowAlign;
                alignSpeed<=(alignErrorPixels<=ALIGN_FINE_ERROR)?fineTurn:coarseTurn;alignPulseUs<=nextAlignPulseUs;
+               alignKickSpeed<=kickTurn;alignKickUs<=nextKickUs;
                backtrackAuthorized<=0;backtracking<=0;stationaryRecoveryRequired<=0;
              end
              else if(timeUs-stateStartUs>=ACQUIRE_TIMEOUT_US)begin
@@ -252,8 +286,8 @@ module motion_fsm #(
        left_cm_s=backtracking?searchTurn:-searchTurn;right_cm_s=-left_cm_s;
      end
      else if(state==ALIGN && motionTargetValid && alignTurn && !alignExpired && !alignCrossed)begin
-       if(alignLow)begin left_cm_s=-alignSpeed;right_cm_s=alignSpeed;end
-       else begin left_cm_s=alignSpeed;right_cm_s=-alignSpeed;end
+       if(alignLow)begin left_cm_s=-appliedAlignSpeed;right_cm_s=appliedAlignSpeed;end
+       else begin left_cm_s=appliedAlignSpeed;right_cm_s=-appliedAlignSpeed;end
      end else if(state==APPROACH && motionTargetValid && approachTrackable && distance_mm>DOCK_STOP_MM)begin
        if(centred)begin
          left_cm_s=distance_mm<=FINE_MM?fineSpeed:driveSpeed;right_cm_s=left_cm_s;

@@ -25,7 +25,7 @@ module memberCBoard #(
     input wire [5:0] SW,
     input logic [1:0] mode,
     input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
-    input logic [31:0] scanBudgetUs,tuningWord,
+    input logic [31:0] scanBudgetUs,tuningWord,alignTimingWord,
     output logic [511:0] statusWords,
     // Internal public v3 link to perceptionCore, all synchronous to CLOCK_50.
     input logic [31:0] timeUs,
@@ -154,7 +154,7 @@ module memberCBoard #(
       .ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US)) control_u(
       .clk(CLOCK_50),.reset(reset50),.power_frame(power_frame),.estop_frame(estop_frame),
       .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
-      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),.tuningWord(tuningWord),
+      .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),
       .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
       .rawMode(rawMode),.injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),
       .distanceSample(sample_pulse),.zeroSent(zeroSent),.uartBusy(chassis_busy),.statusWords(controlStatusWords),

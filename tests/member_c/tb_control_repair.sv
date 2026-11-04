@@ -11,6 +11,10 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  logic debugStart=0,debugStop=0,modeChanged=0,rawMode=0,injectLeaseValid=1,scanCalibrated=0,visualStart=0;
  logic [31:0] scanBudgetUs=100000;
  logic [31:0] tuningWord=RUNTIME_TUNING?(STRICT_ALIGN_BAND?32'h000a3544:32'h001e3544):32'hxxxxxxxx;
+ logic [31:0] alignTimingWord=RUNTIME_TUNING?32'h00015420:32'hxxxxxxxx;
+ logic [7:0] timingProbeU=0;
+ logic [31:0] timingProbeWord=32'h00015420;
+ wire [31:0] dutPulseMathWidth;
  logic cameraFifoFault=0,cameraAbandonEvent=0;
  perceptionStatus_t status;
  targetRequest_t req,held;
@@ -46,15 +50,15 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  localparam string HIGH_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.05}\n" : "{\"T\":1,\"L\":-0.05,\"R\":-0.03}\n";
  localparam string LOW_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n" : "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n";
  localparam string HIGH_FINE_STEER_JSON=TURN_SIGN==-1 ? "{\"T\":1,\"L\":-0.03,\"R\":-0.04}\n" : "{\"T\":1,\"L\":-0.04,\"R\":-0.03}\n";
- string lines[0:511];
- // Default follows the E7070011 runtime-enabled production top; +1 remains an explicit
+ string lines[0:1023];
+ // Default follows the E7070012 runtime-enabled production top; +1 remains an explicit
  // generic convention regression, not the corrected hardware configuration.
  member_c_control #(.RUNTIME_TUNING(RUNTIME_TUNING),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(TEST_ALIGN_LOW),.ALIGN_HIGH(TEST_ALIGN_HIGH),
    .SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
    .ACQUIRE_TIMEOUT_US(20000),.LOST_WAIT_US(1000),.TASK_TIMEOUT_US(2000000)) dut(
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),.selection(selection),
    .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),.rawMode(rawMode),
-   .injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),
+   .injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),
    .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.status(status),
    .targetRequest(req),.targetRequestValid(qv),.targetRequestReady(qr),
    .targetReport(rpt),.targetReportValid(rv),.targetReportReady(rr),
@@ -62,6 +66,19 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    .zeroSent(zeroSent),.uartBusy(uartBusy),.left_cm_s(l),.right_cm_s(r),
    .permit(permit),.used(used),.estop(estop),.sonar_stop(sonar_stop),.motionTargetValid(motionTargetValid),
    .motionState(state),.stop_reason(reason),.statusWords(statusWords));
+ // Independent combinational probe checks the optimized runtime arithmetic
+ // against full-width reference multiplication over every possible U.
+ motion_fsm #(.RUNTIME_TUNING(1),.TURN_SIGN(TURN_SIGN)) timingProbe(
+   .clk(clk),.reset(reset),.startPulse(1'b0),.cancel(1'b0),.taskActive(1'b0),.safetyHalt(1'b0),
+   .sourceHealthyFresh(1'b0),.targetObserved(1'b0),.motionTargetValid(1'b0),.distance_valid(1'b0),
+   .scanAllowed(1'b0),.zeroSent(1'b0),.motionApplied(1'b0),.timeUs(32'd0),.scanBudgetUs(32'd0),
+   .tuningWord(32'h001e3544),.alignTimingWord(timingProbeWord),.centreU(timingProbeU),.distance_mm(12'd0),
+   .left_cm_s(),.right_cm_s(),.state(),.acquireFencePulse(),.taskDone(),.scanElapsedUs(),.scanRemainingUs(),.failureReason());
+ generate if(RUNTIME_TUNING)begin: runtimeMathWidth
+   assign dutPulseMathWidth=$bits(dut.motion.runtimeAlignMath.scaledPulseUs);
+ end else begin: legacyMathWidth
+   assign dutPulseMathWidth=$bits(dut.motion.boundedAlignMath.scaledPulseUs);
+ end endgenerate
  chassis_command #(.CLKS_PER_BIT(4),.PERIOD_CLKS(10000),.USE_WHEEL_REQUESTS(1)) uart(
    .clk(clk),.reset(reset),.armed(permit),.left_cm_s(-l),.right_cm_s(-r),
    .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(uartBusy),.zeroSent(zeroSent));
@@ -139,15 +156,23 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    @(negedge clk);tuningWord={10'd0,6'(tolerance),4'(fine),4'(drive),4'(turn),4'(search)};tick(3);
    ck(dut.motion.tuningValid,"valid runtime tuple accepted by controller datapath");
  endtask
+ task automatic configureTiming(input int kickUnits,input int minUnits,input int maxUnits,input int kickSpeed);
+   stopTask();wait(zeroSent && !uartBusy);
+   @(negedge clk);alignTimingWord={14'd0,4'(kickSpeed),5'(maxUnits),5'(minUnits),4'(kickUnits)};tick(3);
+   ck(dut.motion.alignTimingValid && dut.motion.tuningValid,"valid two-stage timing tuple accepted while stopped");
+ endtask
  task automatic runtimeStart(input int u,input int mm,input int expectedL,input int expectedR,input string label);
    stopTask();wait(zeroSent && !uartBusy);distance_mm=12'(mm);samples();fresh(1,u);
    allowRuntimeWheels(expectedL,expectedR);arm();verifyRuntimeWheels(expectedL,expectedR,label);
  endtask
- task automatic pulseEnd(input int expectedUs);
+ task automatic pulseEnd(input int expectedUs,input int refreshU=-1);
    logic[31:0] began,taskStart,spent;
    int remainingUs;
    began=dut.motion.stateStartUs;taskStart=dut.motion.taskStartUs;spent=dut.scanElapsedUs;
    remainingUs=expectedUs-int'(timeUs-began)-1;
+   while(refreshU>=0 && remainingUs>100000)begin
+     tick(80000);send(1,refreshU);remainingUs=expectedUs-int'(timeUs-began)-1;
+   end
    ck(remainingUs>0,"pulse boundary checked before expiry");
    tick(remainingUs);ck(permit && state==2,"turn remains permitted just before latched pulse limit");
    tick();stopped("pulse deadline gates logical wheels without waiting for next state edge");
@@ -188,7 +213,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
      for(int b=0;b<8;b++)begin #80;ch[b]=tx;end
      #80;if(tx!==1)$fatal(1,"UART stop bit");line={line,ch};
      if(ch==10)begin
-       if(lineCount>=512)$fatal(1,"UART capture capacity exceeded");
+       if(lineCount>=1024)$fatal(1,"UART capture capacity exceeded");
        lines[lineCount]=line;
        lineCount++;
        if(line=="{\"T\":1,\"L\":0.00,\"R\":0.00}\n")zeroLines++;
@@ -509,7 +534,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
      end
      tick(2500);stopTask();
    end
-   ck($bits(dut.motion.boundedAlignMath.scaledPulseUs)==17,"production and legacy centre120 bands retain the narrow arithmetic fast path");
+   ck(dutPulseMathWidth==(RUNTIME_TUNING?19:17),"runtime and legacy pulse arithmetic retain bounded narrow widths");
    if(!STRICT_ALIGN_BAND)ck(lowFineTurnLines==0 && highFineTurnLines==0,"expanded production centre band does not invent fine pivots within tolerance");
 
    // Ordinary approach/alignment acquisition must never invent a SEARCH
@@ -652,8 +677,100 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
      configureTuning(4,4,5,3,30);fresh(1,30);arm();
      @(negedge clk);tuningWord=0;#1;stopped("invalid word also gates latched ALIGN speed");
      configureTuning(4,4,5,3,30);stopped("restoring tuning while stopped cannot ARM");
+
+     // The default profile must preserve E11 for all 256 input U values;
+     // other profiles exercise the full 300 ms cap and minimum clamp.
+     for(int profile=0;profile<3;profile++)begin
+       int minUs,maxUs;
+       case(profile)
+         0:begin timingProbeWord=32'h00015420;minUs=20000;maxUs=100000;end
+         1:begin timingProbeWord={14'd0,4'd8,5'd30,5'd2,4'd10};minUs=20000;maxUs=300000;end
+         2:begin timingProbeWord={14'd0,4'd3,5'd30,5'd30,4'd1};minUs=300000;maxUs=300000;end
+       endcase
+       for(int u=0;u<256;u++)begin
+         int expectedPulse;
+         @(negedge clk);timingProbeU=8'(u);#1;
+         expectedPulse=(u<120?120-u:u-120)*2000;
+         if(expectedPulse<minUs)expectedPulse=minUs;
+         if(expectedPulse>maxUs)expectedPulse=maxUs;
+         if(u>=90 && u<=150)expectedPulse=0;
+         ck(timingProbe.nextAlignPulseUs==32'(expectedPulse),"runtime pulse arithmetic matches full-width reference over every U");
+       end
+     end
+
+     // A real complete kick JSON must precede a complete lower-speed JSON,
+     // with direction, speed and total time latched for this one pulse.
+     configureTuning(3,4,5,3,30);configureTiming(2,10,20,8);
+     runtimeStart(30,1000,-8*TURN_SIGN,8*TURN_SIGN,"20 ms kick uses independent upper speed bound8");
+     begin logic[31:0] began;int untilKickEnd;
+       began=dut.motion.stateStartUs;
+       ck(dut.motion.alignPulseUs==180000 && dut.motion.alignKickUs==20000,"2 ms per pixel selects180 ms total and20 ms kick");
+       @(negedge clk);alignTimingWord=32'h00015420;tuningWord[7:4]=3;tick(3);
+       ck(dut.motion.alignPulseUs==180000 && dut.motion.alignKickUs==20000 && dut.motion.alignSpeed==4*TURN_SIGN && dut.motion.alignKickSpeed==8*TURN_SIGN,
+         "valid input changes cannot alter any in-flight phase latch");
+       untilKickEnd=20000-int'(timeUs-began)-1;ck(untilKickEnd>0,"kick deadline checked before phase boundary");
+       tick(untilKickEnd);ck(l==-8*TURN_SIGN && r==8*TURN_SIGN,"kick stays active immediately before its deadline");
+       tick();ck(l==-4*TURN_SIGN && r==4*TURN_SIGN && state==2,"kick deadline changes directly to latched cruise without reversing or restarting");
+       verifyRuntimeWheels(-4*TURN_SIGN,4*TURN_SIGN,"complete cruise4 UART follows complete kick8 UART");
+       pulseEnd(180000,30);
+       tick(2500);ck(zeroSent && state==6,"two-stage turn completes zero UART and stays in acquisition");
+     end
+     configureTuning(3,4,5,3,30);configureTiming(0,30,30,3);
+     runtimeStart(210,1000,4*TURN_SIGN,-4*TURN_SIGN,"disabled kick begins directly with high-side cruise4");
+     ck(dut.motion.alignPulseUs==300000 && dut.motion.alignKickUs==0,"maximum total300 ms and disabled kick are exact");
+     pulseEnd(300000,210);
+     configureTiming(10,2,2,5);
+     runtimeStart(210,1000,5*TURN_SIGN,-5*TURN_SIGN,"high-side kick uses its own signed speed");
+     ck(dut.motion.alignPulseUs==20000 && dut.motion.alignKickUs==20000,"100 ms requested kick truncates to20 ms total");
+     pulseEnd(20000);
+
+     // Every stop condition must interrupt both the kick and cruise phases.
+     // Each restoration remains disarmed and zero; no old kick is replayed.
+     for(int phase=0;phase<2;phase++)begin
+       for(int kill=0;kill<7;kill++)begin
+         configureTiming(2,10,20,5);
+         runtimeStart(30,1000,-5*TURN_SIGN,5*TURN_SIGN,"fresh two-stage turn starts with bounded kick5");
+         if(phase==1)begin
+           tick(20001-int'(timeUs-dut.motion.stateStartUs));
+           verifyRuntimeWheels(-4*TURN_SIGN,4*TURN_SIGN,"kill test reaches cruise before interruption");
+         end
+         case(kill)
+           0:begin debugStop=1;#1;stopped("STOP immediately interrupts either ALIGN phase");tick(2);debugStop=0;end
+           1:begin estop_frame=1;#1;stopped("IR immediately interrupts either ALIGN phase");tick(2);estop_frame=0;end
+           2:begin distance_mm=240;#1;stopped("near J3 immediately interrupts either ALIGN phase");tick(2);end
+           3:begin send();stopped("target loss interrupts either ALIGN phase");end
+           4:begin status.perceptionReady=0;#1;stopped("unhealthy source immediately interrupts either ALIGN phase");tick(2);end
+           5:begin send(1,120);stopped("centre crossing stops either phase instead of applying the next phase");end
+           6:begin wait(!uartBusy);reset=1;#1;stopped("reset immediately interrupts either ALIGN phase");tick(3);reset=0;tick(20);end
+         endcase
+         stopTask();wait(zeroSent && !uartBusy);
+         reset=1;tick(3);reset=0;status.perceptionReady=1;distance_mm=1000;tick(20);samples();fresh(1,30);tick(2500);
+         stopped("restored safety/source after cancellation cannot replay a kick");
+         ck(!dut.taskActive && dut.motion.alignKickUs==0 && dut.motion.alignKickSpeed==0,"reset clears phase latches and leaves task disarmed");
+       end
+     end
+     configureTiming(0,2,10,5);fresh();arm();
+     begin logic[31:0] invalidWord,spent;
+       for(int invalidCase=0;invalidCase<9;invalidCase++)begin
+         invalidWord=32'h00015420;
+         case(invalidCase)
+           0:invalidWord[3:0]=11;1:invalidWord[8:4]=1;2:invalidWord[8:4]=31;
+           3:invalidWord[13:9]=1;4:invalidWord[13:9]=31;5:invalidWord[8:4]=11;
+           6:invalidWord[17:14]=2;7:invalidWord[17:14]=9;8:invalidWord[18]=1;
+         endcase
+         @(negedge clk);alignTimingWord=invalidWord;#1;stopped("invalid timing word gates SEARCH immediately");
+         tick(2);spent=dut.scanElapsedUs;tick(3);
+         ck(!dut.motion.alignTimingValid && !dut.motion.tuningValid && dut.scanElapsedUs==spent,"invalid timing cannot charge or permit scan movement");
+       end
+     end
+     configureTiming(0,2,10,5);runtimeStart(120,1000,5,5,"valid timing retains ordinary forward approach");
+     @(negedge clk);alignTimingWord=0;#1;stopped("invalid timing also gates live forward approach");
+     configureTiming(2,10,20,5);runtimeStart(30,1000,-5*TURN_SIGN,5*TURN_SIGN,"valid timing restores kick only after explicit new task");
+     @(negedge clk);alignTimingWord=0;#1;stopped("invalid timing immediately gates a latched kick");
+     configureTiming(0,2,10,5);configureTuning(4,4,5,3,30);stopped("restored default timing never arms the controller");
    end else if(!RUNTIME_TUNING)begin
      ck(dut.motion.tuningValid,"legacy parameter path ignores even an unknown omitted runtime word");
+     ck(dut.motion.alignTimingValid && dut.motion.alignKickUs==0,"legacy parameter path ignores unknown timing input and has no kick");
    end
    tick(2500);ck(zeroLines>0 && zeroSent,"completed UART zero observed separately from logical stop");
    $display("PASS: tb_control_repair TURN_SIGN=%0d STRICT_ALIGN_BAND=%0d RUNTIME_TUNING=%0d checks=%0d UART lines=%0d spin=%0d drive=%0d zero=%0d low=%0d high=%0d fineLow=%0d fineHigh=%0d steerLow=%0d steerHigh=%0d fineSteerLow=%0d fineSteerHigh=%0d runtime=%0d",TURN_SIGN,STRICT_ALIGN_BAND,RUNTIME_TUNING,checks,lineCount,spinLines,driveLines,zeroLines,lowTurnLines,highTurnLines,lowFineTurnLines,highFineTurnLines,lowSteerLines,highSteerLines,lowFineSteerLines,highFineSteerLines,runtimeLines);$finish;

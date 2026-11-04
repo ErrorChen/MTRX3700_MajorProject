@@ -139,7 +139,7 @@ module echo7IntegratedTop #(
     wire syntheticRequestReady,syntheticReportValid;
     wire [1:0] controlMode;
     wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
-    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord;
+    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord;
     wire [511:0] chassisStatusWords;
     assign requestReady=!modeChanged && (controlMode==2 ? syntheticRequestReady : realRequestReady);
     assign targetReport=controlMode==2 ? syntheticReport : realReport;
@@ -150,7 +150,8 @@ module echo7IntegratedTop #(
         .clk(CLOCK_50),.reset(reset50),.timeUs(timeUs),.statusWords(chassisStatusWords),
         .mode(controlMode),.modeChanged(modeChanged),.debugStart(debugStart),.debugStop(debugStop),
         .injectLeaseValid(injectLeaseValid),.leaseAgeUs(leaseAgeUs),.scanCalibrated(scanCalibrated),
-        .scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.observation0(observation0),.observation1(observation1),.templateValid(templateValid));
+        .scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),
+        .observation0(observation0),.observation1(observation1),.templateValid(templateValid));
     syntheticPerception syntheticSource(
         .clk(CLOCK_50),.reset(reset50),.enabled(controlMode==2),.sourceChanged(modeChanged),
         .leaseValid(injectLeaseValid),.templateValid(templateValid),.timeUs(timeUs),
@@ -216,7 +217,8 @@ module echo7IntegratedTop #(
         .mode(controlMode),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
         .visualStart(visualStart),
         .rawMode(rawProcessingSync),.injectLeaseValid(injectLeaseValid),
-        .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.statusWords(chassisStatusWords),
+        .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),
+        .alignTimingWord(alignTimingWord),.statusWords(chassisStatusWords),
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),

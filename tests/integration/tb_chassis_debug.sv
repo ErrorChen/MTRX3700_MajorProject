@@ -6,7 +6,7 @@ module tb_chassis_debug;
  logic [511:0] statusWords='0;
  wire [1:0] mode;
  wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
- wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord;
+ wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord;
  chassisDebug #(.LEASE_US(500)) dut(.*);
  targetRequest_t targetRequest;
  logic targetRequestValid=0;
@@ -45,10 +45,15 @@ module tb_chassis_debug;
   check(dut.ackToggle==toggle,"ACK timeout");
   check(dut.errorCode==expectedError,"unexpected error code");
  endtask
+ function automatic logic [31:0] pulseWord(input int kick,minTotal,maxTotal,kickSpeed);
+  return 32'(kick)|(32'(minTotal)<<4)|(32'(maxTotal)<<9)|(32'(kickSpeed)<<14);
+ endfunction
  initial begin
   tick(4);reset=0;tick(12);
   check(mode==0&&!injectLeaseValid&&starts==0,"safe integrated reset");
   check(tuningWord==32'h001e3544,"runtime tuning reset defaults");
+  check(alignTimingWord==32'h00015420,"ALIGN timing reset defaults preserve old motion");
+  command(12,pulseWord(6,8,20,4),5);check(alignTimingWord==32'h00015420,"integrated pulse write rejected");
   command(11,32'h00284855,5);check(tuningWord==32'h001e3544,"integrated tuning rejected");
   command(1,1);command(3,0,3);check(starts==0,"vision must never arm");
   command(11,32'h00284855,5);check(tuningWord==32'h001e3544,"zeroSent required");
@@ -79,7 +84,38 @@ module tb_chassis_debug;
   command(1,2);command(11,32'h001e3544,5);
   command(1,1);command(11,32'h000a3433);
   check(tuningWord==32'h000a3433,"minimum runtime field boundaries accepted");
-  command(11,32'h001e3544);statusWords='0;
+  command(11,32'h001e3544);
+  command(10,1);command(2);
+  check(dut.frozenWords[15*32+20+:8]==8'ha2 &&
+        dut.frozenWords[15*32+2+:18]==18'h15420 &&
+        dut.frozenWords[15*32+28+:4]==4'b0010 && dut.frozenWords[15*32+:2]==1,
+        "pulse capability/payload preserve upper flags and mode");
+  command(12,pulseWord(6,8,20,4));
+  check(alignTimingWord==pulseWord(6,8,20,4) && tuningWord==32'h001e3544 &&
+        scanCalibrated && scanBudgetUs==10000000 && starts==0 && !injectLeaseValid,
+        "atomic pulse commit preserves speed/scan and does not ARM or lease");
+  check(dut.frozenWords[15*32+2+:18]==18'h15420,"pulse snapshot remains immutable after commit");
+  command(2);check(dut.frozenWords[15*32+2+:18]==pulseWord(6,8,20,4),"new snapshot has entire pulse word");
+  command(12,32'h00055420,2); // reserved bit18
+  command(12,32'h80015420,2); // high reserved bit
+  command(12,pulseWord(11,2,10,5),2);
+  command(12,pulseWord(0,1,10,5),2);command(12,pulseWord(0,31,31,5),2);
+  command(12,pulseWord(0,2,31,5),2);command(12,pulseWord(0,10,9,5),2);
+  command(12,pulseWord(0,2,10,2),2);command(12,pulseWord(0,2,10,9),2);
+  check(alignTimingWord==pulseWord(6,8,20,4),"invalid pulse field rejects the whole word");
+  statusWords[20]=1;command(12,32'h00015420,5);statusWords[20]=0;
+  statusWords[28]=1;command(12,32'h00015420,5);statusWords[28]=0;
+  statusWords[7*32+:7]=3;command(12,32'h00015420,5);statusWords[7*32+:7]=0;
+  statusWords[7*32+8+:7]=7'h7d;command(12,32'h00015420,5);statusWords[7*32+8+:7]=0;
+  statusWords[8*32+15]=0;command(12,32'h00015420,5);statusWords[8*32+15]=1;
+  command(1,2);command(12,32'h00015420,5);command(1,1);
+  check(alignTimingWord==pulseWord(6,8,20,4) && starts==0,"every pulse stationary boundary rejects without ARM");
+  statusWords[29]=1;statusWords[30]=1;
+  command(12,pulseWord(0,2,2,3));check(alignTimingWord==pulseWord(0,2,2,3),"minimum pulse boundaries accepted");
+  command(12,pulseWord(10,30,30,8));check(alignTimingWord==pulseWord(10,30,30,8),"maximum pulse boundaries accepted");
+  command(12,pulseWord(10,2,2,8));check(alignTimingWord==pulseWord(10,2,2,8),"longer kick accepted for controller total-time truncation");
+  check(statusWords[29]&&statusWords[30]&&scanCalibrated&&starts==0,"pulse write retains latched safety inputs/calibration");
+  command(12,32'h00015420);statusWords='0;
   command(1,2);command(7,0,4);
   command(5,(200<<24)|(1<<20)|(1<<19)|(1<<17)|(160<<8)|80);
   command(7,0,4);check(!templateValid,"half template cannot commit");
@@ -107,6 +143,7 @@ module tb_chassis_debug;
   command(3);begin int prior;prior=starts;reset=1;tick(5);reset=0;tick(15);
    check(starts==prior,"old JTAG ARM not replayed after reset");
    check(tuningWord==32'h001e3544&&!scanCalibrated,"reset restores tuning defaults and clears calibration");end
+  check(alignTimingWord==32'h00015420,"reset restores kick disabled and old pulse duration");
   $display("PASS tb_chassis_debug checks=%0d reports=%0d",checks,reports);$finish;
  end
  initial begin #1000000;$fatal(1,"CCTL watchdog");end

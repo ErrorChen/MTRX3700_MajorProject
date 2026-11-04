@@ -44,7 +44,7 @@ class TuningSession:
         self.words = [0] * 16
         self.words[8] = 1 << 15
         self.words[13] = 0xa1000000 | client.tuning_word(**client.TUNING_DEFAULTS)
-        self.words[15] = 1 | (1 << 29)
+        self.words[15] = 1 | (1 << 29) | (0xa2 << 20) | (client.pulse_word(**client.PULSE_DEFAULTS) << 2)
 
     def __enter__(self): return self
     def __exit__(self, *_): pass
@@ -55,9 +55,13 @@ class TuningSession:
 
     def tx(self, op, value=0):
         self.events.append(("tx", op, value))
-        if op != 11: raise AssertionError("tuning must never send mode/ARM/lease commands")
-        if (self.words[13] & 15) != (value & 15): self.words[15] &= ~(1 << 29)
-        self.words[13] = 0xa1000000 | value
+        if op == 11:
+            if (self.words[13] & 15) != (value & 15): self.words[15] &= ~(1 << 29)
+            self.words[13] = 0xa1000000 | value
+        elif op == 12:
+            self.words[15] = (self.words[15] & 0xf0000003) | (0xa2 << 20) | (value << 2)
+        else:
+            raise AssertionError("tuning must never send mode/ARM/lease commands")
 
 
 class ChassisToolsTests(unittest.TestCase):
@@ -121,6 +125,90 @@ class ChassisToolsTests(unittest.TestCase):
         with patch.object(client, "Session", return_value=session), contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(client.main(["tune", "--search", "3", "--tolerance", "35"]), 0)
         self.assertEqual([event[1] for event in session.events if event[0] == "tx"], [11])
+
+    def test_pulse_encoding_limits_units_and_capability_preserve_old_fields(self):
+        self.assertEqual(client.pulse_word(**client.PULSE_DEFAULTS), 0x00015420)
+        for changes in ({"min_ms": 10}, {"min_ms": 21}, {"max_ms": 310}, {"max_ms": 99},
+                        {"min_ms": 110}, {"kick_ms": -10}, {"kick_ms": 110}, {"kick_ms": 1},
+                        {"kick_speed": 2}, {"kick_speed": 9}, {"kick_ms": True}):
+            with self.subTest(changes=changes), self.assertRaises(ValueError):
+                client.pulse_word(**(client.PULSE_DEFAULTS | changes))
+        # A kick longer than the total is legal: RTL clips it to that total.
+        self.assertEqual(client.pulse_word(min_ms=20, max_ms=20, kick_ms=100, kick_speed=8), 0x2042a)
+        state = TuningSession().status()
+        self.assertEqual(state["alignTiming"], {"minMs": 20, "maxMs": 100, "kickMs": 0, "kickSpeed": 5})
+        self.assertTrue(state["alignTimingSupported"] and state["scanCalibrated"])
+        self.assertEqual(state["mode"], "VISION_ONLY")
+        self.assertEqual(state["tuning"], client.TUNING_DEFAULTS)
+
+    def test_pulse_read_only_and_old_or_unknown_capability_never_write(self):
+        session = TuningSession()
+        client.pulse(session)
+        self.assertEqual(session.events, [("status", False)])
+        for cap in (0, 0xa3):
+            session = TuningSession()
+            session.words[15] = (session.words[15] & 0xf0000003) | (cap << 20)
+            self.assertFalse(session.status()["alignTimingSupported"])
+            with self.assertRaisesRegex(RuntimeError, "does not support"):
+                client.pulse(session, kick_ms=60)
+            self.assertFalse(any(event[0] == "tx" for event in session.events))
+            # E11's speed protocol remains available even without pulse support.
+            self.assertEqual(client.tune(session, turn=5)["tuning"]["turn"], 5)
+
+    def test_pulse_atomic_partial_merge_defaults_and_independent_settings(self):
+        session = TuningSession()
+        session.words[0] = (1 << 29) | (1 << 30)
+        session.words[6] = 15100000
+        session.words[11] = 4
+        session.words[15] |= 1 << 28
+        state = client.pulse(session, kick_ms=60, kick_speed=4, max_ms=200)
+        expected = client.PULSE_DEFAULTS | {"kick_ms": 60, "kick_speed": 4, "max_ms": 200}
+        self.assertEqual(session.events, [("status", False), ("tx", 12, client.pulse_word(**expected)),
+                                          ("status", False)])
+        self.assertEqual(state["alignTiming"], {"minMs": 20, "maxMs": 200, "kickMs": 60, "kickSpeed": 4})
+        self.assertTrue(state["irEstop"] and state["sonarHold"] and state["colourCalibrated"] and state["framesEnabled"])
+        self.assertTrue(state["scanCalibrated"])
+        self.assertEqual(state["scanBudgetUs"], 15100000)
+        self.assertEqual(state["tuning"], client.TUNING_DEFAULTS)
+        # Changing speeds must not rewrite the independently stored pulse word.
+        self.assertEqual(client.tune(session, turn=3)["alignTiming"], state["alignTiming"])
+        self.assertEqual(client.pulse(session, defaults=True)["alignTiming"],
+                         {"minMs": 20, "maxMs": 100, "kickMs": 0, "kickSpeed": 5})
+
+    def test_pulse_rejects_every_nonstationary_boundary_without_write(self):
+        for index, value in ((15, 0), (15, 2), (0, 1 << 20), (0, 1 << 28),
+                             (7, 3), (7, 125 << 8), (8, 0)):
+            session = TuningSession()
+            session.words[index] = ((session.words[15] & ~3) | value) if index == 15 else value
+            with self.subTest(index=index, value=value), self.assertRaisesRegex(RuntimeError, "requires VISION_ONLY"):
+                client.pulse(session, max_ms=200)
+            self.assertFalse(any(event[0] == "tx" for event in session.events))
+
+    def test_pulse_readback_and_unrelated_settings_are_verified_after_ack(self):
+        session = TuningSession()
+        with patch.object(session, "tx"), self.assertRaisesRegex(RuntimeError, "readback mismatch"):
+            client.pulse(session, kick_ms=50)
+        original = session.tx
+        def corrupt_scan(op, value):
+            original(op, value)
+            session.words[6] += 1
+        with patch.object(session, "tx", side_effect=corrupt_scan), self.assertRaisesRegex(RuntimeError, "unrelated"):
+            client.pulse(session, kick_ms=50)
+        with self.assertRaisesRegex(ValueError, "cannot be combined"):
+            client.pulse(session, defaults=True, max_ms=200)
+
+    def test_pulse_cli_rejects_bad_inputs_before_jtag_and_routes_only_opcode12(self):
+        for args in (("pulse", "--kick-ms", "1"), ("pulse", "--max-ms", "301"),
+                     ("pulse", "--min-ms", "200", "--max-ms", "100"),
+                     ("pulse", "--kick-speed", "9"), ("pulse", "--defaults", "--kick-ms", "0")):
+            with patch.object(client, "Session") as factory, contextlib.redirect_stderr(io.StringIO()):
+                self.assertEqual(client.main(args), 1)
+                factory.assert_not_called()
+        session = TuningSession()
+        with patch.object(client, "Session", return_value=session), contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(client.main(["pulse", "--min-ms", "80", "--max-ms", "200",
+                                          "--kick-ms", "60", "--kick-speed", "4"]), 0)
+        self.assertEqual([event[1] for event in session.events if event[0] == "tx"], [12])
 
     def test_no_target_search_uses_current_budget_plus_final_dwell_margin(self):
         self.assertEqual(client.no_target_search_rows({"scanBudgetUs": 10000000}),

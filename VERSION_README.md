@@ -1,3 +1,5 @@
+> 本次发布源码、成功构建SOF及实际下载读回均为 **E7070012**。E12新增ALIGN总时长和可关闭的起步段，默认20–100 ms、kick关闭；五项tune默认4/4/5/3/30保持。协议193检查/20报告、Python24项、Tcl模拟传输2项及控制44.0894113秒（两sign各2041检查/500UART，legacy848/289）通过，首次TB层次引用失败保留。正式R6首跑 **223.404755秒、13 PASS＋CAUGHT**；Full Compilation **1163.903秒**及post-fit **26.783秒PASS**，setup/hold +0.842/+0.102 ns，原始SOF6706156字节已实际下载。真实静止pulse读写、独立读回和参数隔离通过。地面前三轮INCOMPLETE；第四轮固定200 ms总时长进入APPROACH后由主机主动停车，用户接受轻微偏左，只证明有限回正。第五轮从已见目标接近仍 **INCOMPLETE，60.0399573秒**，反复对准后丢牌、重搜未找回，最终J3近障HOLD；收尾V1未ARM/零速/zeroSent、J3约254 mm，未DOCK。该五轮证据使用最后tune3/3/5/4/40、pulse200/200/60/6及15.1秒扫描；随后tol40→30另行实验尚待结果。所有实验参数均volatile、未写入SOF，也不是验证推荐；画外搜索停靠未通过。
+
 > E11源码及实板E7070011已独立构建/下载；本次发布为E11。控制runtime两sign996/358、legacy847/289；首R6 FAIL302.015209保留，fresh最终R6 PASS219.199994秒/13 PASS＋CAUGHT；编译1375.853秒＋门检26.278秒PASS。真实JTAG停车调参及标定失效/默认恢复PASS、蓝4零速4/4锁定；初始停车调参未运动；后续首轮/search3搜索均NOT_FOUND，turn3仅抽动INCOMPLETE。当前3/5/4/3/40与15.1秒为volatile实验参数，turn5已INCOMPLETE，approach4亦INCOMPLETE，降速未解决过冲；停止本轮测试，RTL不再改版。
 
 > 历史E10的源码、成功构建及当时实板均为E7070010，最终VISION_ONLY、未ARM、零速。E10默认居中U90–150并增加锁定目标直接APPROACH入口；本版定向默认两sign各804/275、旧参数817/278已PASS（29.1663517秒）；正式R6已PASS271.31444秒、13 PASS＋CAUGHT；Full Compilation1260.493秒＋post-fit25.832秒PASS，setup/hold +0.909/+0.118ns，实际下载读回E10；蓝4零速预检4/4锁定，实机短暂APPROACH后LOST/恢复SEARCH，最终NOT_FOUND/SCAN_BUDGET，未DOCK、未触发反向SEARCH；失锁恢复问题保留。历史构建和失败证据保留。E9有限回扫的两种TURN_SIGN各696检查/245UART PASS，累计执行20.8500433秒；正式R6独立PASS274.530007秒、13 PASS + CAUGHT。Full Compilation1218.109秒＋post-fit26.779秒PASS，ALM29699/32070（93%）、setup/hold +0.629/+0.117ns，已实际下载并核对E9身份，蓝4零速校色/锁定预检4/4通过。画外蓝4实机INCOMPLETE：曾发现/锁定，60秒观察窗内未DOCK，主机STOP后零速；没有反向SEARCH，回扫物理效果未验证。E8蓝1/3/4已见目标停靠、蓝2分段证据与最后画外搜索NOT_FOUND分别保留；蓝5/6单独地面测试按用户要求取消。操作见[README.md](README.md)，证据见[修复验收记录](docs/REPAIR_RESULT.md)。
@@ -2013,3 +2015,92 @@ runner最终 **18项HOST_RUNNER测试PASS，1.962秒**，日志`r6_e11_overlap_h
 | turn5、approach4、tolerance40隔离 | 15.0186774秒 | INCOMPLETE，降速仍抽动并越过目标 |
 
 本轮到此停止追加测试，未增加RTL修改、编译或新版本。最终维持E7070011、VISION_ONLY、未ARM、零速；会话实验参数 **3/5/4/3/40、15.1秒**暂时保留，**只是已试组合，不是经过验证的推荐配置**。固件默认仍 **4/4/5/3/30**，KEY0/掉电/重下载恢复默认并丢失运行时扫描标定。停车调参与标定失效链已实机通过，LOST恢复路径有特定条件的板上证据；机械过冲、持续捕获和外视野搜索到停靠仍未通过。E8蓝1/3/4从已见目标停靠的历史成功保留，不能作为本版完整任务通过。
+
+## 2026-11-05：E12发布——ALIGN分段短转与独立实机记录（E7070012）
+
+用户要求继续现有主线，并增加短转起步参数。E11两次画外搜索NOT_FOUND、三个短时对照INCOMPLETE的事实保留；E12不将这些缺陷改写为已解决。源码冻结后，本版独立控制、R6、完整构建/post-fit、下载及静止pulse均已通过，具体结果如下。本次发布E12，板上已核对该身份；五轮实机记录如下，主线停靠仍未通过。
+
+新增独立opcode12及STATUS word15 A2能力，原opcode11/word13 A1不变。四项为minMs/maxMs各20–300（10 ms步长且min≤max）、kickMs0–100（10 ms）、kickSpeed3–8 cm/s；默认20/100/0/5，kick关闭，保持E11默认短转。min仅限制计算的名义总时长，丢牌/跨方向/居中或IR/J3可提前停车，实际可能短于min；kickSpeed为UGV02 UART速度请求，不是PWM/电流/转矩或实测轮速。总时长按误差×2 ms夹在min/max内且**包含起步段**，kick截断至总时长，剩余沿原方向用既有turn或小误差固定3。只作用ALIGN，SEARCH和APPROACH不加kick；原stop/居中/跨方向/保护中断及驻留恢复保持。
+
+CLI `pulse`无选项只读；`--min-ms/--max-ms/--kick-ms/--kick-speed`合并原四项后整组原子写入并独立读回，`--defaults`独占恢复四项默认。VISION_ONLY、未ARM、无permit、LR0、zeroSent是主机与RTL双重写入条件；无自动切模式/START/heartbeat。pulse与tune独立、pulse不清扫描标定、改变search仍清标定；KEY0/掉电/下载恢复volatile默认。旧E11无A2拒绝pulse写，保持原tune可用。详细范围、CLI示例与协议字段见中英README新增E12节。
+
+协议定向`build/remaining_20261104/pulse_e12_20261104T192735Z/result.json`：HDL **193检查/20报告、1.5672301秒PASS**；Python **24项、0.141秒PASS**；生产Tcl脚本与模拟transport **2项、1.037秒PASS**。这些不是实板调参或机械起转证据。控制定向已有下述独立PASS；正式R6已有下述独立PASS；完整编译/post-fit及实际下载/静止pulse已有下述独立结果；E12五轮实机结论见下文；只有第四轮有限回正被用户接受，其余未完成，不称机械同步或过冲已解决。
+
+
+### E12独立控制回归与保留的失败尝试
+
+首次控制定向目录`build/remaining_20261104/control_e12_20261104T192836_046724Z/`保留为失败尝试：runtime分支调整后，TB仍引用旧层次名；生产源码未因此改变，修复只涉及TB引用。随后一次编译、三配置完整运行`build/remaining_20261104/control_e12_20261104T192902_661125Z/result.json`独立**PASS，44.0894113秒、0 errors/0 warnings**：runtime两种TURN_SIGN各**2041检查/500完整UART**；关闭runtime且timing输入未知的legacy参数配置**848检查/289 UART**。原失败不覆盖，逻辑计时及完整UART检查不等于真实电机速度阶段或机械停稳验证。正式R6结果见下文；完整构建/post-fit、下载与实机结果继续分别记录。
+
+### E12正式R6首次完整运行通过
+
+`build/member_b/20261104T193009_881634Z_verilator_course/result.json`独立**PASS，223.404755秒、exit0、targetMet=true，13项PASS及mutation CAUGHT**。本版首次正式R6即达到285秒目标；61个fresh源文件，jobs4、最多2个仿真与1个编译进程，11项预编译，继续沿用E11经验证的当前调用精确输入/产物检查及调度策略。没有减少场景、输入帧数或断言，也没有借旧版结果填补本版证据。此前E11的302.015209秒FAIL仍是历史失败，未被这次E12成功覆盖。
+
+此前综合于悉尼时间2026-11-05 06:32:15完成、DSP51；随后完整构建/post-fit、下载及静止验收也已取得下述独立PASS。R6通过本身不证明实物起步同步或搜索停靠成功。
+
+### E12完整构建、实际下载与停车pulse参数验证
+
+`build/member_b/20261104T192605_706632Z_build/result.json`为**PASS**：Full Compilation **1163.903秒**，post-fit gate **26.783秒**，0 errors、92 warnings、0 critical warnings。最终资源为**29647/32070 ALM（92%）**、41286寄存器、357/397 M10K、2802640存储位、51/87 DSP、2/6 PLL。四角16项setup/hold/recovery/removal最差裕量为**+0.842/+0.102/+28.060/+0.434 ns**。88项report gate通过，illegal/unconstrained均0；每角同步链63/63覆盖，MTBF仍NOT_ASSESSED。Gray覆盖9/9/32，resultToCamera1589、requestCdc22及resultToDisplay979的对应物理覆盖完整；maxSkew/netDelay最差约束裕量18.127/14.470 ns，并非实际传播延迟。
+
+构建于**2026-11-04 19:45:56.942735 UTC**完成；原始`source/quartus/output_files/PartBDebug.sof`为**6706156字节**。`e12_production_source_match.json`记录63个生产源文件与本次构建副本逐字节一致，后续没有用其他源码替换产物。`program_e12_console.log`记录实际下载、读回**E7070012 PASS**，完成**19:46:26.577567 UTC（悉尼次日06:46:26.577567）**。这是本版独立结果，不沿用E11产物或时序。
+
+`build/remaining_20261104/e12_pulse_hardware.json`为**真实JTAG静止参数PASS**，五个样本和最终cleanup均保持VISION_ONLY、未ARM、无运动许可、左右0、zeroSent=true；START/synthetic/heartbeat计数均0，cleanupErrors为空。
+
+| 静止操作 | 独立状态/范围 |
+|---|---|
+| 默认读取 | pulse min/max/kickMs/kickSpeed为20/100/0/5；tune仍4/4/5/3/30 |
+| 写入首个分段配置 | pulse100/200/60/5，即总100–200 ms、起步60 ms/5 cm/s请求 |
+| 独立再次读取 | 四项与请求完全相同；五项tune及扫描状态未变 |
+| 边界值写入 | pulse300/300/100/8，只在停车V1写入/读回，**没有按此速度运动** |
+| 恢复默认及cleanup | pulse20/100/0/5，tune保持默认，扫描仍未标定；停车/zeroSent确认 |
+
+这只证明真实传输、整组保持、读回和字段互不影响，不证明UART速度请求产生了对应轮速、起步力或机械阶段。`e12_blue4_calibration_preflight.json`四个独立C/B健康锁定样本为U113、J3约655–659 mm、cfg1已校色；该过程零速。
+
+随后`e12_first_profile_config.json`在停车边界写入首轮实验**tune search3/turn3/approach5/fine3/tolerance40**与**pulse min100/max200/kickMs60/kickSpeed5**，恢复同一塑胶地面search3已有15.1秒扫描记录，最终scanCalibrated=true、V1未ARM/零速。该基准仍只有E11两次单圈加一次双圈参考，未因重新写入而成为精确360°标定。首轮15秒短转比较已完成但INCOMPLETE，用户反馈略好且仍偏右；不能声称已解决单侧起转、静摩擦或过冲，详细证据见后续记录。
+
+### E12首轮地面短转：用户反馈略好，仍偏右且未完成
+
+`build/remaining_20261104/integrated_blue4_e12_kick5_cruise3_15s.jsonl`使用**tune3/3/5/3/40、pulse100/200/60/5、15.1秒扫描预算**，记录**320个CCTL和42个BCTL样本**。15秒观察窗实际taskObservationSeconds为**15.0223777秒**，终态**INCOMPLETE**，未DOCK；主机收尾后VISION_ONLY、未ARM、无permit、左右0、zeroSent=true、UART空闲、J3约659 mm，cleanupErrors为空。此观察窗结束不是产品120秒任务超时，也不是自动完成停靠。
+
+用户原话：**“会好一点，但是转出来蓝色偏右一些”**。初始蓝4为U55、框左边界14且完整；BCTL采到U55→76→83→168→175。直接读到了ALIGN的`+3/−3`以及反向ALIGN的`−5/+5`命令，但没有在**同一次脉冲**内完整采到5→3转序，因此只能结合既有RTL逻辑验证与这些离散命令读数，不能宣称本轮完整机械两段过程已被采证。主要坐标偏移跨越APPROACH5/3→LOST停车，发生在反向ALIGN之前，不把整段目标位移都归因于反向短转。
+
+任务采样中的来源一直健康，没有HOLD/IR/fatal；42个B样本均fresh/good。此范围内没有证据支持来源失效是本轮偏移的原因，但稀疏采样不能还原所有轮速、转角或机械停止时间。操作者主观“好一点”与末段仍偏右同时保留；本轮不算稳定对准或画外搜索停靠通过。
+
+后续只将**fine3改为4**，其他保持，形成同一E12的第二轮实验**tune3/3/5/4/40**、pulse100/200/60/5及15.1秒扫描预算。此修改使远距差速慢轮变4，350–500 mm近距直行也变4、近距差速快轮为5；不是仅对一个动作单独改变速度。没有新增RTL、重新编译或新版本。第二轮结果及后续独立对照见下文，不用首轮反馈推定其效果。
+
+### E12第二至四轮：命令两段转序与有限回正证据
+
+各轮保持E7070012和原安全链，只在V1停车时修改一项参数，没有增加RTL版本或重新编译。C/B数量为离散JTAG快照数量，不是原生相机帧数或机械速度采样率。
+
+| 试验 / 日志 | 相对前轮修改 | 样本与观察时长 | 实际结论与清理 |
+|---|---|---|---|
+| 第二轮 `integrated_blue4_e12_fine4_15s.jsonl` | fine3→4；tune3/3/5/4/40，pulse100/200/60/5 | 422C/35B，15.0445792秒 | INCOMPLETE，cleanupErrors为空，末V1零速/zeroSent、J3约636 mm |
+| 第三轮 `integrated_blue4_e12_kick6_reverse_15s.jsonl` | 仅kickSpeed5→6，其他不变 | 500C/39B，15.0423456秒 | INCOMPLETE，U187→181、末J3约632 mm；未完全回正 |
+| 第四轮 `integrated_blue4_e12_kick6_total200_reverse_15s.jsonl` | 仅minMs100→200，maxMs仍200：名义总时长固定200 ms，kick6/60 ms、后段turn3 | 780C/60B，任务3.8547528秒 | ALIGN_CORRIDOR_OBSERVED；首次采到APPROACH5/5便由主机STOP主动终止诊断，末V1零速/zeroSent、J3约591 mm，cleanupErrors为空；非DOCK |
+
+**第二轮采到了板上两阶段命令转序，但没有单独验证fine4差速纠偏。** 直接采到6组同一次ALIGN的5→3速度幅值变化，正反方向各3组，后续均归零；这是命令序列证据，不是实际轮速、同步起转或机械脉宽测量。B位置U49→71→153（第三次短转后、APPROACH之前）→159→178，反向短转后188。实际APPROACH只采到5/5，未采到5/4；因此首轮怀疑前进差速造成偏移的解释未得到本轮支持，不能写成已确定原因或fine4纠偏有效。用户原话：“最开始那几下右轮抽能明显让车子转一点点，但是最后大动又使得蓝四偏右”。
+
+**第三轮提升kick仍不足以回正。** 在原右侧U187附近保持摆位，kick升至6后，用户反馈“左轮短抽几次有效果，但未能完全回正”；B仅U187→181，仍INCOMPLETE。此反馈证明观察到有限运动，不证明设定6 cm/s对应实际轮速，也不支持已经解决静摩擦或步幅不均。
+
+**第四轮延长总时长后，用户接受残余偏差。** 直接采到2段`−6/+6 → −3/+3 → 0/0`，B为U181→171→104/105。全部来源样本健康，B均good/fresh，无HOLD/IR/fatal/transport fault，15.1秒扫描预算未消耗。用户反馈：“几乎回正了，但是有点点偏左，不过勉强可以接受”。保留其接受误差的决定，不再把“精确居中”作为该轮必须继续追求的目标；步幅不均仍是限制。诊断helper因预设“首次APPROACH就STOP”返回exit1，并不代表失控或无效日志；`ALIGN_CORRIDOR_OBSERVED`只表示进入接近通道，不能写为DOCK或完整搜索停靠通过。
+
+随后`e12_approach_after_alignment_preflight.json`另取得**3/3健康锁定、U84、J3约582 mm**。这是不同预检时点，不与第四轮末U104/105混为同一个物理状态，也不能假定间隔内场景完全未变。接下来`integrated_blue4_e12_approach_after_alignment.jsonl`使用同一配置**tune3/3/5/4/40、pulse200/200/60/6、扫描15.1秒**，从已经可见的目标进行最多60秒接近观察；该轮实际INCOMPLETE结果见下文；它也不属于从画外开始的完整搜索验收。
+
+### E12第五轮接近未完成：边缘丢牌、重新搜索与近障HOLD
+
+`build/remaining_20261104/integrated_blue4_e12_approach_after_alignment.jsonl`沿用**tune3/3/5/4/40、pulse200/200/60/6、15.1秒扫描预算**，从已见目标进行接近观察，保留**687C/85B**。taskObservationSeconds **60.0399573秒**，结果**INCOMPLETE**；cleanupErrors为空，最终VISION_ONLY、未ARM、左右0、zeroSent=true、J3约254 mm，**sonarHold仍true**。没有DOCKED，也没有用主机收尾冒充自主停靠。
+
+板上采到5段短APPROACH，包括一次5/4请求，以及5/5、4/4；其间反复ALIGN，未形成用户可见的稳定直行加小差速过程。用户原话：“一直左右校准方式前进，并没有直行然后小差速纠偏之类操作。然后在一次纠偏过了后360度重扫的时候，没有重新抓回蓝四”。其中“360度重扫”保留为操作者描述，没有航向传感器或独立角度计量，不转写成已测精确一圈。日志对应目标触边拒识后两段SEARCH仍未找回。
+
+J3在**248 mm**时触发近障HOLD，最小样本**240 mm**；48个HOLD样本处于**240–254 mm**，未达到≥300 mm的连续新安全样本恢复条件，因此本轮没有HOLD释放证据。最终近障保护停车不等于350 mm正常停靠，254 mm也不是合格停靠距离或尺量精度。
+
+全部已采来源状态健康，85个B样本good/fresh，未见transport fault；蓝色候选抵达边界0/239时出现拒识码4/5。末现场真实抓图`capture20261104T200809_077960Z_capture`通过fresh及CRC检查，显示牌在图边裁切。**这只是最后现场图，不是首次失锁帧**；它与边缘拒识相符，但不还原整个失锁过程、不能单凭末图确定所有过冲原因。已经取得的5→3或6→3板上命令序证据仍不等于实际轮速或两轮起步完全一致。
+
+| E12本次发布保留的地面观察 | 结果 | 验收范围 |
+|---|---|---|
+| kick5/turn3首轮 | INCOMPLETE15.0223777秒 | 用户略好但偏右；同脉冲完整5→3未采到 |
+| fine4第二轮 | INCOMPLETE15.0445792秒 | 6组同次5→3命令序；没有采到5/4，不能独立确认fine4纠偏效果 |
+| kick6第三轮 | INCOMPLETE15.0423456秒 | 左轮短抽有有限作用，未完全回正 |
+| 总200 ms第四轮 | ALIGN_CORRIDOR_OBSERVED，3.8547528秒 | 2组6→3→零命令，用户接受轻微偏左；首次APPROACH主机STOP，非DOCK |
+| 已见目标接近第五轮 | INCOMPLETE60.0399573秒 | 短APPROACH/反复ALIGN/边缘丢牌/重搜未找回，最终近障HOLD；停靠未通过 |
+
+发布记录以这五轮为界。随后只有**tolerance40→30**改变，形成**tune3/3/5/4/30、pulse200/200/60/6**的同版本独立诊断，扫描仍15.1秒；其结果在本次快照中**待验证**，不把它写成改进已通过或推荐设置。该调参不新增RTL、编译或固件版本。SOF的复位默认仍是**tune4/4/5/3/30、pulse20/100/0/5**；KEY0、掉电或重新下载不会保留实验配置与扫描标定。原E8已见目标停靠及所有历史失败继续按各自版本保留，不能覆盖本轮未完成的主线功能。

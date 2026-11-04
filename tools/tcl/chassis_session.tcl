@@ -149,7 +149,7 @@ while {[gets stdin line] >= 0} {
             TX {
                 if {[llength $fields] != 4} { error "TX needs opcode and payload" }
                 set opcode [lindex $fields 2]; set payload [lindex $fields 3]
-                if {![string is integer -strict $opcode] || $opcode < 1 || $opcode > 11 ||
+                if {![string is integer -strict $opcode] || $opcode < 1 || $opcode > 12 ||
                     ![string is wideinteger -strict $payload] || $payload < 0 || $payload > 0xffffffff} { error "invalid TX arguments" }
                 set answer [command $opcode $payload]
             }

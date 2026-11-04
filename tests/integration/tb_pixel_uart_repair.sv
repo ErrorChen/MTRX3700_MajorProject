@@ -42,6 +42,7 @@ module tb_pixel_uart_repair;
    .selection(6'b000001),.mode(2'd0),.debugStart(1'b0),.debugStop(debugStop),
    .modeChanged(1'b0),.rawMode(1'b0),.injectLeaseValid(1'b0),
    .scanCalibrated(1'b1),.scanBudgetUs(32'd700000),.timeUs(timeUs),.tuningWord(32'h001e3544),
+   .alignTimingWord(32'h00015420),
    .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.status(status),
    .targetRequest(targetRequest),.targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
    .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),

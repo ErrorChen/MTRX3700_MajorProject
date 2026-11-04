@@ -112,43 +112,43 @@ story = [
 left = [
     p("RED AND BLUE MARKERS", "label"),
     p('<font color="#205AA7"><b>Blue 1-6: destination bays.</b></font> '
-      "The matching switch selects the number to follow. Keep the complete border and white anchor visible."),
+      "SW0-SW5 choose one number to follow. Keep its complete border and white anchor visible."),
     p('<font color="#AF3939"><b>Red1: colour calibration.</b></font> '
-      "Show red1 with its paired blue reference stripe, steadily. Motion pauses during calibration; wait for <b>CAL:Y</b>. "
-      "The stripe is labelled <b>BJ</b>; it is not a bay."),
+      "Hold red1 and its paired blue reference stripe steady. Motion pauses until calibration finishes: <b>CAL:Y</b>. "
+      "The stripe label <b>BJ</b> is not a bay."),
     p('<font color="#AF3939"><b>Red2: reselect and start.</b></font> '
-      "Re-read the switches, relock and request a task. Move it out, then present it once beside the target. "
-      "It does not choose a bay or restart an active task. Keep hands/cards clear of J3."),
+      "Re-read switches, relock and request a task. Remove it, then present it beside the target. "
+      "It cannot choose a bay or restart an active task. Keep hands/cards clear of J3."),
     Spacer(1, 4), p("SWITCHES AND BUTTONS", "label"),
     table([
-        ["<b>SW0-SW5</b>", "SW0/1/2/3/4/5 select blue 1/2/3/4/5/6. <b>Exactly one ON.</b> "
-         "No selection/multiple selections cannot start. Changing selection cancels motion."],
+        ["<b>SW0-SW5</b>", "SW0/1/2/3/4/5 select blue 1/2/3/4/5/6. <b>Exactly one ON</b> to start. "
+         "Changing selection cancels motion."],
         ["<b>SW6</b>", "Candidate colour/number diagnostics."],
         ["<b>SW7</b>", "Centre colour sample and marker identity."],
         ["<b>SW8</b>", "0: normal perspective handling.<br/>1: bounding-box recognition bypass."],
         ["<b>SW9</b>", "Camera-only display; cancels motion. OFF requires a new start to move again."],
         ["<b>KEY0 / KEY1</b>", "KEY0: full reset. KEY1: next display page."],
     ], [64, COL - 64], padding=3), Spacer(1, 5),
-    p("<b>Remote POWER:</b> start. <b>A:</b> latched emergency stop. After A, the first fresh POWER only "
-      "releases the stop; release the key, then press POWER again to start. Holding POWER does not do both."),
-    p("<b>PC/JTAG motion tuning:</b> VISION_ONLY only, disarmed and stopped. Settings and limits: README. "
-      "Safety distance thresholds stay fixed.", "small"),
+    p("<b>Remote POWER:</b> start. <b>A:</b> latched emergency stop. After A, one fresh POWER releases it; "
+      "release and press again to start. Holding POWER cannot do both."),
+    p("<b>PC/JTAG:</b> In stopped, disarmed VISION_ONLY, use <b>tune</b> for speeds/centring and <b>pulse</b> "
+      "for short turns. Ranges are not validated presets. Commands: README.", "small"),
 ]
 
 right = [
     p("WHAT THE VGA IMAGE SHOWS", "label"),
-    p("Upright camera image, red/blue colour contours and accepted labels <b>R1/R2</b>, <b>B1-B6</b>, "
-      "or <b>BJ</b>. <b>CAL:W/B/Y</b> = waiting/calibrating/calibrated. "
-      "<b>FRAME:GOOD/BAD/STALE</b> reports image health. <b>STATE</b> is the calibration interaction state, not driving state."),
-    p("<b>SW6:</b> RGB/HSV, colour, number or UNKNOWN, and rejection code E. "
-      "PAGE:1/2 alternates about every 2 s across 16 slots; yellow sample marks identify slots."),
-    p("<b>SW7:</b> white 8 x 8 centre sample with RGB/HSV and the identity of a complete marker covering it. "
-      "<b>SW8:</b> BYPASS:1 changes recognition, not the camera view or safety. <b>SW9:</b> removes overlays."),
+    p("Upright camera image with red/blue contours and labels <b>R1/R2</b>, <b>B1-B6</b> or <b>BJ</b>. "
+      "<b>CAL:W/B/Y</b> = waiting/calibrating/calibrated. <b>FRAME:GOOD/BAD/STALE</b> = image health. "
+      "<b>STATE</b> = calibration interaction, not navigation."),
+    p("<b>SW6:</b> RGB/HSV, colour, number or UNKNOWN, rejection code E. PAGE:1/2 alternates every "
+      "2 s across 16 slots, identified by yellow sample marks."),
+    p("<b>SW7:</b> white 8 x 8 centre sample: RGB/HSV and the complete marker covering it. "
+      "<b>SW8:</b> BYPASS:1 changes recognition, not camera view or safety. <b>SW9:</b> hides overlays."),
     Spacer(1, 4), p("READING THE SIX-DIGIT DISPLAY", "label"), display_example(),
     p("<b>d1 0520</b> = distance page, VISION_ONLY, <b>520 mm</b>. "
       "The second digit is the mode code above, not the bay number.", "small"),
     table([
-        ["<b>d</b>", "Decimal millimetres. <b>FAr</b> = valid out-of-range indication, not a measured 4 m. "
+        ["<b>d</b>", "Millimetres. <b>FAr</b> = valid out-of-range, not measured 4 m. "
          "Four blank digits = invalid distance."],
         ["<b>H</b>", "Last IR word, upper half in hexadecimal. Right pair <b>12</b> = POWER, <b>0F</b> = A "
          "(examples ED12 / F00F)."],
@@ -167,16 +167,18 @@ columns.setStyle(TableStyle([
     ("TOPPADDING", (0, 0), (-1, -1), 0), ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
     ("LINEBEFORE", (1, 0), (1, 0), 0.5, LINE),
 ]))
-story.extend([columns, Spacer(1, 6)])
+story.extend([columns, Spacer(1, 3)])
 limits = table([
-    ["<b>APPROACH / STOP</b>  Default speeds: 5 cm/s, 3 cm/s within 500 mm. A locked target within +/-30 pixels of centre "
-     "allows straight approach and docks at &lt;=350 mm; restart to move again. Stop at &lt;=250 mm, invalid/stale range or IR A. "
-     "Obstacle HOLD can release after three fresh &gt;=300 mm readings. Target loss: fully stop for 1.5 s, then reconfirm from fresh frames before searching."],
-    ["<b>SEARCH / RESET</b>  An unseen target uses bounded low-speed search. After a search sighting: stop, wait and reconfirm. "
-     "If the sighting is lost, up to three 150 ms reverse steps may recover it; each stops to reconfirm within the same scan budget. "
-     "Search is approximate, not a guaranteed 360 degrees. Changing search speed requires new floor scan calibration. "
-     "Reset/power loss restores tuning defaults and clears colour/scan calibration; restore the scan setting from the PC before "
-     "unseen-target search. Visible, locked targets can still be approached."],
+    ["<b>APPROACH / STOP</b>  Defaults: 5 cm/s; 3 cm/s within 500 mm. A lock within +/-30 centre pixels allows straight approach; "
+     "dock at &lt;=350 mm, then require a new start. Stop for &lt;=250 mm, invalid/stale range or IR A. "
+     "HOLD releases after three fresh &gt;=300 mm readings. After target loss, stop for 1.5 s and reconfirm fresh frames."],
+    ["<b>ADJUSTABLE SHORT TURN</b>  ALIGN only: kick at 3-8 cm/s for 0-100 ms, then cruise at 3-5 cm/s "
+     "(3 cm/s for small errors). Set total min/max to 20-300 ms (min &lt;= max); time settings use 10 ms steps. Total includes/truncates kick; "
+     "0 ms disables it. Centring, loss or safety can end it early. Defaults: kick off (5 cm/s), total 20-100 ms. SEARCH/APPROACH have no kick."],
+    ["<b>SEARCH / RESET</b>  Search is not guaranteed 360 degrees. Stop to confirm sightings; loss can trigger up to three "
+     "150 ms reverse steps, each reconfirming within the scan budget. Recalibrate after changing search speed. "
+     "Reset/power loss restores defaults and clears colour/scan calibration. Restore scan calibration for unseen-target search; "
+     "visible locks can still approach."],
 ], [WIDTH], padding=7)
 limits.setStyle(TableStyle([("BACKGROUND", (0, 0), (-1, -1), AMBER),
     ("BOX", (0, 0), (-1, -1), 0.45, colors.HexColor("#E5CF9E"))]))
