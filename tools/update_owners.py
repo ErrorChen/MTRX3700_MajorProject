@@ -37,6 +37,8 @@ INTEGRATION_FILES = {
 
 
 def maintainer(name):
+    if name in TEAM_FILES:
+        return "Member A (Hajin) SID pending", None
     if name.startswith(("rtl/member_c/", "tests/member_c/")):
         return "Member C SID pending", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
     if name in INTEGRATION_FILES or name.startswith(("tests/integration/", "tests/scheme_c/")):
