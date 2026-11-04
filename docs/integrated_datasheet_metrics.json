@@ -9,10 +9,10 @@
   "sof": "firmware/E7070012/PartBDebug.sof;6706156bytes;sha256 d209153b7b8e32a824b835ae9b87367afd21f76bca557e144b055b4e6a5da3b6. Byte-identical to original build20261104T192605_706632Z_build. Programmed E7070012 verified UTC2026-11-04T19:46:26.577567Z.",
   "hardware_prior": "E8 blue1/3/4 actual approach and DOCKED with user estimates335/310/320mm; blue2 separate manual forward/stop plus post-run DOCKED342mm, without continuous motion trace. E8 outside-view search failed NOT_FOUND. E4 raised real-J3/IR/STOP tests and historical failures retained. Blue5/6 independent ground tasks cancelled by user; six-card static evidence remains.",
   "scan": "Search3 recalibration on unchanged plastic floor: first30.014554s observation was TWO circles plus10deg and3cm rearward drift; dividing by2 gives only15.007277s approximate reference. Second single-circle retry14.093147s, about7.5deg extra and right wheel1cm more; third14.691960s, about3deg extra and4cm rearward drift. The initial second attempt was IR-latched and aborted without motion. Set15.1s bounded calibrated-time budget using two single-circle trials plus one double-circle reference; do not call these three precise single-circle passes. Reverse recovery also consumes budget and reduces net coverage. Exact360deg and epoxy-floor performance unverified. Parameters and calibration are volatile; reset/reprogramming restores defaults and invalidates calibration.",
-  "remaining": "Two-stage ALIGN commands and stationary parameter protocol work; fixed200ms achieved an isolated allowed-heading result. Uneven wheel startup/turn-stop response and target-edge clipping still interrupt continuous approach. An uninterrupted approximately60cm E12 approach and outside-view search-to-dock have NOT passed; the separately restarted approximately41cm task has board DOCKED evidence. tolerance40 left only5px differential windows, but large position jumps also prevent attributing failure solely to tolerance; tolerance30 diagnostic now has continuous 5/4,5/5,4/4 command snapshots and user-confirmed correction; it intentionally stopped at first LOST, so full autonomous docking remains unverified. Exact lost-frame B sample unavailable. Independent trial7 near-target task now observed DOCKED, with J3292mm versus user ruler370mm unresolved. Outside-view trial8 found the target after2.553478s and recovered six sampled losses through ACQUIRE without newSEARCH, but remained INCOMPLETE60.1513566s with repeated alignment. No uninterrupted60cm-to-DOCK or full search-to-dock pass. SEARCH/APPROACH/backscan do not use kick. Existing HOLD-loss limitation, unconfirmed physical backtrack, exact net angle, scene-to-UART latency, SW8 ground comparison and unprovided A/C student IDs remain. Blue5/6 ground tasks waived by user. Trial10 also remained INCOMPLETE60.0024068s; repeated5/5 requests are not proof of physical straight travel. Long physical runs paused for read-only turn-to-forward/startup analysis. Runtime configuration is not a validated recommendation. User additionally confirmed almost only one side actually moved despite equal requests. Installed chassis firmware semantics and wheel speeds remain unverified; two official source paths differ, so no PI/integral or damaged-hardware diagnosis is established.",
+  "remaining": "Two-stage ALIGN commands and stationary parameter protocol work; fixed200ms achieved an isolated allowed-heading result. Uneven wheel startup/turn-stop response and target-edge clipping still interrupt continuous approach. An uninterrupted approximately60cm E12 approach and outside-view search-to-dock have NOT passed; the separately restarted approximately41cm task has board DOCKED evidence. tolerance40 left only5px differential windows, but large position jumps also prevent attributing failure solely to tolerance; tolerance30 diagnostic now has continuous 5/4,5/5,4/4 command snapshots and user-confirmed correction; it intentionally stopped at first LOST, so full autonomous docking remains unverified. Exact lost-frame B sample unavailable. Independent trial7 near-target task now observed DOCKED, with J3292mm versus user ruler370mm unresolved. Outside-view trial8 found the target after2.553478s and recovered six sampled losses through ACQUIRE without newSEARCH, but remained INCOMPLETE60.1513566s with repeated alignment. No uninterrupted60cm-to-DOCK or full search-to-dock pass. SEARCH/APPROACH/backscan do not use kick. Existing HOLD-loss limitation, unconfirmed physical backtrack, exact net angle, scene-to-UART latency, SW8 ground comparison and unprovided A/C student IDs remain. Blue5/6 ground tasks waived by user. Trial10 also remained INCOMPLETE60.0024068s; repeated5/5 requests are not proof of physical straight travel. Long physical runs paused for read-only turn-to-forward/startup analysis. Runtime configuration is not a validated recommendation. User additionally confirmed almost only one side actually moved despite equal requests. Installed chassis firmware semantics and wheel speeds remain unverified; two official source paths differ, so no PI/integral or damaged-hardware diagnosis is established. A subsequent feedback-off real-camera search also remained INCOMPLETE60.0067485s after one isolated transition with user-confirmed two-wheel participation. Real-task final stop was host observation-limit cleanup, not DOCKED. Rejections include non-edge-touching candidate boxes; six sampled ALIGN segments were logically interrupted by target validity before nominal200ms. No causal repair or exact mechanical delay established.",
   "runtime_protocol": "PASS:193 debug HDL checks/20 synthetic reports in1.5672301s;24 host tests in0.141s;2 production Tcl fake-transport tests in1.037s. CCTL opcode12 with word15 A2 capability and atomic18bit payload; original opcode11/word13 A1 retained. Stationary VISION_ONLY only, complete readback and unchanged speed/scan settings checked. Pulse times use10ms steps: min/max20..300ms,min<=max;kick0..100ms,0 disables;kick speed3..8cm/s. Total includes/truncates kick; later ALIGN speed follows existing tune configuration. Defaults20/100/0/5 preserve E11. Safety can stop earlier than the nominal minimum. Speed requests are not measured wheel speed or torque commands.",
   "hardware_e11": "E11 programmed and ID verified. Stationary tuning seven-sample read/write/default/scan-invalidation test passed without motion. First outside-view search4 trial368C/50B ended NOT_FOUND at28.0071143s: two reverse SEARCH commands sampled and a third150ms charge inferred; user did not observe physical reverse, no APPROACH. Search3/turn4 trial593C/69B ended NOT_FOUND at43.5151717s with brief APPROACH and three LOST->ACQUIRE->ALIGN sequences, all already at exhausted scan budget. User reported right-wheel-only correction and overshoot. Turn3/tolerance40 trial273C/35B was INCOMPLETE at15.1179462s; U40->41 and user saw only jerks. Turn5/tolerance40 trial340C/44B was INCOMPLETE at15.0022591s: U41->82, APPROACH5/5, then U195 and LOST->ACQUIRE with all15.1s scan budget remaining. User saw both wheels move and some advance, then overshoot/right-edge target and left-wheel jerks. Every completed trial cleaned up to VISION_ONLY/disarmed/zero/zeroSent with no cleanup errors. zeroSent establishes UART completion, not physical standstill. Approach4 comparison289C/36B was INCOMPLETE at15.0186774s: repeated U41 then43/46/49/126/140 and NF, with a brief APPROACH4/4. User again saw initial forward jerks then two larger right-wheel movements taking blue4 past the right edge. Final VISION_ONLY/disarmed/zero/zeroSent, J3619mm, cleanupErrors empty. Lowering forward speed did not resolve short-pivot startup/overshoot; no end-to-end search-to-dock PASS.",
-  "experiment": "SameE12 tune3/4/5/4/30,pulse200/200/60/6,scan15.1 restored after user chassis restart and sameSOF reprogram. StartupOLED UGV Rover/version0.9 confirmed. Stopped RX approximately11kB/s before RAM feedbackflowoff, then no added bytes across5samples; no cross-window counter subtraction. Continuous command trial1 stopped at realD500, incomplete3rdhold and user did not watch. Trial2 oneSTART/3holds5/5->5/4->5/5, user observed faster->slower->faster->stop; not individual wheel-speed/direction acceptance or a matched flow-on causal test. Main search-to-dock still incomplete. Minimal ALIGN->zero/dwell->APPROACH diagnostic next, no result in this snapshot. NoRTL/SOF/build/R6 changes.",
+  "experiment": "SameE12 tune3/4/5/4/30,pulse200/200/60/6,scan15.1 restored after user chassis restart and sameSOF reprogram. StartupOLED UGV Rover/version0.9 confirmed. Stopped RX approximately11kB/s before RAM feedbackflowoff, then no added bytes across5samples; no cross-window counter subtraction. Continuous command trial1 stopped at realD500, incomplete3rdhold and user did not watch. Trial2 oneSTART/3holds5/5->5/4->5/5, user observed faster->slower->faster->stop; not individual wheel-speed/direction acceptance or a matched flow-on causal test. Main search-to-dock still incomplete. Single ALIGN->zero/dwell->APPROACH isolation observed and user confirmed both wheels moving together; subsequent real-camera search INCOMPLETE60.0067485s, user reports repeated correction and both wheels advancing at the end; final stop was host observation-limit cleanup, not DOCKED. Camera-to-marker460mm is distinct from J3407mm. NoRTL/SOF/build/R6 changes.",
   "hardware_e12_trial6": {
     "log": "build/remaining_20261104/integrated_blue4_e12_tolerance30_approach15s.jsonl",
     "outcome": "APPROACH_INTERRUPTED",
@@ -438,5 +438,179 @@
       },
       "scope": "ACK-to-observation includes host sampling/report formation, not chassis delay. Timings are not mechanical stopping. Range change is not exact displacement."
     }
+  },
+  "single_turn_to_forward_flowoff_trial1": {
+    "log": "build/remaining_20261104/e12_single_turn_to_forward_flowoff_trial1.jsonl",
+    "outcome": "SINGLE_ALIGN_ZERO_FORWARD_REQUESTS_OBSERVED",
+    "statusSnapshots": 60,
+    "armedSnapshots": 54,
+    "hostStartCommands": 1,
+    "inputSource": "SYNTHETIC through real C/FSM/J3/IR/UART; no direct wheel or distance override",
+    "alignSamples": [
+      {
+        "left": 6,
+        "right": -6,
+        "samples": 2
+      },
+      {
+        "left": 4,
+        "right": -4,
+        "samples": 2
+      }
+    ],
+    "acquireZeroSnapshots": 31,
+    "forwardSnapshots": 19,
+    "forwardRequests": [
+      5,
+      5
+    ],
+    "forwardSampleSpanSeconds": 0.92035,
+    "zeroToFirstForwardSeconds": 1.611663,
+    "naturalAcquireAfterStartSeconds": 0.267321,
+    "targetChangeRequestedAfterStartSeconds": 0.31145,
+    "targetChangeCommitAckAfterStartSeconds": 0.343871,
+    "startToStopRequestSeconds": 2.799345,
+    "startToFinalZeroSeconds": 2.842336,
+    "hostBudgetSeconds": 6,
+    "outstandingReadCutoffOverrunMs": 34.774,
+    "rxCountAllSamples": 1230,
+    "cleanupErrors": [],
+    "final": {
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "permit": false,
+      "left": 0,
+      "right": 0,
+      "zeroSent": true,
+      "uartBusy": false,
+      "distanceMm": 730
+    },
+    "operatorObservation": "两侧轮子都一起走的",
+    "scope": "Both wheels participated in this check; no separate physical direction, precise duration or straightness claim. No matched flow-on control, no causal feedback repair claim. Natural zero/ACQUIRE preceded the synthetic centre update; normal fence requalification is not a LOST fault. No second ALIGN/SEARCH/LOST sampled."
+  },
+  "real_camera_flowoff_search": {
+    "log": "build/remaining_20261104/integrated_blue4_e12_flowoff_search_to_dock.jsonl",
+    "outcome": "INCOMPLETE",
+    "taskObservationSeconds": 60.0067485,
+    "statusSnapshots": 729,
+    "visionSnapshots": 90,
+    "hostStartCommands": 0,
+    "syntheticWrites": 0,
+    "heartbeatCommands": 0,
+    "terminalObserved": false,
+    "cleanupErrors": [],
+    "final": {
+      "mode": "VISION_ONLY",
+      "armed": false,
+      "permit": false,
+      "left": 0,
+      "right": 0,
+      "zeroSent": true,
+      "distanceMm": 407,
+      "irEstop": false,
+      "sonarHold": false
+    },
+    "operatorObservation": "找到蓝4后慢慢修正，牌边先靠VGA右边再靠左边，最终居中；有反复修正，末段两轮共同前进后停；用户对末段是否再大幅纠偏不确定。",
+    "independentAudit": {
+      "armedSnapshots": 469,
+      "sampledStateSegments": {
+        "SEARCH": 3,
+        "ACQUIRE": 27,
+        "ALIGN": 18,
+        "LOST": 15,
+        "APPROACH": 4
+      },
+      "approachCommandSamples": [
+        {
+          "left": 5,
+          "right": 5,
+          "samples": 1
+        },
+        {
+          "left": 5,
+          "right": 4,
+          "samples": 4
+        },
+        {
+          "left": 4,
+          "right": 5,
+          "samples": 2
+        },
+        {
+          "left": 4,
+          "right": 4,
+          "samples": 8
+        }
+      ],
+      "searchSeconds": 1.433652,
+      "remainingSearchSeconds": 13.666348,
+      "searchRequests": [
+        3,
+        -3
+      ],
+      "reverseSearchObserved": false,
+      "sourceUnhealthyArmedSamples": 3,
+      "sourceUnhealthyStates": [
+        "ACQUIRE"
+      ],
+      "sourceUnhealthyFrames": [
+        45034,
+        45117,
+        45129
+      ],
+      "sourceUnhealthyInputAgeMsRange": [
+        54,
+        77
+      ],
+      "sourceUnhealthyScope": "All zero/zeroSent; exact B frames unsampled, no acquisition-timeout cause established.",
+      "lostEntries": 15,
+      "lostEntriesSourceHealthy": 15,
+      "lostEntriesNotObservedNotLocked": 12,
+      "lostEntriesObservedNotLocked": 3,
+      "visionAllGoodFresh": true,
+      "candidateFaults": false,
+      "transportFaults": false,
+      "bufferDropCountConstant": 3,
+      "completionDiscardCount": 0,
+      "visionProcessingMsRange": [
+        38.818,
+        57.066
+      ],
+      "visionSnapshotAgeMsRange": [
+        40.02,
+        92.062
+      ],
+      "rxAllSamples": 1230,
+      "armedDistanceValidAndSelectionMatch": true,
+      "armedIRHoldFatalFramingError": false,
+      "targetUProgression": [
+        53,
+        85,
+        142,
+        185,
+        192,
+        194,
+        129,
+        64,
+        77,
+        129
+      ],
+      "candidateBoxScope": "U185 main candidate139..230 or140..231 has8..9px right clearance despite NF/reason4; later146..238/149..239 touches edge. NF mostly reason4, one reason3 and one reason1; not every rejection is clipping.",
+      "alignSegmentsFollowedByLost": 11,
+      "kickFirstSegmentsProvenInterruptedBeforeNominal200ms": 6,
+      "kickSampleToLostBoardMsRange": [
+        96.095,
+        122.53
+      ],
+      "segmentDurationUpperBoundMsRange": [
+        156.095,
+        182.53
+      ],
+      "earlyInterruptionScope": "Bound uses first sampled kick within60ms; logical target-validity interruption, not exact physical pulse width or measured wheel response.",
+      "countsScope": "Sparse samples/observed segments, not exact actions or UART packets; C/B are not same-frame proof."
+    },
+    "scope": "Separate real-camera task, same E12/SOF/settings. Host STOP at observation limit; no completed search-to-dock or established feedback-shutdown causal improvement.",
+    "operatorCameraToMarkerPerpendicularMm": 460,
+    "measurementScope": "Camera-to-marker460mm and J3final407mm have different origins; no same-baseline error inferred. Host60s cleanup stop, not DOCKED. No matched flow-on comparison."
   }
 }
