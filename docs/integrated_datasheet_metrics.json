@@ -711,7 +711,7 @@
   "programmed_build_id": "E7070014",
   "candidate_e14": {
     "buildId": "E7070014",
-    "status": "BUILD_R6_PROGRAM_POLICY_PASS_FIRST_RED2_SEARCH_INCOMPLETE",
+    "status": "FINAL_HANDOFF_CONSERVATIVE_RAM_READBACK_PASS_FULL_FLOW_UNPASSED_TESTING_ENDED",
     "changes": [
       "Bounded original ALIGN gap at total <=200ms, no extension/re-kick/reversal; other safety priority retained",
       "Whole zero then one RAM T131 flowoff initialization; local completion gates new starts, not an execution ACK",
@@ -896,6 +896,29 @@
         ],
         "stationary": true,
         "scope": "All four runtime fields written/read/restored; no physical-motion performance claim"
+      },
+      "secondBypassSearch": {
+        "file": "build/remaining_20261104/integrated_blue4_e14_red2_bypass_search_to_dock_02.jsonl",
+        "outcome": "INCOMPLETE",
+        "taskObservationSeconds": 60.0301474,
+        "cSnapshots": 765,
+        "bSnapshots": 104,
+        "armedSamples": 419,
+        "armedStateSamples": {
+          "SEARCH": 94,
+          "HOLD": 218,
+          "ACQUIRE": 100,
+          "ALIGN": 7
+        },
+        "approachDockObserved": false,
+        "hostStartCommands": 0,
+        "syntheticWrites": 0,
+        "heartbeatCommands": 0,
+        "scanElapsedUs": 14017840,
+        "scanRemainingUs": 1082160,
+        "cleanupErrors": [],
+        "operatorMovedVehicleOrScene": true,
+        "scope": "Manual movement in later part prevents autonomous-recovery acceptance; no full-flow success"
       }
     },
     "releaseSof": {
@@ -1028,6 +1051,129 @@
       ],
       "sonarHold": true,
       "scope": "Real read-only zero preflight; no task started because close real range; not full-flow acceptance"
+    },
+    "finalConservativeProfile": {
+      "schema": "echo7-manual-runtime-profile-v1",
+      "name": "E14 final conservative candidate",
+      "buildId": "E7070014",
+      "date": "2026-11-05",
+      "status": "HARDWARE_WRITTEN_AND_READ_BACK_NO_MOTION_RETEST",
+      "purpose": "Manual restoration reference only. No loader automatically applies this JSON. User ended motion testing due to time; full autonomous search-to-dock remains unpassed.",
+      "tuning": {
+        "search": 3,
+        "turn": 4,
+        "approach": 5,
+        "fine": 4,
+        "tolerance": 40
+      },
+      "alignTiming": {
+        "minMs": 120,
+        "maxMs": 160,
+        "kickMs": 40,
+        "kickSpeed": 6
+      },
+      "motionPolicy": {
+        "corridorPx": 60,
+        "settleMs": 1800,
+        "stopMm": 400,
+        "slowMm": 700
+      },
+      "unchangedScan": {
+        "scanBudgetUs": 15100000,
+        "scanCalibrated": true,
+        "scope": "Historical approximate plastic-floor time profile, not new three-trial angle calibration"
+      },
+      "fixedSafety": {
+        "obstacleHoldMm": 250,
+        "releaseMm": 300,
+        "releaseFreshReadings": 3,
+        "irA": "Latched stop; first fresh POWER only clears latch"
+      },
+      "finalState": {
+        "mode": "VISION_ONLY",
+        "taskArmed": false,
+        "motionPermit": false,
+        "leftCmS": 0,
+        "rightCmS": 0,
+        "zeroSent": true,
+        "irEstop": false,
+        "sonarHold": false,
+        "chassisInitSent": true,
+        "chassisRxCount": 0,
+        "physicalSwitchesOn": [
+          "SW3",
+          "SW8"
+        ],
+        "selectedBlue": 4,
+        "bypassPerspective": true
+      },
+      "evidence": {
+        "readback": "build/remaining_20261104/e14_final_conservative_readback.json",
+        "samples": 3,
+        "allParameterAndZeroReadbacksMatch": true,
+        "writeLogs": [
+          "build/remaining_20261104/e14_final_conservative_tune.json",
+          "build/remaining_20261104/e14_final_conservative_pulse.json",
+          "build/remaining_20261104/e14_final_conservative_policy.json"
+        ],
+        "distanceSamples": [
+          "FAR",
+          1147,
+          1329
+        ],
+        "distanceScope": "Scene/robot had been moved; not fixed-position ranging evidence",
+        "visionScope": "No target locks, two healthy C samples and one bad B frame; not a final vision-ready claim"
+      },
+      "persistence": {
+        "volatile": true,
+        "resetEvents": [
+          "KEY0",
+          "FPGA power loss followed by reprogramming",
+          "SOF reprogramming"
+        ],
+        "resetRestores": "Production SOF boot values below, not this conservative runtime profile",
+        "sofBootTuning": {
+          "search": 3,
+          "turn": 4,
+          "approach": 5,
+          "fine": 4,
+          "tolerance": 30
+        },
+        "sofBootAlignTiming": {
+          "minMs": 200,
+          "maxMs": 200,
+          "kickMs": 60,
+          "kickSpeed": 6
+        },
+        "sofBootMotionPolicy": {
+          "corridorPx": 45,
+          "settleMs": 1500,
+          "stopMm": 350,
+          "slowMm": 500
+        }
+      },
+      "restoreCommands": [
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode vision",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 tune --search 3 --turn 4 --approach 5 --fine 4 --tolerance 40",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 pulse --min-ms 120 --max-ms 160 --kick-ms 40 --kick-speed 6",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy --corridor-px 60 --settle-ms 1800 --stop-mm 400 --slow-mm 700",
+        "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status"
+      ],
+      "futureDemonstration": {
+        "normalVision": "Set physical SW8 down and obtain new healthy confirmed frames; leave current state unchanged at handoff",
+        "modeCommand": "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode integrated",
+        "start": "After checking scene, physical one-hot target selection and safety, remove red2 for fresh absence confirmation, then present it anew. POWER cannot start while still in VISION_ONLY.",
+        "scope": "Operating instructions only, not a claim that the full physical flow has passed"
+      }
+    },
+    "acceptanceDisposition": {
+      "physicalMotionTesting": "ENDED_AT_USER_REQUEST_TIME_LIMIT",
+      "fullAutonomousSearchToDock": "UNPASSED",
+      "conservativeProfileMotionRetest": "NOT_RUN",
+      "newCompilation": "NOT_RUN_OR_REQUIRED_FOR_RAM_PROFILE",
+      "handoffMode": "VISION_ONLY_DISARMED_ZERO_SENT",
+      "futureModeChangeRequired": true
     }
   }
 }

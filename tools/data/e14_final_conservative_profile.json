@@ -1,0 +1,115 @@
+{
+  "schema": "echo7-manual-runtime-profile-v1",
+  "name": "E14 final conservative candidate",
+  "buildId": "E7070014",
+  "date": "2026-11-05",
+  "status": "HARDWARE_WRITTEN_AND_READ_BACK_NO_MOTION_RETEST",
+  "purpose": "Manual restoration reference only. No loader automatically applies this JSON. User ended motion testing due to time; full autonomous search-to-dock remains unpassed.",
+  "tuning": {
+    "search": 3,
+    "turn": 4,
+    "approach": 5,
+    "fine": 4,
+    "tolerance": 40
+  },
+  "alignTiming": {
+    "minMs": 120,
+    "maxMs": 160,
+    "kickMs": 40,
+    "kickSpeed": 6
+  },
+  "motionPolicy": {
+    "corridorPx": 60,
+    "settleMs": 1800,
+    "stopMm": 400,
+    "slowMm": 700
+  },
+  "unchangedScan": {
+    "scanBudgetUs": 15100000,
+    "scanCalibrated": true,
+    "scope": "Historical approximate plastic-floor time profile, not new three-trial angle calibration"
+  },
+  "fixedSafety": {
+    "obstacleHoldMm": 250,
+    "releaseMm": 300,
+    "releaseFreshReadings": 3,
+    "irA": "Latched stop; first fresh POWER only clears latch"
+  },
+  "finalState": {
+    "mode": "VISION_ONLY",
+    "taskArmed": false,
+    "motionPermit": false,
+    "leftCmS": 0,
+    "rightCmS": 0,
+    "zeroSent": true,
+    "irEstop": false,
+    "sonarHold": false,
+    "chassisInitSent": true,
+    "chassisRxCount": 0,
+    "physicalSwitchesOn": [
+      "SW3",
+      "SW8"
+    ],
+    "selectedBlue": 4,
+    "bypassPerspective": true
+  },
+  "evidence": {
+    "readback": "build/remaining_20261104/e14_final_conservative_readback.json",
+    "samples": 3,
+    "allParameterAndZeroReadbacksMatch": true,
+    "writeLogs": [
+      "build/remaining_20261104/e14_final_conservative_tune.json",
+      "build/remaining_20261104/e14_final_conservative_pulse.json",
+      "build/remaining_20261104/e14_final_conservative_policy.json"
+    ],
+    "distanceSamples": [
+      "FAR",
+      1147,
+      1329
+    ],
+    "distanceScope": "Scene/robot had been moved; not fixed-position ranging evidence",
+    "visionScope": "No target locks, two healthy C samples and one bad B frame; not a final vision-ready claim"
+  },
+  "persistence": {
+    "volatile": true,
+    "resetEvents": [
+      "KEY0",
+      "FPGA power loss followed by reprogramming",
+      "SOF reprogramming"
+    ],
+    "resetRestores": "Production SOF boot values below, not this conservative runtime profile",
+    "sofBootTuning": {
+      "search": 3,
+      "turn": 4,
+      "approach": 5,
+      "fine": 4,
+      "tolerance": 30
+    },
+    "sofBootAlignTiming": {
+      "minMs": 200,
+      "maxMs": 200,
+      "kickMs": 60,
+      "kickSpeed": 6
+    },
+    "sofBootMotionPolicy": {
+      "corridorPx": 45,
+      "settleMs": 1500,
+      "stopMm": 350,
+      "slowMm": 500
+    }
+  },
+  "restoreCommands": [
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode vision",
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status",
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 tune --search 3 --turn 4 --approach 5 --fine 4 --tolerance 40",
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 pulse --min-ms 120 --max-ms 160 --kick-ms 40 --kick-speed 6",
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy --corridor-px 60 --settle-ms 1800 --stop-mm 400 --slow-mm 700",
+    "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status"
+  ],
+  "futureDemonstration": {
+    "normalVision": "Set physical SW8 down and obtain new healthy confirmed frames; leave current state unchanged at handoff",
+    "modeCommand": "python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode integrated",
+    "start": "After checking scene, physical one-hot target selection and safety, remove red2 for fresh absence confirmation, then present it anew. POWER cannot start while still in VISION_ONLY.",
+    "scope": "Operating instructions only, not a claim that the full physical flow has passed"
+  }
+}

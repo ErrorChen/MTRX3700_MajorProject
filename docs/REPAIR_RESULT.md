@@ -1,10 +1,66 @@
 # ECHO-7 本次修复与实机记录
 
+## 最终交付：保守RAM参数与停止状态 / Final handoff: conservative RAM profile and stopped state
+
+**中文**
+
+按用户“有移动，把参数调保守，没时间了”的要求，**本轮结束运动测试**，不再编译或追加试车。最终程序仍为 **E7070014**：完整构建、四角时序、正式R6 **233.259611秒**及实际下载已通过。已将下面保守候选参数写入实板，并独立读取三次全部一致；**没有使用这组最终参数运动复验，完整自主画外搜索→跟踪→前进→停靠仍未通过**，保留此缺陷，不拼接历史分段成功。
+
+| 参数组 | 最终实板RAM设置 | E14 SOF在KEY0/重新下载后的启动值 |
+|---|---|---|
+| search / turn / approach / fine / tolerance | **3 /4 /5 /4 /40**（cm/s；末项px） | 3 /4 /5 /4 /30 |
+| ALIGN min / max / kick / kick speed | **120 /160 /40 ms /6 cm/s** | 200 /200 /60 ms /6 cm/s |
+| corridor / settle / stop / slow | **60 px /1800 ms /400 mm /700 mm** | 45 px /1500 ms /350 mm /500 mm |
+
+意图是容许更大横向误差、缩短单次短转及起步段、增加停稳等待，并提早减速/正常停车；效果尚未运动验证。近障 **≤250 mm HOLD、三个新鲜≥300 mm读数释放**及IR保护没有修改。逻辑速度和距离阈值不代表实测轮速或保证的尺量停车距离。
+
+参数档为 [e14_final_conservative_profile.json](../tools/data/e14_final_conservative_profile.json)，是明确的手工恢复记录，**没有新增自动loader**。`e14_final_conservative_readback.json`最终3/3样本均VISION_ONLY、ARM0、permit0、左右0、zeroSent=true；上述全部参数准确，scan15.1 s/资格true不变，initSent=true、RX0、IR/HOLD=false。现场已经移动，FAR/1147/1329 mm只保留为当时读数，不当固定测距验证。最终没有目标锁定（2/3 C来源健康、1个坏B帧），不能称视觉READY。
+
+**当前实物保持SW3和SW8上拨：选择蓝4，处于旁路对照配置；不要求用户再操作。车辆保持VISION_ONLY零速，此时按POWER不会启动任务。** 未来若演示正常视觉，应先下拨SW8并重新确认健康画面/校色和目标；准备实际运动时还须显式切到INTEGRATED，再通过新呈现红2启动。红2先移开，确认缺失后再放入；拨码/红2/真实安全条件仍生效。
+
+**KEY0、掉电后重新下载或直接重新下载SOF会恢复右列生产启动值，不保留这组RAM参数。** FPGA掉电仍需下载SOF。`tune --defaults`/`pulse --defaults`还是更早通用兼容值，也不是这组最终参数。以后要恢复保守档，在空闲JTAG会话、零速状态下执行以下命令并核对输出；这些命令不发送START：
+
+**English**
+
+At the user's request to use conservative settings and stop because time was limited, **motion testing ends for this run**. No new compilation or driving trial is scheduled. The final program remains **E7070014**, with full-build/four-corner timing, formal **233.259611-second R6**, and actual programming passed. The conservative RAM profile in the table was written and independently read back three times. **It has not been retested in motion, and complete autonomous outside-view search→tracking→forward travel→docking has not passed.** Historical successful segments are not combined into a complete run.
+
+The intended changes allow greater horizontal error, shorten each ALIGN/kick, increase zero dwell, and slow/dock earlier; their physical effect is unverified. Fixed **≤250 mm HOLD and three fresh ≥300 mm readings for release**, plus IR protection, remain unchanged. Logical speeds/thresholds do not establish actual wheel speeds or ruler stopping accuracy.
+
+The [JSON parameter file](../tools/data/e14_final_conservative_profile.json) is a manual restoration record, **not an automatically applied loader**. Final3/3 readbacks were VISION_ONLY/disarmed/no permit/L0/R0/zeroSent, with every parameter matching,15.1-second scan qualification unchanged,initSent=true,RX0 and no IR/HOLD latch. The moved scene produced FAR/1147/1329 mm, which are observations rather than a fixed-position distance test. No target was locked; two C samples were healthy and one B frame was bad, so no final vision-ready claim is made.
+
+**Physical SW3 andSW8 remain ON: blue4 selected, perspective bypass active. The handoff leaves VISION_ONLY at zero; POWER cannot start a task in that mode.** For a future normal-vision demonstration, switchSW8 OFF and reconfirm healthy frames/calibration/target. Driving additionally requires explicitly selecting INTEGRATED and then a new red2 presentation after absence confirmation. No further switch operation is requested at this handoff.
+
+**KEY0, FPGA power loss/reprogramming or SOF reprogramming restores the production boot values in the right column, not this RAM profile.** Generic `tune --defaults`/`pulse --defaults` also do not restore these final settings. Use the explicit commands below on an idle JTAG connection while stopped and check readback. They do not issue START:
+
+```powershell
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode vision
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 tune --search 3 --turn 4 --approach 5 --fine 4 --tolerance 40
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 pulse --min-ms 120 --max-ms 160 --kick-ms 40 --kick-speed 6
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy --corridor-px 60 --settle-ms 1800 --stop-mm 400 --slow-mm 700
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status
+```
+
+仅在未来已准备好演示时切换模式 / Only when ready for a future demonstration:
+
+```powershell
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode integrated
+```
+
+随后重新呈现红2；此处是使用说明，不是已通过全流程的结果。 / Then present red2 anew; this is an operating procedure, not a full-flow acceptance claim.
+
+### 第二轮旁路试验：人工移动，仍未完成 / Second bypass trial: manual movement, still incomplete
+
+`integrated_blue4_e14_red2_bypass_search_to_dock_02.jsonl`结果 **INCOMPLETE，60.0301474秒**，765 C/104 B、cleanupErrors为空；419个ARM样本为SEARCH94、HOLD218、ACQUIRE100、ALIGN7，没有APPROACH或DOCK，host START/合成写入/heartbeat均0。用户明确确认后半段移动车身/现场，所以不能把后段重新捕获/动作记为自主恢复PASS。最终scan累计14.017840秒、余1.082160秒，也不是预算耗尽。之后才写入上面的保守参数，没有再跑车。本轮收尾承认未完成项，已有R6/时序/下载和零速参数证据分别保留。
+
+The second bypass log ended **INCOMPLETE after60.0301474 seconds**, with765 C/104 B samples and no cleanup errors. Its419 armed samples comprise94 SEARCH,218 HOLD,100 ACQUIRE and7 ALIGN; no APPROACH/DOCK,host START,synthetic writes or heartbeats occurred. The operator confirmed moving the vehicle/scene during the latter part, so later reacquisition/actions are **not autonomous recovery acceptance**. Final accumulated scan time14.017840 seconds left1.082160 seconds; its budget was not exhausted. The conservative profile was written afterward, with no further motion run. Failed full-flow scope remains distinct from successful R6,timing,programming and stationary parameter evidence.
+
+
 日期：2026-11-04～11-05（Australia/Sydney）。工程：`C:/Quartus_Projects/ECHO72.0/github_publish/MTRX3700_MajorProject`，保留基于`dc1db23`以来的历史工程与用户改动。本次发布E7070012原始构建、下载身份、协议/控制/R6、真实静止pulse读写均有独立证据。五轮地面观察保留：三轮短时INCOMPLETE、一轮仅回正诊断进入APPROACH即主动STOP、第五轮60.0399573秒仍INCOMPLETE并停于近障HOLD。主线搜索停靠未通过；后续第六轮连续差速获用户确认，第七轮独立近距DOCKED，第八轮搜索发现后仍INCOMPLETE；不拼成单次主线完成。第九轮turn4有限回正获反馈、首次APPROACH即STOP；第十轮完整搜索INCOMPLETE60.0024068秒；5/5逻辑请求不证明物理直行。BCTL/CCTL使用真实BUILD_ID，须配套新版主机/Tcl。历史成功与失败不互相覆盖。
 
 ## E14 当前进度
 
-最终E7070014源码已冻结，定向、完整构建/四角时序及实际下载/零速预检通过；最终fresh R6已PASS233.259611秒，真实SW→红2→搜索→DOCK仍待。E13时序FAIL、未下载；当前实板已确认E14。完整E14参数/初始化说明及独立结果见本文末段。
+最终E7070014源码已冻结，定向、完整构建/四角时序及实际下载/零速预检通过；最终fresh R6已PASS233.259611秒，真实SW→红2→搜索→DOCK未通过；用户要求停止运动测试，保守RAM设置已完成3/3回读。E13时序FAIL、未下载；当前实板已确认E14。完整E14参数/初始化说明及独立结果见本文末段。
 
 ### E14 已完成的定向验证（尚非整板或实机验收）
 
@@ -1218,7 +1274,7 @@ E13的完整编译已结束，最终为 **FAIL**：`build/member_b/20261104T2125
 
 ## E14 最终源码与当前交付状态
 
-当前开发源码为 **E7070014（最终迭代候选）**，完整构建、四角时序及最终fresh R6（233.259611秒）已PASS；实机全流程仍待本轮完成。E14完整构建和实际下载已通过，板上确认为 **E7070014**；完整红2运动任务仍待，E12保留为历史回滚。**E7070013 的定向仿真和 R6 通过，但 Full Compilation 的时序检查失败，未下载、未实机测试，不能使用其 SOF。** 以下 E12 及更早结果均属于各自历史版本，不能升级为 E14 的成绩。
+当前开发源码为 **E7070014（最终迭代候选）**，完整构建、四角时序及最终fresh R6（233.259611秒）已PASS；用户已结束本轮运动测试；两次完整任务均未停靠，最终保守RAM档仅写入/读回，未运动复验。E14完整构建和实际下载已通过，板上确认为 **E7070014**；完整红2运动任务未通过，E12保留为历史回滚。**E7070013 的定向仿真和 R6 通过，但 Full Compilation 的时序检查失败，未下载、未实机测试，不能使用其 SOF。** 以下 E12 及更早结果均属于各自历史版本，不能升级为 E14 的成绩。
 
 E14 将用户同意的最多 200 ms 有限短转继续、最终启动配置、底盘自动反馈初始化、UART 字符查表时序修正和停车调参合并。主要验收仍是一次真实、连续的 **实体拨码选择 → 新呈现红2 → 自动搜索 → 停稳确认/跟踪 → 接近 → 自主 DOCKED 停车**，以及真实 J3 近障保护和 IR A 急停。主机观察到时限后发送 STOP 不算自主停靠；各段独立成功不能拼成完整任务。
 
