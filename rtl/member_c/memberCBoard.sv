@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// ECHO-7 IR/sonar test: POWER once, safety-latched stop, KEY0 rearm.
+// ECHO-7 production board: separate tracking, task authorization and safety.
 // POWER starts a perception-driven task, never direct fixed-speed motion.
 // Board I/O wrapper reused from validated Member C; only reset ownership changed.
 // KEY1 pages: decimal distance (d), NEC high word (H), NEC low word (L).
@@ -13,13 +13,19 @@ module memberCBoard #(
     parameter int ULTRASONIC_ESTOP_MM = 250, // EB STOP DISTANCE mm
     parameter int HEARTBEAT_CLKS = 10_000_000, // 200 ms at 50 MHz
     parameter int BLINK_CLKS = 2_500_000,      // 50 ms event indication
-    parameter int KEY_DEBOUNCE_CLKS = 1_000_000 // 20 ms stable press AND release
+    parameter int KEY_DEBOUNCE_CLKS = 1_000_000, // 20 ms stable press AND release
+    parameter int SELECTION_STABLE_CLKS = 1_000_000,
+    parameter int ACQUIRE_SETTLE_US = 200000, ACQUIRE_TIMEOUT_US = 900000
 ) (
     input  wire       CLOCK_50,
     input  wire       reset50, // Shared integrated CLOCK_50 reset.
     input  wire [1:0] KEY,
     input  wire       IRDA_RXD,
-    input wire [4:2] SW,
+    input wire [5:0] SW,
+    input logic [1:0] mode,
+    input logic debugStart,debugStop,modeChanged,rawMode,injectLeaseValid,scanCalibrated,visualStart,
+    input logic [31:0] scanBudgetUs,
+    output logic [511:0] statusWords,
     // Internal public v3 link to perceptionCore, all synchronous to CLOCK_50.
     input logic [31:0] timeUs,
  input logic cameraFifoFault, cameraAbandonEvent, // synchronous CLOCK_50 private safety link
@@ -97,30 +103,52 @@ module memberCBoard #(
     hex_digit h1 (.d(shown[7:4]),   .blank(display_blank), .seg(HEX1));
     hex_digit h2 (.d(shown[11:8]),  .blank(display_blank), .seg(HEX2));
     hex_digit h3 (.d(shown[15:12]), .blank(display_blank), .seg(HEX3));
-    assign HEX5 = page==0 ? 7'b0100001 : high_page ? 7'b0001001 : 7'b1000111; // H / L, active low
-    assign HEX4 = 7'b0111111;                         // '-'
+    assign HEX5 = !statusWords[14] ? (statusWords[15] ? 7'b1000110 : 7'b0101011) :
+      page==0 ? 7'b0100001 : high_page ? 7'b0001001 : 7'b1000111; // H / L, active low
+    hex_digit mode_hex(.d({2'b00,mode}),.blank(1'b0),.seg(HEX4)); // mode: 0 integrated, 1 vision, 2 injection
+    //                         // '-'
 
-    // Stage 1 fixed controls: these are command bytes, not the inverse bytes.
+    // Confirmed command bytes (not inverse bytes).
     localparam logic [7:0] POWER_CODE = 8'h12;
     localparam logic [7:0] ESTOP_CODE = 8'h0f;
-    wire power_frame = nec_valid && (nec_code[23:16] == POWER_CODE);
+    // NEC repeats and retransmitted full frames refresh the quiet timer. A held
+    // POWER therefore cannot both release the IR latch and start a new task.
+    logic irSeen;
+    logic [7:0] lastIrCommand;
+    logic [31:0] lastIrUs;
+    wire power_frame = nec_valid && nec_code[23:16]==POWER_CODE &&
+      (!irSeen || lastIrCommand!=POWER_CODE || timeUs-lastIrUs>=180000);
+    always_ff @(posedge CLOCK_50)begin
+      if(reset50)begin irSeen<=0;lastIrCommand<=0;lastIrUs<=0;end
+      else if(nec_valid || nec_repeat)begin
+        irSeen<=1;lastIrUs<=timeUs;
+        if(nec_valid)lastIrCommand<=nec_code[23:16];
+      end
+    end
     wire estop_frame = nec_valid && (nec_code[23:16] == ESTOP_CODE);
     sonar_guard sonar_u(.clk50(CLOCK_50),.reset(reset50),.echo(SONAR_ECHO),
       .trig(SONAR_TRIG),.distance_mm(distance_mm),.distance_valid(distance_valid),.sample_pulse(sample_pulse));
     wire running, used, estop, sonar_stop;
     wire [2:0] stop_reason;
-    (* async_reg = "true" *) logic [2:0] sw_meta, sw_sync;
+    (* async_reg = "true" *) logic [5:0] sw_meta, sw_sync;
     always_ff @(posedge CLOCK_50) begin
       if(reset50) begin sw_meta<=0;sw_sync<=0;end
       else begin sw_meta<=SW;sw_sync<=sw_meta;end
     end
-    wire [2:0] motionState;
+    wire [3:0] motionState;
+    wire chassis_busy,zeroSent;
     wire motionTargetValid;
+    wire [511:0] controlStatusWords;
     wire signed [6:0] logicalL,logicalR;
-    member_c_control #(.ULTRASONIC_ESTOP_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN)) control_u(
+    member_c_control #(.ULTRASONIC_ESTOP_MM(ULTRASONIC_ESTOP_MM),.TURN_SIGN(TURN_SIGN),
+      .SELECTION_STABLE_CLKS(SELECTION_STABLE_CLKS),.ACQUIRE_SETTLE_US(ACQUIRE_SETTLE_US),
+      .ACQUIRE_TIMEOUT_US(ACQUIRE_TIMEOUT_US)) control_u(
       .clk(CLOCK_50),.reset(reset50),.power_frame(power_frame),.estop_frame(estop_frame),
       .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
       .selection(sw_sync),.timeUs(timeUs),.status(perceptionStatus),
+      .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
+      .rawMode(rawMode),.injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),
+      .distanceSample(sample_pulse),.zeroSent(zeroSent),.uartBusy(chassis_busy),.statusWords(controlStatusWords),
       .targetRequest(targetRequest),.targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
       .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),
       .distance_valid(distance_valid),.distance_mm(distance_mm),.left_cm_s(logicalL),.right_cm_s(logicalR),
@@ -132,12 +160,11 @@ module memberCBoard #(
     logic [1:0] uart_por = 2'b11;
     always_ff @(posedge CLOCK_50) uart_por <= {uart_por[0], 1'b0};
     // Legacy ir_drive manual control is NOT instantiated.
-    wire chassis_busy;
     chassis_command #(.CLKS_PER_BIT(434), .PERIOD_CLKS(HEARTBEAT_CLKS),
         .USE_WHEEL_REQUESTS(1)) chassis_u (
         .clk(CLOCK_50), .reset(uart_por[1]), .armed(running && !reset50),
         .motion(2'b00), .speed(2'b00), .left_cm_s(motorL), .right_cm_s(motorR), .feedback(1'b0),
-        .tx(CHASSIS_TX), .busy(chassis_busy));
+        .tx(CHASSIS_TX), .busy(chassis_busy),.zeroSent(zeroSent));
 
     wire [7:0] chassis_rx_byte;
     wire chassis_rx_valid, chassis_rx_fe;
@@ -146,6 +173,16 @@ module memberCBoard #(
         .data_rx(chassis_rx_byte), .valid(chassis_rx_valid), .ready(1'b1),
         .parity_error(), .framing_error(chassis_rx_fe));
 
+    logic [15:0] chassisRxCount;
+    logic [7:0] lastRxByte;
+    always_ff @(posedge CLOCK_50)begin
+      if(reset50)begin chassisRxCount<=0;lastRxByte<=0;end
+      else if(chassis_rx_valid && !chassis_rx_fe)begin chassisRxCount<=chassisRxCount+16'd1;lastRxByte<=chassis_rx_byte;end
+    end
+    always_comb begin
+      statusWords=controlStatusWords;
+      statusWords[12*32+:32]={7'd0,chassis_rx_fe,lastRxByte,chassisRxCount};
+    end
     wire valid_led, repeat_led, rx_led;
     pulse_stretch #(.CLKS(BLINK_CLKS)) valid_blink (
         .clk(CLOCK_50), .reset(reset50), .trigger(nec_valid), .q(valid_led));

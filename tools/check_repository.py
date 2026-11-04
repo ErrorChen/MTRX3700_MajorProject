@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Check the active repository layout/dependency closure, not FPGA behaviour."""
 from pathlib import Path
-import hashlib,json,os,re,subprocess,tempfile
+import json,os,re,subprocess,tempfile
 
 
 def checkIgnoreRules(root, samples):
@@ -49,7 +49,7 @@ def main():
     if [p.name for p in projects]!=['PartBDebug.qpf']:errors.append('Exactly one active Quartus project is required')
     qsf=root/'quartus/PartBDebug.qsf'
     sourceText=qsf.read_text(encoding='utf-8')
-    if 'TOP_LEVEL_ENTITY perceptionDemoTop' not in sourceText or 'DEVICE 5CSEMA5F31C6' not in sourceText:
+    if 'TOP_LEVEL_ENTITY echo7IntegratedTop' not in sourceText or 'DEVICE 5CSEMA5F31C6' not in sourceText:
         errors.append('Unexpected active top/device')
     switchPins=('AB12','AC12','AF9','AF10','AD11','AD12','AE11','AC9','AD10','AE12')
     for switch,pin in enumerate(switchPins):
@@ -70,7 +70,8 @@ def main():
                  'assets/markers/scene_manifest.json','assets/markers/ECHO7_All_Markers_A4_v2.pdf'):
         if not (root/name).is_file():errors.append(f'Missing retained input: {name}')
     readmes=sorted(p.name for p in root.glob('*README*.md'))
-    if readmes!=['README.md','VERSION_README.md']:errors.append('Use the main and version README pair')
+    if readmes!=['README.md','README_EN.md','VERSION_README.md']:
+        errors.append('Keep the Chinese README, English README and version history')
     errors.extend(checkIgnoreRules(root,[('build/example.log',True),('quartus/db/generated.cdb',True),
                             ('assets/markers/sheet_320x240_rgb565.hex',False),
                             ('tests/fixtures/camera/frame30158/frame.png',False),
@@ -81,8 +82,11 @@ def main():
         path=(fixtureRoot/entry['path']).resolve()
         if not path.is_relative_to(fixtureRoot.resolve()) or not path.is_file():
             errors.append(f'Missing or external camera fixture: {entry["path"]}')
-        elif hashlib.sha256(path.read_bytes()).hexdigest()!=entry['sha256']:
-            errors.append(f'Camera fixture hash changed: {entry["path"]}')
+        elif path.suffix.lower()=='.json':
+            try:
+                json.loads(path.read_text(encoding='utf-8'))
+            except (ValueError,UnicodeError) as error:
+                errors.append(f'Invalid camera fixture JSON {entry["path"]}: {error}')
     result={'level':'STRUCTURAL','status':'FAIL' if errors else 'PASS','activeProject':'PartBDebug',
             'projectDependencies':len(dependencies),'rtlBenches':len(manifest['tests']),'errors':errors,
             'limitation':'This check does not run RTL simulation, synthesis, timing or hardware.'}

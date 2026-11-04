@@ -10,6 +10,7 @@ Synthetic pixels do not constitute live CAMERA_HW or vehicle integration.
 from __future__ import annotations
 
 import argparse
+from concurrent.futures import ThreadPoolExecutor
 import datetime
 import hashlib
 import itertools
@@ -26,6 +27,7 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_VERSION = "5.050"
 SUITE_NAMES = (
+    "tb_pixel_uart_repair", "tb_control_repair", "tb_chassis_debug", "red2Start_tb",
     "perceptionCoreContinuous_tb", "perceptionCoreOverload_tb", "hsvColourGate_tb", "targetTracker_tb",
     "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb", "mainColourSupportReader_tb",
 )
@@ -152,6 +154,7 @@ def runProcess(arguments, cwd, logPath, deadline):
     if remaining <= 0:
         raise TimeoutError("the complete clean suite exceeded 300 seconds")
     started = time.monotonic()
+    startedUtc = datetime.datetime.now(datetime.timezone.utc).isoformat()
     command = [str(value) for value in arguments]
     process = subprocess.Popen(command, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                text=True, encoding="utf-8", errors="replace",
@@ -174,6 +177,7 @@ def runProcess(arguments, cwd, logPath, deadline):
         output, _ = process.communicate(timeout=5)
     Path(logPath).write_text(output, encoding="utf-8")
     return {"arguments": command, "returnCode": process.returncode, "timedOut": timedOut,
+            "startedUtc": startedUtc, "finishedUtc": datetime.datetime.now(datetime.timezone.utc).isoformat(),
             "elapsedSeconds": round(time.monotonic() - started, 6), "log": str(logPath)}, output
 
 
@@ -238,10 +242,12 @@ def prepareVectors(outputDir):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--verilator", default="verilator", help="Verilator 5.050 executable; no installation is attempted")
-    parser.add_argument("--jobs", type=int, default=2, choices=range(1, 17))
+    parser.add_argument("--jobs", type=int, default=4, choices=range(1, 17))
     parser.add_argument("--out", type=Path, help="new result directory; existing directories are never reused/deleted")
     parser.add_argument("--prepare-vectors", type=Path, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
+    if os.name == "nt" and os.environ.get("ECHO7_R6_NATIVE_PATH"):
+        os.environ["PATH"] = os.environ["ECHO7_R6_NATIVE_PATH"] + os.pathsep + os.environ.get("PATH", "")
     if os.name == "nt" and os.environ.get("VERILATOR_ROOT"):
         # The native makefile is evaluated by Git's POSIX shell. Backslashes
         # in the inherited Windows path otherwise become shell escapes.
@@ -256,7 +262,9 @@ def main(argv=None):
     outputDir.mkdir(parents=True, exist_ok=False)
     result = {"schema": "echo7-verilator-course-v1", "status": "RUNNING", "level": "RTL_SIM",
               "requiredVersion": REQUIRED_VERSION, "maximumSeconds": 300, "cleanBuild": True,
-              "scope": "Member B modules and perceptionCore pixel-to-report system; no chassis", "tests": [], "commands": [],
+              "targetSeconds": 285, "simulationConcurrency": 2,
+              "compileJobs": args.jobs,
+              "scope": "B+C modules, scanning/safety/CCTL and actual perceptionCore pixels through C and UART", "tests": [], "commands": [],
               "compilations": [], "compilationReuse": "EXACT_INPUTS_WITHIN_THIS_FRESH_RUN_ONLY"}
     exitCode = 1
     try:
@@ -279,7 +287,7 @@ def main(argv=None):
         result["toolchain"]["compilerVersion"] = compilerVersion.strip()
         result["toolchain"]["make"] = makeExecutable
         toolExecutables = {"verilator": verilator, "compiler": compiler, "make": makeExecutable}
-        result["toolchain"]["executableSha256"] = {name: fileHash(path) for name, path in toolExecutables.items()}
+        toolHashes = {name: fileHash(path) for name, path in toolExecutables.items()}
         try:
             import numpy
             import PIL
@@ -294,8 +302,21 @@ def main(argv=None):
                             "tools/lib/export_vision_vectors.py", "tools/lib/vision_reference.py",
                             "tools/lib/projective_reference.py", "tools/lib/candidates_reclaimed_model.py",
                             "tools/lib/candidates_model.py", "tests/python/test_vision.py",
-                            "assets/markers/marker_spec.json", "assets/markers/sheet_320x240.png"))
-        result["sourceSha256"] = {path: fileHash(ROOT / path) for path in sorted(sourcePaths)}
+                            "assets/markers/marker_spec.json", "assets/markers/sheet_320x240.png",
+                            "tests/vectors/sheet_320x240_rgb565.hex"))
+        sourceHashes = {path: fileHash(ROOT / path) for path in sorted(sourcePaths)}
+        result["sourceCount"] = len(sourceHashes)
+        # Compile from a fresh source copy, with no prior objects or binaries.
+        # Internal hashes only detect an edit racing this invocation; no
+        # per-file hash manifest is exported or required from the user.
+        sourceRoot = outputDir / "source"
+        for relative in sorted(sourcePaths):
+            copied = sourceRoot / relative
+            copied.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / relative, copied)
+            if fileHash(copied) != sourceHashes[relative]:
+                raise RuntimeError("source changed while making the clean copy: " + relative)
+        result["sourceCopy"] = str(sourceRoot)
         vectors = outputDir / "vectors"
         record, _ = runProcess([sys.executable, __file__, "--prepare-vectors", vectors], ROOT,
                                outputDir / "vectors.log", deadline)
@@ -308,17 +329,20 @@ def main(argv=None):
         # already compiled exact-input binary from this fresh invocation; every
         # scenario still executes independently with its own log and verdict.
         compiled = CurrentRunCompilations(outputDir)
+        completedPairs = set()
         for test in [*tests, {**next(t for t in tests if t["name"] == "targetTracker_tb"), "mutant": True}]:
             mutant = test.get("mutant", False)
             name = "targetTracker_broken_lock" if mutant else test["name"]
+            if name in completedPairs:
+                continue
             folder = outputDir / name
             folder.mkdir()
             top = test.get("top", test["name"])
-            sources = [ROOT / path for path in test["sources"]]
+            sources = [sourceRoot / path for path in test["sources"]]
             if mutant:
                 mutantPath = folder / "targetTracker.sv"
-                makeMutant(ROOT / "rtl/tracking/targetTracker.sv", mutantPath)
-                sources = [mutantPath if path == ROOT / "rtl/tracking/targetTracker.sv" else path for path in sources]
+                makeMutant(sourceRoot / "rtl/tracking/targetTracker.sv", mutantPath)
+                sources = [mutantPath if path == sourceRoot / "rtl/tracking/targetTracker.sv" else path for path in sources]
                 result["mutation"] = {"source": "rtl/tracking/targetTracker.sv", "privateSha256": fileHash(mutantPath),
                                       "before": MUTATION_BEFORE, "after": MUTATION_AFTER}
             defines = ["-D" + define for define in test.get("defines", []) if define != "VERILATOR"]
@@ -330,12 +354,12 @@ def main(argv=None):
                 # runtime; this changes no HDL semantics or assertion flags.
                 command[1:1] = ["-LDFLAGS", "-static", "-MAKEFLAGS", "PYTHON3=" + Path(sys.executable).as_posix()]
             for toolName, path in toolExecutables.items():
-                if fileHash(path) != result["toolchain"]["executableSha256"][toolName]:
+                if fileHash(path) != toolHashes[toolName]:
                     raise RuntimeError("tool executable changed during clean suite: " + toolName)
             # Detect a mid-run source edit before either compiling or reusing
             # it. The deliberate private mutant is recorded separately above.
             for path in test["sources"]:
-                if fileHash(ROOT / path) != result["sourceSha256"][path]:
+                if fileHash(ROOT / path) != sourceHashes[path]:
                     raise RuntimeError("source changed during clean suite: " + path)
             compileKey, compileInputs = compilationIdentity(command, sources, result["toolchain"])
             compiledBinary = compiled.lookup(compileKey)
@@ -346,7 +370,7 @@ def main(argv=None):
                     raise RuntimeError(f"{name} compilation failed or exceeded the complete-suite deadline")
                 binary = folder / "obj" / ("V" + top + (".exe" if os.name == "nt" else ""))
                 compiledBinary = compiled.register(compileKey, name, binary)
-                result["compilations"].append({"inputSha256": compileKey, "inputs": compileInputs,
+                result["compilations"].append({"cacheKey": compileKey,
                                                "compiledBinary": compiledBinary})
             else:
                 binary = Path(compiledBinary["path"])
@@ -354,19 +378,56 @@ def main(argv=None):
                 (folder / "compile.log").write_text(
                     "No compiler process was run: exact-input binary reused from this fresh run.\n" +
                     json.dumps(compiledBinary, indent=2) + "\n", encoding="utf-8")
-            plusargs = [value.replace("{vectors}", vectors.as_posix()) for value in test.get("plusargs", [])]
-            record, output = runProcess([binary, "+VECTOR_DIR=" + vectors.as_posix(), *plusargs], folder,
-                                        folder / "simulation.log", deadline)
-            result["commands"].append(record)
-            passed = mutantCaught(record, output) if mutant else simulationPassed(record, output, test["passMarker"])
-            status = "CAUGHT" if mutant and passed else "PASS" if passed else "FAIL"
-            result["tests"].append({"name": name, "status": status,
-                                    "compiledBinary": compiledBinary,
-                                    "inputSource": test.get("inputSource", "SYNTHETIC_MODULE_STIMULUS")})
-            print(status + " " + name, flush=True)
-            if not passed:
-                raise RuntimeError(f"{name}: missing expected assertion/PASS, failed simulation or timeout")
-        changed = [path for path, digest in result["sourceSha256"].items() if fileHash(ROOT / path) != digest]
+            group = [(test, name, folder, compiledBinary)]
+            if name == "perceptionCoreContinuous_tb":
+                # These two independent processes only read their immutable
+                # vectors. They share this invocation's exact-input binary,
+                # with separate cwd/logs and independent assertions/verdicts.
+                paired = next(t for t in tests if t["name"] == "perceptionCoreOverload_tb")
+                pairedFolder = outputDir / paired["name"]
+                pairedFolder.mkdir()
+                pairedCommand = list(command)
+                pairedCommand[pairedCommand.index("--Mdir")+1] = pairedFolder / "obj"
+                pairedSources = [sourceRoot / path for path in paired["sources"]]
+                pairedKey, _ = compilationIdentity(pairedCommand, pairedSources, result["toolchain"])
+                if (pairedKey != compileKey or paired.get("top", paired["name"]) != top or
+                        paired.get("defines", []) != test.get("defines", [])):
+                    raise RuntimeError("continuous/overload no longer have identical compile inputs")
+                pairedBinary = compiled.lookup(pairedKey)
+                (pairedFolder / "compile_reuse.json").write_text(json.dumps(pairedBinary, indent=2)+"\n", encoding="utf-8")
+                (pairedFolder / "compile.log").write_text(
+                    "Exact-input binary from this fresh invocation; scenario runs concurrently in its own process.\n", encoding="utf-8")
+                group.append((paired, paired["name"], pairedFolder, pairedBinary))
+                completedPairs.add(paired["name"])
+                result["parallelScenarios"] = [name, paired["name"]]
+
+            def runScenario(item):
+                scenario, scenarioName, scenarioFolder, scenarioBinary = item
+                plusargs = [value.replace("{vectors}", vectors.as_posix()).replace("{root}", sourceRoot.as_posix())
+                            for value in scenario.get("plusargs", [])]
+                return runProcess([Path(scenarioBinary["path"]), "+VECTOR_DIR=" + vectors.as_posix(), *plusargs],
+                                  scenarioFolder, scenarioFolder / "simulation.log", deadline)
+
+            if len(group) == 2:
+                with ThreadPoolExecutor(max_workers=2) as pool:
+                    futures = [pool.submit(runScenario, item) for item in group]
+                    outcomes = [future.result() for future in futures]
+            else:
+                outcomes = [runScenario(group[0])]
+            failed = []
+            for (scenario, scenarioName, _, scenarioBinary), (record, output) in zip(group, outcomes):
+                result["commands"].append(record)
+                passed = mutantCaught(record, output) if mutant else simulationPassed(record, output, scenario["passMarker"])
+                status = "CAUGHT" if mutant and passed else "PASS" if passed else "FAIL"
+                result["tests"].append({"name": scenarioName, "status": status,
+                                        "compiledBinary": scenarioBinary,
+                                        "inputSource": scenario.get("inputSource", "SYNTHETIC_MODULE_STIMULUS")})
+                print(status + " " + scenarioName, flush=True)
+                if not passed:
+                    failed.append(scenarioName)
+            if failed:
+                raise RuntimeError(f"{', '.join(failed)}: missing expected assertion/PASS, failed simulation or timeout")
+        changed = [path for path, digest in sourceHashes.items() if fileHash(ROOT / path) != digest]
         if changed:
             raise RuntimeError("sources changed during clean suite: " + ", ".join(changed))
         if time.monotonic() > deadline:
@@ -382,6 +443,7 @@ def main(argv=None):
         print("FAIL " + str(error), flush=True)
     finally:
         result["elapsedSeconds"] = round(time.monotonic() - started, 6)
+        result["targetMet"] = result["status"] == "PASS" and result["elapsedSeconds"] <= result["targetSeconds"]
         result["exitCode"] = exitCode
         (outputDir / "result.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
         print(f"{result['status']} course R6; result={outputDir / 'result.json'}", flush=True)

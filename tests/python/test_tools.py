@@ -22,7 +22,7 @@ import echo7
 
 
 class BuildIsolationTests(unittest.TestCase):
-    def testBuildSnapshotCopiesOnlyHashedSourcesAndPreservesOriginalHeader(self):
+    def testBuildSnapshotCopiesDependenciesAndPreservesOriginalHeader(self):
         identity = echo7.sourceIdentity()
         header = echo7.ROOT / "rtl/common/memberBBuildId.svh"
         originalHeader = header.read_bytes() if header.exists() else None
@@ -35,8 +35,8 @@ class BuildIsolationTests(unittest.TestCase):
             self.assertEqual(project, snapshot / "quartus")
             self.assertFalse((project / "db").exists())
             self.assertFalse((project / "output_files").exists())
-            for relative, expectedHash in identity["files"].items():
-                self.assertEqual(echo7.digest(snapshot / relative), expectedHash)
+            for relative in identity["files"]:
+                self.assertEqual((snapshot / relative).read_bytes(), (echo7.ROOT / relative).read_bytes())
             self.assertIn(f"32'h{identity['buildId']:08x}", (snapshot / "rtl/common/memberBBuildId.svh").read_text())
             with self.assertRaises(FileExistsError):
                 echo7.stageBuildSources(identity, snapshot)
@@ -46,10 +46,12 @@ class BuildIsolationTests(unittest.TestCase):
     def testSourceMutationDuringStagingIsRejected(self):
         identity = echo7.sourceIdentity()
         relative = next(iter(identity["files"]))
-        badIdentity = {**identity, "files": {relative: "0" * 64}}
         with tempfile.TemporaryDirectory(prefix="build_mutation_", dir=echo7.WORK) as folder:
-            with self.assertRaisesRegex(RuntimeError, "changed while staging"):
-                echo7.stageBuildSources(badIdentity, Path(folder) / "source")
+            def corruptCopy(source, target):
+                Path(target).write_bytes(b"changed during staging")
+            with patch.object(echo7.shutil, "copyfile", side_effect=corruptCopy):
+                with self.assertRaisesRegex(RuntimeError, "changed while staging"):
+                    echo7.stageBuildSources(identity, Path(folder) / "source")
 
     def testMixedInstallEnvironmentIsPinnedWithoutChangingParent(self):
         root = (echo7.WORK / "fake install/18.1/quartus").resolve()
@@ -337,8 +339,8 @@ class VectorNamespaceTests(unittest.TestCase):
             self.assertEqual((output / "contour_vector_count.hex").read_text(), "00000002\n")
 
 
-class DeferredAudioControlTests(unittest.TestCase):
-    def testArmIsOnlyVisualOpcodeAndNeverANumberProposal(self):
+class RemovedAudioControlTests(unittest.TestCase):
+    def testArmIsUnsupportedAndNeverSendsACommand(self):
         # Test the command dispatcher without connecting to a board. This is a
         # tool protocol check, not evidence that red 2 or speech was recognised.
         runner = echo7.Runner(argparse.Namespace(command="speech", arm=True, record=False, timeout=1))
@@ -347,15 +349,12 @@ class DeferredAudioControlTests(unittest.TestCase):
             commands.append(command)
             return {"decoded": {"status": {"audioReady": 0}}}
         runner.control = control
-        runner.execute()
-        self.assertEqual(commands, [4 << 24])
-        self.assertEqual(commands[0] & 0xffffff, 0)
-        self.assertFalse(runner.result["audioReady"])
-        self.assertEqual(runner.result["audioInputStatus"], "DEFERRED_USER")
-        self.assertIn("no digit proposal", runner.result["operationMeaning"])
+        with self.assertRaisesRegex(echo7.Blocked, "unsupported"):
+            runner.execute()
+        self.assertEqual(commands, [])
         self.assertNotIn("userEvent", runner.result)
 
-    def testRecordIsExplicitlyDeferred(self):
+    def testRecordIsExplicitlyUnsupported(self):
         output = io.StringIO()
         with redirect_stdout(output):
             code = echo7.main(["speech", "--record"])
@@ -363,7 +362,7 @@ class DeferredAudioControlTests(unittest.TestCase):
         self.assertEqual(code, 2)
         self.assertEqual(result["exitCode"], 2)
         self.assertEqual(result["status"], "BLOCKED")
-        self.assertEqual(result["audioInputStatus"], "DEFERRED_USER")
+        self.assertIn("unsupported", result["reason"])
 
 
 class HardwareDiagnosticGateTests(unittest.TestCase):

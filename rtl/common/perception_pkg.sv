@@ -38,7 +38,8 @@ package perception_pkg;
     typedef enum logic [3:0] {
         EVENT_NONE=4'd0, EVENT_SPEECH_BAY_REQUEST=4'd1, EVENT_CALIBRATION_DONE=4'd2,
         EVENT_CALIBRATION_FAILED=4'd3, EVENT_INPUT_REJECTED=4'd4,
-        EVENT_INTERACTION_CANCELLED=4'd5, EVENT_INTERACTION_TIMEOUT=4'd6
+        EVENT_INTERACTION_CANCELLED=4'd5, EVENT_INTERACTION_TIMEOUT=4'd6,
+        EVENT_START_REQUEST=4'd7 // Red2 edge; bayId reserved, target comes from physical SW.
     } eventType_t;
     typedef enum logic [7:0] {
         REASON_OK=8'd0, REASON_LOW_CONFIDENCE=8'd1, REASON_BAY_DISABLED=8'd2,

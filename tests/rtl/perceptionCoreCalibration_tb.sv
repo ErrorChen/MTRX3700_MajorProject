@@ -4,6 +4,7 @@
 // claim is made here. The core's currentSample/sampleGood/applyCommit decisions,
 // shadow registers, active profile and bank metadata are never forced.
 module perceptionCoreCalibration_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     logic bypassPerspective=0;
     logic processingEnable=1;
     import candidate_pkg::*;

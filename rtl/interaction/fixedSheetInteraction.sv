@@ -1,7 +1,8 @@
 // Fixed unfolded sheet interaction, CLOCK_50 only. Recognition is supplied by
 // real pixel processing; no command injects a successful marker or calibration.
-// Audio is deliberately deferred: red 2 can arm the entry, but never emits a
-// speech proposal. Idle armed state is not busy and consumes no event FIFO slot.
+// Red1 calibrates. Three fresh unique red2 frames request a new task using
+// physical SW selection; red2 never provides a bay identity. Legacy speech
+// ports remain reserved zero. A resident card can request only one start.
 module fixedSheetInteraction #(
     parameter logic [31:0] WAIT_TIMEOUT_US=32'd2000000,
     parameter logic [31:0] SAMPLE_TIMEOUT_US=32'd3000000,
@@ -11,10 +12,10 @@ module fixedSheetInteraction #(
 ) (
     input logic clk, reset,
     input logic [31:0] timeUs,
-    input logic enable, permit, debugCalArm, debugSpeechArm,
+    input logic enable, permit, debugCalArm, debugSpeechArm, red2Reset,
     input logic frameValid, frameGood,
     input logic [15:0] frameId, configVersion, activeCfgVersion,
-    input logic red1Paired, red2Seen,
+    input logic red1Paired, red2Seen, red2Present,
     input logic sampleResultValid, sampleGood,
     input logic commitAck,
     input logic [15:0] commitVersion,
@@ -39,7 +40,8 @@ module fixedSheetInteraction #(
     logic haveAutoFailure;
     eventType_t lastAutoFailureType;
     eventReason_t lastAutoFailureReason;
-    logic [1:0] red1Count, red2Count;
+    logic [1:0] red1Count,red2ConfirmCount,red2AbsentCount;
+    logic red2Latched;
     logic [15:0] lastFrame, lastFrameConfig, lastSampleFrame;
     // A collection window belongs to exactly one segmentation/orientation/
     // bypass configuration. A later mode change cancels it, including the
@@ -48,7 +50,7 @@ module fixedSheetInteraction #(
     logic [15:0] attemptCfgVersion;
     logic [31:0] stateStartUs;
     logic [31:0] elapsedUs;
-    logic frameCurrent, adjacentFrame, nextRed1Confirmed, nextRed2Confirmed;
+    logic frameCurrent, adjacentFrame, nextRed1Confirmed,nextRed2Confirmed;
     userEvent_t terminalEvent;
     userEvent_t eventFifo [0:3];
     logic [1:0] readPointer, writePointer;
@@ -59,10 +61,11 @@ module fixedSheetInteraction #(
         frameCurrent = frameGood && configVersion==activeCfgVersion;
         adjacentFrame = haveFrame && frameId==lastFrame+16'd1 && configVersion==lastFrameConfig;
         nextRed1Confirmed = frameValid && frameCurrent && red1Paired && adjacentFrame && red1Count>=2;
-        nextRed2Confirmed = frameValid && frameCurrent && red2Seen && adjacentFrame && red2Count>=2;
+        nextRed2Confirmed=frameValid&&frameCurrent&&red2Seen&&adjacentFrame&&red2ConfirmCount>=2&&!red2Latched&&!red2Reset;
         elapsedUs=timeUs-stateStartUs;
         busy = state==INTERACTION_WAIT_PERMIT || state==INTERACTION_CAL_COLLECT ||
-            state==INTERACTION_CAL_VALIDATE || state==INTERACTION_CAL_COMMIT || state==INTERACTION_RESULT_QUEUE;
+            state==INTERACTION_CAL_VALIDATE || state==INTERACTION_CAL_COMMIT ||
+            (state==INTERACTION_RESULT_QUEUE && terminalEvent.eventType!=EVENT_START_REQUEST);
         kind = busy ? KIND_CALIBRATION : KIND_NONE;
         // Permit remains a continuous condition; revoke takes priority before a
         // new same-domain SOF commit. A previously asserted commitAck is final.
@@ -71,7 +74,8 @@ module fixedSheetInteraction #(
         userEventValid=eventCount!=0 && !reset;
         userEvent=eventCount!=0 ? eventFifo[readPointer] : userEvent_t'('0);
         popEvent=userEventValid && userEventReady;
-        pushEvent=state==INTERACTION_RESULT_QUEUE && eventCount<4;
+        pushEvent=state==INTERACTION_RESULT_QUEUE && eventCount<4 &&
+            !(red2Reset && terminalEvent.eventType==EVENT_START_REQUEST);
     end
 
     // Build one terminal record. It is immutable while waiting for FIFO enqueue.
@@ -121,12 +125,12 @@ module fixedSheetInteraction #(
             lastAutoFailureReason<=REASON_OK;
             lastFrame<=0;lastFrameConfig<=0;lastSampleFrame<=0;
             attemptCfgVersion<=0;
-            red1Count<=0;red2Count<=0;sampleCount<=0;
+            red1Count<=0;red2ConfirmCount<=0;red2AbsentCount<=0;red2Latched<=1;sampleCount<=0; // Require a new physical presentation after reset.
             stateStartUs<=0;interactionId<=0;calibrationAttempt<=0;
             eventOverflow<=0;readPointer<=0;writePointer<=0;eventCount<=0;
             eventSerial<=0;terminalEvent<='0;
         end else begin
-            calibrationAttempt<=0;
+            calibrationAttempt<=0;speechArmed<=0; // Public v3 reserved bit.
             if(popEvent) readPointer<=readPointer+2'd1;
             if(pushEvent) begin
                 eventFifo[writePointer]<=terminalEvent;
@@ -144,45 +148,65 @@ module fixedSheetInteraction #(
                 if(!enable || !frameCurrent || !red1Paired) red1Count<=0;
                 else if(!adjacentFrame) red1Count<=1;
                 else if(red1Count<3) red1Count<=red1Count+2'd1;
-                if(!enable || !frameCurrent || !red2Seen || !calibrated || busy) red2Count<=0;
-                else if(!adjacentFrame) red2Count<=1;
-                else if(red2Count<3) red2Count<=red2Count+2'd1;
+                // Duplicate red2 is present but not unique: it cannot confirm,
+                // and cannot masquerade as removal to rearm the start edge.
+                if(!enable || !permit || busy || !frameCurrent || !red2Seen)red2ConfirmCount<=0;
+                else if(!adjacentFrame)red2ConfirmCount<=1;
+                else if(red2ConfirmCount<3)red2ConfirmCount<=red2ConfirmCount+2'd1;
+                if(enable&&frameCurrent&&!red2Present)begin
+                    if(!adjacentFrame)red2AbsentCount<=1;
+                    else if(red2AbsentCount>=2)begin red2Latched<=0;red2AbsentCount<=3;end
+                    else red2AbsentCount<=red2AbsentCount+2'd1;
+                end else red2AbsentCount<=0;
+                // No latent start when a card was shown during calibration or
+                // revoked permission. It must leave and be shown again.
+                if(frameCurrent&&red2Present&&(busy||!permit))red2Latched<=1;
             end
-            if(!enable) begin speechArmed<=0;red1Count<=0;red2Count<=0;end
+            if(!enable) begin speechArmed<=0;red1Count<=0;red2ConfirmCount<=0;red2AbsentCount<=0;red2Latched<=1;end
             // Unsigned subtraction permits timeUs wrap. Cooldown is idle, so
             // it does not block visual observations or claim calibration busy.
             // Discard all pre-cooldown/pre-permit red-card history: reopening
             // requires three new consecutive, good frames of one configuration.
             if(retryPending || (initialRetry && !permit)) begin
-                red1Count<=0;haveFrame<=0;
+                red1Count<=0; // Keep shared frame ordering for independent red2 confirmation.
             end
             if(retryPending && state==INTERACTION_IDLE && enable && permit &&
                timeUs-retryStartUs>=RETRY_DELAY_US) begin
                 retryPending<=0;attemptAllowed<=1;
             end
             case(state)
-                INTERACTION_IDLE,INTERACTION_SPEECH_ARMED:begin
+                INTERACTION_IDLE:begin
                     if(enable && attemptAllowed && (!initialRetry || permit) &&
-                       nextRed1Confirmed && !debugCalArm && !debugSpeechArm) begin
+                       nextRed1Confirmed && !debugCalArm) begin
                         if(eventCount<4) begin
                             attemptAllowed<=0;interactionId<=interactionId+16'd1;
                             calibrationAttempt<=1;sampleCount<=0;haveSample<=0;
                             attemptCfgVersion<=activeCfgVersion;
-                            speechArmed<=0;red2Count<=0;stateStartUs<=timeUs;
+                            speechArmed<=0;stateStartUs<=timeUs;
+                            red2ConfirmCount<=0;if(red2Present)red2Latched<=1;
                             state<=permit ? INTERACTION_CAL_COLLECT : INTERACTION_WAIT_PERMIT;
                         end else eventOverflow<=1;
-                    end else if(enable && calibrated && nextRed2Confirmed && !debugCalArm && !debugSpeechArm) begin
-                        speechArmed<=1;state<=INTERACTION_SPEECH_ARMED;
+                    end else if(enable&&permit&&nextRed2Confirmed&&!debugCalArm)begin
+                        red2Latched<=1;red2ConfirmCount<=0;
+                        if(eventCount<4)begin
+                            interactionId<=interactionId+16'd1;
+                            terminalEvent<='0;
+                            terminalEvent.eventType<=EVENT_START_REQUEST;
+                            terminalEvent.bayId<=INVALID_BAY_ID;
+                            terminalEvent.issuedAtUs<=timeUs;
+                            terminalEvent.configVersion<=activeCfgVersion;
+                            terminalEvent.interactionId<=interactionId+16'd1;
+                            terminalEvent.reason<=REASON_OK;
+                            state<=INTERACTION_RESULT_QUEUE;
+                        end else eventOverflow<=1;
                     end else if(!enable) state<=INTERACTION_IDLE;
                     // Explicit debug commands reopen only the real recognition
                     // workflow and never supply a marker identity or sample value.
                     if(debugCalArm) begin
-                        attemptAllowed<=1;speechArmed<=0;red1Count<=0;red2Count<=0;
+                        attemptAllowed<=1;speechArmed<=0;red1Count<=0;
                         automaticInitialisation<=0;initialRetry<=0;retryPending<=0;
                         haveAutoFailure<=0;haveFrame<=0;
                         state<=INTERACTION_IDLE;
-                    end else if(debugSpeechArm) begin
-                        speechArmed<=0;red2Count<=0;state<=INTERACTION_IDLE;
                     end
                 end
                 INTERACTION_WAIT_PERMIT:begin
@@ -220,7 +244,7 @@ module fixedSheetInteraction #(
                 end
                 INTERACTION_CAL_COMMIT:begin
                     if(commitAck) begin
-                        calibrated<=1;red2Count<=0;
+                        calibrated<=1;
                         automaticInitialisation<=0;initialRetry<=0;retryPending<=0;
                         finishInteraction(EVENT_CALIBRATION_DONE,REASON_OK,commitVersion);
                     end else if(!enable || !permit)
@@ -236,6 +260,10 @@ module fixedSheetInteraction #(
                 end
                 default:state<=INTERACTION_IDLE;
             endcase
+            if(red2Reset)begin
+                red2Latched<=1;red2ConfirmCount<=0;red2AbsentCount<=0;
+                if(state==INTERACTION_RESULT_QUEUE && terminalEvent.eventType==EVENT_START_REQUEST)state<=INTERACTION_IDLE;
+            end
         end
     end
 endmodule

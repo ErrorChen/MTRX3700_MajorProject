@@ -45,8 +45,8 @@ class DatasheetProfileTests(unittest.TestCase):
             index = fixtureIndex(); del index[group][key]
             with self.subTest(group=group, key=key), self.assertRaisesRegex(ValueError, "missing explicit"):
                 sheet.indexProfile(index)
-        index = fixtureIndex(); index["source"]["sha256"] = "A"*64
-        with self.assertRaisesRegex(ValueError, "lowercase source"):
+        index = fixtureIndex(); index["source"]["buildId"] = -1
+        with self.assertRaisesRegex(ValueError, "unsigned 32-bit"):
             sheet.indexProfile(index)
 
     def testHistoricalAndCurrentAlgorithmsHaveExplicitMeanings(self):
@@ -90,16 +90,13 @@ class DatasheetProfileTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "board identity"):
                 read(bad)
 
-    def testIndexedRecordHashAndRealCalibrationTraceAreRequired(self):
+    def testRealCalibrationTraceIsRequiredWithoutHashGate(self):
         index = fixtureIndex()
         record = dict(level="CAMERA_HW", boardStatus=dict(decoded=boardFor(index)), command="calibrate")
         with tempfile.TemporaryDirectory(prefix="datasheet_binding_") as folder:
             path = Path(folder) / "synthetic.json"
             path.write_text(json.dumps(record), encoding="utf-8")
-            index["records"]["calibration"] = dict(path=str(path), sha256="0"*64)
-            with self.assertRaisesRegex(ValueError, "hash differs"):
-                sheet.readRecord(index, "calibration", None)
-            index["records"]["calibration"]["sha256"] = sheet.digest(path)
+            index["records"]["calibration"] = dict(path=str(path))
             with self.assertRaisesRegex(ValueError, "real-pixel frame trace"):
                 sheet.readRecord(index, "calibration", None)
 
@@ -119,10 +116,10 @@ class DatasheetProfileTests(unittest.TestCase):
             self.assertNotIn("Reader5 should", text)
             self.assertNotIn("ten printed signs", text)
             sidecar = json.loads(output.with_suffix(".pdf.json").read_text())
-            self.assertEqual(sidecar["sourceSha256"], index["source"]["sha256"])
-            self.assertEqual(sidecar["indexSha256"], hashlib.sha256(source.read_bytes()).hexdigest())
+            self.assertEqual(sidecar["buildId"], index["source"]["buildId"])
+            self.assertEqual(sidecar["index"], str(source))
             self.assertEqual(sidecar["level"], "DOCUMENT_GENERATION_NOT_HARDWARE_VALIDATION")
-            self.assertIsNone(sidecar["hardwareSha256"])
+            self.assertIsNone(sidecar["hardware"])
 
 
 if __name__ == "__main__":

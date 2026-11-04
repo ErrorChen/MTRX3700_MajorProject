@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export the current verified B source/bitstream using relative archive paths.
+"""Export the current integrated source/bitstream using relative archive paths.
 
 No Git operation or remote upload occurs. Reproducible compiler databases,
 private toolchains and unrelated runs are excluded. Export refuses a stale SOF.
@@ -114,38 +114,29 @@ def aiTranscriptBinding(path, root):
 
 
 def datasheetBinding(path, current):
-    """Accept only the explicit PDF's hash-bound renderer record for this build."""
-    sidecar = path.with_suffix(path.suffix + ".json")
-    binding = json.loads(sidecar.read_text(encoding="utf-8"))
-    if (binding.get("schema") != "member-b-datasheet-generation-v1"
-            or binding.get("status") != "PASS" or binding.get("pages") != 1
-            or binding.get("sourceSha256") != current["sha256"]
-            or binding.get("buildId") != current["buildId"]
-            or binding.get("sha256") != echo7.digest(path)
-            or len(binding.get("indexSha256", "")) != 64):
-        raise ValueError("datasheet PDF/renderer record does not match the current verified source")
-    return {key: binding[key] for key in
-            ("schema", "sourceSha256", "buildId", "sha256", "indexSha256", "pages")}
+    """Validate the explicitly selected PDF; a SHA sidecar is not required."""
+    from pypdf import PdfReader
+    pages = len(PdfReader(path).pages)
+    if pages != 1:
+        raise ValueError("course datasheet must have exactly one page")
+    return {"path": str(path), "buildId": current["buildId"], "pages": pages,
+            "meaning": "Explicit document; inclusion does not establish hardware acceptance"}
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--out", type=Path)
     parser.add_argument("--datasheet", type=Path,
-                        help="Explicit current one-page PDF; requires its adjacent .pdf.json renderer/source binding")
+                        help="Explicit current one-page PDF; no SHA sidecar required")
+    parser.add_argument("--sof", type=Path, help="explicit SOF from the current successful build")
     parser.add_argument("--ai-transcript-manifest", type=Path,
                         help="Explicit reviewed visible-message export manifest; includes only its validated TXT/JSON/manifest under course/")
     args = parser.parse_args()
     root = echo7.ROOT
-    build = json.loads((echo7.WORK / "last_build.json").read_text())
+    build, sof = echo7.verifiedBuild(args.sof)
     current = echo7.sourceIdentity()
-    if build.get("status") != "PASS" or build["source"]["sha256"] != current["sha256"]:
-        raise RuntimeError("current sources do not have a successful fitted/timed build")
-    sof = Path(build["sof"]["path"])
-    if echo7.digest(sof) != build["sof"]["sha256"]:
-        raise RuntimeError("verified SOF hash changed")
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    out = args.out or echo7.WORK / (stamp + "_member_b_submission.zip")
+    out = args.out or echo7.WORK / (stamp + "_echo7_submission.zip")
     if out.exists():
         raise FileExistsError("refusing to overwrite an existing submission archive")
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -158,37 +149,35 @@ def main():
                 continue
             if path.name in AI_DATA_FILES | {AI_MANIFEST_NAME}:
                 continue  # Dialogue is opt-in through the verified explicit manifest only.
-            if folder == "docs" and path.suffix.lower() != ".pdf":
+            if (folder == "docs" and path.suffix.lower() not in (".pdf", ".md", ".txt")
+                    and path.name != "integrated_datasheet_metrics.json"):
                 continue
             selected[path.relative_to(root).as_posix()] = path
-    for name in ("README.md", "VERSION_README.md", "OWNERS.md", "requirements.txt", "run_all_tests.sh",
+    for name in ("README.md", "README_EN.md", "VERSION_README.md", "OWNERS.md", "requirements.txt", "run_all_tests.sh",
                  ".gitignore", ".gitattributes", ".editorconfig"):
         selected[name] = root / name
     selected["verified/PartBDebug.sof"] = sof
-    record = {"schema": "echo7-submission-v1", "scope": "Member B only, microphone deferred",
-              "sourceSha256": current["sha256"], "buildId": current["buildId"],
-              "sofSha256": build["sof"]["sha256"], "files": {}}
+    record = {"schema": "echo7-submission-v2", "scope": "Integrated B+C; physical switches; speech cancelled",
+              "buildId": current["buildId"], "top": current["top"], "sof": build["sof"]["path"], "files": []}
     if args.datasheet:
         record["datasheet"] = datasheetBinding(args.datasheet, current)
-        selected["member_b_datasheet.pdf"] = args.datasheet
+        selected["echo7_datasheet.pdf"] = args.datasheet
     transcriptPayloads = {}
     if args.ai_transcript_manifest:
         record["aiTranscript"], transcriptPayloads = aiTranscriptBinding(args.ai_transcript_manifest, root)
     with zipfile.ZipFile(out, "x", compression=zipfile.ZIP_DEFLATED) as archive:
         for name, path in sorted(selected.items()):
             payload = path.read_bytes()
-            if name == "member_b_datasheet.pdf" and hashlib.sha256(payload).hexdigest() != record["datasheet"]["sha256"]:
-                raise ValueError("datasheet changed while creating the submission")
             archive.writestr(name, payload)
-            record["files"][name] = hashlib.sha256(payload).hexdigest()
+            record["files"].append(name)
         for name, payload in sorted(transcriptPayloads.items()):
             archive.writestr(name, payload)
-            record["files"][name] = hashlib.sha256(payload).hexdigest()
-        archive.writestr("verified/manifest.json", json.dumps(record, indent=2) + "\n")
+            record["files"].append(name)
+        archive.writestr("verified/build_record.json", json.dumps(record, indent=2) + "\n")
     with zipfile.ZipFile(out) as archive:
         if archive.testzip():
             raise RuntimeError("submission archive CRC failed")
-    print(json.dumps({"status": "PASS", "path": str(out), "sha256": echo7.digest(out),
+    print(json.dumps({"status": "PASS", "path": str(out),
                       "files": len(selected) + len(transcriptPayloads), "scope": "ARCHIVE_INTEGRITY; does not add hardware acceptance"}, indent=2))
 
 

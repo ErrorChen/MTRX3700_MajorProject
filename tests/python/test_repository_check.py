@@ -29,14 +29,14 @@ class RepositoryCheckTests(unittest.TestCase):
     def project(self, root):
         """Minimal structural fixture; placeholder PDFs are not rendered data."""
         root.mkdir(parents=True)
-        for name in ('README.md','VERSION_README.md','OWNERS.md','quartus/PartBDebug.qpf',
+        for name in ('README.md','README_EN.md','VERSION_README.md','OWNERS.md','quartus/PartBDebug.qpf',
                      'docs/Major_Project_Brief_2026.pdf','assets/markers/marker_spec.json',
                      'assets/markers/scene_manifest.json','assets/markers/ECHO7_All_Markers_A4_v2.pdf'):
             path=root/name
             path.parent.mkdir(parents=True,exist_ok=True)
             path.write_text('synthetic structural fixture\n',encoding='utf-8')
         pins=('AB12','AC12','AF9','AF10','AD11','AD12','AE11','AC9','AD10','AE12')
-        assignments=['set_global_assignment -name TOP_LEVEL_ENTITY perceptionDemoTop',
+        assignments=['set_global_assignment -name TOP_LEVEL_ENTITY echo7IntegratedTop',
                      'set_global_assignment -name DEVICE 5CSEMA5F31C6']
         for index,pin in enumerate(pins):
             assignments += [f'set_location_assignment PIN_{pin} -to SW[{index}]',

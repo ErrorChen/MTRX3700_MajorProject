@@ -3,6 +3,7 @@
 // controlled. The real aggregate scan, BJ pairing, query RAM/router and target
 // tracker execute unchanged. This is not pixel-recognition or camera evidence.
 module perceptionCoreQuery_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     import perception_pkg::*;
     import candidate_pkg::*;
     import vision_pkg::*;

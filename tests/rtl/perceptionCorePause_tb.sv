@@ -4,6 +4,7 @@
 // exercise raw-camera pause, bank cancellation, real tracker/FSM transactions,
 // and three fresh confirmations after resumption. No camera accuracy claim.
 module perceptionCorePause_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     import perception_pkg::*;
     logic clk=0,pclk=0,reset=1,resetPclk=1;
     always #10 clk=~clk;

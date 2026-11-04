@@ -1,14 +1,27 @@
-> 本文保留独立 Member B 历史说明。当前根目录已更新为 B+C Integrated V2 / Scheme C，请以 README.md 的当前状态和集成测试入口为准。
+> 本文保留独立 Member B 历史说明。2026-11-04 当前修复源码为 E7070004：六位独热选择、同一SOF三模式、有界扫描、CCTL、红2重新选择并等待新目标锁定后启动，以及单帧候选溢出恢复。当前操作以 [README.md](README.md) 为准，本次构建、实测与剩余限制见 [修复验收记录](docs/REPAIR_RESULT.md)，不沿用下方旧版本通过结论。
 
 # Version history and validation / 版本与验证记录
 
-This is the consolidated history of Member B. Entries below run from the earlier
+This is the consolidated history of Member B and the later ECHO-7 B/C integration. Entries below run from the earlier
 baseline to the latest work. Build identities, failed experiments and evidence
-levels are kept separate. README.md is the maintained bilingual development and
-B/C interface guide; OWNERS.md records individual-file responsibility and origin.
+levels are kept separate. README.md and README_EN.md are the maintained Chinese
+and English operation guides; OWNERS.md records individual-file responsibility and origin.
 
 这是按开发先后整理的版本记录。MODEL、RTL_SIM、拟合、下载、相机实测和用户确认的
 实体VGA分别记录；历史通过不能证明后续源码通过。课程要求、用户需求和设计选择也不混用。
+
+**当前入口（2026-11-04）**：本页末尾的“ECHO-7 整机修复与现场迭代”记录本次
+`dc1db23` 基线之后的工作。历史段落中的“最终”“不再下载”“静止 Member B 顶层”
+以及当时的 R6 FAIL 只描述对应日期和源码，不能作为当前集成版本的结论。
+当前源码 `E7070004` 的控制自检为 **254 PASS**，完整 R6 为 **12 PASS + CAUGHT，
+219.556074 秒**；Full Compilation **1121.141秒PASS**、post-fit门检 **25.868秒PASS**，
+22:31:50 AEDT新SOF下载及E7070004读回成功。真实红2重新选择、新锁定后ARM/ALIGN
+板上链路已通过，用户确认实物启动，并最终澄清“蓝一脱离后就停车了”。
+收口为VISION_ONLY/未ARM/左右逻辑零速，用户确认已停止；主机STOP的独立机械停车时刻未测，zeroSent只证明发送完成。
+不借用E7070002/E7070003 的硬件动作结果。完整证据和待验收项目见
+[修复验收记录](docs/REPAIR_RESULT.md)。操作入口为[中文README](README.md) /
+[English README](README_EN.md)；一页数据表发布位置为
+[docs/ECHO7_Integrated_Datasheet.pdf](docs/ECHO7_Integrated_Datasheet.pdf)，采用004最终核验及用户澄清后的结论。
 
 ## 2026-10-22 to 2026-10-23: same-group predecessor
 
@@ -922,3 +935,161 @@ Read another fresh image without rebuilding/downloading / 继续读新图、不�
 ```powershell
 & 'C:/Users/15402/.cache/codex-runtimes/codex-primary-runtime/dependencies/python/python.exe' tools/echo7.py --quartus-bin 'C:/intelFPGA_lite/18.1/quartus/bin64' --timeout 120 capture --fresh
 ```
+
+## 2026-11-04：ECHO-7 整机修复与现场迭代
+
+本次从 `github_publish/MTRX3700_MajorProject` 的 `dc1db23` 继续开发；外层旧工程及其
+未提交 QSF 修改未覆盖。用户要求“主要功能一定实现、需要实机纠正、可以保留部分缺陷、
+不过度跑”。因此先恢复同一生产顶层的真实视觉—控制—UART 链，再用有限的定向仿真、
+完整 R6、Quartus 构建和架空实机逐层核验。后续用户明确追加红2启动、R6 285秒目标、
+详细中英 README 与推送仓库要求；这些追加要求覆盖此前对应的收口安排。
+
+### 版本与证据总览
+
+设计 build ID 与 CCTL 接口版本是两个不同标识：以下三版设计分别为 `E7070002`、
+`E7070003`、`E7070004`，接口仍为 `E7070001`，不是读回旧设计。
+
+| 设计版本 | 本轮主要变化 | 对应该版的自动验证 | 对应该版的真实板卡结论 |
+|---|---|---|---|
+| E7070002 | 集成 B/C、三模式、CCTL、完整安全链、红2重新选择、分页候选诊断 | Full Compilation 1203.431秒 PASS；R6 245.451876秒、12 PASS + CAUGHT | 21:23 AEDT 下载/读回成功；合成左中右、租约失效、预算结束、真实 IR 和轮向通过；真实蓝1可锁定，但后续候选溢出暴露健康资格永久阻断 |
+| E7070003 | 将历史候选溢出诊断与当前健康资格分离；坏帧后建立新边界并等待三相邻新好帧 | 控制236检查 PASS；R6 221.258456秒、12 PASS + CAUGHT；Full Compilation 1154.491秒 PASS | 22:02 AEDT 下载/读回成功；保留历史flags=3仍恢复健康和锁定，无需复位；23个真实不同帧、22次锁定；真实红2暴露“启动早于第三帧锁定”问题 |
+| E7070004（当前源码） | 未标定 INTEGRATED 红2必须等新请求目标完成三帧锁定后才启动；健康无目标不能提前消耗授权 | 控制254检查 PASS；R6 219.556074秒、12 PASS + CAUGHT；Full Compilation1121.141秒及门检25.868秒PASS | 22:31:50 AEDT下载/读回成功；真实红2新选择→新锁定→ARM/ALIGN通过；用户确认实物启动及蓝1脱离后停车，末VISION_ONLY/未ARM/左右0 |
+
+### 第一阶段：补齐控制契约和实际接口
+
+实体 SW0–SW5 改为六位独热选择，20 ms 整组稳定后才接受；无拨码为 NO_SELECTION，
+多拨码为 CONFLICT。未 ARM 时仍可 SELECT 和真实追踪。请求通过 ready/valid 握手，
+当前正在等待接收的请求不能被新拨码覆盖；选择、配置、源切换和重新锁定均建立 tag/时间边界。
+健康新帧、看见目标与三帧锁定分别记录，健康 NOT_FOUND 不再等同于视觉源坏掉。
+
+生产 SOF 内包含 INTEGRATED、VISION_ONLY、CHASSIS_INJECT 三模式。第三种模式只替换
+感知报告，沿用真实实体拨码、IR、J3、控制状态机及 UART；主机不能直接写轮速或伪造距离。
+CCTL 提供状态快照、模式、START/STOP、注入和扫描参数；注入/调试会话有500 ms租约，
+失约取消任务并发零速，恢复心跳不自动恢复旧任务。
+
+运动流程包含有界 SEARCH、停车等待、ACQUIRE 驻留、ALIGN、APPROACH 及终态。
+首次发现目标须先确认完整零速 JSON 已发送，再驻留200 ms、建立新采集边界、积累三帧新观测。
+APPROACH 远距5 cm/s，500 mm以内3 cm/s，350 mm停靠；250 mm及以下危险/无效测距
+进入安全 HOLD，连续三个真实新样本达到300 mm才恢复安全资格。IR A立即锁存停止；
+第一次新的 POWER 仅解除 IR，第二次独立新按压才可启动，NEC repeat/持续按住不能算第二次。
+这些行为经控制 TB、真实管脚时序模型及后续部分实机验证，证据层级保持分开。
+
+### 第二阶段：用户追加红2、资源超限与有限范围优化
+
+原附件中的红2 NO_ACTION 被用户明确追加需求替换为“重新取当前拨码、重新锁定并开始”。
+实现范围为未启动/终态接收红2，活动任务不因反复呈卡重置累计扫描预算。
+VISION_ONLY 只重新选择不 ARM；INTEGRATED 在安全条件满足后等待新报告；
+CHASSIS_INJECT 不接入真实红2。红2须先移开三健康帧，再呈现三帧，上电已有卡不触发。
+STOP、模式、IR、实体选择或安全边界清除旧授权；重新选择不清除已完成的红1校色。
+
+首次构建 `20261104T094653_234340Z_build` 在追加需求后停止，其子流程仍留下
+**32238/32070 ALM，无法 fit** 的报告。这不是通过构建，也没有下载该产物。
+VGA 候选诊断随后从18组同时存储改为10组：每页8个候选，加中心与参考，
+两页覆盖全部16个候选（含拒绝候选），默认每120个 VGA SOP切页，60 Hz下约2秒。
+这次只做必要的分页资源调整，保留显示内容、中心关联和单HSV转换器。
+
+主机工具方面，持久 STP 的 stdout 缓冲导致交互响应不可靠，改为显式 flush 的文件响应通道；
+同一会话 STATUS/BSTATUS/STATUS 实测43/262/38 ms。Windows Verilator 环境按实际
+编译器/DLL路径修正，未以模型或假结果替代 RTL 仿真。
+
+R6 的失败与提速顺序保留如下，输入、断言和故意坏模块检测未删减：
+
+1. 首次串行套件到300秒总限时后清理，实耗303.055秒，9项已通过、其余未完成，结果 **FAIL**。
+2. 连续帧与过载两个独立系统场景在同次新编译之后并行运行，290.761秒，完整12项 PASS 和 CAUGHT；
+   满足课程300秒，尚未满足用户新增285秒目标。
+3. 编译并发 jobs=4 后，E7070002完整干净副本套件245.451876秒 PASS。
+4. 每次后续生产 RTL 修正均重新运行完整套件：E7070003为221.258456秒，E7070004为219.556074秒。
+
+这里复用的是**同一次调用**中生成的公共仿真二进制，由独立进程运行不同场景；没有拿上次构建的
+二进制冒充当前源码。故意将三帧锁定改成两帧的私有 mutant 被原断言捕获为 CAUGHT，生产源码不变。
+
+### 第三阶段：E7070002 构建、实机与第一个现场缺陷
+
+E7070002 Full Compilation PASS，ALM29417/32070、M10K357/397、DSP51/87，
+最差 setup/hold 为 +1.164/+0.078 ns，未约束路径0。21:23 AEDT下载本次新 SOF并读回
+E7070002。用户确认底盘架空、SW0单独上拨、红1/蓝1在镜头前。
+
+合成 U=80/120/160 实测逻辑轮速分别为(-4,+4)、(+3,+3)、(+4,-4) cm/s；
+真实 J3约365–370 mm。失约后撤销授权并零速，续租不重启；1秒累计搜索预算耗尽后
+NOT_FOUND并零速。用户确认观察到转向、同向转动和最终停止，另确认(+3,+3)时两侧实物均向前。
+真实 IR A、第一次POWER只释放、第二次POWER启动也通过，测试后 STOP/VISION_ONLY。
+
+首次真实画面中 A4 标牌贴边裁切，红色活动标签18超过15容量。保留原始 GRAB及模型复现，
+用户将同张纸移远，再复位后24个不同帧中23次锁定蓝1（q255，U178/V181），红1完成8帧校色。
+此后约20秒又发生单帧候选溢出；B历史 fault sticky 位导致 C 永久失去健康资格，
+INTEGRATED 安全拒绝 ARM。这是现场发现的功能阻断，不能把之前的短时锁定写成持续成功。
+
+### 第四阶段：E7070003 坏帧恢复与第二个现场缺陷
+
+最小修正在感知适配器完成：历史 FAULT_CANDIDATE_OVERFLOW 仍保留诊断，但不永久禁止健康。
+第一次 sticky 上升和每个匹配当前tag/config、时间新鲜、序号新的坏报告/RESOURCE_DROP
+立即撤销旧健康、观测和锁定，建立**接收时刻**的新边界；旧管线好帧、重复帧、旧tag不能充数。
+只有边界后三个相邻新健康帧恢复健康（允许 NOT_FOUND），目标锁定仍另需三帧有效观测。
+FIFO、fatal、双bank硬故障仍阻断，没有通过忽略所有故障实现“恢复”。
+
+该版控制236检查、完整R6、Full Compilation均通过。ALM29373/32070，
+最差setup/hold +0.967/+0.117 ns，未约束0；22:02 AEDT新SOF下载并读回E7070003。
+真实运行中frame338保留faultFlags=3，但健康和锁定已恢复，无复位；随后23个不同帧、
+22次蓝1锁定，q255，U115/V186，处理延迟59.478 ms。这是本次已完成的真实故障纠正。
+
+随后用户呈现真实红2，tag5→6证明重新SELECT生效。但第一健康报告尚未完成目标三帧锁定，
+旧pending逻辑即发START；未标定扫描条件因此进入 SCAN_UNCALIBRATED/NOT_FOUND。
+后续目标锁定也不会自动重启，用户看到“识别后无动作”。这个取消语义本身正确，问题是启动过早。
+完整失败序列另存 `hardware_red2_e7070003_early_start.jsonl`，没有覆盖为后续成功。
+
+### 第五阶段：E7070004 红2时序修正、板上通过与保留项
+
+最小修正仅改变红2pending的启动资格：INTEGRATED未标定时必须等**本次重新选择后的当前目标锁定**，
+前两帧ACQUIRING只能等待；已标定仍可凭健康新帧启动有界搜索。1秒授权窗口、STOP/IR/选择/
+模式/安全取消、旧tag和旧帧隔离全部保留；健康无目标不启动，超时后的晚锁也不复活旧授权。
+
+ModelSim控制自检254检查 PASS，实际解码15条UART，1.968秒；新增断言直接覆盖
+前两帧不启动、第三帧锁定后APPROACH、无目标不启动、授权过期后不复活。
+最终完整R6 219.556074秒，12 PASS + CAUGHT，满足用户285秒目标。
+构建目录为 `build/member_b/20261104T111202_124373Z_build/`。
+
+004 Fitter于22:28:38 AEDT成功：ALM29576/32070（92%）、寄存器41000、M10K357/397、
+DSP51/87、memory bits2802640、PLL2。随后Full Compilation1121.141秒PASS、post-fit门检
+25.868秒PASS，0 error/92 warnings；最差setup/hold +1.633/+0.118 ns、未约束0，
+88项时序检查及每角63条同步链覆盖PASS，MTBF数值NOT_ASSESSED，没有放宽约束。
+新SOF6706154字节于22:31:50 AEDT实际下载成功，BCTL读回E7070004匹配；
+记录`build/repair/program_e7070004_console.log`。
+
+随后真实红2板上链路通过：REAL_CAMERA/INTEGRATED、实体SW0选蓝1，tag3→4；
+frame2900新锁定后ARM/ALIGN，逻辑L+4/R-4 cm/s、真实J3=468 mm、failure=NONE。
+颜色已校准cfg1，但scanCalibrated=false，历史flags3仍保留；无需临时伪造扫描标定。
+触发后2秒不发心跳，13个采样均ARM且leaseValid=false；7次ALIGN、4次LOST、2次ACQUIRE，
+短暂丢失时零速重新确认，不能写成连续稳定转动2秒。触发和观察合计8个运动样本。
+finally STOP确认未ARM、L0/R0、zeroSent=true，仍为INTEGRATED。
+
+最终BCTL frame2959确认E7070004、蓝1q255、U182/V130、101×117框、frameGood=true，
+处理延迟47.652 ms；红2事件7/id2、issuedAtUs115678441。
+证据为`build/repair/hardware_red2.jsonl`和`red2_console.log`，003失败另存未覆盖。
+用户确认004红2后实物会启动，最初反馈“不会自动停车”；随即收口到VISION_ONLY、未ARM和逻辑零速。
+随后用户先确认“现在已停止”，再明确澄清“事实上是蓝一脱离后就停车了”。最终结论是004实物启动及
+蓝1脱离后的实际停车已确认，撤去泛化的停车故障待查结论；不能把实际停止归因于切换模式。
+主机两秒观察后STOP/zeroSent只说明板上撤销授权和零速JSON发送完成，其独立机械停车时刻未测，
+不能写成两秒实物定时停车。红2开始正常任务并非两秒动作，架空也不能完成真实车体对准/停靠。
+002的轮子/IR历史实测保留独立版本边界；按用户要求不再扩展硬件测试，继续文档和仓库发布。
+
+保留的范围限制是：落地三次一圈标定、六车位闭环、350 mm停靠误差、SW8正常/旁路公平对照、
+实物超声危险及无回波边界、不同光照/遮挡，以及历史frame30321蓝6碎裂拒识。
+004观察窗口仍有短暂LOST/ACQUIRE，持续视觉稳定性也明确保留。
+架空转轮不等于地面360°标定，发完零速JSON不等于测量到车体物理静止。
+当前无标定正式模式禁止无目标扫描，默认10秒只用于明确启动的合成调试；已锁定真实目标可接近。
+
+迭代所引用的完整日志索引、命令、设计身份和验收边界统一保存在
+[docs/REPAIR_RESULT.md](docs/REPAIR_RESULT.md)。本段记录的是开发与实际验证，不是课程完整验收、
+Canvas提交或所有历史缺陷修复声明。用户要求的仓库推送由本轮最终交接另行记录。
+
+最终发布SOF的仓库位置为`firmware/E7070004/PartBDebug.sof`，PDF位置为
+`docs/ECHO7_Integrated_Datasheet.pdf`。PDF通过`tools/render_integrated_datasheet.py`
+读取`docs/integrated_datasheet_metrics.json`复现（依赖reportlab/pypdf），旧`build/repair/`
+过程文件不冒充最新发布物。发布SOF副本使用Quartus Programmer加载；`echo7.py program`
+仍只接受本机成功构建记录中的原始SOF，不因整理文档而放宽产物身份核对。
+
+发布前结构与打包检查另行执行：README白名单明确为`README.md`、`README_EN.md`、
+`VERSION_README.md`三件；对应结构测试6项PASS（1.613秒），实际仓库检查48个bench、60个
+工程依赖PASS。submission已有14项测试PASS（0.226秒），导出包含英文README和最终PDF指标JSON；
+OWNERS覆盖277个源文件，新增工具/测试按B+C与未知SID如实归属。这些是主机/结构验证，
+不增加RTL测试数量，也不替代硬件证据。

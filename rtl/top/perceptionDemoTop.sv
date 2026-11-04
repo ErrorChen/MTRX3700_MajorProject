@@ -169,7 +169,7 @@ module perceptionDemoTop #(
         .clk(CLOCK_50),.reset(reset50),.pclk(cam_pclk),.resetPclk(resetPclk),
         .cameraFrameStart(frame_start),.cameraPixelValid(px_valid),.cameraPixel(px),.cameraX(px_x),.cameraY(px_y),
         .timeUs(timeUs),.interactionEnable(1'b1),.interactionPermit(1'b1),
-        .debugCalArm(calibrateArm),.debugSpeechArm(speechArm),.orientationProfile(orientationProfile),
+        .debugCalArm(calibrateArm),.debugSpeechArm(speechArm),.red2Reset(1'b0),.orientationProfile(orientationProfile),
         .debugInteractionArmReady(debugInteractionArmReady),
         .bypassPerspective(bypassSync),.processingEnable(!rawProcessingSync),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),

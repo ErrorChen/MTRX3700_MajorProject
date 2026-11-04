@@ -3,6 +3,7 @@
 // Six repeated synthetic full-page RGB565 frames: normal then bounding-box bypass.
 // This samples latency; it is not a worst-case bound or live-camera validation.
 module tb_v2_pixel_latency;
+ logic red2Reset=0; // No mode change in this pixel fixture.
  wire cameraFifoFault,cameraAbandonEvent;
  import perception_pkg::*;
  logic clk=0,pclk=0,reset=1,resetPclk=1;always #10 clk=~clk;

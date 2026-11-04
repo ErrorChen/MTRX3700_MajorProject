@@ -68,7 +68,8 @@ module memberBDebug_tb;
         issue(3,0);waitAck();waitClocks(5);
         if(calPulses!=1)$fatal(1,"Calibration arm is not one pulse");
         issue(4,0);waitAck();waitClocks(5);
-        if(speechPulses!=1)$fatal(1,"Speech arm is not one pulse");
+        if(speechPulses!=0 || !dut.commandError || dut.rejectionReason!=1)
+            $fatal(1,"Removed speech arm must return unsupported without a pulse");
         interactionArmReady=0;
         issue(3,0);waitAck();waitClocks(5);
         if(!dut.commandError||dut.rejectionReason!=2||calPulses!=2)

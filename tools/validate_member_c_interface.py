@@ -403,8 +403,8 @@ def expectedBuild(args):
         raise echo7.Blocked("no last_build.json; build/program first or supply --expected-build-id")
     record = json.loads(path.read_text(encoding="utf-8"))
     require(record.get("status") == "PASS", "last_build.json does not describe a successful build")
-    return record["source"]["buildId"], {"path": str(path), "sha256": echo7.digest(path),
-        "sourceSha256": record["source"]["sha256"], "sofSha256": record.get("sof", {}).get("sha256")}
+    return record["source"]["buildId"], {"path": str(path),
+        "sof": record.get("sof", {}).get("path")}
 
 
 def main(argv=None):

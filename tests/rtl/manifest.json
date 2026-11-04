@@ -715,6 +715,112 @@
       ],
       "timeoutSeconds": 1800,
       "inputSource": "ONE_RECORDED_CAMERA_FRAME_REPEATED_IN_RTL"
+    },
+    {
+      "name": "tb_control_repair",
+      "passMarker": "PASS: tb_control_repair",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/member_c/perception_adapter.sv",
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "rtl/member_c/member_c_control.sv",
+        "rtl/member_c/uart_tx.sv",
+        "rtl/member_c/chassis_command.sv",
+        "tests/member_c/tb_control_repair.sv"
+      ],
+      "inputSource": "SYNTHETIC_PROTOCOL_REAL_C_AND_UART"
+    },
+    {
+      "name": "tb_chassis_debug",
+      "passMarker": "PASS tb_chassis_debug",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/debug/snapshot_probes.sv",
+        "rtl/debug/chassisDebug.sv",
+        "rtl/debug/syntheticPerception.sv",
+        "tests/integration/tb_chassis_debug.sv"
+      ],
+      "defines": [
+        "VERILATOR"
+      ],
+      "inputSource": "CCTL_SYNTHETIC_ENDPOINT_RTL"
+    },
+    {
+      "name": "tb_pixel_uart_repair",
+      "passMarker": "PASS tb_pixel_uart_repair",
+      "sources": [
+        "rtl/common/camera_pkg.sv",
+        "rtl/vision/candidate_pkg.sv",
+        "rtl/common/perception_pkg.sv",
+        "rtl/common/vision_pkg.sv",
+        "rtl/common/heldBusCdc.sv",
+        "rtl/common/asyncPixelFifo.sv",
+        "rtl/capture/cameraStreamBridge.sv",
+        "rtl/vision/causalMaskCleanup.sv",
+        "rtl/vision/boundedCandidates.sv",
+        "rtl/vision/glyphBanks.sv",
+        "rtl/vision/nativeAnchorReader.sv",
+        "rtl/vision/mainColourSupportReader.sv",
+        "rtl/vision/projectiveMarkerReader.sv",
+        "rtl/tracking/targetTracker.sv",
+        "rtl/interaction/colourSampler.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "rtl/vision/hsvColourGate.sv",
+        "rtl/vision/horizontalRunFilter.sv",
+        "rtl/vision/markerQueryStore.sv",
+        "rtl/interaction/calibrationPointMapper.sv",
+        "rtl/interaction/calibrationGeometry.sv",
+        "rtl/top/perceptionCore.sv",
+        "rtl/member_c/perception_adapter.sv",
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "rtl/member_c/member_c_control.sv",
+        "rtl/member_c/chassis_command.sv",
+        "rtl/member_c/uart_tx.sv",
+        "tests/integration/tb_pixel_uart_repair.sv"
+      ],
+      "plusargs": [
+        "+SCENE={root}/tests/vectors/sheet_320x240_rgb565.hex"
+      ],
+      "timeoutSeconds": 300,
+      "inputSource": "FIXED_25FPS_SYNTHETIC_PIXELS_REAL_CORE_C_UART"
+    },
+    {
+      "name": "tb_board_repair_pins",
+      "passMarker": "PASS: tb_board_repair_pins",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/member_c/perception_adapter.sv",
+        "rtl/member_c/motion_fsm.sv",
+        "rtl/member_c/safety_arbiter.sv",
+        "rtl/member_c/member_c_control.sv",
+        "rtl/member_c/uart_tx.sv",
+        "rtl/member_c/chassis_command.sv",
+        "rtl/debug/syntheticPerception.sv",
+        "rtl/member_c/sonar_pll.sv",
+        "rtl/member_c/sonar_range.sv",
+        "rtl/member_c/sonar_guard.sv",
+        "rtl/member_c/nec_decoder.sv",
+        "rtl/member_c/uart_rx.sv",
+        "rtl/member_c/hex_digit.sv",
+        "rtl/member_c/blink.sv",
+        "rtl/member_c/memberCBoard.sv",
+        "tests/member_c/hcsr04_model.sv",
+        "tests/member_c/tb_board_repair_pins.sv"
+      ],
+      "timeoutSeconds": 1200,
+      "inputSource": "PIN_LEVEL_NEC_J3_UART_SYNTHETIC_VISION"
+    },
+    {
+      "name": "red2Start_tb",
+      "passMarker": "PASS red2Start_tb",
+      "sources": [
+        "rtl/common/perception_pkg.sv",
+        "rtl/interaction/fixedSheetInteraction.sv",
+        "tests/rtl/red2Start_tb.sv"
+      ],
+      "inputSource": "RED2_DISTINCT_FRAME_EVENT_AND_BACKPRESSURE"
     }
   ]
 }

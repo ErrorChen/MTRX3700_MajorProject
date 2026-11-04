@@ -3,6 +3,7 @@
 // coverage is protocol injection, not camera recognition evidence.
 module jtagInteraction_tb;
     import perception_pkg::*;
+    logic red2Reset=0;
     logic clk=0,reset=1;
     always #10 clk=~clk;
     logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords=0;
@@ -16,6 +17,7 @@ module jtagInteraction_tb;
     logic [1:0] orientationProfile;
     logic enable=1,permit=1,frameValid=0,frameGood=1,red1Paired=1,red2Seen=1;
     logic [31:0] timeUs=0;
+    wire red2Present=red2Seen;
     logic [15:0] frameId=0,configVersion=0,activeCfgVersion=0,commitVersion=0;
     logic sampleResultValid=0,sampleGood=1,commitAck=0;
     logic collectEnable,commitRequest,calibrationAttempt,calibrated,speechArmed,busy,eventOverflow;
@@ -45,7 +47,7 @@ module jtagInteraction_tb;
             while(debugPort.ackToggle!==hostToggle&&cycles<80)begin @(negedge clk);cycles++;end
             if(cycles==80)$fatal(1,"BCTL action timeout");
             if(debugPort.commandError!==!expectedAccepted||
-                debugPort.rejectionReason!==(expectedAccepted?2'd0:2'd2))
+                debugPort.rejectionReason!==(expectedAccepted?2'd0:opcode==4?2'd1:2'd2))
                 $fatal(1,"Busy action ACK incorrectly implies acceptance state=%0d",state);
             checks++;
         end

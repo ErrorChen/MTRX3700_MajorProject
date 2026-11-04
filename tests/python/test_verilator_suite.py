@@ -8,6 +8,7 @@ from pathlib import Path
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
 from unittest.mock import patch
@@ -29,11 +30,13 @@ class VerilatorRunnerTests(unittest.TestCase):
         selected = suite.selectTests(json.loads((ROOT / "tests/rtl/manifest.json").read_text(encoding="utf-8")))
         markers = {test["name"]: test["passMarker"] for test in selected}
         calls = []
+        pairedSimulationBarrier = threading.Barrier(2)
 
         def process(arguments, cwd, logPath, deadline):
             command = [str(value) for value in arguments]
             logPath = Path(logPath)
-            calls.append({"arguments": command, "cwd": str(cwd), "log": str(logPath), "deadline": deadline})
+            calls.append({"arguments": command, "cwd": str(cwd), "log": str(logPath), "deadline": deadline,
+                          "threadId": threading.get_ident()})
             code = 0
             if logPath.name == "version.log":
                 text = "Verilator 5.050 HOST_RUNNER_DOUBLE_ONLY\n"
@@ -53,6 +56,8 @@ class VerilatorRunnerTests(unittest.TestCase):
                 text = "HOST_RUNNER_DOUBLE_ONLY compilation\n"
             else:
                 name = Path(cwd).name
+                if name in ("perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"):
+                    pairedSimulationBarrier.wait(timeout=2)
                 if name == "targetTracker_broken_lock":
                     code, text = 1, "%Error: Assertion failed: three-frame lock HOST_RUNNER_DOUBLE_ONLY\n"
                 elif name == failedScenario:
@@ -77,13 +82,18 @@ class VerilatorRunnerTests(unittest.TestCase):
     def testSystemIsMandatoryAndFirst(self):
         manifest = json.loads((ROOT / "tests/rtl/manifest.json").read_text(encoding="utf-8"))
         selected = suite.selectTests(manifest)
-        self.assertEqual(selected[0]["name"], "perceptionCoreContinuous_tb")
+        self.assertEqual(selected[0]["name"], "tb_pixel_uart_repair")
         self.assertIn("rtl/top/perceptionCore.sv", selected[0]["sources"])
-        self.assertEqual(selected[0]["plusargs"], ["+CONTINUOUS"])
+        continuous = next(test for test in selected if test["name"] == "perceptionCoreContinuous_tb")
+        self.assertEqual(continuous["plusargs"], ["+CONTINUOUS"])
         overload = next(test for test in selected if test["name"] == "perceptionCoreOverload_tb")
         self.assertIn("rtl/top/perceptionCore.sv", overload["sources"])
         self.assertIn("+OVERLOAD", overload["plusargs"])
-        self.assertEqual(len(selected), 8)
+        self.assertEqual(len(selected), 12)
+        pixel = next(test for test in selected if test["name"] == "tb_pixel_uart_repair")
+        self.assertIn("rtl/top/perceptionCore.sv", pixel["sources"])
+        self.assertIn("rtl/member_c/member_c_control.sv", pixel["sources"])
+        self.assertIn("rtl/member_c/chassis_command.sv", pixel["sources"])
         with self.assertRaises(KeyError):
             suite.selectTests({"tests": [test for test in manifest["tests"]
                                          if test["name"] != "perceptionCoreContinuous_tb"]})
@@ -214,19 +224,24 @@ class VerilatorRunnerTests(unittest.TestCase):
             self.assertEqual(result["status"], "PASS")
             self.assertTrue(result["cleanBuild"])
             self.assertEqual(result["maximumSeconds"], 300)
-            self.assertEqual(len(result["tests"]), 9)
+            self.assertEqual(len(result["tests"]), len(suite.SUITE_NAMES)+1)
             self.assertEqual([test["name"] for test in result["tests"][:-1]], list(suite.SUITE_NAMES))
             self.assertEqual(result["tests"][-1]["status"], "CAUGHT")
             compilations = [call for call in calls if "--binary" in call["arguments"]]
             simulations = [call for call in calls if Path(call["log"]).name == "simulation.log"]
-            self.assertEqual((len(compilations), len(simulations)), (8, 9))
-            first, overload = result["tests"][:2]
+            self.assertEqual((len(compilations), len(simulations)), (len(suite.SUITE_NAMES), len(suite.SUITE_NAMES)+1))
+            first = next(test for test in result["tests"] if test["name"] == "perceptionCoreContinuous_tb")
+            overload = next(test for test in result["tests"] if test["name"] == "perceptionCoreOverload_tb")
             self.assertEqual(overload["compiledBinary"]["reusedFrom"], first["name"])
             self.assertEqual(overload["compiledBinary"]["sha256"], first["compiledBinary"]["sha256"])
-            self.assertEqual(simulations[0]["arguments"][0], simulations[1]["arguments"][0])
-            self.assertNotIn("+OVERLOAD", simulations[0]["arguments"])
-            self.assertIn("+OVERLOAD", simulations[1]["arguments"])
-            self.assertNotEqual(simulations[0]["log"], simulations[1]["log"])
+            continuousRun = next(call for call in simulations if Path(call["cwd"]).name == "perceptionCoreContinuous_tb")
+            overloadRun = next(call for call in simulations if Path(call["cwd"]).name == "perceptionCoreOverload_tb")
+            self.assertEqual(continuousRun["arguments"][0], overloadRun["arguments"][0])
+            self.assertNotIn("+OVERLOAD", continuousRun["arguments"])
+            self.assertIn("+OVERLOAD", overloadRun["arguments"])
+            self.assertNotEqual(continuousRun["log"], overloadRun["log"])
+            self.assertNotEqual(continuousRun["threadId"], overloadRun["threadId"])
+            self.assertEqual(result["parallelScenarios"], ["perceptionCoreContinuous_tb", "perceptionCoreOverload_tb"])
             self.assertTrue((output / overload["name"] / "compile_reuse.json").is_file())
             self.assertEqual(len(set(call["deadline"] for call in calls)), 1)
             good = next(test for test in result["tests"] if test["name"] == "targetTracker_tb")
@@ -236,7 +251,7 @@ class VerilatorRunnerTests(unittest.TestCase):
             # A second fresh invocation compiles again even though identical
             # current-run binaries still exist in the first result directory.
             _, second, secondCalls = self.runHostDouble(Path(folder) / "another clean run")
-            self.assertEqual(sum("--binary" in call["arguments"] for call in secondCalls), 8)
+            self.assertEqual(sum("--binary" in call["arguments"] for call in secondCalls), len(suite.SUITE_NAMES))
             self.assertIsNone(second["tests"][0]["compiledBinary"]["reusedFrom"])
 
     def testFailureOfReusedSimulatorStillFailsAndKeepsIndependentLog(self):
@@ -245,11 +260,11 @@ class VerilatorRunnerTests(unittest.TestCase):
             exitCode, result, calls = self.runHostDouble(output, "perceptionCoreOverload_tb")
             self.assertEqual(exitCode, 1)
             self.assertEqual(result["status"], "FAIL")
-            self.assertEqual([test["status"] for test in result["tests"]], ["PASS", "FAIL"])
+            self.assertEqual([test["status"] for test in result["tests"]], ["PASS"]*5 + ["FAIL"])
             failed = result["tests"][-1]
             self.assertEqual(failed["compiledBinary"]["reusedFrom"], "perceptionCoreContinuous_tb")
             self.assertIn("FAIL injected", (output / failed["name"] / "simulation.log").read_text())
-            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), 1)
+            self.assertEqual(sum("--binary" in call["arguments"] for call in calls), 5)
 
 
 if __name__ == "__main__":

@@ -23,6 +23,25 @@ STAFF_FILES = {
 }
 
 
+INTEGRATION_FILES = {
+    "rtl/top/echo7IntegratedTop.sv", "rtl/debug/chassisDebug.sv", "rtl/debug/syntheticPerception.sv",
+    "quartus/MemberCIntegration.sdc", "tools/chassis_debug.py", "tools/tcl/chassis_session.tcl",
+    "tools/echo7.py", "tools/check_repository.py", "tools/export_submission.py",
+    "tools/lib/verilator_suite.py", "tools/run_r6_windows.py", "run_all_tests.sh",
+    "tools/render_integrated_datasheet.py",
+    "tools/update_owners.py", "tools/validate_member_c_interface.py",
+    "tests/python/test_chassis_debug.py", "tests/python/test_chassis_tcl.py", "tests/python/test_chassis_tools.py",
+}
+
+
+def maintainer(name):
+    if name.startswith(("rtl/member_c/", "tests/member_c/")):
+        return "Member C SID pending", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
+    if name in INTEGRATION_FILES or name.startswith(("tests/integration/", "tests/scheme_c/")):
+        return "B 540207680; A/C SID pending", "B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off"
+    return "540207680", None
+
+
 def main():
     manifest = json.loads((ROOT / "tests/rtl/manifest.json").read_text())
     paths = []
@@ -32,8 +51,8 @@ def main():
                   and "__pycache__" not in p.parts and not any(part in ("db", "incremental_db", "output_files", "vga_sink") for part in p.parts)]
     paths += [ROOT / name for name in ("run_all_tests.sh", "requirements.txt", ".gitignore", ".gitattributes", ".editorconfig")]
     paths += list((ROOT / "tests/fixtures/camera").rglob("*.png"))
-    lines = ["# Current Member B ownership and provenance", "",
-        "SID **540207680** is the user-confirmed Member B maintainer of the files below.",
+    lines = ["# ECHO-7 ownership and provenance", "",
+        "SID **540207680** is the user-confirmed Member B maintainer. Member A and Member C SIDs are **pending**.",
         "The preliminary repository was built by same-group students Hajin and Jiaze Sun;",
         "Hajin mainly handles Member A. Their SIDs remain unknown and are not invented.",
         "Origin is separate from maintenance responsibility. Original source/IP notices",
@@ -42,7 +61,7 @@ def main():
         "Source: user statement on 3 November 2026; original notices and",
         "ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate with",
         "`python tools/update_owners.py` after adding a maintained source or test.", "",
-        "| File | B SID | Origin / adaptation | Verification entry (not an execution claim) |",
+        "| File | Maintainer / SID | Origin / adaptation | Verification entry (not an execution claim) |",
         "|---|---|---|---|"]
     for path in sorted(set(paths)):
         name = path.relative_to(ROOT).as_posix()
@@ -53,9 +72,11 @@ def main():
         elif name.startswith("assets/"):
             origin = "User-supplied one-page PDF; B geometry/template recovery and generation"
         elif name.startswith("tests/fixtures/camera/"):
-            origin = "Same-team recorded OV7670 pixels of user-provided physical signs; B host-only annotations/profile metadata, AI-assisted; per-input origin and hashes in camera/manifest.json"
+            origin = "Same-team recorded OV7670 pixels of user-provided physical signs; B host-only annotations/profile metadata, AI-assisted; per-input provenance in camera/manifest.json"
         else:
             origin = "Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim"
+        owner, integrationOrigin = maintainer(name)
+        if integrationOrigin: origin = integrationOrigin
         benches = [test["name"] for test in manifest["tests"] if name in test["sources"]]
         if benches:
             check = ", ".join(benches[:3]) + ("; full mapping: tests/rtl/manifest.json" if len(benches)>3 else "")
@@ -67,7 +88,7 @@ def main():
             check = "echo7.py build; post-fit timing/CDC/resource gate and board validation"
         else:
             check = "Python suite / check_repository.py; command execution evidence remains separate"
-        lines.append(f"| `{name}` | 540207680 | {origin} | {check} |")
+        lines.append(f"| `{name}` | {owner} | {origin} | {check} |")
     (ROOT / "OWNERS.md").write_text("\n".join(lines)+"\n", encoding="utf-8")
     print(f"Updated OWNERS.md: {len(set(paths))} individual files; human review pending")
 

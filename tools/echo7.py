@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ECHO-7 Member B evidence runner. All external commands use argument arrays.
+"""ECHO-7 integrated build, camera diagnostics and regression runner.
 
 Exit 0 is a completed check, 1 is a failed check, and 2 is an external block or
 an explicitly deferred function. MODEL, RTL_SIM and hardware are never merged.
@@ -48,6 +48,10 @@ def toolDirs():
             installation = root.parent.parent
             if installation.is_dir():
                 roots.extend(p / "quartus" for p in sorted(installation.iterdir()) if p.is_dir())
+    if os.name == "nt":
+        for base in (Path("C:/intelFPGA_lite"), Path("C:/altera")):
+            if base.is_dir():
+                roots.extend(p / "quartus" for p in base.iterdir() if p.is_dir())
     roots = sorted(set(roots), key=lambda p: ("18.1" not in str(p), str(p)))
     return roots
 
@@ -74,14 +78,15 @@ def discover(name, override=None):
 
 
 def sourceIdentity():
-    """Hash the B project's explicit source/constraint closure, excluding its ID.
+    """Discover the explicit source closure and simple build identifier.
 
-    Quartus databases and .qws UI state must not change the build identity.
-    Vendor IP versions are recorded by the build tool.
+    File names and the latest source modification time reject an obviously
+    stale build without maintaining per-file hash manifests. Clean staging
+    and a new output directory prevent reusing an earlier SOF as this build.
     """
     project = ROOT / "quartus"
     qsf = project / "PartBDebug.qsf"
-    files = {qsf, project / "PartBDebug.qpf"}
+    files = {qsf, project / "PartBDebug.qpf", ROOT / "rtl/common/memberBBuildId.svh"}
     searchPaths = [project]
     text = qsf.read_text(encoding="utf-8")
     for name in re.findall(r"^set_global_assignment\s+-name SEARCH_PATH\s+(.+?)\s*$", text, re.M):
@@ -92,53 +97,62 @@ def sourceIdentity():
     seen = set()
     while pending:
         path = pending.pop()
-        if path in seen or path.name == "memberBBuildId.svh":
+        if path in seen:
             continue
         seen.add(path)
         if not path.is_file():
-            raise RuntimeError(f"B project dependency is missing: {path}")
+            raise RuntimeError(f"project dependency is missing: {path}")
         if path.suffix.lower() in (".sv", ".svh", ".v", ".vh", ".sdc", ".qip"):
             source = path.read_text(encoding="utf-8", errors="replace")
             includes = re.findall(r'`include\s+"([^"]+)"', source)
             includes += re.findall(r'^\s*source\s+["{]?([^"}\s]+)', source, re.M)
             for include in includes:
-                if Path(include).name == "memberBBuildId.svh":
-                    continue
                 candidates = [path.parent / include, *(folder / include for folder in searchPaths)]
                 found = next((p.resolve() for p in candidates if p.is_file()), None)
                 if found is None:
                     raise RuntimeError(f"unresolved source include {include} in {path}")
                 files.add(found); pending.append(found)
-    files = {p for p in files if p.name != "memberBBuildId.svh"}
-    hashes = {str(p.relative_to(ROOT)).replace("\\", "/"): digest(p) for p in sorted(files)}
-    identity = hashlib.sha256(json.dumps(hashes, sort_keys=True).encode()).hexdigest()
-    return {"sha256": identity, "buildId": int(identity[:8], 16), "files": hashes}
+    header = (ROOT / "rtl/common/memberBBuildId.svh").read_text(encoding="utf-8")
+    buildId = re.search(r"MEMBER_B_BUILD_ID\s+32'h([0-9a-fA-F]+)", header)
+    if not buildId:
+        raise RuntimeError("missing simple build identifier in memberBBuildId.svh")
+    return {"buildId": int(buildId.group(1), 16), "top": "echo7IntegratedTop",
+            "latestModifiedNs": max(p.stat().st_mtime_ns for p in files),
+            "files": [p.relative_to(ROOT).as_posix() for p in sorted(files)]}
 
 
 def stageBuildSources(identity, destination):
-    """Copy exactly the hashed source closure into a new private build tree.
-
-    No compiler database, old bitstream or GUI state is reused. Byte checks
-    catch an edit racing the copy, and the generated ID only changes the copy.
-    Relative QSF/include paths therefore retain the same meaning as at source.
-    """
+    """Copy the explicit dependencies into a new tree with no old SOF/database."""
     destination = Path(destination).resolve()
     destination.mkdir(parents=True, exist_ok=False)
-    for relative, expectedHash in identity["files"].items():
+    for relative in identity["files"]:
         source = (ROOT / relative).resolve()
         target = (destination / relative).resolve()
         if not source.is_relative_to(ROOT.resolve()) or not target.is_relative_to(destination):
             raise RuntimeError(f"build dependency escapes its source tree: {relative}")
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(source, target)
-        if digest(target) != expectedHash:
+        if source.read_bytes() != target.read_bytes():
             raise RuntimeError(f"source changed while staging build: {relative}")
-    header = destination / "rtl/common/memberBBuildId.svh"
-    header.parent.mkdir(parents=True, exist_ok=True)
-    header.write_text("// Generated by echo7.py build from sourceIdentity().\n"
-                      "`define MEMBER_B_BUILD_ID 32'h%08x\n" % identity["buildId"],
-                      encoding="utf-8", newline="\n")
     return destination / "quartus"
+
+
+def verifiedBuild(sofPath=None):
+    """Return this project's successful fresh build; reject another SOF path."""
+    record = WORK / "last_build.json"
+    if not record.is_file():
+        raise Blocked("no current successful build record; run build first")
+    build = json.loads(record.read_text(encoding="utf-8"))
+    current = sourceIdentity()
+    sof = Path(build["sof"]["path"]).resolve()
+    if sofPath is not None and Path(sofPath).resolve() != sof:
+        raise RuntimeError("--sof must identify the SOF produced by the recorded current build")
+    if build.get("status") != "PASS" or build.get("source") != current:
+        raise RuntimeError("sources differ from the current successful integrated build; rebuild first")
+    if not sof.is_file() or sof.stat().st_size != build["sof"].get("bytes") or \
+            sof.stat().st_mtime_ns != build["sof"].get("modifiedNs"):
+        raise RuntimeError("the current build SOF is missing or changed")
+    return build, sof
 
 
 def quartusEnvironment(quartusBin, inherited=None):
@@ -216,7 +230,7 @@ def checkSynchroniserReports(folder, timing):
     for corner in corners:
         reportPath = Path(folder) / f"synchronisers_{corner}.txt"
         coverage = validateSynchronisers(reportPath.read_text(encoding="utf-8", errors="replace"))
-        records.append({"corner": corner, "report": str(reportPath), "sha256": digest(reportPath),
+        records.append({"corner": corner, "report": str(reportPath),
                         "expectedChainCount": coverage["expectedChainCount"],
                         "reportedChainCount": coverage["reportedChainCount"],
                         "coverageStatus": coverage["coverageStatus"], "mtbfAcceptance": "NOT_ASSESSED"})
@@ -245,7 +259,7 @@ class Runner:
         self.result = {"schema": "echo7-cli-v1", "command": args.command, "status": "RUNNING",
                        "startedUtc": datetime.now(timezone.utc).isoformat(), "inputSource": "NONE",
                        "outputDirectory": str(self.out), "python": sys.executable,
-                       "runnerSha256": digest(__file__), "steps": []}
+                       "steps": []}
         self.selectedTarget = None
         self.logCounts = {}
         self.quartusBin = None
@@ -259,8 +273,6 @@ class Runner:
         self.logCounts[label] = occurrence + 1
         logName = label if occurrence == 0 else f"{label}_{occurrence:04d}"
         logPath = self.out / (logName + ".log")
-        scriptHashes = {arg: digest(arg) for arg in command[1:]
-                        if Path(arg).suffix.lower() in (".py", ".tcl") and Path(arg).is_file()}
         started = time.monotonic()
         # External programs write directly to a persistent regular file. A
         # descendant may inherit stdout after its parent exits; using a pipe
@@ -326,7 +338,6 @@ class Runner:
         output = output.replace("\r\n", "\n").replace("\r", "\n")
         self.result["steps"].append({"name": label, "command": command, "returncode": code,
                                      "level": self.result.get("level", "TOOLS"),
-                                     "scriptSha256": scriptHashes,
                                      "logEncoding": logEncoding, "timedOut": timedOut,
                                      "treeTerminationConfirmed": treeStopped,
                                      "ownedParentMayRemain": parentRunning,
@@ -439,7 +450,7 @@ class Runner:
         # Attribute the complete suite to one source snapshot. Per-test checks
         # alone miss an early bench's source changing while later benches run.
         suiteHashes = {path: digest(ROOT / path) for test in config["tests"] for path in test["sources"]}
-        self.result["rtlSuiteSourceSha256"] = suiteHashes
+        self.result["rtlSuiteSourceCount"] = len(suiteHashes)
         vectors = self.out / "vectors"
         self.run("candidate_vectors", [sys.executable, ROOT / "tools/lib/candidates_reclaimed_model.py",
                                     "--write-vectors", vectors])
@@ -485,7 +496,7 @@ class Runner:
             self.result["projectiveReplayProfile"] = {
                 "readerAlgorithm": readerAlgorithm,
                 "colourAlgorithm": vectorProfile["colourAlgorithm"],
-                "manifestSha256": digest(projectiveManifest),
+                "vectorManifest": str(projectiveManifest),
                 "simulationParameters": projectiveParameters}
         for test in config["tests"]:
             name = test["name"]
@@ -495,7 +506,7 @@ class Runner:
             self.run(name + "_vlib", [binDir / ("vlib" + suffix), library], cwd=folder)
             sources = [ROOT / p for p in test["sources"]]
             sourceHashes = {str(p.relative_to(ROOT)): digest(p) for p in sources}
-            testResult = {"name": name, "status": "RUNNING", "sourceSha256": sourceHashes,
+            testResult = {"name": name, "status": "RUNNING",
                           "inputSource": ("RECORDED_CAMERA_RTL_REPLAY" if captureArgs else
                                           test.get("inputSource", "SYNTHETIC_RTL_VECTORS")),
                           "simulationModelDefines": test.get("defines", [])}
@@ -505,7 +516,8 @@ class Runner:
             # This is RTL simulation of the wrapper, not Intel IP/JTAG validation.
             defines = ["+define+" + d for d in test.get("defines", [])]
             self.run(name + "_compile", [binDir / ("vlog" + suffix), "-sv", *defines, "-work", library, *sources], cwd=folder)
-            plusargs = [value.replace("{vectors}", vectors.as_posix()) for value in test.get("plusargs", [])]
+            plusargs = [value.replace("{vectors}", vectors.as_posix()).replace("{root}", ROOT.as_posix())
+                        for value in test.get("plusargs", [])]
             simulationParameters = (projectiveParameters if
                 test.get("top", name) == "projectiveMarkerReader_tb" else {})
             testResult["simulationParameters"] = simulationParameters
@@ -540,8 +552,8 @@ class Runner:
         if not qsf.exists():
             raise Blocked("PartBDebug.qsf is not available yet")
         text = qsf.read_text()
-        if not re.search(r"TOP_LEVEL_ENTITY\s+perceptionDemoTop\b", text) or "5CSEMA5F31C6" not in text:
-            raise RuntimeError("PartBDebug must use perceptionDemoTop and 5CSEMA5F31C6")
+        if not re.search(r"TOP_LEVEL_ENTITY\s+echo7IntegratedTop\b", text) or "5CSEMA5F31C6" not in text:
+            raise RuntimeError("PartBDebug must use echo7IntegratedTop and 5CSEMA5F31C6")
         identity = sourceIdentity()
         self.result["source"] = identity
         project = stageBuildSources(identity, self.out / "source")
@@ -563,8 +575,8 @@ class Runner:
             raise RuntimeError(f"compile exited {compileCode}; see {self.out / 'compile.log'}")
         if any("Critical Warning" in line for line in self.result["warnings"]):
             raise RuntimeError("critical Quartus warnings require correction/review before this build can be programmed")
-        if sourceIdentity()["sha256"] != identity["sha256"]:
-            raise RuntimeError("sources changed during compilation; build cannot be attributed to its initial source hash")
+        if sourceIdentity() != identity:
+            raise RuntimeError("sources changed during compilation; rebuild the current source")
         if not sof.exists():
             raise RuntimeError("compile did not produce a fresh PartBDebug.sof")
         self.run("timing_gate", [self.qt("quartus_sta"), "-t", ROOT / "tools/tcl/timing_check.tcl", "PartBDebug", self.out / "timing.json"], project)
@@ -578,7 +590,8 @@ class Runner:
         if timing.get("status") != "PASS":
             raise RuntimeError("timing checks did not pass")
         self.result["synchroniserCoverage"] = checkSynchroniserReports(self.out, timing)
-        self.result["sof"] = {"path": str(sof), "sha256": digest(sof)}
+        self.result["sof"] = {"path": str(sof.resolve()), "bytes": sof.stat().st_size,
+                              "modifiedNs": sof.stat().st_mtime_ns}
         self.result["fitterSummary"] = (project / "output_files/PartBDebug.fit.summary").read_text()
         self.result["status"] = "PASS"
         (WORK / "last_build.json").write_text(json.dumps(self.result, indent=2))
@@ -677,14 +690,7 @@ class Runner:
     def program(self):
         self.result["level"] = "PROGRAMMED"
         buildPath = WORK / "last_build.json"
-        if not buildPath.exists():
-            raise Blocked("no successful build manifest; run build first")
-        build = json.loads(buildPath.read_text())
-        sof = Path(build["sof"]["path"])
-        if build.get("status") != "PASS" or digest(sof) != build["sof"]["sha256"]:
-            raise RuntimeError("SOF no longer matches the successful build manifest")
-        if sourceIdentity()["sha256"] != build["source"]["sha256"]:
-            raise RuntimeError("RTL/project changed since the successful build; rebuild before programming")
+        build, sof = verifiedBuild(getattr(self.args, "sof", None))
         target = self.target(programming=True)
         self.run("program", [self.qt("quartus_pgm"), "-c", target["cable"], "-m", "JTAG", "-o", f"p;{sof}@{target['index']}"])
         self.result["build"] = buildPath.as_posix()
@@ -692,7 +698,7 @@ class Runner:
                                      "programmedAtUtc": datetime.now(timezone.utc).isoformat()}, indent=2))
         status = self.control()
         if status["buildId"] != build["source"]["buildId"]:
-            raise RuntimeError("programmed device buildId differs from the successful source/SOF manifest")
+            raise RuntimeError("programmed device buildId differs from the current build")
         self.result["programmerSucceeded"] = True
         self.result["buildIdVerified"] = True
 
@@ -838,16 +844,7 @@ class Runner:
                 state = self.control()
             self.result["operationMeaning"] = "explicit debug orientation applied at a frame boundary; B/C coordinates remain upright240x320"
         elif c == "speech":
-            if self.args.arm:
-                state = self.control(4 << 24)
-                self.result["audioInputStatus"] = "DEFERRED_USER"
-                self.result["audioReady"] = bool(state["decoded"]["status"]["audioReady"])
-                self.result["operationMeaning"] = (
-                    "reopen visual red-2 arming only; a real recognised red 2 is still required. "
-                    "Microphone input remains deferred, audioReady=0 in this build, and this command creates no digit proposal")
-            else:
-                self.result["audioInputStatus"] = "DEFERRED_USER"
-                raise Blocked("microphone recording/input is deferred by the user's latest instruction; use select --bay 1..6")
+            raise Blocked("speech is unsupported; select a bay with physical SW0-SW5")
         elif c == "autodebug":
             self.replay(); self.rtl(); self.build(); self.program(); self.capture(); self.hardware()
 
@@ -860,8 +857,10 @@ def main(argv=None):
     parser.add_argument("--device")
     parser.add_argument("--timeout", type=int, default=300)
     commands = parser.add_subparsers(dest="command", required=True)
-    for name in ("doctor", "build", "program", "status", "clear"):
+    for name in ("doctor", "build", "status", "clear"):
         commands.add_parser(name)
+    commands.add_parser("program").add_argument("--sof", type=Path,
+        help="explicit SOF from this project's latest successful build (defaults to its recorded path)")
     autodebug = commands.add_parser("autodebug")
     test = commands.add_parser("test")
     # Both entry points use the same loss-preserving assessor. A truth file

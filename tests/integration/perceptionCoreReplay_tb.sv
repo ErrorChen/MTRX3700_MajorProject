@@ -4,6 +4,7 @@
 // fixture is expanded to even 640x480 coordinates with sensor-like idle cycles.
 // This does not exercise a live OV7670 byte stream or microphone chain.
 module perceptionCoreReplay_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     // CLOCK_50 is 20 ns; PCLK is 50 ns. The post-capture source emits only
     // retained even rows. A real 640x480 sensor also spends time on discarded
     // odd rows: normal source SOFs are therefore explicitly 40 ms apart. The
@@ -463,13 +464,13 @@ module perceptionCoreReplay_tb;
             $finish;
         end
         // Three recognition frames, eight sample frames, next SOF commit, then
-        // three new-configuration red-2 recognition frames arm the idle entry.
+        // three new-configuration red-2 frames remain NO_ACTION.
         for(int n=1;n<=15;n++)begin
             frame();
             if(!lastReport.observed)$fatal(1,"printed blue3 not read from pixels frame=%0d accepted=%0d",n,dut.acceptedCount);
         end
-        if(!status.calibrated||!status.speechArmed||status.interactionBusy||eventCount!=1||status.activeCfgVersion!=1)
-            $fatal(1,"fixed unfolded sheet did not calibrate once then arm: cfg=%0d calibrated=%0d armed=%0d events=%0d",
+        if(!status.calibrated||status.speechArmed||status.interactionBusy||eventCount!=1||status.activeCfgVersion!=1)
+            $fatal(1,"fixed unfolded sheet did not calibrate once with speech reserved zero: cfg=%0d calibrated=%0d armed=%0d events=%0d",
                 status.activeCfgVersion,status.calibrated,status.speechArmed,eventCount);
         if(userEventValid||!debugWords[(DEBUG_TAIL_BASE+2)*32+2]||debugWords[18*32+:104]!==consumedEvent)
             $fatal(1,"Consumed terminal event was not retained for JTAG diagnosis");
@@ -497,7 +498,7 @@ module perceptionCoreReplay_tb;
         frame();
         if(lastReport.observed||lastReport.locked||lastReport.centreU||lastReport.centreV||lastReport.quality)
             $fatal(1,"blank current image reused historical measurement");
-        if(!status.calibrated||!status.speechArmed||eventCount!=1)$fatal(1,"red absence reset persistent interaction state");
+        if(!status.calibrated||status.speechArmed||eventCount!=1)$fatal(1,"red absence reset persistent interaction state");
         $readmemh({vectorDir,"/vision_0_rgb565.hex"},pixels);
         truncatedFrame();truncatedFrame();truncatedFrame();
         expectedBufferDrops=3;

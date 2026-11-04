@@ -17,14 +17,14 @@ module tb_jtag_ownership;
    toggle=!toggle;dut.probes.src_jtag={toggle,3'd0,4'(opcode),18'd0,6'(value)};
    repeat(20)@(negedge clk);
    if(dut.ackToggle!==toggle || dut.commandError!==reject ||
-      (reject && dut.rejectionReason!=2))$fatal(1,"JTAG opcode %0d acknowledgement/rejection",opcode);
+      (reject && dut.rejectionReason!=(opcode==4?1:2)))$fatal(1,"JTAG opcode %0d acknowledgement/rejection",opcode);
    checks++;
  endtask
  initial begin
    repeat(5)@(negedge clk);reset=0;repeat(12)@(negedge clk);
    issue(1,6'h12,1);issue(2,0,1);issue(7,1,1);issue(8,0,1);issue(9,6'h12,1);
-   issue(3);issue(4);issue(6,2);issue(5);
-   if(calPulses!=1||speechPulses!=1||orientationProfile!=2||autoCycle)$fatal(1,"Unrelated visual debug controls changed");
+   issue(3);issue(4,0,1);issue(6,2);issue(5);
+   if(calPulses!=1||speechPulses!=0||orientationProfile!=2||autoCycle)$fatal(1,"Unrelated visual debug controls changed");
    $display("PASS: tb_jtag_ownership %0d commands: sole C owner, visual debug retained",checks);$finish;
  end
 endmodule

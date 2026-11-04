@@ -35,7 +35,8 @@ module chassis_command #(
     input logic signed [6:0] left_cm_s, right_cm_s,
     input  logic       feedback,    // 1: also ask for telemetry ({"T":130}) every period
     output logic       tx,          // to the chassis RX
-    output logic       busy         // a message is going out
+    output logic       busy,        // a message is going out
+    output logic       zeroSent = 0 // completed zero-speed JSON, not physical rest
 );
     localparam int MAXLEN = 28;
     // Constant-folded ASCII conversion: no runtime divider or DSP needed.
@@ -118,6 +119,7 @@ module chassis_command #(
     logic                fb_pending = 1'b0;
     logic                tx_valid = 1'b0, tx_ready;
     logic last_armed = 0, stop_pending = 1;
+    logic messageIsZero=1,messageIsMotion=1;
     wire stop_edge = last_armed && !armed;
     enum logic [1:0] {IDLE, SEND, LOAD_FB} state = IDLE;
 
@@ -130,6 +132,7 @@ module chassis_command #(
         if (reset) begin
             last_armed <= 0; stop_pending <= 1; sentL<=0;sentR<=0;
             state <= IDLE; tx_valid <= 1'b0; remaining <= '0; fb_pending <= 1'b0;
+            zeroSent<=0;messageIsZero<=1;messageIsMotion<=1;
         end else case (state)
             IDLE: if (stop_pending || stop_edge || tick || wheelsChanged || (armed && !last_armed)) begin
                 if(USE_WHEEL_REQUESTS)
@@ -137,13 +140,21 @@ module chassis_command #(
                 else {remaining, shreg} <= motion_msg(armed && !stop_pending && !stop_edge, motion, speed);
                 sentL<=armed && !stop_pending && !stop_edge ? left_cm_s:7'sd0;
                 sentR<=armed && !stop_pending && !stop_edge ? right_cm_s:7'sd0;
+                messageIsMotion<=1;
+                messageIsZero<=!armed || stop_pending || stop_edge ||
+                  (USE_WHEEL_REQUESTS && left_cm_s==0 && right_cm_s==0);
+                if(armed && !stop_pending && !stop_edge &&
+                  (!USE_WHEEL_REQUESTS || left_cm_s!=0 || right_cm_s!=0))zeroSent<=0;
                 stop_pending <= 0;
                 fb_pending <= feedback && !stop_pending && !stop_edge;
                 state <= SEND;
             end
             SEND: begin
                 if (!tx_valid) begin
-                    if (remaining == 0 && tx_ready) state <= (fb_pending && !stop_pending && !stop_edge) ? LOAD_FB : IDLE;
+                    if (remaining == 0 && tx_ready) begin
+                        state <= (fb_pending && !stop_pending && !stop_edge) ? LOAD_FB : IDLE;
+                        if(messageIsMotion && messageIsZero)zeroSent<=1;
+                    end
                     else if (tx_ready)   tx_valid <= 1'b1;
                 end else if (tx_ready) begin              // handshake: this byte is taken
                     tx_valid  <= 1'b0;
@@ -152,6 +163,7 @@ module chassis_command #(
                 end
             end
             LOAD_FB: begin
+                messageIsMotion<=0;
                 shreg <= {FB, {(MAXLEN - 10) * 8{1'b0}}};
                 remaining <= 8'd10;
                 fb_pending <= 1'b0;

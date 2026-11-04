@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Render B's frozen targets as one A4 page with source-checked measurements.
+"""Render the integrated project's indexed measurements as one A4 page.
 
 Requires reportlab and pypdf. No hardware command is executed. Missing current
 camera results stay PENDING. The index's existing records.trials/calibration
 entries are used when available, or supply explicit --hardware/--calibration.
-Repeat --calibration for each attempt, or put three {path, sha256} entries in
+Repeat --calibration for each attempt, or put three {path} entries in
 index.records.calibrationTrials. A lone calibration record is not three trials.
 The source identity must match the recorded board before numbers are displayed.
 """
@@ -52,11 +52,9 @@ def indexProfile(index):
         for fields, names in required:
             for name in names:
                 fields[name]
-        sourceSha256, buildId = source["sha256"], source["buildId"]
+        buildId = source["buildId"]
     except (KeyError, TypeError) as error:
         raise ValueError(f"datasheet index is missing explicit source/profile/scene metadata: {error}") from error
-    if not isinstance(sourceSha256, str) or not re.fullmatch(r"[0-9a-f]{64}", sourceSha256):
-        raise ValueError("datasheet index requires a complete lowercase source SHA256")
     if type(buildId) is not int or not 0 <= buildId <= 0xffffffff:
         raise ValueError("datasheet buildId must be an unsigned 32-bit integer")
     reader, colour = algorithm["readerAlgorithm"], algorithm["colourAlgorithm"]
@@ -115,8 +113,6 @@ def readRecord(index, name, explicit, record=None):
         path = ROOT / path
     if not path.is_file():
         raise FileNotFoundError(path)
-    if not explicit and record.get("sha256") and digest(path) != record["sha256"]:
-        raise ValueError(f"{name} evidence hash differs from index")
     result = json.loads(path.read_text(encoding="utf-8"))
     board = result.get("initialStatus", result.get("boardStatus", {}).get("decoded", {}))
     if board.get("buildId") != index["source"]["buildId"]:
@@ -201,7 +197,6 @@ def main():
     args = parser.parse_args()
     index = json.loads(args.index.read_text(encoding="utf-8"))
     profile = indexProfile(index)
-    sourceSha256 = index["source"]["sha256"]
     comparisonSwitch = profile["comparisonSwitch"]
     population = f"{index['scene']['printedMarkerCount']} declared printed signs"
     predictions = index.get("predictions", {})
@@ -233,10 +228,10 @@ def main():
     title = ParagraphStyle("title", parent=heading, fontSize=20, leading=23, spaceBefore=0, spaceAfter=5)
     small = ParagraphStyle("small", parent=body, fontSize=7.8, leading=10)
     para = lambda value, style=body: Paragraph(value, style)
-    story = [para("ECHO-7 | Member B datasheet", title),
-             para("MTRX3700 Major Project - B contribution for team integration", heading),
-             para("Owner SID <b>540207680</b> | Frozen targets: 3 November 2026 | Stationary camera / JTAG input"),
-             para("B provides perception, red/blue floor calibration and target reports. Movement and complete-robot acceptance belong to Member C/the team. Microphone input is deferred.")]
+    story = [para("ECHO-7 | Integrated project datasheet", title),
+             para("MTRX3700 Major Project - real camera, C controller and UGV02", heading),
+             para("Ownership: OWNERS.md | SW0-SW5 select bays | IR POWER or a fresh red-2 presentation starts; A stops"),
+             para("One production SOF provides VISION_ONLY, CHASSIS_INJECT and INTEGRATED. Physical IR and J3 protect movement; speech is cancelled. Missing physical measurements remain PENDING.")]
     story += [para("Fixed conditions and scope", heading),
               para(escape(index["scene"]["description"]) + f" Native320 x240 RGB565; orientation profile{index['scene']['orientationProfile']}. "
                    + escape(index["scene"]["conditions"])),
@@ -270,26 +265,22 @@ def main():
               para(f"{comparisonSwitch}=0: measured-quad perspective sampling; {comparisonSwitch}=1: axis-aligned bbox. Replay uses identical input pixels; physical trials use matched scene conditions. Keep anchor/stroke/rejection and tracking; modes bind at SOP and change configuration. If bypass still meets the threshold, do not claim this stage was necessary to achieve it." +
                    (f" {profile['rawSwitch']} is separate pure-camera mode; keep it down for measurement." if profile["rawSwitch"] else "") +
                    " Any duplicate typed ID must remain ambiguous during tracking."),
-              para("R5 numerical targets are B design choices, not course grading cut-offs. R6 simulation and R7 recorded-input agreement are separate from CAMERA_HW and physical VGA/SW9 checks. This page is a B contribution, not the group's completed datasheet or a whole-robot performance claim.", small),
+              para("R5 numerical targets are design choices, not course grading cut-offs. R6 simulation and R7 recorded-input agreement are separate from CAMERA_HW and vehicle acceptance. Scan time, docking error and image-to-UART response need current physical measurements.", small),
               Spacer(1, 3),
-              para(f"Evidence snapshot: source <b>0x{buildId:08x}</b>; index SHA256 {digest(args.index)[:16]}...<br/>{escape(indexLabel)} | Full frozen protocol: README.md; historical outcomes: VERSION_README.md<br/>Brief: p3 R5-R9; p4 target/bypass rules. Human review and team integration remain required.", small)]
+              para(f"Build <b>0x{buildId:08x}</b><br/>{escape(indexLabel)} | Operation: README.md; historical outcomes: VERSION_README.md<br/>Brief: p3 R5-R9; p4 target/bypass rules. No missing physical result is inferred from simulation.", small)]
     args.out.parent.mkdir(parents=True, exist_ok=True)
     doc = SimpleDocTemplate(str(args.out), pagesize=A4, leftMargin=14*mm, rightMargin=14*mm,
                             topMargin=12*mm, bottomMargin=12*mm,
-                            title="ECHO-7 Member B contribution datasheet", author="Member B SID 540207680")
+                            title="ECHO-7 integrated project datasheet", author="ECHO-7 team; see OWNERS.md")
     doc.build(story)
     pages = len(PdfReader(args.out).pages)
     if pages != 1:
         raise RuntimeError(f"one-page datasheet overflowed to {pages} pages")
     generation = {"schema": "member-b-datasheet-generation-v1", "status": "PASS",
                       "level": "DOCUMENT_GENERATION_NOT_HARDWARE_VALIDATION",
-                      "path": str(args.out), "pages": pages, "sha256": digest(args.out),
-                      "sourceSha256": sourceSha256, "buildId": buildId,
-                      "indexSha256": digest(args.index),
-                      "hardwareSha256": digest(hardwarePath) if hardwarePath else None,
-                      "calibrationSha256": [digest(path) for value, path in calibrationRecords]}
-    # The exporter verifies this exact PDF and source identity. It never picks
-    # up an unrequested old PDF merely because a default output file exists.
+                      "path": str(args.out), "pages": pages, "buildId": buildId,
+                      "index": str(args.index), "hardware": str(hardwarePath) if hardwarePath else None,
+                      "calibration": [str(path) for value, path in calibrationRecords]}
     args.out.with_suffix(args.out.suffix + ".json").write_text(json.dumps(generation, indent=2) + "\n", encoding="utf-8")
     print(json.dumps(generation, indent=2))
 

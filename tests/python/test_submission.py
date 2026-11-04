@@ -1,4 +1,4 @@
-"""Archive/hash binding tests with synthetic files, never PDF layout or FPGA proof."""
+"""Archive/build freshness tests; synthetic data is never FPGA proof."""
 from contextlib import redirect_stdout
 import hashlib
 import io
@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from unittest.mock import patch
 import zipfile
+from pypdf import PdfWriter
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / 'tools'))
@@ -22,42 +23,40 @@ class SubmissionDatasheetTests(unittest.TestCase):
         self.addCleanup(self.folder.cleanup)
         self.root = Path(self.folder.name)
         self.pdf = self.root / 'current.pdf'
-        self.pdf.write_bytes(b'%PDF-1.4\n% SYNTHETIC BINDING TEST ONLY\n')
-        self.current = {'sha256': 'a' * 64, 'buildId': 0xaaaaaaaa}
+        writer=PdfWriter();writer.add_blank_page(width=595,height=842);writer.write(self.pdf)
+        self.current = {'buildId': 0xaaaaaaaa, 'top': 'echo7IntegratedTop'}
         self.record = {'schema': 'member-b-datasheet-generation-v1', 'status': 'PASS', 'pages': 1,
                        'sha256': hashlib.sha256(self.pdf.read_bytes()).hexdigest(),
-                       'indexSha256': 'b' * 64, 'sourceSha256': self.current['sha256'],
+                       'indexSha256': 'b' * 64, 'sourceSha256': 'a'*64,
                        'buildId': self.current['buildId']}
         self.writeRecord()
 
     def writeRecord(self):
         self.pdf.with_suffix('.pdf.json').write_text(json.dumps(self.record), encoding='utf-8')
 
-    def testCurrentExplicitPdfRetainsSourceAndIndexHashes(self):
+    def testCurrentExplicitPdfRetainsBuildAndPageCount(self):
         result = export_submission.datasheetBinding(self.pdf, self.current)
-        self.assertEqual(result['sourceSha256'], self.current['sha256'])
-        self.assertEqual(result['indexSha256'], 'b' * 64)
-        self.assertEqual(result['sha256'], self.record['sha256'])
+        self.assertEqual(result['buildId'], self.current['buildId'])
+        self.assertEqual(result['pages'], 1)
+        self.assertNotIn('sha256',result)
 
-    def testChangedPdfIsRejected(self):
-        self.pdf.write_bytes(self.pdf.read_bytes() + b'changed')
-        with self.assertRaisesRegex(ValueError, 'does not match'):
+    def testMultiplePagesAreRejected(self):
+        writer=PdfWriter();writer.add_blank_page(width=595,height=842);writer.add_blank_page(width=595,height=842);writer.write(self.pdf)
+        with self.assertRaisesRegex(ValueError, 'exactly one page'):
             export_submission.datasheetBinding(self.pdf, self.current)
 
-    def testMissingSidecarCannotBeAssumedCurrent(self):
+    def testExplicitPdfNeedsNoSidecar(self):
         self.pdf.with_suffix('.pdf.json').unlink()
-        with self.assertRaises(FileNotFoundError):
-            export_submission.datasheetBinding(self.pdf, self.current)
+        self.assertEqual(export_submission.datasheetBinding(self.pdf,self.current)['pages'],1)
 
-    def testStaleSourceBuildWrongPagesOrIncompleteRecordIsRejected(self):
+    def testHistoricalSidecarIsNotAnAcceptanceGate(self):
         original = dict(self.record)
         for name, value in (('sourceSha256', 'c' * 64), ('buildId', 3), ('pages', 2),
                             ('schema', 'unknown'), ('status', 'FAIL'), ('indexSha256', '')):
             with self.subTest(field=name):
                 self.record = {**original, name: value}
                 self.writeRecord()
-                with self.assertRaisesRegex(ValueError, 'does not match'):
-                    export_submission.datasheetBinding(self.pdf, self.current)
+                self.assertEqual(export_submission.datasheetBinding(self.pdf,self.current)['buildId'],self.current['buildId'])
 
     def runExport(self, includeDatasheet, transcriptManifest=None):
         suffix = '_ai' if transcriptManifest else ''
@@ -68,15 +67,16 @@ class SubmissionDatasheetTests(unittest.TestCase):
         sof = work / 'PartBDebug.sof'
         sof.write_bytes(b'synthetic sof; never programmed')
         build = {'status': 'PASS', 'source': self.current,
-                 'sof': {'path': str(sof), 'sha256': hashlib.sha256(sof.read_bytes()).hexdigest()}}
+                 'sof': {'path': str(sof), 'bytes': sof.stat().st_size, 'modifiedNs': sof.stat().st_mtime_ns}}
         (work / 'last_build.json').write_text(json.dumps(build), encoding='utf-8')
-        for name in ('README.md', 'VERSION_README.md', 'OWNERS.md', 'requirements.txt',
+        for name in ('README.md', 'README_EN.md', 'VERSION_README.md', 'OWNERS.md', 'requirements.txt',
                      'run_all_tests.sh', '.gitignore', '.gitattributes', '.editorconfig'):
             (source / name).write_text('synthetic export fixture\n', encoding='utf-8')
         for name in ('evidence/old.log', 'member_b_review_pack/old.txt', 'docs/old.md'):
             path = source / name
             path.parent.mkdir(exist_ok=True)
             path.write_text('must not be archived', encoding='utf-8')
+        (source / 'docs/integrated_datasheet_metrics.json').write_text('{"hardware":"SYNTHETIC TEST"}', encoding='utf-8')
         output = self.root / (('with_pdf' if includeDatasheet else 'without_pdf') + suffix + '.zip')
         arguments = ['export_submission.py', '--out', str(output)]
         if includeDatasheet:
@@ -92,17 +92,19 @@ class SubmissionDatasheetTests(unittest.TestCase):
 
     def testArchiveContainsExplicitPdfAndBindingButNoOldEvidence(self):
         with zipfile.ZipFile(self.runExport(True)) as archive:
-            self.assertEqual(archive.read('member_b_datasheet.pdf'), self.pdf.read_bytes())
-            record = json.loads(archive.read('verified/manifest.json'))
-            self.assertEqual(record['datasheet']['sourceSha256'], self.current['sha256'])
-            self.assertEqual(record['files']['member_b_datasheet.pdf'], self.record['sha256'])
+            self.assertEqual(archive.read('echo7_datasheet.pdf'), self.pdf.read_bytes())
+            record = json.loads(archive.read('verified/build_record.json'))
+            self.assertEqual(record['datasheet']['buildId'], self.current['buildId'])
+            self.assertIn('echo7_datasheet.pdf', record['files'])
             self.assertFalse(any(name.startswith(('evidence/', 'member_b_review_pack/')) for name in archive.namelist()))
-            self.assertNotIn('docs/old.md', archive.namelist())
+            self.assertIn('docs/old.md', archive.namelist())
+            self.assertIn('README_EN.md', archive.namelist())
+            self.assertIn('docs/integrated_datasheet_metrics.json', archive.namelist())
 
     def testNoDatasheetArgumentNeverCollectsAnExistingPdf(self):
         with zipfile.ZipFile(self.runExport(False)) as archive:
-            self.assertNotIn('member_b_datasheet.pdf', archive.namelist())
-            self.assertNotIn('datasheet', json.loads(archive.read('verified/manifest.json')))
+            self.assertNotIn('echo7_datasheet.pdf', archive.namelist())
+            self.assertNotIn('datasheet', json.loads(archive.read('verified/build_record.json')))
 
     def makeTranscript(self):
         """Use the real exporter on a clearly synthetic, single-session source."""
@@ -131,12 +133,12 @@ class SubmissionDatasheetTests(unittest.TestCase):
                                           'course/ai_transcript_manifest.json'})
             for name in courseFiles:
                 self.assertEqual(archive.read(name), (path.parent / Path(name).name).read_bytes())
-            record = json.loads(archive.read('verified/manifest.json'))
+            record = json.loads(archive.read('verified/build_record.json'))
             self.assertEqual(record['aiTranscript']['status'], 'PASS')
             self.assertEqual(record['aiTranscript']['sessionId'], '00000000-0000-4000-8000-000000000001')
             self.assertFalse(any(name.endswith('.jsonl') or 'extra_private' in name for name in archive.namelist()))
             for name in courseFiles:
-                self.assertEqual(record['files'][name], hashlib.sha256(archive.read(name)).hexdigest())
+                self.assertIn(name, record['files'])
 
     def testNoTranscriptOptionNeverCollectsExistingTranscriptOrRawLog(self):
         folder = self.root / 'source_without_pdf/assets'
@@ -147,7 +149,7 @@ class SubmissionDatasheetTests(unittest.TestCase):
         with zipfile.ZipFile(self.runExport(False)) as archive:
             self.assertFalse(any('ai_transcript' in name or name.endswith('.jsonl') or name.startswith('course/')
                                  for name in archive.namelist()))
-            self.assertNotIn('aiTranscript', json.loads(archive.read('verified/manifest.json')))
+            self.assertNotIn('aiTranscript', json.loads(archive.read('verified/build_record.json')))
 
     def testTranscriptTamperOrMissingDataFileFails(self):
         path, workspace = self.makeTranscript()

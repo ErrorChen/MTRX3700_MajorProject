@@ -16,7 +16,7 @@ def main():
     parser.add_argument("--compiler-bin",type=Path,required=True)
     parser.add_argument("--bash",type=Path,required=True)
     parser.add_argument("--verilator-root",type=Path,default=Path("build/toolchains/verilator5050/ucrt64"))
-    parser.add_argument("--jobs",type=int,choices=range(1,17),default=2)
+    parser.add_argument("--jobs",type=int,choices=range(1,17),default=4)
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     toolRoot=args.verilator_root.resolve()
@@ -27,9 +27,13 @@ def main():
             parser.error(f"missing dependency: {path}")
     environment=dict(os.environ)
     pathKey=next((key for key in environment if key.upper()=="PATH"),"PATH")
-    environment[pathKey]=os.pathsep.join((str(compilerRoot),str(toolRoot/"bin"),environment.get(pathKey,"")))
+    shellTools=args.bash.resolve().parent.parent/"usr/bin"
+    environment[pathKey]=os.pathsep.join((str(compilerRoot),str(toolRoot/"bin"),str(shellTools),environment.get(pathKey,"")))
     environment["VERILATOR_ROOT"]=(toolRoot/"share/verilator").as_posix()
     environment["PYTHON"]=Path(sys.executable).as_posix()
+    # Git's bin/bash launcher prepends its incompatible mingw DLL directory.
+    # The Python runner reapplies these explicit native tool paths after Bash.
+    environment["ECHO7_R6_NATIVE_PATH"]=os.pathsep.join((str(compilerRoot),str(toolRoot/"bin"),str(shellTools)))
     return subprocess.run([str(args.bash),"./run_all_tests.sh","--verilator",str(verilator),"--jobs",str(args.jobs)],
                           cwd=root,env=environment,check=False).returncode
 

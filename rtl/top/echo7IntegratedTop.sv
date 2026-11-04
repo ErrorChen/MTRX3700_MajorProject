@@ -11,7 +11,7 @@ module echo7IntegratedTop #(
     output wire [6:0] HEX0, HEX1, HEX2, HEX3, HEX4, HEX5,
     input wire IRDA_RXD,
     input  wire [3:0]  KEY,
-    input  wire [9:0]  SW, // SW0/1 diagnostics; SW8 perspective bypass; SW9 pure camera.
+    input  wire [9:0]  SW, // SW0..5 bay one-hot; SW6/7 diagnostics; SW8 bypass; SW9 raw/STOP.
     output wire [9:0]  LEDR,
     inout  wire [35:0] GPIO_1,
     output wire        VGA_CLK, VGA_HS, VGA_VS, VGA_BLANK_N, VGA_SYNC_N,
@@ -43,7 +43,7 @@ module echo7IntegratedTop #(
     logic rawVgaMeta=0,rawVgaSync=0;
     always_ff @(posedge clk_25) begin
         if(reset25) begin switchMeta<=0;switchSync<=0;end
-        else begin switchMeta<=SW[1:0];switchSync<=switchMeta;end
+        else begin switchMeta<=SW[7:6];switchSync<=switchMeta;end
         if(reset25)begin rawVgaMeta<=0;rawVgaSync<=0;end
         else begin rawVgaMeta<=SW[9];rawVgaSync<=rawVgaMeta;end
     end
@@ -129,6 +129,34 @@ module echo7IntegratedTop #(
     userEvent_t userEvent;
     perceptionStatus_t status;
     logic requestValid,requestReady,reportValid,reportReady,eventValid,eventReady;
+    // C is the only target-request owner. Select the entire response/status
+    // interface together; drain real B reports while its source is inactive.
+    targetReport_t realReport,syntheticReport;
+    perceptionStatus_t activeStatus,syntheticStatus;
+    wire realRequestReady,realReportValid,realReportReady;
+    wire syntheticRequestReady,syntheticReportValid;
+    wire [1:0] controlMode;
+    wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
+    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1;
+    wire [511:0] chassisStatusWords;
+    assign requestReady=!modeChanged && (controlMode==2 ? syntheticRequestReady : realRequestReady);
+    assign targetReport=controlMode==2 ? syntheticReport : realReport;
+    assign reportValid=!modeChanged && (controlMode==2 ? syntheticReportValid : realReportValid);
+    assign realReportReady=controlMode==2 || modeChanged ? 1'b1 : reportReady;
+    assign activeStatus=controlMode==2 ? syntheticStatus : status;
+    chassisDebug chassisDebugControl(
+        .clk(CLOCK_50),.reset(reset50),.timeUs(timeUs),.statusWords(chassisStatusWords),
+        .mode(controlMode),.modeChanged(modeChanged),.debugStart(debugStart),.debugStop(debugStop),
+        .injectLeaseValid(injectLeaseValid),.leaseAgeUs(leaseAgeUs),.scanCalibrated(scanCalibrated),
+        .scanBudgetUs(scanBudgetUs),.observation0(observation0),.observation1(observation1),.templateValid(templateValid));
+    syntheticPerception syntheticSource(
+        .clk(CLOCK_50),.reset(reset50),.enabled(controlMode==2),.sourceChanged(modeChanged),
+        .leaseValid(injectLeaseValid),.templateValid(templateValid),.timeUs(timeUs),
+        .observation0(observation0),.observation1(observation1),
+        .targetRequest(targetRequest),.targetRequestValid(requestValid && controlMode==2 && !modeChanged),
+        .targetRequestReady(syntheticRequestReady),.targetReport(syntheticReport),
+        .targetReportValid(syntheticReportValid),.targetReportReady(controlMode!=2 || modeChanged || reportReady),
+        .status(syntheticStatus));
     logic commandValid,commandReady,calibrateArm,speechArm,autoCycle;
     targetOperation_t commandOperation;
     markerType_t commandMarkerType;
@@ -136,8 +164,21 @@ module echo7IntegratedTop #(
     // Debug SELECT/CLEAR/LIST/GET/AUTO are disabled: C exclusively owns the link.
     assign commandReady=1'b0;
     wire debugQueryBusy=queryBusy;
-    // C does not consume interaction events; drain them to prevent stale events/overflow.
+    // Drain interaction events, accepting only fresh red2 START from the active
+    // real source/current configuration. Red1 calibration keeps its own path.
     assign eventReady=!reset50;
+    wire visualBoundary=modeChanged || debugStop || rawProcessingSync || controlMode==2 ||
+        !chassisStatusWords[14] || !chassisStatusWords[31] || chassisStatusWords[29] ||
+        chassisStatusWords[10*32+5] || (controlMode==0 && chassisStatusWords[30]);
+    logic [31:0] visualFenceUs;
+    always_ff @(posedge CLOCK_50)begin
+        if(reset50)visualFenceUs<=0;
+        else if(visualBoundary)visualFenceUs<=timeUs;
+    end
+    wire [31:0] afterVisualFence=userEvent.issuedAtUs-visualFenceUs;
+    wire visualStart=controlMode!=2 && !visualBoundary && eventValid && eventReady &&
+        userEvent.eventType==EVENT_START_REQUEST && userEvent.configVersion==status.activeCfgVersion &&
+        afterVisualFence!=0 && !afterVisualFence[31] && freshTime(timeUs,userEvent.issuedAtUs,32'd150000);
     logic debugInteractionArmReady;
     logic [3:0] commandDigit;
     logic [1:0] orientationProfile;
@@ -156,20 +197,24 @@ module echo7IntegratedTop #(
     perceptionCore core (
         .clk(CLOCK_50),.reset(reset50),.pclk(cam_pclk),.resetPclk(resetPclk),
         .cameraFrameStart(frame_start),.cameraPixelValid(px_valid),.cameraPixel(px),.cameraX(px_x),.cameraY(px_y),
-        .timeUs(timeUs),.interactionEnable(1'b1),.interactionPermit(1'b1),
+        .timeUs(timeUs),.interactionEnable(1'b1),.interactionPermit(1'b1),.red2Reset(visualBoundary),
         .debugCalArm(calibrateArm),.debugSpeechArm(speechArm),.orientationProfile(orientationProfile),
         .debugInteractionArmReady(debugInteractionArmReady),
         .bypassPerspective(bypassSync),.processingEnable(!rawProcessingSync),
-        .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
-        .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),
+        .targetRequest(targetRequest),.targetRequestValid(requestValid && controlMode!=2 && !modeChanged),.targetRequestReady(realRequestReady),
+        .targetReport(realReport),.targetReportValid(realReportValid),.targetReportReady(realReportReady),
         .queryResult(queryResult),.queryResultValid(queryResultValid),.queryResultReady(queryResultReady),.queryBusy(queryBusy),
         .userEvent(userEvent),.userEventValid(eventValid),.userEventReady(eventReady),.status(status),
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .debugWords(coreWords),.completedFrame(completedFrame),.completedFrameId(completedFrameId));
     memberCBoard #(.LEFT_POLARITY(LEFT_POLARITY),.RIGHT_POLARITY(RIGHT_POLARITY),
         .TURN_SIGN(TURN_SIGN),.ULTRASONIC_ESTOP_MM(250)) chassis (
-        .CLOCK_50(CLOCK_50),.reset50(reset50),.KEY(KEY[1:0]),.SW(SW[4:2]),.IRDA_RXD(IRDA_RXD),
-        .timeUs(timeUs),.perceptionStatus(status),
+        .CLOCK_50(CLOCK_50),.reset50(reset50),.KEY(KEY[1:0]),.SW(SW[5:0]),.IRDA_RXD(IRDA_RXD),
+        .timeUs(timeUs),.perceptionStatus(activeStatus),
+        .mode(controlMode),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
+        .visualStart(visualStart),
+        .rawMode(rawProcessingSync),.injectLeaseValid(injectLeaseValid),
+        .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.statusWords(chassisStatusWords),
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),

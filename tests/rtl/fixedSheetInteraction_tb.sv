@@ -1,11 +1,13 @@
 `timescale 1ns/1ps
 module fixedSheetInteraction_tb;
     import perception_pkg::*;
+    logic red2Reset=0;
     logic clk=0,reset=1;
     always #10 clk=~clk;
     logic [31:0] timeUs=0;
     logic enable=1,permit=1,debugCalArm=0,debugSpeechArm=0;
     logic frameValid=0,frameGood=1,red1Paired=1,red2Seen=1;
+    wire red2Present=red2Seen;
     logic [15:0] frameId=0,configVersion=0,activeCfgVersion=0;
     // Models perceptionCore's nonblocking configuration update at input SOF.
     // The interaction sees the old version on that edge, then the new version
@@ -112,21 +114,24 @@ module fixedSheetInteraction_tb;
            events[0].eventId!=1 || events[0].configVersion!=1 || events[0].interactionId!=1)
             $fatal(1,"one committed calibration event");
         frame(0);frame(0);frame(0);
-        if(!speechArmed || busy || kind!=KIND_NONE || state!=INTERACTION_SPEECH_ARMED)
-            $fatal(1,"red2 in new config should arm without busy");
+        if(speechArmed || busy || kind!=KIND_NONE || state!=INTERACTION_IDLE)
+            $fatal(1,"red2 must remain NO_ACTION after calibration");
         repeat(10) frame(0);
         timeUs=5000;repeat(20) tick();
-        if(attempts!=1 || eventTotal!=1 || busy || !speechArmed) $fatal(1,"stationary cards/silence must not repeat transactions");
+        if(attempts!=1 || eventTotal!=1 || busy || speechArmed) $fatal(1,"stationary cards/silence must not repeat transactions");
         // Physical disappearance is an input condition; no computer flip is implied.
         red1Paired=0;red2Seen=0;frame(0);
-        if(!speechArmed || !calibrated) $fatal(1,"leaving red cards must preserve committed state");
+        if(speechArmed || !calibrated) $fatal(1,"leaving red cards must preserve committed state");
         @(negedge clk);permit=0;tick();
-        if(!speechArmed || busy || eventTotal!=1) $fatal(1,"idle permit revoke is not cancellation");
+        if(speechArmed || busy || eventTotal!=1) $fatal(1,"idle permit revoke is not cancellation");
         @(negedge clk);enable=0;tick();
         if(speechArmed || !calibrated) $fatal(1,"enable revoke clears only speech arm");
         @(negedge clk);enable=1;permit=1;red1Paired=1;red2Seen=1;
         frame(0);frame(0);frame(0);
-        if(!speechArmed || attempts!=1) $fatal(1,"reenable requires red2, not another calibration");
+        if(speechArmed || attempts!=1) $fatal(1,"reenable must preserve calibration with red2 NO_ACTION");
+        @(negedge clk);debugSpeechArm=1;tick();
+        @(negedge clk);debugSpeechArm=0;tick();
+        if(speechArmed || busy || eventTotal!=1 || attempts!=1) $fatal(1,"reserved speech input changed calibration/task state");
         // Recalibration failure leaves the old committed profile and ends once.
         arm();beginAttempt();sampleGood=0;frame(1);sampleGood=1;flushEvent();
         if(!calibrated || eventTotal!=2 || events[1].eventType!=EVENT_CALIBRATION_FAILED ||
@@ -211,7 +216,7 @@ module fixedSheetInteraction_tb;
            events[1].interactionId!=3 || events[1].eventId!=2)
             $fatal(1,"coalesced episode lost first failure/final success or attempt identity");
         timeUs=5000;repeat(12) frame(0);
-        if(attempts!=3 || eventTotal!=2 || !speechArmed || busy)
+        if(attempts!=3 || eventTotal!=2 || speechArmed || busy)
             $fatal(1,"successful recovery repeated with resident cards");
 
         // Cooldown arithmetic wraps at 2^32 microseconds. Revoked permission

@@ -3,6 +3,7 @@
 // CAMERA_HW recognition. It uses real SOF/bank metadata logic and controls the
 // completion edge to reproduce configuration changes around a held old bank.
 module perceptionCoreProfile_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     logic bypassPerspective=0;
     logic processingEnable=1;
     import perception_pkg::*;

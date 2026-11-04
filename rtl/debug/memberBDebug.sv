@@ -119,7 +119,9 @@ module memberBDebug #(
                             4'd2: begin commandValid<=1;commandOperation<=perception_pkg::TARGET_CLEAR;
                                 commandMarkerType<=perception_pkg::MARKER_NONE;commandDigit<=4'hf;end
                             4'd3: calibrateArm<=1;
-                            4'd4: speechArm<=1;
+                            4'd4: begin // Removed speech opcode: explicit unsupported, never success.
+                                commandError<=1;rejectionReason<=1;ackToggle<=sourceWord[31];
+                            end
                             4'd5: begin frozenWords<=debugWords;queryFrozen<=0;ackToggle<=sourceWord[31];end
                             4'd6: begin orientationProfile<=sourceWord[1:0];ackToggle<=sourceWord[31];end
                             4'd7: begin autoCycle<=sourceWord[0];ackToggle<=sourceWord[31];end

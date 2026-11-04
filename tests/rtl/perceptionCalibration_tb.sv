@@ -5,6 +5,7 @@
 // Frames wait for their preceding report; this checks transaction sequencing.
 // Independent continuous/overload benches check an unstalled source cadence.
 module perceptionCalibration_tb;
+ logic red2Reset=0; // No mode change in this pixel fixture.
     import perception_pkg::*;
     logic clk=0,pclk=0,reset=1,resetPclk=1;
     always #10 clk=~clk;
@@ -203,7 +204,7 @@ module perceptionCalibration_tb;
         if(dut.configVersion!=3||commitCount!=1||!status.calibrated||lastReport.locked)
             $fatal(1,"new calibration version did not commit/unlock tracking");
         for(int n=0;n<3;n++)frame();
-        if(!lastReport.observed||!lastReport.locked||!status.speechArmed||status.interactionBusy||eventCount!=3)
+        if(!lastReport.observed||!lastReport.locked||status.speechArmed||status.interactionBusy||eventCount!=3)
             $fatal(1,"post-commit tracking/idle arming did not recover");
         if(acceptedSamples!=18||commitCount!=1)
             $fatal(1,"sample/commit accounting mismatch samples=%0d commits=%0d",acceptedSamples,commitCount);
@@ -220,7 +221,7 @@ module perceptionCalibration_tb;
                     $fatal(1,"recorded pixel-to-report bay selection bay=%0d confirmation=%0d",bay,n);
             end
         end
-        if(eventCount!=3||commitCount!=1||!status.speechArmed||status.interactionBusy)
+        if(eventCount!=3||commitCount!=1||status.speechArmed||status.interactionBusy)
             $fatal(1,"stationary red cards retriggered calibration or blocked observations");
         $display("PASS perceptionCalibration_tb frames=%0d checks=%0d acceptedSamples=%0d samplingFrames=%0d commits=%0d events=%0d source=ONE_RECORDED_FRAME_REPEATED_IN_RTL",frameNumber,checks,acceptedSamples,samplingFrames,commitCount,eventCount);
         $finish;

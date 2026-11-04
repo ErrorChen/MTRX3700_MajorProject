@@ -1,4 +1,3 @@
-// An unqualified manual GUI build has no verified source identity. The CLI
-// replaces this header only in its isolated source copy with the real hash.
-// Never leave a previous build's identity attached to changed working sources.
-`define MEMBER_B_BUILD_ID 32'h00000000
+// Repair revision: red2 waits for the new lock; per-frame overflow can recover.
+// Build logs and the explicit fresh SOF path identify each compilation.
+`define MEMBER_B_BUILD_ID 32'hE7070004
