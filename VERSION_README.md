@@ -2487,3 +2487,21 @@ Actual J3 was **167–180 mm**, with HOLD=true; the final search was therefore n
 The original wrapper,jobs4,one compiler/at most two concurrent simulations and300-second hard deadline were retained. No cross-run cache, overload/negative-test removal or reduced frame/assertion coverage was used. Bounded ALIGN, initialization,start gate and policy scenarios passed;4939 initialization checks and32768 ASCII-equivalence combinations remain. The earlier104.45794-second tool-crash FAIL and301.821791-second suite-deadline FAIL are preserved. This third run passed independently after all Quartus processes had exited, with approximately17% CPU before launch; it does not overwrite failed attempts.
 
 R6 establishes the stated model/RTL regression and runtime, **not complete vehicle acceptance**. E14 separately has full-build/four-corner timing, actual programming/identity and4/4 stationary vision/startup-readback evidence. Physical SW→red2→outside-view search→approach→DOCK and final obstacle trials are recorded independently by the hardware task. Per the user's instruction, these R6 results are pushed immediately without waiting for all motion testing.
+
+### E14首轮真实红2搜索未完成 / First real E14 red2 search remained incomplete
+
+**中文**
+
+`integrated_blue4_e14_red2_search_to_dock_01.jsonl`保留 **728个C、91个B快照**，真实红2确认使请求tag4→5并ARM进入SEARCH；**host START、合成写入和heartbeat均0**。首次ARM后的观察 **60.0170459秒**，结果 **INCOMPLETE**、未DOCK。已采49个SEARCH运动快照，随后真实近障保护停车；没有采到ACQUIRE、ALIGN、APPROACH或DOCK。搜索命令累计 **6.552069秒**，J3从起步约725 mm进入近距，采到161 mm。最终观察窗到限后STOP→VISION_ONLY收尾，ARM0、左右0、zeroSent、J3 732 mm、HOLD=false，cleanupErrors为空。
+
+用户反馈“超过蓝四没停车”。约38.08秒的一个B快照有蓝候选框x83..170/y48..119，却因reason4被拒绝；它不是接受的蓝4目标，且约1秒间隔的B采样不能证明所有中间帧或唯一失败原因。不能将本轮写成成功抓牌后跟踪、接近或自主停靠。真实红2到新请求/SEARCH链路和近障保护均有板上证据，但完整任务仍未通过。
+
+独立静止policy实机写入 **50 px /1400 ms /360 mm /550 mm** 并读回，再恢复 **45/1500/350/500**，两次CLI exit0、维持零速。证据为`e14_policy_stationary_write.json`和`e14_policy_stationary_restore.json`。这证明四个新字段的板上写入/读回/恢复，不是这些参数的运动性能验收。主线继续在同一个E14 SOF内调参，结果分轮保留。
+
+**English**
+
+`integrated_blue4_e14_red2_search_to_dock_01.jsonl` retained **728 C and91 B snapshots**. A real red2 confirmation changed request tag4→5 and armed SEARCH, with **zero host START, synthetic writes or heartbeat commands**. The observation after first ARM lasted **60.0170459 seconds**, ending **INCOMPLETE**, without DOCKED. Forty-nine SEARCH motion snapshots were recorded before real close-obstacle protection stopped motion; no ACQUIRE,ALIGN,APPROACH or DOCK was sampled. Accumulated scan-command time was **6.552069 seconds**. J3 started around725 mm and later sampled161 mm. At the observation limit, STOP→VISION_ONLY cleanup ended disarmed,L0/R0,zeroSent,J3 732 mm,HOLD=false, with no cleanup errors.
+
+The operator reported that the robot passed blue4 without stopping for it. One B snapshot around38.08 seconds contained a blue candidate atx83..170/y48..119 rejected withreason4. It was not an accepted blue4 target; roughly one-second B sampling cannot establish every intervening frame or a unique cause. This is not accepted-target tracking, approach or autonomous docking success. Real red2→new request→SEARCH and close-obstacle protection have board evidence; the complete task remains unpassed.
+
+An independent stationary hardware policy write/readback changed all four fields to **50 px/1400 ms/360 mm/550 mm**, then restored **45/1500/350/500**. Both CLI calls exited0 and remained zero, recorded in `e14_policy_stationary_write.json` and `e14_policy_stationary_restore.json`. This verifies writing, reading and restoring the four fields, not their motion performance. Further tuning uses the same E14 SOF and retains each trial separately.

@@ -711,7 +711,7 @@
   "programmed_build_id": "E7070014",
   "candidate_e14": {
     "buildId": "E7070014",
-    "status": "BUILD_R6_PROGRAM_PREFLIGHT_PASS_FULL_PHYSICAL_FLOW_PENDING",
+    "status": "BUILD_R6_PROGRAM_POLICY_PASS_FIRST_RED2_SEARCH_INCOMPLETE",
     "changes": [
       "Bounded original ALIGN gap at total <=200ms, no extension/re-kick/reversal; other safety priority retained",
       "Whole zero then one RAM T131 flowoff initialization; local completion gates new starts, not an execution ACK",
@@ -806,7 +806,60 @@
       "reuse": "Only overload from same-run exact-input continuous binary; no cross-run cache",
       "scope": "Complete formal RTL regression pass; not end-to-end physical acceptance"
     },
-    "hardware": null,
+    "hardware": {
+      "firstRealRed2Search": {
+        "file": "build/remaining_20261104/integrated_blue4_e14_red2_search_to_dock_01.jsonl",
+        "outcome": "INCOMPLETE",
+        "taskObservationSeconds": 60.0170459,
+        "cSnapshots": 728,
+        "bSnapshots": 91,
+        "hostStartCommands": 0,
+        "syntheticWrites": 0,
+        "heartbeatCommands": 0,
+        "requestTagTransition": [
+          4,
+          5
+        ],
+        "actualRed2SearchStartObserved": true,
+        "searchMotionSnapshots": 49,
+        "acquireAlignApproachDockObserved": false,
+        "scanElapsedUs": 6552069,
+        "startDistanceMm": 725,
+        "closeDistanceMm": 161,
+        "finalDistanceMm": 732,
+        "finalMode": "VISION_ONLY",
+        "finalArmed": false,
+        "finalLeftCmS": 0,
+        "finalRightCmS": 0,
+        "finalZeroSent": true,
+        "finalSonarHold": false,
+        "cleanupErrors": [],
+        "operatorObservation": "超过蓝四没停车",
+        "scope": "Real red2 start and close-obstacle stop evidence; no full search-to-dock. One sampled blue reason4 rejection is not a complete causal diagnosis."
+      },
+      "stationaryPolicy": {
+        "writeFile": "build/remaining_20261104/e14_policy_stationary_write.json",
+        "restoreFile": "build/remaining_20261104/e14_policy_stationary_restore.json",
+        "write": [
+          50,
+          1400,
+          360,
+          550
+        ],
+        "restore": [
+          45,
+          1500,
+          350,
+          500
+        ],
+        "exitCodes": [
+          0,
+          0
+        ],
+        "stationary": true,
+        "scope": "All four runtime fields written/read/restored; no physical-motion performance claim"
+      }
+    },
     "releaseSof": {
       "path": "firmware/E7070014/PartBDebug.sof",
       "bytes": 6706155,
