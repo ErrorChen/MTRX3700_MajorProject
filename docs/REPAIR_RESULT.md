@@ -2,9 +2,17 @@
 
 日期：2026-11-04～11-05（Australia/Sydney）。工程：`C:/Quartus_Projects/ECHO72.0/github_publish/MTRX3700_MajorProject`，保留基于`dc1db23`以来的历史工程与用户改动。本次发布E7070012原始构建、下载身份、协议/控制/R6、真实静止pulse读写均有独立证据。五轮地面观察保留：三轮短时INCOMPLETE、一轮仅回正诊断进入APPROACH即主动STOP、第五轮60.0399573秒仍INCOMPLETE并停于近障HOLD。主线搜索停靠未通过；后续第六轮连续差速获用户确认，第七轮独立近距DOCKED，第八轮搜索发现后仍INCOMPLETE；不拼成单次主线完成。第九轮turn4有限回正获反馈、首次APPROACH即STOP；第十轮完整搜索INCOMPLETE60.0024068秒；5/5逻辑请求不证明物理直行。BCTL/CCTL使用真实BUILD_ID，须配套新版主机/Tcl。历史成功与失败不互相覆盖。
 
-## 当前结论与证据边界
+## E14 当前进度
 
-当前发布仍为 **E7070012**，本轮只补充同SOF/同参数的实机记录，没有新RTL、编译或R6。原正式R6 **223.404755秒（13 PASS＋CAUGHT）**、Full Compilation1163.903秒＋post-fit26.783秒、下载及静止pulse读写证据保留。此前第七轮从约41 cm重新POWER的独立任务达到DOCKED，J3 292 mm与探头前端尺量约370 mm差异未定；它不能替代60 cm或画外搜索闭环。其余真实搜索失败、左右起步/过冲问题仍按轮次记录。
+最终候选源码E7070014已冻结，定向验证通过，完整构建和fresh R6运行中，下载及真实SW→红2→搜索→DOCK仍待。E13时序FAIL、未下载；最后确认实板仍E12。完整E14参数/初始化说明及独立结果见本文末段。
+
+### E14 已完成的定向验证（尚非整板或实机验收）
+
+冻结源码的定向结果 `motion_policy_20261104T220025097074Z/result.json` 为PASS、18.9839668秒：四字段策略覆盖11616种合法组合、11687项检查；debug251项；真实adapter/control基线2049项及500条完整UART；初始化启动门47项。随后 `motion_policy_20261104T220112003036Z/result.json` 的最终debug254项另覆盖生产启动值与KEY0恢复。主机工具31项、HOST_RUNNER18项通过。正式R6已扩为17个正常场景加mutant，正在独立执行；最终Quartus时序与实机仍待，不以定向结果替代。
+
+## E12 与较早版本的历史结论与证据边界
+
+截至下述E12历史轮次，发布版本为 **E7070012**；该轮只补充同SOF/同参数的实机记录，没有新RTL、编译或R6。原正式R6 **223.404755秒（13 PASS＋CAUGHT）**、Full Compilation1163.903秒＋post-fit26.783秒、下载及静止pulse读写证据保留。此前第七轮从约41 cm重新POWER的独立任务达到DOCKED，J3 292 mm与探头前端尺量约370 mm差异未定；它不能替代60 cm或画外搜索闭环。其余真实搜索失败、左右起步/过冲问题仍按轮次记录。
 
 后续OLED确认UGV Rover/version0.9，同E12重下载并恢复实验tune3/4/5/4/30、pulse200/200/60/6及15.1秒基准。T131仅关闭底盘RAM自动反馈，独立零速RX由约11 kB/s变为五样本0新增。连续改值trial1因真实500 mm诊断边界提前结束且没有物理验收；trial2已观察5/5→5/4→5/5三段，用户确认较快→较慢→较快→停车。单次ALIGN→完整零速驻留→APPROACH隔离也取得逻辑证据，用户确认“两侧轮子都一起走的”。这些是限定试验结果，不是精确轮速、直行精度或flowoff因果修复证明。
 
@@ -50,7 +58,7 @@
 - `tools/chassis_debug.py`、`tools/tcl/chassis_session.tcl`：同一持久STP会话的CCTL/BCTL读写、注入、序列播放、心跳和STOP；只读状态不改任务。
 - `tools/echo7.py`、`check_repository.py`、`export_submission.py`、datasheet工具及R6 runner：支持当前集成顶层、新产物路径和必要检查；不再强制旧B逐文件SHA凭据链。
 
-详细开关、IR、模式及可执行命令见根目录 [中文README](../README.md) / [English README](../README_EN.md)。一页产品数据表发布为 [ECHO7_Integrated_Datasheet.pdf](ECHO7_Integrated_Datasheet.pdf)，介绍功能、组件、模式、红蓝牌及操作/显示，版本来自RTL header。验证指标另存于 [integrated_datasheet_metrics.json](integrated_datasheet_metrics.json)与本文，renderer不再读取它们填充产品页；未完成的落地指标及独立停车时刻测量仍保留，不用板上状态替代。
+详细开关、IR、模式及可执行命令见根目录 [中英双语README](../README.md)。[ECHO7_Integrated_Datasheet.pdf](ECHO7_Integrated_Datasheet.pdf)现为两页，第一页介绍功能、组件、模式、红蓝牌及操作/显示，第二页是正式R5指标；版本来自RTL header。[ECHO7_R5_Datasheet.pdf](ECHO7_R5_Datasheet.pdf)为独立一页R5表，export的`--datasheet`应指定此文件，不能传两页Integrated。指标定义/项目目标来源见[R5_TARGETS.md](R5_TARGETS.md)及`tools/data/echo7_r5_targets.json`。E14三次实测未齐时acceptance/claimed grade保留PENDING，不用历史E4/E12拼接成绩。详细验证另存于[integrated_datasheet_metrics.json](integrated_datasheet_metrics.json)与本文，产品页不填测试计数；未完成的落地指标及独立停车时刻测量不被板上状态替代。
 
 ### 关键现场修正的先后顺序
 
@@ -81,7 +89,7 @@
 | E7070004最终正式R6 | **PASS：12项及CAUGHT，包含红2等新目标锁定的修正，满足285秒要求**。完整干净副本、Verilator5.050、jobs4、独立场景断言全部保留 | **219.556074秒**，退出0，targetMet=true；`build/member_b/20261104T110801_416299Z_verilator_course/result.json` |
 | 独立故意坏模块 | **CAUGHT**：将tracker的三帧锁定故意改成两帧，真实Verilator仿真被原断言捕获；生产RTL未改 | 6.861秒；`build/repair/tracker_mutant/result.json`。独立补测，不将上面的R6 FAIL改写为PASS |
 | 主机与结构 | 68项工具定向测试PASS；结构检查48个bench、60个工程依赖PASS | 工具Agent实际运行结果；不将结构通过当作RTL或硬件通过 |
-| 最终文档/提交导出 | README三件精确白名单；结构测试6项PASS（1.613秒），实际48个bench/60个依赖检查PASS；已有submission测试14项PASS（0.226秒） | 导出包括README_EN及指标JSON；OWNERS覆盖277个源文件。属于发布工具检查，不累计为新RTL或实机测试 |
+| 最终文档/提交导出 | 当时README三件精确白名单（E14现改两件）；结构测试6项PASS（1.613秒），实际48个bench/60个依赖检查PASS；已有submission测试14项PASS（0.226秒） | 当时导出包括独立英文README及指标JSON；E14改为单个双语README；OWNERS覆盖277个源文件。属于发布工具检查，不累计为新RTL或实机测试 |
 
 R6首次串行尝试在300秒截止后清理，总计303.055秒而FAIL（9项PASS、后续未完成），记录保留在`build/member_b/20261104T100142_083131Z_verilator_course/`。并行两个独立系统场景后290.761秒全PASS，满足课程但未达到用户285秒；随后编译jobs=4得到上述245.452秒。现有同次调用hash缓存实际避免一次约16秒的重复core编译。重复文件hash测量仅0.01163秒，无需新增逐文件哈希表；没有复用上一次调用的二进制。
 
@@ -808,6 +816,8 @@ E9已找到并锁定蓝4，但60秒观察窗内反复原地修正而未停靠，
 
 ### E11：停车状态下的小范围调参
 
+本节记录E11首次引入的通用接口。E14新增policy可调正常停车/减速距离及驻留，生产启动值也已变化，以上方E14表为准。
+
 此节对应已下载的E11；旧版E10没有调参能力，配套新工具读取旧板时会拒绝写入，不会把旧状态字当作新调参寄存器。`tune`无参数只读状态，查看`tuningSupported`与`tuning`；指定任意字段时，先读当前五项、合并本次修改，再一次原子写入整组并读回核对。所有值必须是表内整数，且`approach > fine`。这些是控制器的逻辑cm/s请求与像素容差，不是电机PWM、实测轮速或遥控车轮接口。
 
 | CLI字段 | 范围 / 默认值 | 作用 |
@@ -1188,3 +1198,90 @@ ARM期间来源与租约、有效非FAR距离和实体选择健康，IR/HOLD/fat
 18个已采ALIGN段中11个随后进入LOST，其中6段首个样本仍为kick6，到下一LOST的板上时间差为96.095–122.530 ms。结合起步段最多60 ms，可给出这些段开始至中断的上界156.095–182.530 ms，早于名义200 ms终点：这是**目标有效性使至少这些6段提前终止的逻辑证据**，不是完整物理脉宽或车轮停止时间测量。CCTL轮询可能漏短状态；没有把样本间时间当作精确发包或机械延迟。
 
 结论保持分层：一次隔离过渡的两轮参与运动已获用户确认；真实相机任务仍受反复对准/拒识影响而未DOCK，最后停止来自观察窗收尾。未开展匹配flow-on对照，未定位确定因果，也未据本轮改RTL、添加启动初始化或生成新版本；后续针对短暂NF的讨论不能写成已实现修复。
+
+### E13：定向及R6通过，整板时序失败，未下载
+
+用户授权的有限ALIGN失锁处理已落实到候选源码，BUILD_ID为 **E7070013**；正式整机顶层显式启用`ALLOW_BOUNDED_ALIGN_GAP`，旧参数兼容入口默认关闭。进入转向仍须新鲜锁定；只有原定ALIGN时长非零且 **≤200 ms** 才取得有限继续资格。健康短暂NF或同身份重新获取期间，保持已锁存的原方向、速度阶段及截止时间，不延长、不重新kick、不改向；**配置超过200 ms仍执行原先的持续锁定要求，不把整个300 ms设置都放宽**。可信有效观测跨越允许居中边界可提前停；缺失报告的旧坐标不能伪装成跨越。来源/选择/配置/帧质量/歧义/时效和原IR/J3安全条件仍优先，结束后完整零速ACQUIRE重确认。APPROACH失锁立即停车规则不变。
+
+`build/remaining_20261104/align_continuity_e13_20261104T212612021761Z/verified_result.json`从原成功日志独立确认定向 **PASS**：新`tb_align_continuity`在TURN_SIGN−1/+1下各 **553项检查、60条UART解码**；关闭新连续性例外的旧`tb_control_repair`基线 **2041项检查、500条UART解码**。此旧基线的`STRICT_ALIGN_BAND=0`、`RUNTIME_TUNING=1`，不是旧110–130窄居中档。定向运行记录总耗时 **21.4837644秒**，最终编译/三配置日志均0 errors/0 warnings。HOST_RUNNER另有 **18项PASS**。这些均是主机/RTL证据，不是底盘实际轮速、机械过冲或停靠验收。
+
+历史失败没有覆盖：原`result.json`因末端PASS字符串匹配漏掉冒号，把已经输出`PASS: tb_control_repair`的成功旧基线误记FAIL；`verified_result.json`只重新核对原日志，**没有重跑仿真或覆盖原FAIL文件**。此前测试台曾错误地把mode2中不适用的`cameraAbandon`作为来源故障，随后改用适用的`interactionBusy`；另一个32位回绕用例的早期失败也保留，修正细节待独立说明。不得把本次记录写成“无失败尝试”。
+
+正式fresh课程R6已 **PASS，223.568636秒**，目标285秒、targetMet=true、cleanBuild=true；**62个新鲜source、14项正常PASS＋1项mutant CAUGHT、退出0、jobs4**。结果为`build/member_b/20261104T212711_301457Z_verilator_course/result.json`。哈希复用仍只发生在当次运行、精确source匹配条件下；新增测试进入正式回归，没有削减旧场景、帧数或断言。
+
+E13的完整编译已结束，最终为 **FAIL**：`build/member_b/20261104T212541_740043Z_build/result.json`记录compile1309.487秒、Quartus返回0，但wrapper检测到Critical Warning332148和负setup裕量而拒绝通过。最差slow85 setup **−0.279 ns**、slow0 **−0.246 ns**，hold **+0.214 ns**；ALM29610/32070（92%）、41152寄存器、M10K357/397、DSP51/87。独立post-fit门检没有继续运行，**E13未下载、未实机，不提供可用发布SOF**。当前最后确认实板仍是E7070012，E12的真实flowoff搜索60.0067485秒未DOCK结论不变。
+
+只读STA诊断将关键链定位为 `chassisDebugControl|mode[0] → chassis_u|shreg[19]`，经感知有效性、运动请求、安全许可和轮速ASCII转换，共21逻辑级；不是已锁存短转截止比较器。E14将signed7-bit合法轮速−15..15的绝对值/十进制串行运算改成等价查表；32768种左右/enable组合完整232位报文相等的定向验证通过，但最终时序改善必须由E14实际拟合确认。没有放宽时序约束或把仿真通过当成可下载许可。
+
+最后迭代明确为 **E7070014**。用户允许同一最终SOF增加停车调参，以完成真实SW→红2→搜索→跟踪/前进→DOCK及近障/IR保护；E14完整构建、R6和实机验收仍待。新增策略范围和默认差异见README开头。最终ZIP等最终实际结果形成后统一打包；R5正式一页表已补齐字段，未实测成绩/等级仍PENDING。
+
+
+## E14 最终源码与当前交付状态
+
+当前开发源码为 **E7070014（最终迭代候选）**，完整构建、时序、R6及实机全流程仍待本轮完成。当前已经发布且最后确认在板运行的是 **E7070012**。**E7070013 的定向仿真和 R6 通过，但 Full Compilation 的时序检查失败，未下载、未实机测试，不能使用其 SOF。** 以下 E12 及更早结果均属于各自历史版本，不能升级为 E14 的成绩。
+
+E14 将用户同意的最多 200 ms 有限短转继续、最终启动配置、底盘自动反馈初始化、UART 字符查表时序修正和停车调参合并。主要验收仍是一次真实、连续的 **实体拨码选择 → 新呈现红2 → 自动搜索 → 停稳确认/跟踪 → 接近 → 自主 DOCKED 停车**，以及真实 J3 近障保护和 IR A 急停。主机观察到时限后发送 STOP 不算自主停靠；各段独立成功不能拼成完整任务。
+
+### E14 启动、红2与安全行为
+
+- 上电/KEY0 后为 INTEGRATED、未授权、零速。先完成一条零速运动 JSON，再在真实未 ARM、零速且 UART 空闲时发送一次 `{"T":131,"cmd":0}`，关闭 UGV 的 RAM 自动反馈。`chassisInitSent` 只表示本地完整发完最后换行字节，不是底盘执行 ACK；初始化未完成前不接受新运动任务，早按的启动不排队重放。
+- KEY0 不截断正在发送的 UART 行；复位事件重新安排完整零速和初始化。若只重启底盘，待底盘启动后按 KEY0 重新初始化；系统不能自动检测所有底盘单独重启。FPGA 断电后仍须重新下载 SOF，T131 不是永久固件设置。
+- 红1负责校色，蓝1–6才是车位。红2只重新读取当前合法实体选择并请求新任务，不替代拨码。复位/初始化等边界中已经留在画面内的红2不会自动启动：先移开，连续三个健康帧确认缺失，再新呈现并确认。活动任务中的红2不重复启动。
+- E14 启动配置是已尝试的 E12 地面配置：search/turn/approach/fine/tolerance = **3/4/5/4/30**；短转 **200/200/60/6**（最短/最长/kick 毫秒/kick cm/s）；存储扫描预算 **15.1 s**。这是塑胶地板、历史供电/载荷条件的近似时间配置，并非新 E14 三次精确 360° 标定，也不是实验室环氧树脂地板标定。它基于两次单圈与一次双圈归一化参考，且早于关闭自动反馈；改变 search 仍使扫描资格失效。
+- 仅已锁定且原定时长不超过 **200 ms** 的原地短转，可在健康短暂未识别/同身份重新获取时完成原剩余时长，不延长、重起 kick 或改向。可信坐标越过允许居中边界可提前停；坏帧、过期、错误选择/身份、歧义、近障和 A 仍立即停止。配置超过 200 ms 时保持原持续锁定要求。前进失锁仍立即停车，随后零速驻留和新三帧确认。
+- **≤250 mm 的近障 HOLD 和连续三个新鲜 ≥300 mm 读数的释放规则固定**，与下面可调的正常停靠距离分离。A 是锁存急停；第一次新 POWER 只解除锁存，仍停车。DOCKED/NOT_FOUND 后退远障碍物不会自动重启。正常结束的超量程回波显示 FAr；异常/过期测距仍保护。
+
+### E14 停车调参：同一 SOF 内设置
+
+`tune`、`pulse` 和新增 `policy` 的写操作均要求 **VISION_ONLY、未 ARM、无运动许可、左右请求为0、完整零速已发送**。不满足时拒绝写入，不自动切模式、不自动启动；没有参数的命令只读。每次写入原子提交并独立读回；未指定的同组字段保持当前值。参数是逻辑速度/控制阈值，不是实测轮速、扭矩或机械停稳保证。
+
+| 命令字段 | 范围与步长 | E14 上电值 | 用途 |
+|---|---|---:|---|
+| `tune --search` / `--turn` | 3–5 cm/s，整数 | 3 / 4 | 搜索/短转第二段；改变 search 后须重新核定扫描预算 |
+| `tune --approach` / `--fine` | 4–8 / 3–4 cm/s，且 approach > fine | 5 / 4 | 远距/近距连续前进；纠偏两侧请求由控制器组合 |
+| `tune --tolerance` | 10–40 px，整数 | 30 | 相对图像 U120 的允许居中范围 |
+| `pulse --min-ms` / `--max-ms` | 20–300 ms，10 ms；min ≤ max | 200 / 200 | ALIGN 总时长，已包含起步段；≤200 ms 才允许有限目标间隙 |
+| `pulse --kick-ms` / `--kick-speed` | 0–100 ms，10 ms / 3–8 cm/s | 60 / 6 | 起步段；0 关闭，起步时长被总时长截断 |
+| `policy --corridor-px` | 45–70 px，5 px | 45 | 已锁定目标可连续前进纠偏的横向范围；不等于居中容差 |
+| `policy --settle-ms` | 500–2000 ms，100 ms | 1500 | 完整零速之后的驻留，之后仍须新三帧确认 |
+| `policy --stop-mm` | 300–400 mm，10 mm | 350 | 正常停靠距离比较；不是近障急停阈值，也不保证尺量终距 |
+| `policy --slow-mm` | 500–1000 mm，50 mm | 500 | 切换近距前进档的距离 |
+
+示例在空闲 JTAG 会话执行；按实际安装位置调整 Python/Quartus 路径。以下命令仅准备参数，不发送 START：
+
+```powershell
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 mode vision
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 status
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 tune --search 3 --turn 4 --approach 5 --fine 4 --tolerance 30
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 pulse --min-ms 200 --max-ms 200 --kick-ms 60 --kick-speed 6
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy --corridor-px 45 --settle-ms 1500 --stop-mm 350 --slow-mm 500
+python tools/chassis_debug.py --quartus-bin C:/intelFPGA_lite/18.1/quartus/bin64 policy
+```
+
+**`tune --defaults` 和 `pulse --defaults` 仍恢复通用兼容值 4/4/5/3/30 与 20/100/0/5，不是 E14 的上述启动配置。** 恢复 E14 配置请显式写入完整参数；KEY0 会恢复生产启动值并重新校色/初始化。`policy --defaults` 恰好与 E14 的 45/1500/350/500 一致。所有会话修改在 KEY0/重新下载/断电后丢失。若改变过 search，即使随后调回3，扫描资格也不会自动恢复；应按实际地面测量重新核定，不能为启动而伪称已标定。
+
+CCTL 保持 16 个状态字。`policy` 为 opcode13，word10 高位具有能力标记和17位参数；旧固件没有能力标记时主机拒绝写入。word10 低位保留原标志以及初始化支持/本地发送完成位。策略写入不更改速度、pulse、扫描资格/预算，不刷新注入租约，不直接写轮速或测距。
+
+
+本节为E14候选实现和待执行操作说明，实际测量结果将在后续独立追加，不覆盖E13失败或E12历史记录。
+
+### E14 正式R6首轮：Verilator工具崩溃，保留FAIL
+
+`build/member_b/20261104T220131_947405Z_verilator_course/result.json`为 **FAIL，104.45794秒、exit1、targetMet=false**。失败点是新增`tb_chassis_init`的Verilator编译阶段：0.095982秒返回3221225477（Windows **0xC0000005**访问冲突），不是该测试的运行时断言失败，也不是完整套件耗尽时间。日志的通用错误文本包含“compilation failed or exceeded deadline”，但该次返回码/用时支持前者。原始FAIL与日志保留，不能因为不足285秒就称达标。
+
+后续仅作等价测试台兼容修正，保留初始化场景及断言，生产RTL不改；最终完整fresh R6仍须重新执行并独立记录。Quartus E14完整编译继续，不能从该仿真工具崩溃推断FPGA时序或实机结果。
+
+
+### E14 R6工具兼容修正与第二轮整体超时
+
+首轮崩溃后，仅把`tests/member_c/tb_chassis_init.sv`内两处层次枚举引用`dut.SEND`/`dut.LOAD_FB`改为相同编码的本地常量；生产RTL、初始化场景及断言未削减。独立Verilator验证 `verilator_init_verified_20261104T220628_233730Z/result.json` 已PASS：4939项检查、183条完整UART、41条初始化报文及32768个ASCII等价组合，约8.21秒。它仅验证兼容修正后的初始化场景，不替代完整R6。
+
+第二轮fresh R6 `build/member_b/20261104T220649_240451Z_verilator_course/result.json`仍为 **FAIL，301.821791秒、exit1、targetMet=false**。已完成10项PASS，包括全部新增场景、debug/red2和continuous；`perceptionCoreOverload_tb`运行时触及整个套件300秒时限而终止，后续场景未完成。不能写成17项PASS或285秒达标，且前两轮失败均保留。
+
+该轮与Quartus拟合并行；主机争用是待核对的耗时因素，不是已确认唯一原因。计划拟合结束后、生产源码不变时重新执行完整fresh R6，再独立记录实际总耗时。未删除负载场景、未降低帧数/断言、未改285秒目标，也不跨运行复用旧二进制冒充clean build。E14仍未下载。
+
+### E14 candidate source publication / E14候选源码推送
+
+按用户要求，编译进行时先推送当前冻结候选源码，后续实测结果可独立追加。README已合并成单个逐节中英对应文件，独立英文文件删除；保留15个主节、37个子节和原英文独有说明。发布白名单/fixture同步，submission14项(0.287s)、结构6项(2.038s)和实际60依赖/53bench结构检查PASS。当前仍是E14构建运行中、未下载；R6两轮FAIL如实保留。不发布未过时序的E14 SOF，不生成已验收最终ZIP。
+
+At the user’s request, publish the frozen candidate sources during compilation; later hardware results may follow in another commit. One section-paired bilingual README retains15 main sections,37 subsections and all English-only content. The export/structure contract was updated;14 submission tests(0.287s),6 structure tests(2.038s) and the actual60-dependency/53-bench structural check passed. E14 compilation is still running and it is not programmed; both R6 failures remain recorded. No unqualified E14 SOF or validated final ZIP is published.

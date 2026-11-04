@@ -29,7 +29,7 @@ class RepositoryCheckTests(unittest.TestCase):
     def project(self, root):
         """Minimal structural fixture; placeholder PDFs are not rendered data."""
         root.mkdir(parents=True)
-        for name in ('README.md','README_EN.md','VERSION_README.md','OWNERS.md','quartus/PartBDebug.qpf',
+        for name in ('README.md','VERSION_README.md','OWNERS.md','quartus/PartBDebug.qpf',
                      'docs/Major_Project_Brief_2026.pdf','assets/markers/marker_spec.json',
                      'assets/markers/scene_manifest.json','assets/markers/ECHO7_All_Markers_A4_v2.pdf'):
             path=root/name

@@ -70,8 +70,8 @@ def main():
                  'assets/markers/scene_manifest.json','assets/markers/ECHO7_All_Markers_A4_v2.pdf'):
         if not (root/name).is_file():errors.append(f'Missing retained input: {name}')
     readmes=sorted(p.name for p in root.glob('*README*.md'))
-    if readmes!=['README.md','README_EN.md','VERSION_README.md']:
-        errors.append('Keep the Chinese README, English README and version history')
+    if readmes!=['README.md','VERSION_README.md']:
+        errors.append('Keep the single bilingual README and version history')
     errors.extend(checkIgnoreRules(root,[('build/example.log',True),('quartus/db/generated.cdb',True),
                             ('assets/markers/sheet_320x240_rgb565.hex',False),
                             ('tests/fixtures/camera/frame30158/frame.png',False),

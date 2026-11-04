@@ -122,7 +122,18 @@ class VerilatorRunnerTests(unittest.TestCase):
         overload = next(test for test in selected if test["name"] == "perceptionCoreOverload_tb")
         self.assertIn("rtl/top/perceptionCore.sv", overload["sources"])
         self.assertIn("+OVERLOAD", overload["plusargs"])
-        self.assertEqual(len(selected), 13)
+        self.assertEqual(len(selected), 17)
+        continuity = next(test for test in selected if test["name"] == "tb_align_continuity")
+        self.assertIn("rtl/member_c/member_c_control.sv", continuity["sources"])
+        self.assertIn("rtl/member_c/perception_adapter.sv", continuity["sources"])
+        self.assertIn("tests/member_c/tb_align_continuity.sv", continuity["sources"])
+        self.assertEqual(continuity["passMarker"], "PASS tb_align_continuity")
+        for name in ("tb_chassis_init", "tb_chassis_init_gate", "tb_motion_policy"):
+            initialization = next(test for test in selected if test["name"] == name)
+            self.assertIn("tests/member_c/" + name + ".sv", initialization["sources"])
+            self.assertEqual(initialization["passMarker"], "PASS " + name)
+            with self.assertRaises(KeyError):
+                suite.selectTests({"tests": [test for test in manifest["tests"] if test["name"] != name]})
         sonar = next(test for test in selected if test["name"] == "tb_sonar_guard")
         self.assertEqual(sonar["sources"], ["rtl/member_c/sonar_pll.sv", "rtl/member_c/sonar_range.sv",
                                          "rtl/member_c/sonar_guard.sv", "tests/member_c/tb_sonar_guard.sv"])
@@ -143,6 +154,9 @@ class VerilatorRunnerTests(unittest.TestCase):
         with self.assertRaises(KeyError):
             suite.selectTests({"tests": [test for test in manifest["tests"]
                                          if test["name"] != "tb_sonar_guard"]})
+        with self.assertRaises(KeyError):
+            suite.selectTests({"tests": [test for test in manifest["tests"]
+                                         if test["name"] != "tb_align_continuity"]})
 
     def testPassRequiresMarkerExitAndNoErrors(self):
         record = {"returnCode": 0, "timedOut": False}

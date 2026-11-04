@@ -6,8 +6,19 @@ module tb_chassis_debug;
  logic [511:0] statusWords='0;
  wire [1:0] mode;
  wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
- wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord;
- chassisDebug #(.LEASE_US(500)) dut(.*);
+ wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord,motionPolicyWord;
+ chassisDebug #(.LEASE_US(500),.RUNTIME_MOTION_POLICY(1)) dut(.*);
+ wire [1:0] bootMode;
+ wire bootStart,bootCalibrated;
+ wire [31:0] bootScanBudget,bootTuning,bootTiming,bootPolicy;
+ chassisDebug #(.RUNTIME_MOTION_POLICY(1),.INITIAL_SCAN_CALIBRATED(1),
+   .INITIAL_SCAN_BUDGET_US(15100000),.INITIAL_TUNING_WORD(32'h001e4543),
+   .INITIAL_ALIGN_TIMING_WORD(32'h0001a946)) productionBoot(
+   .clk(clk),.reset(reset),.timeUs(timeUs),.statusWords(statusWords),
+   .mode(bootMode),.modeChanged(),.debugStart(bootStart),.debugStop(),
+   .injectLeaseValid(),.leaseAgeUs(),.scanCalibrated(bootCalibrated),.scanBudgetUs(bootScanBudget),
+   .tuningWord(bootTuning),.alignTimingWord(bootTiming),.motionPolicyWord(bootPolicy),
+   .observation0(),.observation1(),.templateValid());
  targetRequest_t targetRequest;
  logic targetRequestValid=0;
  wire targetRequestReady,targetReportValid;
@@ -51,6 +62,10 @@ module tb_chassis_debug;
  initial begin
   tick(4);reset=0;tick(12);
   check(mode==0&&!injectLeaseValid&&starts==0,"safe integrated reset");
+  check(bootMode==0 && !bootStart && bootCalibrated && bootScanBudget==15100000,
+    "production boot is disarmed integrated with historical 15.1s scan qualification");
+  check(bootTuning==32'h001e4543 && bootTiming==32'h0001a946 && bootPolicy==32'h00000af9,
+    "production boot retains E12 tested speed/pulse and unchanged policy defaults");
   check(tuningWord==32'h001e3544,"runtime tuning reset defaults");
   check(alignTimingWord==32'h00015420,"ALIGN timing reset defaults preserve old motion");
   command(12,pulseWord(6,8,20,4),5);check(alignTimingWord==32'h00015420,"integrated pulse write rejected");
@@ -115,7 +130,32 @@ module tb_chassis_debug;
   command(12,pulseWord(10,30,30,8));check(alignTimingWord==pulseWord(10,30,30,8),"maximum pulse boundaries accepted");
   command(12,pulseWord(10,2,2,8));check(alignTimingWord==pulseWord(10,2,2,8),"longer kick accepted for controller total-time truncation");
   check(statusWords[29]&&statusWords[30]&&scanCalibrated&&starts==0,"pulse write retains latched safety inputs/calibration");
-  command(12,32'h00015420);statusWords='0;
+  command(12,32'h00015420);
+  check(motionPolicyWord==32'h00000af9,"policy default preserves corridor/dwell/dock/slow");
+  statusWords[10*32+:9]=9'h1d5;command(2);
+  check(dut.frozenWords[10*32+:32]=={6'h2d,17'h00af9,9'h1d5},"policy capability/readback preserves all low nine flags");
+  command(13,32'h00014b4e);
+  check(motionPolicyWord==32'h00014b4e && scanCalibrated && scanBudgetUs==10000000 &&
+    tuningWord==32'h001e3544 && alignTimingWord==32'h00015420 && starts==0 && !injectLeaseValid,
+    "atomic policy write preserves other settings, safety and task authorization");
+  check(dut.frozenWords[10*32+9+:17]==17'h00af9,"old policy snapshot remains immutable");
+  command(2);check(dut.frozenWords[10*32+9+:17]==17'h14b4e,"new policy snapshot is the complete word");
+  // Every field and high reserved bit must reject atomically.
+  command(13,32'h00020af9,2);command(13,32'h80000af9,2);
+  command(13,32'h00000af8,2);command(13,32'h00000aff,2);
+  command(13,32'h00000a49,2);command(13,32'h00000b59,2);
+  command(13,32'h000016f9,2);command(13,32'h000160f9,2);
+  check(motionPolicyWord==32'h00014b4e,"invalid policy leaves old complete word");
+  statusWords[20]=1;command(13,32'h00000af9,5);statusWords[20]=0;
+  statusWords[28]=1;command(13,32'h00000af9,5);statusWords[28]=0;
+  statusWords[7*32+:7]=3;command(13,32'h00000af9,5);statusWords[7*32+:7]=0;
+  statusWords[7*32+8+:7]=7'h7d;command(13,32'h00000af9,5);statusWords[7*32+8+:7]=0;
+  statusWords[8*32+15]=0;command(13,32'h00000af9,5);statusWords[8*32+15]=1;
+  command(1,0);command(13,32'h00000af9,5);command(1,2);command(13,32'h00000af9,5);command(1,1);
+  check(motionPolicyWord==32'h00014b4e && starts==0,"every policy stationary boundary rejects without ARM");
+  command(13,32'h00000059);check(motionPolicyWord==32'h00000059,"minimum policy fields accepted");
+  command(13,32'h0001554e);check(motionPolicyWord==32'h0001554e,"maximum policy fields accepted");
+  command(13,32'h00000af9);statusWords='0;
   command(1,2);command(7,0,4);
   command(5,(200<<24)|(1<<20)|(1<<19)|(1<<17)|(160<<8)|80);
   command(7,0,4);check(!templateValid,"half template cannot commit");
@@ -144,6 +184,10 @@ module tb_chassis_debug;
    check(starts==prior,"old JTAG ARM not replayed after reset");
    check(tuningWord==32'h001e3544&&!scanCalibrated,"reset restores tuning defaults and clears calibration");end
   check(alignTimingWord==32'h00015420,"reset restores kick disabled and old pulse duration");
+  check(motionPolicyWord==32'h00000af9,"reset restores policy defaults");
+  check(bootMode==0 && !bootStart && bootCalibrated && bootScanBudget==15100000 &&
+    bootTuning==32'h001e4543 && bootTiming==32'h0001a946 && bootPolicy==32'h00000af9,
+    "KEY0 restores declared production profile without replaying a START");
   $display("PASS tb_chassis_debug checks=%0d reports=%0d",checks,reports);$finish;
  end
  initial begin #1000000;$fatal(1,"CCTL watchdog");end

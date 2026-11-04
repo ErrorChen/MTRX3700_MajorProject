@@ -1,6 +1,8 @@
 // Logical forward-positive cm/s. All time arguments are unsigned microseconds.
 module motion_fsm #(
  parameter bit RUNTIME_TUNING=0,
+ parameter bit RUNTIME_MOTION_POLICY=0,
+ parameter bit ALLOW_BOUNDED_ALIGN_GAP=0,
  parameter int ALIGN_LOW=90,ALIGN_HIGH=150,DOCK_STOP_MM=350,
  parameter int SAFETY_MM=250,FINE_MM=500,
  parameter int TURN_CM_S=4,APPROACH_CM_S=5,FINE_CM_S=3,TURN_SIGN=1,
@@ -15,7 +17,7 @@ module motion_fsm #(
  input logic sourceHealthyFresh,targetObserved,motionTargetValid,distance_valid,
  input logic scanAllowed,zeroSent,motionApplied,
  input logic [31:0] timeUs,scanBudgetUs,
- input logic [31:0] tuningWord,alignTimingWord,
+ input logic [31:0] tuningWord,alignTimingWord,motionPolicyWord,
  input logic [7:0] centreU,input logic [11:0] distance_mm,
  output logic signed [6:0] left_cm_s,right_cm_s,
  output logic [3:0] state,
@@ -84,6 +86,37 @@ module motion_fsm #(
      assign alignHighBound=8'(ALIGN_HIGH);
    end
  endgenerate
+ // Policy changes are accepted only at the stationary debug boundary.
+ // Narrow shift/add scaling avoids variable multipliers on motion paths.
+ wire motionPolicyValid;
+ wire [31:0] approachCorridor,dockStopMm,slowStartMm,acquireSettleUs;
+ generate
+   if(RUNTIME_MOTION_POLICY)begin: runtimeMotionPolicy
+     wire [3:0] corridorUnits=motionPolicyWord[3:0];
+     wire [4:0] settleUnits=motionPolicyWord[8:4];
+     wire [3:0] stopUnits=motionPolicyWord[12:9],slowUnits=motionPolicyWord[16:13];
+     wire [6:0] corridorWide={3'd0,corridorUnits};
+     wire [20:0] settleWide={16'd0,settleUnits};
+     wire [11:0] stopWide={8'd0,stopUnits},slowWide={8'd0,slowUnits};
+     wire [6:0] corridorPx=(corridorWide<<2)+corridorWide;
+     wire [20:0] settleUs=(settleWide<<16)+(settleWide<<15)+(settleWide<<10)+
+       (settleWide<<9)+(settleWide<<7)+(settleWide<<5);
+     wire [11:0] stopMm=12'd300+(stopWide<<3)+(stopWide<<1);
+     wire [11:0] slowMm=12'd500+(slowWide<<5)+(slowWide<<4)+(slowWide<<1);
+     assign motionPolicyValid=motionPolicyWord[31:17]==0 && corridorUnits>=9 && corridorUnits<=14 &&
+       settleUnits>=5 && settleUnits<=20 && stopUnits<=10 && slowUnits<=10;
+     assign approachCorridor={25'd0,corridorPx};
+     assign acquireSettleUs={11'd0,settleUs};
+     assign dockStopMm={20'd0,stopMm};
+     assign slowStartMm={20'd0,slowMm};
+   end else begin: fixedMotionPolicy
+     assign motionPolicyValid=1'b1;
+     assign approachCorridor=32'(APPROACH_TRACK_ERROR);
+     assign acquireSettleUs=32'(ACQUIRE_SETTLE_US);
+     assign dockStopMm=32'(DOCK_STOP_MM);
+     assign slowStartMm=32'(FINE_MM);
+   end
+ endgenerate
  // Zero disables recovery; unsupported counts/durations fail closed. The
  // two-bit counter never wraps, and is replenished only for a new task.
  localparam int BACKTRACK_LIMIT=(BACKTRACK_MAX_STEPS>=1 && BACKTRACK_MAX_STEPS<=3 &&
@@ -94,6 +127,7 @@ module motion_fsm #(
  logic backtracking,backtrackAuthorized,stationaryRecoveryRequired;
  logic [1:0] backtrackSteps;
  logic alignTurn,alignLow;
+ logic alignGapEligible;
  logic signed [6:0] alignSpeed;
  logic signed [6:0] alignKickSpeed;
  logic [31:0] alignPulseUs;
@@ -143,18 +177,31 @@ module motion_fsm #(
  // stops on the tested floor made startup asymmetry dominate each short turn.
  // A fresh lock may enter this corridor directly outside the dock distance;
  // the narrower straight/docking tolerance and stationary qualification remain.
- wire approachTrackable=alignErrorPixels<=APPROACH_TRACK_ERROR;
+ wire approachTrackable=alignErrorPixels<=approachCorridor;
  // A freshly locked target inside the existing forward-steering corridor
  // need not pivot first. Never enter forward travel at the docking distance.
- wire approachEntry=distance_valid && distance_mm>DOCK_STOP_MM && approachTrackable;
+ wire approachEntry=distance_valid && distance_mm>dockStopMm && approachTrackable;
  wire approachLeftFast=belowAlign ? TURN_SIGN==-1 : TURN_SIGN==1;
- wire signed [6:0] approachFast=distance_mm<=FINE_MM?fineSteerSpeed:driveSpeed;
+ wire signed [6:0] approachFast=distance_mm<=slowStartMm?fineSteerSpeed:driveSpeed;
  // Entry latches direction, speed and duration. A new image cannot extend a
  // turn or reverse it in flight; centring/crossing first requires a full stop.
  wire alignCrossed=RUNTIME_TUNING ?
    (alignLow ? centreU>=alignLowBound : centreU<=alignHighBound) :
    (alignLow ? centreU>=ALIGN_LOW : centreU<=ALIGN_HIGH);
  wire alignExpired=timeUs-stateStartUs>=alignPulseUs;
+ // Only a pulse entered with a fresh target lock can finish through a brief
+ // healthy NOT_FOUND/reacquiring report. The original deadline/phase/direction
+ // remain latched; longer (>200 ms) configurations retain strict live lock.
+ // sourceHealthyFresh is qualified by perception_adapter against the current
+ // request/config, frame health, ambiguity, report shape and age. It is never
+ // equivalent to merely retaining a last-known coordinate.
+ wire nextAlignGapEligible=ALLOW_BOUNDED_ALIGN_GAP && motionTargetValid &&
+   !approachEntry && !centred && nextAlignPulseUs!=0 && nextAlignPulseUs<=200000;
+ wire boundedAlignContinuation=ALLOW_BOUNDED_ALIGN_GAP && alignGapEligible && alignTurn;
+ wire alignObservationPermits=motionTargetValid || boundedAlignContinuation;
+ // A valid same-ID observation can stop a pulse while the tracker is still
+ // acquiring. An absent report cannot turn a stale coordinate into a crossing.
+ wire stopAtAlignCrossing=boundedAlignContinuation ? (targetObserved && alignCrossed) : alignCrossed;
  wire signed [6:0] appliedAlignSpeed=timeUs-stateStartUs<{15'd0,alignKickUs}?alignKickSpeed:alignSpeed;
  wire [16:0] nextKickUs=nextAlignPulseUs<{15'd0,requestedKickUs}?nextAlignPulseUs[16:0]:requestedKickUs;
  wire safeRange=distance_valid && distance_mm>SAFETY_MM && !safetyHalt;
@@ -167,12 +214,15 @@ module motion_fsm #(
      state<=IDLE;taskStartUs<=0;stateStartUs<=0;settleStartUs<=0;lastTimeUs<=0;
      acquirePhase<=0;acquireFencePulse<=0;scanElapsedUs<=0;finalAcquire<=0;failureReason<=0;
      alignTurn<=0;alignLow<=0;alignSpeed<=0;alignPulseUs<=0;alignKickSpeed<=0;alignKickUs<=0;
+     alignGapEligible<=0;
      backtracking<=0;backtrackAuthorized<=0;backtrackSteps<=0;stationaryRecoveryRequired<=0;
    end else begin
      acquireFencePulse<=0;lastTimeUs<=timeUs;
      // A source interruption invalidates the sighting, but does not refund
      // recovery attempts already used in this task.
      if(!sourceHealthyFresh)backtrackAuthorized<=0;
+     if(!taskActive || cancel || !safeRange || !sourceHealthyFresh || !tuningValid || !motionPolicyValid)
+       alignGapEligible<=0;
      // Capture loss before HOLD priority so a simultaneous near obstacle cannot
      // discard the stationary recovery obligation. Cancel/new START clear it.
      if(taskActive && (state==ALIGN || state==APPROACH) &&
@@ -187,10 +237,12 @@ module motion_fsm #(
      else if(startPulse)begin
        scanElapsedUs<=0;taskStartUs<=timeUs;stateStartUs<=timeUs;failureReason<=0;finalAcquire<=0;
        backtracking<=0;backtrackAuthorized<=0;backtrackSteps<=0;stationaryRecoveryRequired<=0;
+       alignGapEligible<=0;
        if(motionTargetValid)begin
          state<=approachEntry?APPROACH:ALIGN;alignTurn<=!centred;alignLow<=belowAlign;
          alignSpeed<=(alignErrorPixels<=ALIGN_FINE_ERROR)?fineTurn:coarseTurn;alignPulseUs<=nextAlignPulseUs;
          alignKickSpeed<=kickTurn;alignKickUs<=nextKickUs;
+         alignGapEligible<=nextAlignGapEligible;
        end
        else if(!scanAllowed)begin state<=NOT_FOUND;failureReason<=3;end
        else if(targetObserved)begin state<=ACQUIRE;acquirePhase<=0;end
@@ -221,13 +273,14 @@ module motion_fsm #(
            // recovery after the source returns; a HOLD cannot bypass it.
            if(stationaryRecoveryRequired && !sourceHealthyFresh)acquirePhase<=0;
            else if(acquirePhase==0 && zeroSent)begin settleStartUs<=timeUs;acquirePhase<=1;end
-           else if(acquirePhase==1 && timeUs-settleStartUs>=ACQUIRE_SETTLE_US)begin
+           else if(acquirePhase==1 && timeUs-settleStartUs>=acquireSettleUs)begin
              acquireFencePulse<=1;acquirePhase<=2;stateStartUs<=timeUs;
            end else if(acquirePhase==2)begin
              if(motionTargetValid && !acquireFencePulse)begin
                state<=approachEntry?APPROACH:ALIGN;stateStartUs<=timeUs;alignTurn<=!centred;alignLow<=belowAlign;
                alignSpeed<=(alignErrorPixels<=ALIGN_FINE_ERROR)?fineTurn:coarseTurn;alignPulseUs<=nextAlignPulseUs;
                alignKickSpeed<=kickTurn;alignKickUs<=nextKickUs;
+               alignGapEligible<=nextAlignGapEligible;
                backtrackAuthorized<=0;backtracking<=0;stationaryRecoveryRequired<=0;
              end
              else if(timeUs-stateStartUs>=ACQUIRE_TIMEOUT_US)begin
@@ -244,24 +297,25 @@ module motion_fsm #(
            end
          end
          ALIGN:begin
-           if(!sourceHealthyFresh || !motionTargetValid)begin
-             state<=LOST;stateStartUs<=timeUs;
+           if(!sourceHealthyFresh || !alignObservationPermits)begin
+             state<=LOST;stateStartUs<=timeUs;alignGapEligible<=0;
            end
            else if(!alignTurn && centred)state<=APPROACH;
-           else if(!alignTurn || alignExpired || alignCrossed)begin
+           else if(!alignTurn || alignExpired || stopAtAlignCrossing)begin
              state<=ACQUIRE;stateStartUs<=timeUs;acquirePhase<=0;finalAcquire<=budgetDone;
+             alignGapEligible<=0;
            end
          end
          APPROACH:begin
            if(!sourceHealthyFresh || !motionTargetValid)begin
              state<=LOST;stateStartUs<=timeUs;
            end
-           else if(!approachTrackable || (!centred && distance_mm<=DOCK_STOP_MM))begin
+           else if(!approachTrackable || (!centred && distance_mm<=dockStopMm))begin
              // Do not reverse a wheel immediately after forward travel.
              // Complete zero UART, dwell, and fresh qualification before pivoting.
              state<=ACQUIRE;stateStartUs<=timeUs;acquirePhase<=0;finalAcquire<=budgetDone;
            end
-           else if(centred && distance_mm<=DOCK_STOP_MM)state<=DOCKED;
+           else if(centred && distance_mm<=dockStopMm)state<=DOCKED;
          end
          LOST:begin
            if(timeUs-stateStartUs>=LOST_WAIT_US)begin
@@ -281,16 +335,16 @@ module motion_fsm #(
  end
  always_comb begin
    left_cm_s=0;right_cm_s=0;
-   if(!reset && !cancel && taskActive && safeRange && sourceHealthyFresh && tuningValid)begin
+   if(!reset && !cancel && taskActive && safeRange && sourceHealthyFresh && tuningValid && motionPolicyValid)begin
      if(state==SEARCH && scanAllowed && !budgetDone && !targetObserved && !backtrackExpired)begin
        left_cm_s=backtracking?searchTurn:-searchTurn;right_cm_s=-left_cm_s;
      end
-     else if(state==ALIGN && motionTargetValid && alignTurn && !alignExpired && !alignCrossed)begin
+     else if(state==ALIGN && alignObservationPermits && alignTurn && !alignExpired && !stopAtAlignCrossing)begin
        if(alignLow)begin left_cm_s=-appliedAlignSpeed;right_cm_s=appliedAlignSpeed;end
        else begin left_cm_s=appliedAlignSpeed;right_cm_s=-appliedAlignSpeed;end
-     end else if(state==APPROACH && motionTargetValid && approachTrackable && distance_mm>DOCK_STOP_MM)begin
+     end else if(state==APPROACH && motionTargetValid && approachTrackable && distance_mm>dockStopMm)begin
        if(centred)begin
-         left_cm_s=distance_mm<=FINE_MM?fineSpeed:driveSpeed;right_cm_s=left_cm_s;
+         left_cm_s=distance_mm<=slowStartMm?fineSpeed:driveSpeed;right_cm_s=left_cm_s;
        end else if((TURN_SIGN==1 || TURN_SIGN==-1) && approachFast>=3 && fineSpeed>=3)begin
          left_cm_s=approachLeftFast?approachFast:fineSpeed;
          right_cm_s=approachLeftFast?fineSpeed:approachFast;

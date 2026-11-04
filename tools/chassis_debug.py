@@ -4,6 +4,7 @@
 Physical SW0-SW5 always select the bay. This tool never overrides wheel outputs
 or sonar values. `tune` changes bounded controller parameters only while stopped
 in VISION_ONLY. `pulse` independently sets ALIGN total duration and startup kick;
+`policy` sets the approach corridor, settling delay and distance thresholds.
 settings reset on KEY0/power loss/reprogramming. Changing search
 speed invalidates the floor scan calibration. `stop` is standalone only when the JTAG link is idle; use Ctrl+C
 in an active injection session. A lost process is stopped by the FPGA lease.
@@ -35,6 +36,66 @@ PULSE_FIELDS = {"min_ms": (4, 31, 20, 300, 10, "minMs"),
                 "max_ms": (9, 31, 20, 300, 10, "maxMs"),
                 "kick_ms": (0, 15, 0, 100, 10, "kickMs"),
                 "kick_speed": (14, 15, 3, 8, 1, "kickSpeed")}
+POLICY_DEFAULTS = {"corridor_px": 45, "settle_ms": 1500, "stop_mm": 350, "slow_mm": 500}
+# shift, mask, minimum, maximum, units, encoding offset, status name
+POLICY_FIELDS = {"corridor_px": (0, 15, 45, 70, 5, 0, "corridorPx"),
+                 "settle_ms": (4, 31, 500, 2000, 100, 0, "settleMs"),
+                 "stop_mm": (9, 15, 300, 400, 10, 300, "stopMm"),
+                 "slow_mm": (13, 15, 500, 1000, 50, 500, "slowMm")}
+
+
+def validate_policy_changes(values):
+    """Validate explicit fields before opening JTAG or reading status."""
+    if set(values) - set(POLICY_FIELDS):
+        raise ValueError("unknown policy parameter")
+    for name, value in values.items():
+        _, _, low, high, units, offset, _ = POLICY_FIELDS[name]
+        if type(value) is not int or not low <= value <= high or (value - offset) % units:
+            raise ValueError(f"{name} must be an integer in {low}..{high}, step {units}")
+
+
+def policy_word(**values):
+    """Encode the four bounded runtime motion-policy fields as one 17-bit word."""
+    if set(values) != set(POLICY_FIELDS):
+        raise ValueError("policy needs corridor_px, settle_ms, stop_mm and slow_mm")
+    validate_policy_changes(values)
+    return sum(((values[name] - offset) // units) << shift
+               for name, (shift, _, _, _, units, offset, _) in POLICY_FIELDS.items())
+
+
+def policy(session, *, defaults=False, **changes):
+    """Read or atomically write motion policy without mode, ARM or lease commands."""
+    if set(changes) - set(POLICY_FIELDS):
+        raise ValueError("unknown policy parameter")
+    changes = {name: value for name, value in changes.items() if value is not None}
+    validate_policy_changes(changes)
+    if defaults and changes:
+        raise ValueError("--defaults cannot be combined with parameter changes")
+    before = session.status(maintain_lease=False)
+    if not defaults and not changes:
+        return before
+    if not before.get("motionPolicySupported"):
+        raise RuntimeError("this firmware does not support runtime motion policy; no write sent")
+    if (before["mode"] != "VISION_ONLY" or before["taskArmed"] or before["motionPermit"] or
+            before["leftCmS"] != 0 or before["rightCmS"] != 0 or not before["zeroSent"]):
+        raise RuntimeError("policy tuning requires VISION_ONLY, disarmed, zero wheel commands and zeroSent; no write sent")
+    desired = dict(POLICY_DEFAULTS if defaults else
+                   {name: before["motionPolicy"][field[6]] for name, field in POLICY_FIELDS.items()})
+    desired.update(changes)
+    payload = policy_word(**desired)
+    session.tx(13, payload)
+    after = session.status(maintain_lease=False)
+    expected = {field[6]: desired[name] for name, field in POLICY_FIELDS.items()}
+    if not after.get("motionPolicySupported") or after["motionPolicy"] != expected:
+        raise RuntimeError("motion policy readback mismatch; write delivery or retention is unconfirmed")
+    if (after["mode"] != "VISION_ONLY" or after["taskArmed"] or after["motionPermit"] or
+            after["leftCmS"] != 0 or after["rightCmS"] != 0 or not after["zeroSent"]):
+        raise RuntimeError("stationary boundary changed after policy tuning; no start was sent")
+    if any(after[key] != before[key] for key in
+           ("scanCalibrated", "scanBudgetUs", "tuningSupported", "tuning",
+            "alignTimingSupported", "alignTiming")):
+        raise RuntimeError("policy tuning changed unrelated speed/pulse/scan settings; no start was sent")
+    return after
 
 
 def pulse_word(**values):
@@ -153,6 +214,8 @@ def decode_status(words):
     distance_far = distance_valid and distance == 4000
     tuning_supported = words[13] & 0xffc00000 == 0xa1000000
     pulse_supported = (words[15] >> 20) & 255 == 0xa2
+    policy_supported = (words[10] >> 26) == 0x2d
+    init_supported = bool(words[10] & (1 << 7))
     return {"mode": {0: "INTEGRATED", 1: "VISION_ONLY", 2: "CHASSIS_INJECT"}.get(mode, "INVALID"),
             "inputSource": "SYNTHETIC" if mode == 2 else "REAL_CAMERA",
             "switchMask": (words[0] >> 2) & 63, "stableMask": (words[0] >> 8) & 63,
@@ -179,6 +242,9 @@ def decode_status(words):
             "zeroSent": bool(words[8] & (1 << 15)), "timeUs": words[9],
             "fatal": bool(words[10] & (1 << 5)), "perceptionReady": bool(words[11] & 2),
             "pendingVisualStart": bool(words[10] & (1 << 6)),
+            "chassisInitSupported": init_supported,
+            # This is local complete UART serialization, not an ESP execution ACK.
+            "chassisInitSent": bool(words[10] & (1 << 8)) if init_supported else None,
             "colourCalibrated": bool(words[11] & 4), "interactionBusy": bool(words[11] & 8),
             "chassisRxCount": words[12] & 65535, "chassisRxLastByte": (words[12] >> 16) & 255,
             "chassisRxFramingError": bool(words[12] & (1 << 24)),
@@ -193,6 +259,10 @@ def decode_status(words):
             "alignTiming": {status_name: ((words[15] >> (shift + 2)) & mask) * units
                             for shift, mask, _, _, units, status_name in PULSE_FIELDS.values()}
                            if pulse_supported else None,
+            "motionPolicySupported": policy_supported,
+            "motionPolicy": {status_name: ((words[10] >> (shift + 9)) & mask) * units + offset
+                             for shift, mask, _, _, units, offset, status_name in POLICY_FIELDS.values()}
+                            if policy_supported else None,
             "words": [f"0x{word:08x}" for word in words]}
 
 
@@ -504,6 +574,12 @@ def main(argv=None):
                             help="logical cm/s during kick" if name == "kick_speed" else
                                  f"milliseconds in {units} ms steps; kick is truncated by total duration")
     timing.add_argument("--defaults", action="store_true", help="restore total20..100 ms, kick0 ms/speed5; cannot mix with changes")
+    motion_policy = commands.add_parser("policy", help="read motion policy; writes require stopped VISION_ONLY, no auto-start")
+    for name, (_, _, low, high, units, _, _) in POLICY_FIELDS.items():
+        motion_policy.add_argument("--" + name.replace("_", "-"), type=int, metavar=f"{low}..{high}",
+                                   help=f"{name.rsplit('_', 1)[1]} in steps of {units}")
+    motion_policy.add_argument("--defaults", action="store_true",
+                              help="restore corridor45 px, settle1500 ms, stop350 mm, slow500 mm; cannot mix with changes")
     shot = commands.add_parser("inject")
     shot.add_argument("--x", type=int, default=120)
     shot.add_argument("--y", type=int, default=160)
@@ -568,6 +644,11 @@ def main(argv=None):
                     raise ValueError(f"{name} must be in {low}..{high}, step {units}")
             if "min_ms" in changes and "max_ms" in changes and changes["min_ms"] > changes["max_ms"]:
                 raise ValueError("minimum pulse duration must not exceed maximum")
+        if args.command == "policy":
+            changes = {name: getattr(args, name) for name in POLICY_FIELDS if getattr(args, name) is not None}
+            validate_policy_changes(changes)
+            if args.defaults and changes:
+                raise ValueError("--defaults cannot be combined with parameter changes")
         with Session(args) as session:
             if args.command == "mode":
                 session.tx(1, MODES[args.mode]); print(json.dumps(session.status(), indent=2))
@@ -580,6 +661,8 @@ def main(argv=None):
                 print(json.dumps(tune(session, defaults=args.defaults, **changes), indent=2))
             elif args.command == "pulse":
                 print(json.dumps(pulse(session, defaults=args.defaults, **changes), indent=2))
+            elif args.command == "policy":
+                print(json.dumps(policy(session, defaults=args.defaults, **changes), indent=2))
             elif args.command == "status":
                 while True:
                     print(json.dumps(session.status()), flush=True)

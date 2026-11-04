@@ -38,6 +38,7 @@ module tb_pixel_uart_repair;
  // Pixel input and the public U/V contract remain unchanged.
  member_c_control #(.TURN_SIGN(-1),.RUNTIME_TUNING(1),.SELECTION_STABLE_CLKS(4),.ACQUIRE_SETTLE_US(1000),
    .ACQUIRE_TIMEOUT_US(300000),.LOST_WAIT_US(80000),.TASK_TIMEOUT_US(1500000)) control(
+   .motionPolicyWord(32'h00000af9),.chassisInitSent(1'b1),
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(1'b0),.visualStart(1'b0),
    .selection(6'b000001),.mode(2'd0),.debugStart(1'b0),.debugStop(debugStop),
    .modeChanged(1'b0),.rawMode(1'b0),.injectLeaseValid(1'b0),
@@ -52,6 +53,7 @@ module tb_pixel_uart_repair;
    .motionState(motionState),.stop_reason(stopReason),.statusWords(statusWords));
  // Accelerated baud only: transmit every real complete JSON and decode its pin.
  chassis_command #(.USE_WHEEL_REQUESTS(1),.CLKS_PER_BIT(4),.PERIOD_CLKS(100000)) sender(
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
    .clk(clk),.reset(reset),.armed(permit),.left_cm_s(-leftRequest),.right_cm_s(-rightRequest),
    .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(uartBusy),.zeroSent(zeroSent));
  logic [15:0] pixels[0:76799];string scenePath;

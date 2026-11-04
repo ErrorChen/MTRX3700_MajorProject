@@ -6,6 +6,7 @@ module tb_wheel_uart;
  always #10 clk=~clk;
  localparam time BIT_NS=80;
  chassis_command #(.CLKS_PER_BIT(4),.PERIOD_CLKS(10000),.USE_WHEEL_REQUESTS(1)) dut(
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
  .clk(clk),.reset(reset),.armed(armed),.motion(2'b00),.speed(2'b00),.feedback(1'b0),
  .left_cm_s(l),.right_cm_s(r),.tx(tx),.busy(busy));
  string line;

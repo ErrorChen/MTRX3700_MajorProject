@@ -25,7 +25,8 @@ module tb_v2_pixel_latency;
  perceptionCore dut(.*);
  logic power_frame=0;wire signed [6:0] l,r;wire permit,used,estop,sonarStop,motionTargetValid;
  wire [2:0] motionState,reason;
- member_c_control c(.clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(1'b0),
+ member_c_control c(
+   .motionPolicyWord(32'h00000af9),.chassisInitSent(1'b1),.clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(1'b0),
  .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),.selection(3'd1),.timeUs(timeUs),.status(status),.targetRequest(targetRequest),
  .targetRequestValid(targetRequestValid),.targetRequestReady(targetRequestReady),
  .targetReport(targetReport),.targetReportValid(targetReportValid),.targetReportReady(targetReportReady),

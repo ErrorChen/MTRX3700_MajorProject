@@ -139,18 +139,26 @@ module echo7IntegratedTop #(
     wire syntheticRequestReady,syntheticReportValid;
     wire [1:0] controlMode;
     wire modeChanged,debugStart,debugStop,injectLeaseValid,scanCalibrated,templateValid;
-    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord;
+    wire [31:0] leaseAgeUs,scanBudgetUs,observation0,observation1,tuningWord,alignTimingWord,motionPolicyWord;
     wire [511:0] chassisStatusWords;
     assign requestReady=!modeChanged && (controlMode==2 ? syntheticRequestReady : realRequestReady);
     assign targetReport=controlMode==2 ? syntheticReport : realReport;
     assign reportValid=!modeChanged && (controlMode==2 ? syntheticReportValid : realReportValid);
     assign realReportReady=controlMode==2 || modeChanged ? 1'b1 : reportReady;
     assign activeStatus=controlMode==2 ? syntheticStatus : status;
-    chassisDebug #(.BUILD_ID(`MEMBER_B_BUILD_ID)) chassisDebugControl(
+    // Last real-tested E12 RAM profile; final image must still pass physical acceptance.
+    // Existing plastic-floor/supply/load profile: two single-circle trials and
+    // one normalized double-circle reference, acquired before flowoff setup.
+    // Not a measured heading loop or an epoxy-floor calibration. Changing
+    // runtime search speed still clears its time-profile qualification.
+    chassisDebug #(.BUILD_ID(`MEMBER_B_BUILD_ID),.RUNTIME_MOTION_POLICY(1),
+        .INITIAL_SCAN_CALIBRATED(1'b1),.INITIAL_SCAN_BUDGET_US(32'd15100000),
+        .INITIAL_TUNING_WORD(32'h001e4543),
+        .INITIAL_ALIGN_TIMING_WORD(32'h0001a946)) chassisDebugControl(
         .clk(CLOCK_50),.reset(reset50),.timeUs(timeUs),.statusWords(chassisStatusWords),
         .mode(controlMode),.modeChanged(modeChanged),.debugStart(debugStart),.debugStop(debugStop),
         .injectLeaseValid(injectLeaseValid),.leaseAgeUs(leaseAgeUs),.scanCalibrated(scanCalibrated),
-        .scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),
+        .scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),.motionPolicyWord(motionPolicyWord),
         .observation0(observation0),.observation1(observation1),.templateValid(templateValid));
     syntheticPerception syntheticSource(
         .clk(CLOCK_50),.reset(reset50),.enabled(controlMode==2),.sourceChanged(modeChanged),
@@ -170,7 +178,11 @@ module echo7IntegratedTop #(
     // Drain interaction events, accepting only fresh red2 START from the active
     // real source/current configuration. Red1 calibration keeps its own path.
     assign eventReady=!reset50;
-    wire visualBoundary=modeChanged || debugStop || rawProcessingSync || controlMode==2 ||
+    // Bit7 declares this local initialization interface; bit8 means the whole
+    // config line was sent, not acknowledged by the chassis. Until then retain
+    // the red2 reset/latch so readiness itself cannot present a new marker.
+    wire chassisInitPending=chassisStatusWords[10*32+7] && !chassisStatusWords[10*32+8];
+    wire visualBoundary=chassisInitPending || modeChanged || debugStop || rawProcessingSync || controlMode==2 ||
         !chassisStatusWords[14] || !chassisStatusWords[31] || chassisStatusWords[29] ||
         chassisStatusWords[10*32+5] || (controlMode==0 && chassisStatusWords[30]);
     logic [31:0] visualFenceUs;
@@ -211,14 +223,15 @@ module echo7IntegratedTop #(
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .debugWords(coreWords),.completedFrame(completedFrame),.completedFrameId(completedFrameId));
     memberCBoard #(.LEFT_POLARITY(LEFT_POLARITY),.RIGHT_POLARITY(RIGHT_POLARITY),
-        .TURN_SIGN(TURN_SIGN),.RUNTIME_TUNING(1),.ULTRASONIC_ESTOP_MM(250)) chassis (
+        .TURN_SIGN(TURN_SIGN),.RUNTIME_TUNING(1),.RUNTIME_MOTION_POLICY(1),.ALLOW_BOUNDED_ALIGN_GAP(1),
+        .INIT_FLOWOFF(1),.ULTRASONIC_ESTOP_MM(250)) chassis (
         .CLOCK_50(CLOCK_50),.reset50(reset50),.KEY(KEY[1:0]),.SW(SW[5:0]),.IRDA_RXD(IRDA_RXD),
         .timeUs(timeUs),.perceptionStatus(activeStatus),
         .mode(controlMode),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),
         .visualStart(visualStart),
         .rawMode(rawProcessingSync),.injectLeaseValid(injectLeaseValid),
         .scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.tuningWord(tuningWord),
-        .alignTimingWord(alignTimingWord),.statusWords(chassisStatusWords),
+        .alignTimingWord(alignTimingWord),.motionPolicyWord(motionPolicyWord),.statusWords(chassisStatusWords),
         .cameraFifoFault(cameraFifoFault),.cameraAbandonEvent(cameraAbandonEvent),
         .targetRequest(targetRequest),.targetRequestValid(requestValid),.targetRequestReady(requestReady),
         .targetReport(targetReport),.targetReportValid(reportValid),.targetReportReady(reportReady),

@@ -56,6 +56,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  member_c_control #(.RUNTIME_TUNING(RUNTIME_TUNING),.TURN_SIGN(TURN_SIGN),.ALIGN_LOW(TEST_ALIGN_LOW),.ALIGN_HIGH(TEST_ALIGN_HIGH),
    .SELECTION_STABLE_CLKS(3),.ACQUIRE_SETTLE_US(TEST_SETTLE_US),
    .ACQUIRE_TIMEOUT_US(20000),.LOST_WAIT_US(1000),.TASK_TIMEOUT_US(2000000)) dut(
+   .motionPolicyWord(32'h00000af9),.chassisInitSent(1'b1),
    .clk(clk),.reset(reset),.power_frame(power_frame),.estop_frame(estop_frame),.selection(selection),
    .mode(mode),.visualStart(visualStart),.debugStart(debugStart),.debugStop(debugStop),.modeChanged(modeChanged),.rawMode(rawMode),
    .injectLeaseValid(injectLeaseValid),.scanCalibrated(scanCalibrated),.scanBudgetUs(scanBudgetUs),.timeUs(timeUs),.tuningWord(tuningWord),.alignTimingWord(alignTimingWord),
@@ -69,6 +70,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
  // Independent combinational probe checks the optimized runtime arithmetic
  // against full-width reference multiplication over every possible U.
  motion_fsm #(.RUNTIME_TUNING(1),.TURN_SIGN(TURN_SIGN)) timingProbe(
+   .motionPolicyWord(32'h00000af9),
    .clk(clk),.reset(reset),.startPulse(1'b0),.cancel(1'b0),.taskActive(1'b0),.safetyHalt(1'b0),
    .sourceHealthyFresh(1'b0),.targetObserved(1'b0),.motionTargetValid(1'b0),.distance_valid(1'b0),
    .scanAllowed(1'b0),.zeroSent(1'b0),.motionApplied(1'b0),.timeUs(32'd0),.scanBudgetUs(32'd0),
@@ -80,6 +82,7 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    assign dutPulseMathWidth=$bits(dut.motion.boundedAlignMath.scaledPulseUs);
  end endgenerate
  chassis_command #(.CLKS_PER_BIT(4),.PERIOD_CLKS(10000),.USE_WHEEL_REQUESTS(1)) uart(
+   .initAllowed(1'b0),.softReset(1'b0),.initSent(),
    .clk(clk),.reset(reset),.armed(permit),.left_cm_s(-l),.right_cm_s(-r),
    .motion(2'b00),.speed(2'b00),.feedback(1'b0),.tx(tx),.busy(uartBusy),.zeroSent(zeroSent));
  task automatic ck(input bit ok,input string label);checks++;if(!ok)$fatal(1,"%s state=%0d time=%0d",label,state,timeUs);endtask
@@ -429,6 +432,17 @@ module tb_control_repair #(parameter int TURN_SIGN=-1,parameter bit STRICT_ALIGN
    @(negedge clk);timeUs=dut.visualStartUs+1000001;tick(3);
    ck(!dut.taskActive && !dut.pendingVisualStart,"uncalibrated absent-target red2 expires after one second");
    fresh(1);ck(!dut.taskActive,"late target lock cannot revive expired red2 authorization");
+   // Final-flow positive case: a new red2 may start calibrated SEARCH while
+   // the selected blue card is outside the view. No fake target lock is used.
+   scanCalibrated=1;fresh();
+   begin logic[15:0] oldTag;oldTag=dut.requestTag;
+     visualStart=1;tick();visualStart=0;tick(12);
+     ck(!dut.taskActive && dut.pendingVisualStart,"calibrated red2 awaits its refreshed request");
+     fresh();tick(4);
+     ck(dut.requestTag!=oldTag && dut.sourceHealthyFresh && !motionTargetValid &&
+        dut.taskActive && state==1 && permit,"calibrated red2 plus healthy NOT_FOUND starts bounded SEARCH");
+     stopTask();
+   end
    scanCalibrated=1;fresh(1);
    begin logic[15:0] oldTag;oldTag=dut.requestTag;
      visualStart=1;tick();visualStart=0;tick(12);ck(!dut.taskActive && dut.pendingVisualStart,"red2 waits for new request report");

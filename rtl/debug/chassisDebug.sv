@@ -2,7 +2,12 @@
 // CLOCK_50 domain; source word must be stable for three cycles. No wheel override.
 module chassisDebug #(
  parameter logic [31:0] BUILD_ID=32'hE7070001,
- parameter int LEASE_US=500000
+ parameter int LEASE_US=500000,
+ parameter bit RUNTIME_MOTION_POLICY=0,
+ parameter bit INITIAL_SCAN_CALIBRATED=0,
+ parameter logic [31:0] INITIAL_SCAN_BUDGET_US=32'd10000000,
+ parameter logic [31:0] INITIAL_TUNING_WORD=32'h001e3544,
+ parameter logic [31:0] INITIAL_ALIGN_TIMING_WORD=32'h00015420
 )(
  input logic clk,reset,
  input logic [31:0] timeUs,
@@ -15,6 +20,7 @@ module chassisDebug #(
  output logic [31:0] scanBudgetUs,
  output logic [31:0] tuningWord,
  output logic [31:0] alignTimingWord,
+ output logic [31:0] motionPolicyWord,
  output logic [31:0] observation0,observation1,
  output logic templateValid
 );
@@ -47,6 +53,12 @@ module chassisDebug #(
    sourceWord[8:4]>=2 && sourceWord[8:4]<=30 &&
    sourceWord[13:9]>=sourceWord[8:4] && sourceWord[13:9]<=30 &&
    sourceWord[17:14]>=3 && sourceWord[17:14]<=8;
+ // Four independent bounded policy fields; physical emergency thresholds
+ // and perception freshness/three-frame fences are deliberately not writable.
+ wire policyPayloadValid=sourceWord[31:17]==0 &&
+   sourceWord[3:0]>=9 && sourceWord[3:0]<=14 &&
+   sourceWord[8:4]>=5 && sourceWord[8:4]<=20 &&
+   sourceWord[12:9]<=10 && sourceWord[16:13]<=10;
  always_comb begin
    selectedWord=0;
    if(stableSource[55:48]<16) selectedWord=frozenWords[stableSource[51:48]*32+:32];
@@ -55,9 +67,10 @@ module chassisDebug #(
    if(reset) begin
      previousSource<=0;stableSource<=0;stableCount<=0;haveBaseline<=0;
      ackToggle<=0;errorCode<=0;mode<=0;modeChanged<=0;debugStart<=0;debugStop<=0;
-     leaseSeen<=0;heartbeatUs<=0;scanCalibrated<=0;scanBudgetUs<=10000000;
-     tuningWord<=32'h001e3544; // search4, turn4, approach5, fine3, tolerance30
-     alignTimingWord<=32'h00015420; // kick0, total20..100 ms, kick speed5
+     leaseSeen<=0;heartbeatUs<=0;scanCalibrated<=INITIAL_SCAN_CALIBRATED;scanBudgetUs<=INITIAL_SCAN_BUDGET_US;
+     tuningWord<=INITIAL_TUNING_WORD;
+     alignTimingWord<=INITIAL_ALIGN_TIMING_WORD;
+     motionPolicyWord<=32'h00000af9; // 45 px, 1500 ms, 350 mm, 500 mm
      stage0<=0;stage1<=0;staged<=0;observation0<=0;observation1<=0;templateValid<=0;frozenWords<=0;
    end else begin
      modeChanged<=0;debugStart<=0;debugStop<=0;
@@ -79,6 +92,8 @@ module chassisDebug #(
                end else errorCode<=2;
              2: begin
                  frozenWords<=statusWords;
+                 if(RUNTIME_MOTION_POLICY)
+                   frozenWords[10*32+9+:23]<={6'h2d,motionPolicyWord[16:0]};
                  frozenWords[13*32+:32]<={8'ha1,2'b0,tuningWord[21:0]};
                  frozenWords[14*32+:32]<=leaseAgeUs;
                  frozenWords[15*32+:32]<={injectLeaseValid,templateValid,scanCalibrated,observation0[20],
@@ -110,6 +125,10 @@ module chassisDebug #(
              12: if(!tuneStationary)errorCode<=5;
                  else if(!pulsePayloadValid)errorCode<=2;
                  else begin alignTimingWord<=sourceWord[31:0];debugStop<=1;end
+             13: if(!RUNTIME_MOTION_POLICY)errorCode<=1;
+                 else if(!tuneStationary)errorCode<=5;
+                 else if(!policyPayloadValid)errorCode<=2;
+                 else begin motionPolicyWord<=sourceWord[31:0];debugStop<=1;end
              default:errorCode<=1;
            endcase
          end

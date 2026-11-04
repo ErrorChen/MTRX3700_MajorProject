@@ -153,7 +153,7 @@ def main():
                     and path.name != "integrated_datasheet_metrics.json"):
                 continue
             selected[path.relative_to(root).as_posix()] = path
-    for name in ("README.md", "README_EN.md", "VERSION_README.md", "OWNERS.md", "requirements.txt", "run_all_tests.sh",
+    for name in ("README.md", "VERSION_README.md", "OWNERS.md", "requirements.txt", "run_all_tests.sh",
                  ".gitignore", ".gitattributes", ".editorconfig"):
         selected[name] = root / name
     firmwarePath = f"firmware/{current['buildId']:08X}/PartBDebug.sof"

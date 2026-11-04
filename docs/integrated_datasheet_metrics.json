@@ -1,7 +1,7 @@
 {
   "date": "05 NOV 2026",
   "build_id": "E7070012",
-  "purpose": "Verification record only. The one-page product/operating datasheet is generated separately and no longer reads this file.",
+  "purpose": "Version-scoped verification record. Top-level historical build_id and measurements remain E12; source_build_id identifies the current candidate. Product and formal R5 PDFs use separate target specification.",
   "control": "PASS: runtime TURN_SIGN-1/+1 each2041 checks /500 complete UART messages; legacy runtime-off with unknown timing input848/289. One compile plus three configurations44.0894113s,0 errors/warnings. All256 U positions across three total-duration profiles checked against independent arithmetic; kick8->cruise4 UART ordering, kick truncation,300ms bound, both phases safety/source interrupts and invalid timing word checked. Initial testbench hierarchical-name failure retained; only testbench fixed afterward. Production source frozen throughout full build.",
   "r6": "PASS223.404755s, E12 first formal run;13 PASS plus mutant CAUGHT,targetMet=true below285s,exit0. Fresh61-source manifest,Verilator5.050,jobs4,max2 simulations/one compiler,11 prefetched scenarios and exact current-run-only hash reuse. Result20261104T193009_881634Z_verilator_course. No runner/test scope reduction for E12.",
   "fit": "PASS: compile1163.903s plus post-fit gate26.783s. ALM29647/32070(92%);M10K357/397;DSP51/87;41286 registers;2802640 memory bits. Worst setup+0.842ns/hold+0.102ns. Build20261104T192605_706632Z_build,63 staged production sources byte-identical to working source. Fitter and timing accepted; MTBF remains unassessed.",
@@ -612,5 +612,230 @@
     "scope": "Separate real-camera task, same E12/SOF/settings. Host STOP at observation limit; no completed search-to-dock or established feedback-shutdown causal improvement.",
     "operatorCameraToMarkerPerpendicularMm": 460,
     "measurementScope": "Camera-to-marker460mm and J3final407mm have different origins; no same-baseline error inferred. Host60s cleanup stop, not DOCKED. No matched flow-on comparison."
+  },
+  "candidate_e13": {
+    "status": "FOCUSED_R6_PASS_FULL_BUILD_TIMING_FAIL_NEVER_PROGRAMMED",
+    "currentReleasedAndProgrammedBuild": "E7070012",
+    "rollbackCommit": "22cdd130cef30251cb003f83488fc24618e2c17b",
+    "authorization": "Initial three-frame lock; at most200ms bounded ALIGN may complete its original time during healthy brief NF/same-identity reacquisition. No extension/re-kick/direction change. Trusted crossing/source fault/safety stop immediately. Full zero ACQUIRE reconfirmation afterward. APPROACH loss still stops. Implemented and focused/R6 verified in E13; timing failed, so no physical validation.",
+    "productionT131Initialization": false,
+    "feedbackFlowOffScope": "External RAM setting, not persistent across an assumed restart and not established causal repair.",
+    "focused": {
+      "status": "PASS_VERIFIED_FROM_EXISTING_LOGS",
+      "file": "build/remaining_20261104/align_continuity_e13_20261104T212612021761Z/verified_result.json",
+      "recordedElapsedSeconds": 21.4837644,
+      "newCases": [
+        {
+          "turnSign": -1,
+          "checks": 553,
+          "uartDecodes": 60
+        },
+        {
+          "turnSign": 1,
+          "checks": 553,
+          "uartDecodes": 60
+        }
+      ],
+      "legacyNoGap": {
+        "checks": 2041,
+        "uartDecodes": 500,
+        "strictAlignBand": false,
+        "runtimeTuning": true
+      },
+      "finalCompileAndSimErrors": 0,
+      "finalCompileAndSimWarnings": 0,
+      "hostRunnerChecks": 18,
+      "history": "Original result.json FAIL from PASS-colon matcher preserved; verified from original successful logs without rerun. Earlier mode2 cameraAbandon stimulus corrected to interactionBusy. Earlier wrap-test failure also retained; details awaiting reviewer."
+    },
+    "r6": {
+      "status": "PASS",
+      "file": "build/member_b/20261104T212711_301457Z_verilator_course/result.json",
+      "elapsedSeconds": 223.568636,
+      "targetSeconds": 285,
+      "targetMet": true,
+      "cleanBuild": true,
+      "freshSources": 62,
+      "normalPass": 14,
+      "mutant": "CAUGHT",
+      "exitCode": 0,
+      "jobs": 4,
+      "scope": "Current-run exact-source reuse; added test, no removed scenarios/frames/assertions."
+    },
+    "compilationPostFit": {
+      "status": "FAIL",
+      "result": "build/member_b/20261104T212541_740043Z_build/result.json",
+      "compileSeconds": 1309.487,
+      "quartusReturncode": 0,
+      "wrapperAccepted": false,
+      "setupSlow85Ns": -0.279,
+      "setupSlow0Ns": -0.246,
+      "holdNs": 0.214,
+      "criticalWarning": 332148,
+      "postFitGateRun": false,
+      "programmed": false,
+      "hardwareTested": false,
+      "scope": "Timing failure; not a downloadable release despite completed assembly and passing simulations."
+    },
+    "programming": "NOT_PROGRAMMED_TIMING_FAIL",
+    "physicalValidation": "NOT_RUN",
+    "scope": "Historical E13 focused/R6 pass, full-build timing failure, never programmed. Superseded candidate E14 requires its own verification.",
+    "candidateBuildId": "E7070013",
+    "implementation": "Integrated top enables ALLOW_BOUNDED_ALIGN_GAP; eligible locked-entry pulse0<duration<=200ms may continue healthy NF/same-ID acquisition to original deadline, phases/direction latched. >200ms stays strict. Trusted observed crossing stops, stale absent coordinate does not. Source/safety priority and full zero ACQUIRE retained; APPROACH loss immediate stop.",
+    "deliveryPlan": {
+      "nextVersionAfterE13": "E7070014_FINAL",
+      "priority": "E14 implemented candidate flow; full build and hardware pending",
+      "finalZip": "Wait for final version; no intermediate micro-test ZIP",
+      "integratedGuide": "docs/ECHO7_Integrated_Datasheet.pdf (2 pages: product + R5)",
+      "submissionDatasheet": "docs/ECHO7_R5_Datasheet.pdf (standalone1page)",
+      "r5Definition": "tools/data/echo7_r5_targets.json and docs/R5_TARGETS.md",
+      "r5Scope": "E14 currentTrials empty/acceptance and claimed grade PENDING; no historical results combined"
+    },
+    "fullBuild": {
+      "status": "FAIL",
+      "result": "build/member_b/20261104T212541_740043Z_build/result.json",
+      "compileSeconds": 1309.487,
+      "quartusReturncode": 0,
+      "wrapperAccepted": false,
+      "setupSlow85Ns": -0.279,
+      "setupSlow0Ns": -0.246,
+      "holdNs": 0.214,
+      "criticalWarning": 332148,
+      "postFitGateRun": false,
+      "programmed": false,
+      "hardwareTested": false,
+      "scope": "Timing failure; not a downloadable release despite completed assembly and passing simulations."
+    }
+  },
+  "source_build_id": "E7070014",
+  "published_build_id": "E7070012",
+  "programmed_build_id": "E7070012",
+  "candidate_e14": {
+    "buildId": "E7070014",
+    "status": "SOURCE_FROZEN_QUARTUS_FITTING_R6_TRIAL2_DEADLINE_FAIL_HARDWARE_PENDING",
+    "changes": [
+      "Bounded original ALIGN gap at total <=200ms, no extension/re-kick/reversal; other safety priority retained",
+      "Whole zero then one RAM T131 flowoff initialization; local completion gates new starts, not an execution ACK",
+      "Equivalent UART ASCII lookup to shorten diagnosed mode-to-shifter path; final timing pending",
+      "Production boot uses tried E12 profile and historical plastic-floor15.1s scan time",
+      "Stationary atomic opcode13 policy tuning with readback; fixed obstacle250/300mm safety unchanged"
+    ],
+    "bootProfile": {
+      "search": 3,
+      "turn": 4,
+      "approach": 5,
+      "fine": 4,
+      "tolerance": 30,
+      "minMs": 200,
+      "maxMs": 200,
+      "kickMs": 60,
+      "kickSpeed": 6,
+      "scanBudgetUs": 15100000,
+      "scanCalibrated": true,
+      "scanScope": "Historical approximate plastic-floor profile; two single circles plus normalized double-circle reference, before telemetry-off; no E14 three-trial angle calibration"
+    },
+    "motionPolicy": {
+      "corridorPx": {
+        "min": 45,
+        "max": 70,
+        "step": 5,
+        "default": 45
+      },
+      "settleMs": {
+        "min": 500,
+        "max": 2000,
+        "step": 100,
+        "default": 1500
+      },
+      "stopMm": {
+        "min": 300,
+        "max": 400,
+        "step": 10,
+        "default": 350
+      },
+      "slowMm": {
+        "min": 500,
+        "max": 1000,
+        "step": 50,
+        "default": 500
+      }
+    },
+    "defaultCommandBoundary": "tune --defaults=4/4/5/3/30 and pulse --defaults=20/100/0/5 remain generic, not E14 boot profile; use explicit fields. policy defaults match production45/1500/350/500.",
+    "acceptanceRequired": [
+      "One uninterrupted physical SW/new-red2 outside-view search-to-DOCK task, no synthetic vision/host START",
+      "Real near-obstacle HOLD/release and IR latch/release, ending stopped"
+    ],
+    "build": null,
+    "r6": null,
+    "hardware": null,
+    "releaseSof": null,
+    "focused": {
+      "status": "PASS",
+      "result": "build/remaining_20261104/motion_policy_20261104T220025097074Z/result.json",
+      "elapsedSeconds": 18.9839668,
+      "policyChecks": 11687,
+      "policyCombinations": 11616,
+      "debugChecks": 251,
+      "controlChecks": 2049,
+      "controlUartLines": 500,
+      "initGateChecks": 47,
+      "finalBootDebugResult": "build/remaining_20261104/motion_policy_20261104T220112003036Z/result.json",
+      "finalBootDebugChecks": 254,
+      "hostTests": 31,
+      "hostRunnerTests": 18
+    },
+    "r6Attempts": [
+      {
+        "status": "FAIL",
+        "result": "build/member_b/20261104T220131_947405Z_verilator_course/result.json",
+        "elapsedSeconds": 104.45794,
+        "exitCode": 1,
+        "targetMet": false,
+        "failureStage": "tb_chassis_init Verilator compilation",
+        "compilerElapsedSeconds": 0.095982,
+        "compilerReturnCode": 3221225477,
+        "windowsStatus": "0xC0000005",
+        "assertionFailure": false,
+        "timeout": false,
+        "repairScope": "Equivalent testbench compatibility only; final fresh full R6 still required; production RTL unchanged"
+      },
+      {
+        "status": "FAIL",
+        "result": "build/member_b/20261104T220649_240451Z_verilator_course/result.json",
+        "elapsedSeconds": 301.821791,
+        "exitCode": 1,
+        "targetMet": false,
+        "completedPass": 10,
+        "terminatedScenario": "perceptionCoreOverload_tb",
+        "wholeSuiteDeadlineSeconds": 300,
+        "laterScenariosCompleted": false,
+        "overlappedQuartusFit": true,
+        "scope": "Whole-suite deadline, not full17PASS. Contention under investigation; final fresh no-fit-contention run still required."
+      }
+    ],
+    "r6CompatibilityFix": {
+      "scope": "Only two hierarchical SEND/LOAD_FB enum references in tb_chassis_init replaced by same-encoding local constants; no production or assertion changes",
+      "result": "build/remaining_20261104/verilator_init_verified_20261104T220628_233730Z/result.json",
+      "status": "PASS",
+      "checks": 4939,
+      "uartLines": 183,
+      "initializationLines": 41,
+      "asciiCombinations": 32768,
+      "approxSeconds": 8.21
+    },
+    "publication": {
+      "scope": "User-requested candidate source push during compilation; actual hardware results may follow separately",
+      "readme": "Single section-paired bilingual README.md; README_EN removed",
+      "publicationChecks": {
+        "submissionTests": 14,
+        "submissionSeconds": 0.287,
+        "repositoryTests": 6,
+        "repositorySeconds": 2.038,
+        "actualStructure": "PASS",
+        "dependencies": 60,
+        "rtlBenches": 53
+      },
+      "sofPublished": false,
+      "finalValidatedZip": false
+    }
   }
 }

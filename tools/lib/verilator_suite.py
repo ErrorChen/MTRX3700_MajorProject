@@ -27,7 +27,8 @@ import time
 ROOT = Path(__file__).resolve().parents[2]
 REQUIRED_VERSION = "5.050"
 SUITE_NAMES = (
-    "tb_pixel_uart_repair", "tb_sonar_guard", "tb_control_repair", "tb_chassis_debug", "red2Start_tb",
+    "tb_pixel_uart_repair", "tb_sonar_guard", "tb_control_repair", "tb_align_continuity",
+    "tb_chassis_init", "tb_chassis_init_gate", "tb_motion_policy", "tb_chassis_debug", "red2Start_tb",
     "perceptionCoreContinuous_tb", "perceptionCoreOverload_tb", "hsvColourGate_tb", "targetTracker_tb",
     "fixedSheetInteraction_tb", "colourSampler_tb", "markerQueryStore_tb", "mainColourSupportReader_tb",
 )
