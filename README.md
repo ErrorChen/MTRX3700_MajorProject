@@ -8,7 +8,7 @@
 
 ## 当前版本与验收范围
 
-本次固件仍为 **E7070012**，后续第六至八轮只调运行参数，没有新增RTL、SOF、编译或R6。原版控制/协议、正式R6 **223.404755秒（13 PASS＋CAUGHT）**、Full Compilation1163.903秒及post-fit26.783秒、实际下载和静止pulse读写均已通过。第六轮连续5/4→5/5→4/4修正获用户确认，但首次LOST就按诊断规则hostSTOP；第七轮是从约41 cm重新POWER的独立任务，首见ARM至DOCK **11.8197369秒**，22个零速DOCK样本跨3.065829秒，J3 **292 mm**与探头前端尺量**约370 mm**差异原因未定，不拼成60 cm连续任务。第八轮画外搜索累计2.553478秒即找到蓝4，之后六段采样LOST均经ACQUIRE恢复、未再转圈搜，但反复对准仍未停靠，**INCOMPLETE60.1513566秒**；收尾V1未ARM/permit0/左右0/zeroSent、J3约390 mm。用户反馈牌在两侧边缘间跨越，最后相机到牌约47 cm，这与J3测量基准不同。第八轮配置tune3/3/5/4/30、pulse200/200/60/6、扫描15.1秒仍非验证推荐；之后仅turn3→4的第九轮隔离另行待验。固件复位默认tune4/4/5/3/30、pulse20/100/0/5不变，主线画外搜索停靠未通过。
+本次记录截至 **E7070012第十轮实机**，仍是运行时调参，没有新RTL、SOF、编译或R6。原控制/协议、正式R6 **223.404755秒（13 PASS＋CAUGHT）**、Full Compilation1163.903秒及post-fit26.783秒、实际下载与静止pulse写读均已通过。第六轮连续差速修正获实物确认；第七轮约41 cm重新POWER的独立任务DOCKED，22个零速样本跨3.065829秒，但J3 **292 mm**与探头前端尺量**约370 mm**差异未定，不能拼成一次60 cm任务。第八轮画外搜索发现目标后仍反复对准而INCOMPLETE；第九轮turn3→4有限隔离获“更稳定、向中间移动”反馈，首次APPROACH即主动STOP。第十轮完整画外搜索仍 **INCOMPLETE60.0024068秒**；虽多次读到APPROACH5/5，用户实际看到持续左右调、居中后继续到另一边缘，没有稳定前进，并进一步确认“请求了，但实际几乎只动了一边”；不能把5/5命令当作物理直行通过。收尾V1未ARM/左右0/zeroSent、J3约524 mm。当前试验tune3/4/5/4/30、pulse200/200/60/6、扫描15.1秒不是推荐设置；主线搜索停靠未通过。长时间实车试验暂告一段落，继续只读核查转向到前进的命令与起步差异，未宣称根因已确定。SOF复位默认不变。
 
 历史已发布E11为 **E7070011**，该轮收尾VISION_ONLY、未ARM、零速；默认参数与当时最终实验配置分别记录。E11加入停车调参及失锁后完整停车重确认。控制定向runtime两sign各996检查/358完整UART、旧参数847/289通过；正式R6首轮302.015209秒超时FAIL保留，优化调度后的全新第二轮 **219.199994秒、13 PASS＋CAUGHT、targetMet=true**。Full Compilation1375.853秒＋post-fit26.278秒PASS，setup/hold +0.237/+0.120 ns，实际下载E11已核对。实板停车五项参数写入/独立读回、search改变使扫描标定失效及默认恢复均PASS；初始停车调参阶段未运动；后续已有真实地面试验，首轮与search3搜索均NOT_FOUND，turn3隔离仅抽动/INCOMPLETE。该轮只调参、不改E11 RTL；最终实验3/5/4/3/40、扫描15.1秒；turn5和approach4对照均INCOMPLETE，降速未解决抽动/过冲。本轮停止追加测试，组合仅作实验记录，不能称实测轮速或停靠通过。
 
@@ -32,7 +32,7 @@ E8最后的蓝4画外搜索扫过两次却未持续锁定，近距暂停、用�
 | E7070009，历史已发布版本 | 正向SEARCH曾观察目标但停车确认超时且目标已离开时，有限反向小步回扫，每步后停车重确认 | 4 cm/s、150 ms、每任务最多3步，同一扫描预算与总任务计时；两种TURN_SIGN各696检查/245完整UART PASS；正式R6独立PASS274.530007秒、13PASS＋CAUGHT；Full Compilation1218.109秒＋post-fit26.779秒PASS，实际下载/身份读回PASS。画外搜索实机INCOMPLETE：发现/锁定后反复对准，60秒观察窗内未DOCK；主机STOP收尾，未触发反向SEARCH，回扫物理效果未验证 |
 | E7070010，历史已发布版本 | 默认居中U90–150；>350 mm且新鲜锁定U75–165可在START/完整ACQUIRE后直接APPROACH | 定向PASS：默认两sign各804/275、旧严格参数817/278，29.1663517秒；正式R6独立PASS271.31444秒、13 PASS＋CAUGHT；Full Compilation1260.493秒＋post-fit25.832秒PASS；原始SOF6706157字节实际下载并核对E10。蓝4实机发现/锁定后短暂APPROACH，再LOST/SEARCH，22.2096082秒观察后NOT_FOUND/SCAN_BUDGET，未DOCK、无反向SEARCH，已零速收尾 |
 | E7070011，当前已下载版本 | 停车V1五项调参；LOST必经完整ACQUIRE，确认义务跨HOLD/源失效 | runtime两sign各996/358、legacy847/289；首R6 FAIL302.015209保留，最终fresh R6 PASS219.199994秒/13 PASS＋CAUGHT。Full Compilation1375.853秒＋门检26.278秒PASS、实际下载和停车调参PASS；首轮/search3搜索NOT_FOUND，turn3/turn5均INCOMPLETE；最终3/5/4/3/40对照仍INCOMPLETE，降速未消除抽动/过冲；停止追加测试 |
-| E7070012，当前发布 | ALIGN独立总时长与可关闭起步段，V1停车原子调参/独立读回 | 协议/控制/R6首跑223.404755秒/完整构建及实际下载PASS；真实静止调参PASS。前三轮INCOMPLETE，第四仅有限回正诊断通过用户观察，第五60.0399573秒INCOMPLETE/近障HOLD；未DOCK，第六轮tol30连续差速接近获用户确认，首次LOST即诊断STOP；第七轮约41 cm独立任务DOCKED，J3292/用户尺量约370 mm分别保留；第八轮画外搜索发现/恢复后仍INCOMPLETE60.1513566秒；第九轮turn4另待 |
+| E7070012，当前发布 | ALIGN独立总时长与可关闭起步段，V1停车原子调参/独立读回 | 协议/控制/R6首跑223.404755秒/完整构建及实际下载PASS；真实静止调参PASS。前三轮INCOMPLETE，第四仅有限回正诊断通过用户观察，第五60.0399573秒INCOMPLETE/近障HOLD；未DOCK，第六轮tol30连续差速接近获用户确认，首次LOST即诊断STOP；第七轮约41 cm独立任务DOCKED，J3292/用户尺量约370 mm分别保留；第八轮画外搜索发现/恢复后仍INCOMPLETE60.1513566秒；第九轮turn4有限回正获反馈、首次APPROACH即STOP；第十轮完整搜索INCOMPLETE60.0024068秒；5/5逻辑请求不证明物理直行 |
 
 已经完成真实硬件纠正及历史search4参数下塑胶地面的三次整圈观察，但六车位落地闭环和精确360°扫描尚未验收。早期实机主要在底盘架空条件下完成，后续地面记录另行标明；本README把现有实现、对应版本的实际证据和后续操作分别说明。后续复现实验的操作步骤也不代表已执行结果。
 
@@ -317,7 +317,7 @@ UART为115200、8N1、完整 `T:1` JSON，正常心跳200 ms；停车优先排�
 
 E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的最终`result.json`为 **FAIL**。Quartus编译工具退出0、耗时1183.703秒且fit成功，但两条critical timing warnings在构建警告检查时导致拒收，**未执行独立`timing_gate`步骤，也未生成`timing.json`**；工具退出0不等于本工程时序验收通过。实际STA路径随后定位并用于E7修正，E7独立构建现已通过。E6失败仍保留，E6从未下载，不把新结果回写成旧版通过。
 
-本次发布buildId为 **E7070012**，BCTL/CCTL均由生产顶层传入实际设计ID，须使用配套新版主机/Tcl。控制、R6、完整构建/post-fit、下载与停车pulse均有本版独立证据；原始SOF为`build/member_b/20261104T192605_706632Z_build/source/quartus/output_files/PartBDebug.sof`、6706156字节。`echo7.py program`核对源码和本机成功构建记录；已记录八轮实机：第七轮独立近距DOCKED，第八轮画外任务仍未完成，不能拼接分段为主线通过。
+本次发布buildId为 **E7070012**，BCTL/CCTL均由生产顶层传入实际设计ID，须使用配套新版主机/Tcl。控制、R6、完整构建/post-fit、下载与停车pulse均有本版独立证据；原始SOF为`build/member_b/20261104T192605_706632Z_build/source/quartus/output_files/PartBDebug.sof`、6706156字节。`echo7.py program`核对源码和本机成功构建记录；已记录十轮实机：第七轮独立近距DOCKED，第八及第十轮画外任务仍未完成，不能拼接分段为主线通过。
 
 先确认Python路径与Quartus工具可用；如尚未安装工程Python依赖，可执行`& $pythonExe -m pip install -r requirements.txt`。依赖安装不属于R6计时。
 
@@ -361,7 +361,7 @@ E6首次Full Compilation目录`build/member_b/20261104T144730_277631Z_build/`的
 | E7070009 | `build/member_b/20261104T171519_480274Z_build/source/quartus/output_files/PartBDebug.sof`；6706161字节，历史原产物保留，旧发布副本由E10替换 | Full Compilation/post-fit、实际下载及BCTL E7070009读回 **PASS**；画外蓝4实机 **INCOMPLETE**，曾发现/锁定但60秒观察窗内未DOCK；反向SEARCH未触发，主机STOP零速收尾 |
 | E7070010 | `build/member_b/20261104T175030_045504Z_build/source/quartus/output_files/PartBDebug.sof`；6706157字节，历史原产物保留，旧发布副本由E11替换 | Full Compilation/post-fit、下载及版本核对PASS；画外蓝4实机NOT_FOUND/SCAN_BUDGET、未DOCK，无反向SEARCH；V1未ARM零速收尾 |
 | E7070011 | `build/member_b/20261104T182211_444905Z_build/source/quartus/output_files/PartBDebug.sof`；6706153字节，历史原构建保留；旧release副本由E12替换 | Full Compilation/post-fit、实际下载/身份、停车调参PASS；真实搜索两轮NOT_FOUND、短时对照三轮INCOMPLETE。实验参数未固化进SOF，默认4/4/5/3/30不变 |
-| E7070012 | `build/member_b/20261104T192605_706632Z_build/source/quartus/output_files/PartBDebug.sof`；当前发布`firmware/E7070012/PartBDebug.sof`，6706156字节 | Full Compilation/post-fit/实际下载及静止pulse PASS；八轮实物结果保留：第七轮独立近距DOCKED，第八轮画外搜索仍INCOMPLETE；volatile实验设置不固化进默认SOF |
+| E7070012 | `build/member_b/20261104T192605_706632Z_build/source/quartus/output_files/PartBDebug.sof`；当前发布`firmware/E7070012/PartBDebug.sof`，6706156字节 | Full Compilation/post-fit/实际下载及静止pulse PASS；十轮实物结果保留：第七轮独立近距DOCKED，第八/十轮画外搜索仍INCOMPLETE；volatile实验设置不固化进默认SOF |
 
 课程R6正式入口仍为 `./run_all_tests.sh`，要求clean copy、Verilator **5.050**、模块与系统自检、故意坏模块输出CAUGHT；本次用户目标为≤285秒（课程门槛300秒）。本机可用下列包装命令调用同一Bash入口，默认4任务编译；本轮完全相同的编译输入通过内部哈希缓存共享一次新编译，所有场景仍独立运行断言，不读取往轮二进制：
 
@@ -797,11 +797,49 @@ B坐标曾约U195停留10秒、U65停留5秒，末段U124→176→171仍越出�
 | 第七轮独立约41 cm任务 | DOCKED_OBSERVED，22个零速样本跨3.065829秒 | J3292 mm/探头前端尺量约370 mm差异未定；不拼接第六轮 |
 | 第八轮画外搜索 | 2.553478秒搜索即发现，6段LOST均经ACQUIRE恢复，无再次SEARCH | 60.1513566秒INCOMPLETE，反复ALIGN、边缘来回、未DOCK；相机47 cm与J3390 mm基准不同 |
 
-这批记录在第八轮后独立提交，保留原五轮失败和有限诊断。随后仅**turn3→4**，形成**tune3/4/5/4/30、pulse200/200/60/6、扫描15.1秒**的最多15秒第九轮隔离，其结果在本次快照中待验证。只调整既有粗ALIGN后段请求，小误差固定3的规则不变；正在试的组合不算已验证、推荐或主线完成。原SOF与产品PDF不因此更换或重编译，历史R6没有新增执行。
+这批记录在第八轮后独立提交，保留原五轮失败和有限诊断。随后仅**turn3→4**，形成**tune3/4/5/4/30、pulse200/200/60/6、扫描15.1秒**的最多15秒第九轮隔离，此前快照将第九轮标待验；现有限诊断结果见下文，不是完整任务通过。只调整既有粗ALIGN后段请求，小误差固定3的规则不变；正在试的组合不算已验证、推荐或主线完成。原SOF与产品PDF不因此更换或重编译，历史R6没有新增执行。
+
+### E12第九轮turn4隔离：方向改善获反馈，进入接近通道即停车
+
+在相同E7070012中只改**turn3→4**，配置为**tune3/4/5/4/30、pulse200/200/60/6、扫描15.1秒**，没有RTL、SOF或构建变化。`build/remaining_20261104/integrated_blue4_e12_turn4_reverse_align15s.jsonl`结果**ALIGN_CORRIDOR_OBSERVED**，taskObservationSeconds **1.7750441秒**，共**1228C/111B**；绝大部分快照用于等待实体POWER，首见ARM在观察器时间**115.1999995秒**，不能把等待时间或总快照数写成持续运动时长/采样率。
+
+直接采到`ALIGN −4/+4 → ACQUIRE 0/0 → APPROACH 4/5`，首次APPROACH触发诊断主机STOP。起步kick6未被这次稀疏轮询采到，不能由配置值补造完整6→4实板命令序。B为U171→164，末VISION_ONLY、未ARM、左右0、zeroSent=true、J3约388 mm，cleanupErrors为空，**没有DOCKED**。用户原话：“**更稳定，并且能向中间移动，但没能居中**”。该观察支持本轮有可接受的方向改善，不能升级为精确居中、持续闭环或通用推荐。
+
+之后独立静止`e12_after_turn4_alignment_preflight.json`取得**3/3健康锁定U147，J3分别379/379/383 mm**，该预检位置位于允许居中带90–150。它与任务中的U164是不同采集时点，不能组合成已测机械停稳曲线、精确停止延迟或同帧前后关系。随后同一参数的第十轮完整画外搜索仍INCOMPLETE，详见下文；本轮有限诊断不替代该任务。
+
+### E12第十轮完整搜索仍未完成：逻辑5/5不等于物理直行
+
+`build/remaining_20261104/integrated_blue4_e12_turn4_search_to_dock.jsonl`使用**tune3/4/5/4/30、pulse200/200/60/6、扫描15.1秒**，记录**613C/79B**，host START、synthetic写入和heartbeat均0。首见ARM在观察器时间**24.2043404秒**、SEARCH状态、J3约699 mm。taskObservationSeconds **60.0024068秒**，结果**INCOMPLETE**；主机60秒观察限到期，不是产品120秒任务时限或正常DOCK。cleanupErrors为空，最终VISION_ONLY、未ARM、左右0、zeroSent=true、J3约**524 mm**，IR0、sonarHold0。
+
+用户原话：“**一直左右调，哪怕居中后还继续调到另一边边缘，并不会往前直走**”。机器多次采到APPROACH5/5，但邻近B坐标出现U141→201、U119→76、U114→196、U143→60的明显跨画面变化。离散C/B快照不是同一原生帧，不能据此精确重建每次物理偏转时刻；不过该命令与实物反馈的不一致必须保留。**相等的左右逻辑请求不证明两轮实际速度相等、车身直行或转向后的机械运动已停止**，不把“读到5/5”写成前进效果通过。
+
+第九轮短诊断“更稳定”的用户反馈不被删去，但其有限观察也不覆盖第十轮长任务中的反复横向调整。当前组合仍属于实验记录，不推广为推荐参数；没有DOCK或完整搜索停靠通过。后续暂不继续长时间实车试跑，转为只读核查ALIGN到前进的命令顺序及起步不均，尚不把软件转序、底盘响应、供电或机械差异中的任何一个写成已确定根因。此轮没有修改RTL、SOF、产品PDF或重新执行R6。
+
+### 第十轮补充：单侧实际运动与底盘固件语义未核实
+
+用户进一步确认：**“请求了，但实际几乎只动了一边”**。因此本轮缺陷不仅是泛称“不直走”，还包括相等逻辑请求下明显不对称的实物响应；当前没有独立轮速反馈证明左右匹配。
+
+截至2026-11-05核查，官方[General_Driver速度入口](https://github.com/waveshareteam/ugv_base_general/blob/main/General_Driver/movtion_module.h#L275-L303)仅mainType3启用PID，其余含UGV02/mainType2将输入乘512及左右倍率后交给PWM；官方[ROS_Driver速度入口](https://github.com/waveshareteam/ugv_base_ros/blob/main/ROS_Driver/movtion_module.h#L246-L268)则启用PID。这说明官方源码存在不同控制路径，不能只凭接口单位标签认定现场固件行为。
+
+本文和日志的**cm/s是FPGA名义请求单位**，已安装底盘固件的具体控制语义、版本与实际轮速仍未核实；OLED车型/固件/电压信息正在核对。本记录不据现象直接断言PI积分问题、电机损坏或某个软件根因，也没有修改或刷写底盘固件。既有实物现象与各轮结果保留，后续核查另列。
+
+### 第十轮只读协议审计：健康输入及停车到前进边界
+
+独立审计得到**447个ARM期间C样本**，全部sourceHealthyFresh、distanceValid、selectionMatches=true；IR/HOLD/fatal/RX framing error均false。79个B样本全good/fresh，无candidate overflow/error/overrun或transportFaultSticky；completionDiscard=0，bufferDrop始终为历史值2、没有新增丢弃。处理时间39.309–50.810 ms、快照采集年龄41.410–88.097 ms只对应这些采样，不是图像变化到轮子响应延迟。
+
+可见状态分段为SEARCH2、ALIGN21、APPROACH4、LOST9、ACQUIRE27；都是离散采样分段数，不是精确全状态次数。累计SEARCH **5.155026秒**，余**9.944974秒**，所有已采SEARCH均+3/−3，没有反向SEARCH或DOCK。最终B为U60、横向框U11–109，J3最终524 mm。
+
+七组同段ALIGN直接采到kick6→cruise4（反向5组、正向2组），之后有零请求；这是板上状态/命令证据，**没有实机TX逐位解码，也不能推出精确脉宽或实际轮速**。四个APPROACH入口都为5/5，各入口之前最近C样本均是ACQUIRE、左右0、zeroSent=true、uartBusy=false。总共14个APPROACH样本中11个5/5，另有4/5两次、5/4一次；它支持发送侧已呈现停车完成到前进的边界，仍不证明机械已停稳或两轮同步起步。
+
+此次只读审计没有找到能由已采证据证明的命令发送侧bug；这不是对所有未采时序的排除，也不等于完整控制策略无问题。结合用户“几乎只动一边”的反馈，下一步需先核对已安装底盘固件语义与实际响应，保持根因未定，不继续把逻辑速度请求直接当作实测车轮速度。
+
+用户本次OLED只读到`AP:UGV`、`ST:OFF`和**11.27 V**，没有提供启动车型/Version；MAC不写入记录。单个电压读数不构成低电故障结论。后续只准备核对启动信息；截至本快照没有底盘flash、PID/PWM或车型配置写入。
+
+两个只读代码审查分别核对：居中退出ALIGN后先zeroSent、1.5秒驻留、新fence三帧再进入APPROACH；同向5/5左右分别编码，没有发现单侧符号翻转；`chassis_command`没有非零指令FIFO，发送一份完整包、STOP优先。28字节在115200 baud的串行时间约2.43 ms，已检查的这一层不支持秒级指令排队解释。既有UART管脚级仿真覆盖相关逻辑，本次未重跑或新增测试，也没有底盘实际ACK/轮速证明。结论仍是**未发现确定的FPGA控制/发包bug，底盘模式及响应待核实**，不是彻底排除FPGA。
 
 ## 已知限制与未验证范围
 
-- E12第五轮仍反复对准并边缘丢牌，重搜未找回后进入J3近障HOLD；未DOCK。有限回正获得用户接受，命令两段转序已有实板证据，但不代表轮速一致或主线通过。第六轮tol30已观察连续差速修正，首次LOST即诊断STOP；第七轮约41 cm独立任务已DOCKED，J3292与用户尺量370 mm差异未定；第八轮画外搜索仍INCOMPLETE60.1513566秒；第九轮turn4另待。
+- E12第五轮仍反复对准并边缘丢牌，重搜未找回后进入J3近障HOLD；未DOCK。有限回正获得用户接受，命令两段转序已有实板证据，但不代表轮速一致或主线通过。第六轮tol30已观察连续差速修正，首次LOST即诊断STOP；第七轮约41 cm独立任务已DOCKED，J3292与用户尺量370 mm差异未定；第八轮画外搜索仍INCOMPLETE60.1513566秒；第九轮turn4有限回正获反馈、首次APPROACH即STOP；第十轮完整搜索INCOMPLETE60.0024068秒；5/5逻辑请求不证明物理直行。
 
 - E11首轮与search3搜索均NOT_FOUND，turn3/turn5隔离均INCOMPLETE；turn5未耗尽预算时已采到LOST→ACQUIRE，仍有单侧抽动、跨中心、丢牌。最后3/5/4/3/40会话对照同样INCOMPLETE，未改RTL；已停止本轮测试，搜索停靠尚未通过。
 
