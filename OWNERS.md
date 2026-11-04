@@ -1,13 +1,14 @@
 # ECHO-7 ownership and provenance
 
-SID **540207680** is the user-confirmed Member B maintainer. Member A and Member C SIDs are **pending**.
-The preliminary repository was built by same-group students Hajin and Jiaze Sun;
-Hajin mainly handles Member A. Their SIDs remain unknown and are not invented.
+Member A is Hajin Paek, SID **540287235**, owner of the Part A front-end files listed below.
+SID **540207680** is the user-confirmed Member B maintainer. The Member C SID is **pending**.
+The preliminary repository was built by same-group students Hajin and Jiaze Sun.
 Origin is separate from maintenance responsibility. Original source/IP notices
 remain applicable. B additions and adaptations are AI-assisted; named human
 review/sign-off is **pending**, not certified by this generated inventory.
 
-Source: user statement on 3 November 2026; original notices and
+Source: user statement on 3 November 2026; Member A identity and Part A ownership
+confirmed by Hajin Paek on 4 November 2026; original notices and
 ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate with
 `python tools/update_owners.py` after adding a maintained source or test.
 
@@ -76,9 +77,9 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `rtl/top/perceptionCore.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb, perceptionCoreContinuous_tb; full mapping: tests/rtl/manifest.json |
 | `rtl/top/perceptionDemoTop.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | echo7.py build; post-fit timing/CDC/resource gate and board validation |
 | `rtl/tracking/targetTracker.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | targetTracker_tb, memberCSimulator_tb, perceptionCoreReplay_tb; full mapping: tests/rtl/manifest.json |
-| `rtl/vision/boundedCandidates.sv` | 540207680 | Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation | boundedCandidates_tb, perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb; full mapping: tests/rtl/manifest.json |
-| `rtl/vision/candidate_pkg.sv` | 540207680 | Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation | boundedCandidates_tb, colourSampler_tb, perceptionCoreReplay_tb; full mapping: tests/rtl/manifest.json |
-| `rtl/vision/causalMaskCleanup.sv` | 540207680 | Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation | perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb, perceptionCoreContinuous_tb; full mapping: tests/rtl/manifest.json |
+| `rtl/vision/boundedCandidates.sv` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); Member B extended it to a shared 16-slot pool with a 15-handle active cap | boundedCandidates_tb, perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb; full mapping: tests/rtl/manifest.json |
+| `rtl/vision/candidate_pkg.sv` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); Member B renamed it and raised MAX_CANDIDATES from 8 to 16 | boundedCandidates_tb, colourSampler_tb, perceptionCoreReplay_tb; full mapping: tests/rtl/manifest.json |
+| `rtl/vision/causalMaskCleanup.sv` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); unchanged from Part A | perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb, perceptionCoreContinuous_tb; full mapping: tests/rtl/manifest.json |
 | `rtl/vision/glyphBanks.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb, perceptionCoreContinuous_tb; full mapping: tests/rtl/manifest.json |
 | `rtl/vision/horizontalRunFilter.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb, perceptionCoreContinuous_tb; full mapping: tests/rtl/manifest.json |
 | `rtl/vision/hsvColourGate.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | memberBVgaOverlay_tb, perceptionCoreReplay_tb, perceptionCoreRecordedReplay_tb; full mapping: tests/rtl/manifest.json |
@@ -180,7 +181,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/python/test_reader6_decode.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_reader8_decode.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_reader9_decode.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
-| `tests/python/test_reclaimed_model.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
+| `tests/python/test_reclaimed_model.py` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); Member B added repository imports and one adversarial-union test | python -m unittest discover -s tests/python |
 | `tests/python/test_reference_pairing.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_repository_check.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_run2.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
@@ -196,7 +197,7 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tests/python/test_trial_tcl.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_verilator_suite.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
 | `tests/python/test_vision.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | python -m unittest discover -s tests/python |
-| `tests/rtl/boundedCandidates_tb.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | boundedCandidates_tb |
+| `tests/rtl/boundedCandidates_tb.sv` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); Member B extended it for the shared 16-slot pool | boundedCandidates_tb |
 | `tests/rtl/boundedCandidatesActive_tb.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | boundedCandidatesActive_tb |
 | `tests/rtl/boundedCandidatesCapacity15_tb.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | boundedCandidatesCapacity15_tb |
 | `tests/rtl/boundedCandidatesCompleted16_tb.sv` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | boundedCandidatesCompleted16_tb |
@@ -248,15 +249,15 @@ ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate 
 | `tools/echo7.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/export_ai_transcript.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/export_submission.py` | B 540207680; A/C SID pending | B+C integration/JTAG/test adaptation, AI-assisted; no unconfirmed human identity or hardware sign-off | Python suite / check_repository.py; command execution evidence remains separate |
-| `tools/lib/analyse_capture.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
+| `tools/lib/analyse_capture.py` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); unchanged from Part A | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/audit_calibration.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/audit_hsv.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/audit_hsv_cleanup.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/audit_hsv_opening.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/audit_hsv_profiles.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/calibration_measurement.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
-| `tools/lib/candidates_model.py` | 540207680 | Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation | Python suite / check_repository.py; command execution evidence remains separate |
-| `tools/lib/candidates_reclaimed_model.py` | 540207680 | Hajin + Jiaze Sun same-group preliminary code / course IP notices; B integration and selective adaptation | Python suite / check_repository.py; command execution evidence remains separate |
+| `tools/lib/candidates_model.py` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); unchanged from Part A | Python suite / check_repository.py; command execution evidence remains separate |
+| `tools/lib/candidates_reclaimed_model.py` | 540287235 | Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex); Member B extended it for the shared 16-slot pool | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/capture_transaction.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/collect_evidence.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |
 | `tools/lib/contract_model.py` | 540207680 | Member B implementation/adaptation, AI-assisted; not a sole-human-authorship claim | Python suite / check_repository.py; command execution evidence remains separate |

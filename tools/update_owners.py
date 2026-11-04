@@ -13,13 +13,26 @@ TEAM_FILES = {
     "rtl/capture/ov7670_config.sv", "rtl/capture/ov7670_capture.sv",
     "rtl/common/camera_pkg.sv", "rtl/common/video_pll.sv",
     "rtl/display/frame_buffer.sv", "rtl/display/camera_display.sv",
-    "rtl/vision/boundedCandidates.sv", "rtl/vision/candidate_pkg.sv",
-    "rtl/vision/causalMaskCleanup.sv", "quartus/vga_sink.qsys",
-    "tools/lib/candidates_model.py", "tools/lib/candidates_reclaimed_model.py",
+    "quartus/vga_sink.qsys",
 }
 STAFF_FILES = {
     "rtl/debug/frame_snap.sv", "rtl/debug/snapshot_ram.sv",
     "rtl/debug/snapshot_probes.sv", "tools/capture/grab.py", "tools/tcl/grab_jtag.tcl",
+}
+
+# Member A (Hajin Paek) Part A front end; ownership confirmed by Hajin Paek on 4 November 2026.
+# Each origin records what Member B changed during integration, from the git history.
+MEMBER_A_SID = "540287235"
+PART_A = "Member A (Hajin Paek) Part A front end, AI-assisted (OpenAI Codex)"
+PART_A_FILES = {
+    "rtl/vision/causalMaskCleanup.sv": PART_A + "; unchanged from Part A",
+    "tools/lib/candidates_model.py": PART_A + "; unchanged from Part A",
+    "tools/lib/analyse_capture.py": PART_A + "; unchanged from Part A",
+    "rtl/vision/candidate_pkg.sv": PART_A + "; Member B renamed it and raised MAX_CANDIDATES from 8 to 16",
+    "rtl/vision/boundedCandidates.sv": PART_A + "; Member B extended it to a shared 16-slot pool with a 15-handle active cap",
+    "tests/rtl/boundedCandidates_tb.sv": PART_A + "; Member B extended it for the shared 16-slot pool",
+    "tools/lib/candidates_reclaimed_model.py": PART_A + "; Member B extended it for the shared 16-slot pool",
+    "tests/python/test_reclaimed_model.py": PART_A + "; Member B added repository imports and one adversarial-union test",
 }
 
 
@@ -37,6 +50,8 @@ INTEGRATION_FILES = {
 
 
 def maintainer(name):
+    if name in PART_A_FILES:
+        return MEMBER_A_SID, PART_A_FILES[name]
     if name.startswith(("rtl/member_c/", "tests/member_c/")):
         return "Member C SID pending", "Inherited Member C/teacher driver notices retained; control repairs and tests AI-assisted"
     if name in INTEGRATION_FILES or name.startswith(("tests/integration/", "tests/scheme_c/")):
@@ -54,13 +69,14 @@ def main():
     paths += [ROOT / name for name in ("run_all_tests.sh", "requirements.txt", ".gitignore", ".gitattributes", ".editorconfig")]
     paths += list((ROOT / "tests/fixtures/camera").rglob("*.png"))
     lines = ["# ECHO-7 ownership and provenance", "",
-        "SID **540207680** is the user-confirmed Member B maintainer. Member A and Member C SIDs are **pending**.",
-        "The preliminary repository was built by same-group students Hajin and Jiaze Sun;",
-        "Hajin mainly handles Member A. Their SIDs remain unknown and are not invented.",
+        "Member A is Hajin Paek, SID **540287235**, owner of the Part A front-end files listed below.",
+        "SID **540207680** is the user-confirmed Member B maintainer. The Member C SID is **pending**.",
+        "The preliminary repository was built by same-group students Hajin and Jiaze Sun.",
         "Origin is separate from maintenance responsibility. Original source/IP notices",
         "remain applicable. B additions and adaptations are AI-assisted; named human",
         "review/sign-off is **pending**, not certified by this generated inventory.", "",
-        "Source: user statement on 3 November 2026; original notices and",
+        "Source: user statement on 3 November 2026; Member A identity and Part A ownership",
+        "confirmed by Hajin Paek on 4 November 2026; original notices and",
         "ROOT README.md / VERSION_README.md preserve consolidated provenance. Regenerate with",
         "`python tools/update_owners.py` after adding a maintained source or test.", "",
         "| File | Maintainer / SID | Origin / adaptation | Verification entry (not an execution claim) |",

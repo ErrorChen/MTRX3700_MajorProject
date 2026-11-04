@@ -1,5 +1,5 @@
 `timescale 1ns/1ps
-// ECHO-7 Part A | Human owner: Member A (name/SID pending).
+// ECHO-7 Part A | Human owner: Member A, Hajin Paek (SID 540287235).
 // AI-assisted by OpenAI Codex; reference vectors come from independent Python BFS.
 // V2 row-reclaimed CCL. Independent row-graph/BFS vectors; unordered descriptors.
 // Generate using tools/lib/candidates_reclaimed_model.py (see that tool's CLI).
