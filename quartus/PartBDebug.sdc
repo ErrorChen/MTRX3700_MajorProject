@@ -1,7 +1,8 @@
 # Member B timing constraints, retaining the verified OV7670 physical interface.
 # DE1-SoC, Quartus 18.1; MemberBCdc.sdc adds bounded perception crossings.
 #
-# Five clocks: the 50 MHz oscillator, the 25 MHz pixel clock and the 10 MHz camera XCLK the PLL
+# Vision clocks below; the additional sonar PLL also derives from CLOCK_50.
+# The 50 MHz oscillator, the 25 MHz pixel clock and the 10 MHz camera XCLK the PLL
 # makes from it, the camera's own 20 MHz PCLK coming back in on GPIO_1[21], and the 100 kHz SCCB
 # clock from a counter (below). PCLK is NOT a PLL
 # clock: XCLK went out through 33 R and a ribbon, and the sensor's own PLL multiplied it, so PCLK
@@ -9,7 +10,7 @@
 # pointers, or held-payload handshakes; a timing exception alone is not a CDC circuit.
 
 create_clock -name CLOCK_50 -period 20.000 [get_ports CLOCK_50]
-# Required physical setting: perceptionDemoTop CAMERA_FPS=25 -> CLKRC=0x81 (prescaler/2),
+# Required physical setting: echo7IntegratedTop CAMERA_FPS=25 -> CLKRC=0x81 (prescaler/2),
 # DBLV=0x4A (PLLx4), XCLK=10MHz -> PCLK=20MHz. Top rejects any other FPS.
 create_clock -name PCLK     -period 50.000 [get_ports {GPIO_1[21]}]
 derive_pll_clocks
@@ -31,7 +32,7 @@ set_input_delay -clock PCLK -clock_fall -min 0.0 [get_ports {GPIO_1[12] GPIO_1[1
 # The video domain uses the dual-clock display RAM and resultToDisplay handshake.
 # CLOCK_50 and PCLK remain in one analysis group so the separate MemberBCdc.sdc
 # maximum-skew/delay checks are not silently removed by Quartus 18.1.
-set_clock_groups -asynchronous -group [get_clocks {CLOCK_50 PCLK}] \
+set_clock_groups -asynchronous -group [get_clocks {CLOCK_50 PCLK *sonar*pll*}] \
     -group [get_clocks {*video_pll* sccb_clk}]
 
 # Slow or static I/O: the buttons, the LEDs, the camera's control pins and XCLK, the VGA pins
@@ -44,8 +45,8 @@ set_false_path -to   [get_ports {VGA_*}]
 # ECHO-7 AI-assisted: asynchronous physical switches terminate at two-stage synchronizers.
 set_false_path -from [get_ports {SW[*]}]
 
-# Blank constant seven-segment outputs have no external synchronous timing contract.
-set_false_path -to [get_ports {HEX0[*] HEX1[*] HEX2[*]}]
+# Human-readable displays have no external synchronous timing contract.
+set_false_path -to [get_ports {HEX0[*] HEX1[*] HEX2[*] HEX3[*] HEX4[*] HEX5[*]}]
 
 # From the course FrameGrab V2026.1 constraints: independent JTAG clock.
 if {[get_collection_size [get_ports -nowarn {altera_reserved_tck}]] > 0} {

@@ -1,3 +1,5 @@
+> 本文保留独立 Member B 历史说明。当前根目录已更新为 B+C Integrated V2 / Scheme C，请以 README.md 的当前状态和集成测试入口为准。
+
 # Version history and validation / 版本与验证记录
 
 This is the consolidated history of Member B. Entries below run from the earlier

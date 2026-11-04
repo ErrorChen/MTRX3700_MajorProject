@@ -1,3 +1,5 @@
+> 保留以下 Member B 原始来源和归属记录；不将新增 Member C、集成连接及 Scheme C 改动归属给未确认的学生身份。新增改动为 AI 辅助实现，等待人工审核和实板验收。
+
 # Current Member B ownership and provenance
 
 SID **540207680** is the user-confirmed Member B maintainer of the files below.

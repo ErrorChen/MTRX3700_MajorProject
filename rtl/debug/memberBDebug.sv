@@ -4,7 +4,8 @@
 // command/acknowledgement transaction provide a coherent payload boundary.
 // A source address change with the same toggle selects another frozen word.
 module memberBDebug #(
-    parameter logic [31:0] BUILD_ID = 32'd0
+    parameter logic [31:0] BUILD_ID = 32'd0,
+    parameter bit ALLOW_TARGET_COMMANDS = 1
 ) (
     input logic clk, reset,
     input logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,
@@ -106,7 +107,11 @@ module memberBDebug #(
                         commandError<=0;
                         rejectionReason<=0;
                         queryBusyAtAction<=queryBusy;
-                        case(sourceWord[27:24])
+                        // Keep new B debug storage; C is the only integrated request owner.
+                        if(!ALLOW_TARGET_COMMANDS && (sourceWord[27:24]==1 || sourceWord[27:24]==2 ||
+                           sourceWord[27:24]==7 || sourceWord[27:24]==8 || sourceWord[27:24]==9)) begin
+                            commandError<=1;rejectionReason<=2;ackToggle<=sourceWord[31];
+                        end else case(sourceWord[27:24])
                             4'd1: if(perception_pkg::markerEnabled(perception_pkg::markerType_t'(sourceWord[5:4]),sourceWord[3:0])) begin
                                 commandValid<=1;commandOperation<=perception_pkg::TARGET_SELECT;
                                 commandMarkerType<=perception_pkg::markerType_t'(sourceWord[5:4]);commandDigit<=sourceWord[3:0];

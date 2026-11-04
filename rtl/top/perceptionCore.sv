@@ -32,6 +32,8 @@ module perceptionCore (
     input logic userEventReady,
     output perception_pkg::perceptionStatus_t status,
     output logic [perception_pkg::DEBUG_WORD_COUNT*32-1:0] debugWords,
+    // Private Scheme C safety link; does not alter the public packed contract.
+    output wire cameraFifoFault, cameraAbandonEvent,
     output logic completedFrame,
     output logic [15:0] completedFrameId
 );
@@ -157,6 +159,8 @@ module perceptionCore (
     logic [3:0] geometryReadIndex;
     colourQuad_t geometryReadQuad,aggregateRedQuad,aggregateBlueQuad;
     logic [4:0] acceptedCount;
+    assign cameraFifoFault=transportFault;
+    assign cameraAbandonEvent=abandonAtSof;
     logic observationValid;
     logic [15:0] bufferDropCount,reportDropCount;
     logic requestInvalidFault;
