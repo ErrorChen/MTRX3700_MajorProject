@@ -4,7 +4,7 @@ _repositoryRoot=_Path(__file__).resolve().parents[2]
 _sys.path[:0]=[str(_repositoryRoot/"tools/lib"),str(_repositoryRoot/"tools"),str(_repositoryRoot/"tests/python")]
 """Independent whole-prefix BFS checks for V2 row-graph reclamation model.
 
-ECHO-7 Member A (name/SID pending), AI-assisted by OpenAI Codex.
+ECHO-7 Member A, Hajin Paek (SID 540287235), AI-assisted by OpenAI Codex.
 """
 from collections import deque
 import random

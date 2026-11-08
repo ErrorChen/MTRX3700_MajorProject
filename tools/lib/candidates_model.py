@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""ECHO-7 Part A, Member A (name/SID pending), AI-assisted by OpenAI Codex.
+"""ECHO-7 Part A, Member A Hajin Paek (SID 540287235), AI-assisted by OpenAI Codex.
 
 Independent whole-image BFS oracle for 4-connected candidates. Hardware uses
 bounded streaming unions; this model does not use union-find. Its capacity rule
